@@ -94,6 +94,7 @@ type Factory struct {
 	bookmarkService         Bookmark
 	responseService         Response
 	webPushService          WebPush
+	mobilePushService       MobilePush
 	ruleService             Rule
 	ruleSuppressionService  RuleSuppression
 	searchDomainService     SearchDomain
@@ -183,6 +184,7 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.pushSubscriptionService = NewPushSubscription()
 	factory.bookmarkService = NewBookmark()
 	factory.webPushService = NewWebPush()
+	factory.mobilePushService = NewMobilePush()
 	factory.collectionItemService = NewCollectionItem()
 	factory.responseService = NewResponse()
 	factory.realtimeBroker = realtime.NewBroker(factory.SSEUpdateChannel())
@@ -266,6 +268,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.pushSubscriptionService.Refresh(factory)
 	factory.bookmarkService.Refresh(factory)
 	factory.webPushService.Refresh(factory)
+	factory.mobilePushService.Refresh(factory)
 	factory.collectionItemService.Refresh(factory)
 	factory.realtimeBroker.Refresh()
 	factory.responseService.Refresh(factory)
@@ -950,6 +953,11 @@ func (factory *Factory) PushSubscription() *PushSubscription {
 // WebPush returns a fully populated WebPush service
 func (factory *Factory) WebPush() *WebPush {
 	return &factory.webPushService
+}
+
+// MobilePush returns a fully populated MobilePush service
+func (factory *Factory) MobilePush() *MobilePush {
+	return &factory.mobilePushService
 }
 
 // RSS returns a fully populated RSS service

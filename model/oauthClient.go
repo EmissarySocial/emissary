@@ -23,6 +23,7 @@ type OAuthClient struct {
 	Website      string             `json:"website"      bson:"website"`      // Human-friendly website URL for the Client
 	RedirectURIs sliceof.String     `json:"redirectUris" bson:"redirectUris"` // Slice of URLs that the Client is allowed to redirect Users to
 	Scopes       sliceof.String     `json:"scopes"       bson:"scopes"`       // OAuth authorization scopes approved for use by this Client
+	MastodonApp  bool               `json:"mastodonApp"  bson:"mastodonApp"`  // TRUE if a Mastodon app registered this Client through POST /api/v1/apps (set by the server only)
 
 	journal.Journal `json:"-" bson:",inline"`
 }

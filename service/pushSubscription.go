@@ -128,13 +128,23 @@ func (service *PushSubscription) RangeByUserID(session data.Session, userID prim
 	return service.Range(session, exp.Equal("userId", userID))
 }
 
+// LoadByOAuthUserToken loads the PushSubscription that a User's OAuth grant created
+func (service *PushSubscription) LoadByOAuthUserToken(session data.Session, userID primitive.ObjectID, oauthUserTokenID primitive.ObjectID, sub *model.PushSubscription) error {
+
+	if oauthUserTokenID.IsZero() {
+		return derp.BadRequest("service.PushSubscription.LoadByOAuthUserToken", "OAuth grant is required")
+	}
+
+	return service.Load(session, exp.Equal("userId", userID).AndEqual("oauthUserTokenId", oauthUserTokenID), sub)
+}
+
 // LoadByEndpoint loads a PushSubscription by its (unique) endpoint URL.
 func (service *PushSubscription) LoadByEndpoint(session data.Session, endpoint string, sub *model.PushSubscription) error {
 	return service.Load(session, exp.Equal("endpoint", endpoint), sub)
 }
 
 // Upsert creates or updates a PushSubscription for a User, keyed by endpoint
-func (service *PushSubscription) Upsert(session data.Session, userID primitive.ObjectID, endpoint string, p256dh string, auth string, userAgent string) error {
+func (service *PushSubscription) Upsert(session data.Session, userID primitive.ObjectID, endpoint string, p256dh string, auth string, userAgent string, format string, oauthUserTokenID primitive.ObjectID) error {
 
 	const location = "service.PushSubscription.Upsert"
 
@@ -162,6 +172,8 @@ func (service *PushSubscription) Upsert(session data.Session, userID primitive.O
 	sub.P256DH = p256dh
 	sub.Auth = auth
 	sub.UserAgent = userAgent
+	sub.Format = format
+	sub.OAuthUserTokenID = oauthUserTokenID
 
 	// Save the subscription
 	if err := service.Save(session, &sub, "Upsert push subscription"); err != nil {
@@ -227,6 +239,49 @@ func (service *PushSubscription) DeleteByEndpoint(session data.Session, endpoint
 	// HardDelete matches nothing when the endpoint is already gone, which makes this idempotent.
 	if err := service.collection(session).HardDelete(exp.Equal("endpoint", endpoint)); err != nil {
 		return derp.Wrap(err, location, "Deleting PushSubscription", endpoint, note)
+	}
+
+	return nil
+}
+
+// ReplaceForOAuthUserToken saves the one mobile subscription that a User's OAuth grant holds,
+// removing any earlier subscription that the same grant registered for a different endpoint
+func (service *PushSubscription) ReplaceForOAuthUserToken(session data.Session, userID primitive.ObjectID, oauthUserTokenID primitive.ObjectID, endpoint string, p256dh string, auth string) error {
+
+	const location = "service.PushSubscription.ReplaceForOAuthUserToken"
+
+	// RULE: Never scope by an empty grant, which would also match every browser subscription
+	if oauthUserTokenID.IsZero() {
+		return derp.BadRequest(location, "OAuth grant is required")
+	}
+
+	// RULE: As in Mastodon, each grant holds one subscription, so a new endpoint replaces the old one
+	criteria := exp.Equal("userId", userID).AndEqual("oauthUserTokenId", oauthUserTokenID).AndNotEqual("endpoint", endpoint)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Deleting replaced PushSubscription", endpoint)
+	}
+
+	if err := service.Upsert(session, userID, endpoint, p256dh, auth, "", model.PushSubscriptionFormatMobile, oauthUserTokenID); err != nil {
+		return derp.Wrap(err, location, "Saving PushSubscription", endpoint)
+	}
+
+	return nil
+}
+
+// DeleteByOAuthUserToken removes the PushSubscription that a User's OAuth grant created, leaving
+// the User's other apps and browsers subscribed
+func (service *PushSubscription) DeleteByOAuthUserToken(session data.Session, userID primitive.ObjectID, oauthUserTokenID primitive.ObjectID, note string) error {
+
+	const location = "service.PushSubscription.DeleteByOAuthUserToken"
+
+	// RULE: Never scope by an empty grant, which would also match every browser subscription
+	if oauthUserTokenID.IsZero() {
+		return derp.BadRequest(location, "OAuth grant is required")
+	}
+
+	if err := service.collection(session).HardDelete(exp.Equal("userId", userID).AndEqual("oauthUserTokenId", oauthUserTokenID)); err != nil {
+		return derp.Wrap(err, location, "Deleting PushSubscription", userID, note)
 	}
 
 	return nil

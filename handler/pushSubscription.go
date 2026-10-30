@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // pushSubscriptionRequest is the JSON body posted by the browser.  It mirrors the shape that
@@ -47,7 +48,7 @@ func PostPushSubscription(ctx *steranko.Context, factory *service.Factory, sessi
 	// caller cannot name a different owner; Upsert separately refuses another User's endpoint.
 	userAgent := ctx.Request().UserAgent()
 
-	if err := factory.PushSubscription().Upsert(session, user.UserID, body.Endpoint, body.Keys.P256DH, body.Keys.Auth, userAgent); err != nil {
+	if err := factory.PushSubscription().Upsert(session, user.UserID, body.Endpoint, body.Keys.P256DH, body.Keys.Auth, userAgent, model.PushSubscriptionFormatWeb, primitive.NilObjectID); err != nil {
 		return derp.Wrap(err, location, "Saving PushSubscription")
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -24,6 +25,7 @@ import (
 
 // https://docs.joinmastodon.org/methods/timelines/
 
+// GetTimeline_Public returns the local or federated timeline of public posts
 // https://docs.joinmastodon.org/methods/timelines/#public
 func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization, txn.GetTimeline_Public) ([]object.Status, toot.PageInfo, error) {
 
@@ -36,6 +38,7 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 			return []object.Status{}, toot.PageInfo{}, nil
 		}
 
+		// Get the factory and a database session for this Domain
 		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
 
 		if err != nil {
@@ -44,9 +47,11 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 
 		defer cancel()
 
+		// Page on createDate, resolving a post ID cursor to that post's own createDate
 		limit := pageLimit(t.Limit)
-		criteria := queryExpression(t)
+		criteria := queryExpressionWithCursors(t, "createDate", streamCursor(factory, session))
 
+		// Collect public posts, newest first, until the page is full
 		streams, statuses, err := collectFiltered(int(limit),
 			func(before int64) ([]model.Stream, error) {
 
@@ -107,7 +112,7 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 		// CreateDate (see queryExpressionByField), and the DESC sort must match the
 		// order getPageInfo assumes (newest first) for its MaxID/MinID to be correct.
 		newsFeedService := factory.NewsFeed()
-		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, queryExpressionByField(t, "rank"), option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
+		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, queryExpressionWithCursors(t, "rank", newsItemCursor(factory, session, auth.UserID)), option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Retrieving newsItems")
@@ -150,7 +155,7 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 		// Get NewsFeed items from the database. Same rank-vs-createDate note as
 		// GetTimeline_Home applies here.
 		newsFeedService := factory.NewsFeed()
-		criteria := queryExpressionByField(t, "rank").AndEqual("folderId", folderID)
+		criteria := queryExpressionWithCursors(t, "rank", newsItemCursor(factory, session, auth.UserID)).AndEqual("folderId", folderID)
 
 		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, criteria, option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
 
@@ -203,6 +208,34 @@ func newsItemsToPosts(factory *service.Factory, session data.Session, auth model
 
 	posts, _ := newsItemsToStatuses(factory, session, auth, newsItems)
 	return posts
+}
+
+// newsItemCursor resolves a status ID used as a paging cursor into its NewsItem's rank
+func newsItemCursor(factory *service.Factory, session data.Session, userID primitive.ObjectID) cursorResolver {
+	return func(id primitive.ObjectID) (int64, bool) {
+
+		newsItem := model.NewNewsItem()
+
+		if err := factory.NewsFeed().LoadByID(session, userID, id, &newsItem); err != nil {
+			return 0, false
+		}
+
+		return newsItem.Rank, true
+	}
+}
+
+// streamCursor resolves a status ID used as a paging cursor into its Stream's createDate
+func streamCursor(factory *service.Factory, session data.Session) cursorResolver {
+	return func(id primitive.ObjectID) (int64, bool) {
+
+		stream := model.NewStream()
+
+		if err := factory.Stream().LoadByID(session, id, &stream); err != nil {
+			return 0, false
+		}
+
+		return stream.CreateDate, true
+	}
 }
 
 // newsItemsToStatuses runs newsItemToStatus over every NewsItem, concurrently.
@@ -285,13 +318,15 @@ func (memo *accountMemo) get(url string, load func() (object.Account, bool)) (ob
 // loadAccount fetches an actor and maps it to an Account, reporting false on failure
 func loadAccount(client streams.Client, factory *service.Factory, session data.Session, url string) (object.Account, bool) {
 
-	document, err := client.Load(url)
+	// The Account is for display only, so an expired cached actor is shown and refreshed in the background
+
+	document, err := client.Load(url, ascache.WithStaleAllowed())
 
 	if err != nil {
 		return object.Account{}, false
 	}
 
-	return mapDocumentToAccount(factory, session, document), true
+	return mapDocumentToAccount(factory, session, document, ascache.WithStaleAllowed()), true
 }
 
 // newsItemToStatus builds the Status for the post behind a NewsItem, live-fetching
@@ -322,7 +357,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 		status.Account = account
 	}
 
-	document, err := client.Load(newsItem.URL)
+	document, err := client.Load(newsItem.URL, ascache.WithStaleAllowed())
 
 	if err != nil {
 		return status, nil
@@ -336,6 +371,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Emojis = mapDocumentToEmojis(document)
 	applyDocumentCounts(&status, document)
 	status.Visibility = documentVisibility(document)
+	status.Filtered = labelFilterResults(document.Metadata.Labels)
 	applyRemoteReply(&status, client, factory, session, document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 

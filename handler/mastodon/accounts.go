@@ -96,11 +96,12 @@ func actorIsBot(document streams.Document) bool {
 	return document.Type() == vocab.ActorTypeApplication || document.Type() == vocab.ActorTypeService
 }
 
-// mapDocumentToAccount maps a fetched remote actor document to a Mastodon Account.
-// Shared by GetAccount (looks up by opaque ID -- no handle available) and
-// GetAccount_Lookup (looks up by handle -- caller already knows the exact "acct" to
-// use, so it overwrites this function's derived value afterward; see that function).
-func mapDocumentToAccount(factory *service.Factory, session data.Session, document streams.Document) object.Account {
+// mapDocumentToAccount maps a fetched remote actor document to a Mastodon Account, passing
+// loadOptions to the follower, following and post count fetches
+func mapDocumentToAccount(factory *service.Factory, session data.Session, document streams.Document, loadOptions ...any) object.Account {
+
+	// Shared by GetAccount (by opaque ID, no handle available) and GetAccount_Lookup (by handle, which
+	// overwrites the derived "acct" afterward). A timeline passes options that accept cached counts.
 
 	const location = "handler.mastodon.mapDocumentToAccount"
 
@@ -137,17 +138,17 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 	go func() {
 		defer recoverGoroutine(location)
 		defer waitGroup.Done()
-		followersCount = document.Followers().LoadLink().TotalItems()
+		followersCount = document.Followers().LoadLink(loadOptions...).TotalItems()
 	}()
 	go func() {
 		defer recoverGoroutine(location)
 		defer waitGroup.Done()
-		followingCount = document.Following().LoadLink().TotalItems()
+		followingCount = document.Following().LoadLink(loadOptions...).TotalItems()
 	}()
 	go func() {
 		defer recoverGoroutine(location)
 		defer waitGroup.Done()
-		statusesCount = document.Outbox().LoadLink().TotalItems()
+		statusesCount = document.Outbox().LoadLink(loadOptions...).TotalItems()
 	}()
 	waitGroup.Wait()
 
@@ -171,7 +172,24 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		Bot:            actorIsBot(document),
 		Group:          document.Type() == vocab.ActorTypeGroup,
 		Locked:         document.Get("manuallyApprovesFollowers").Bool(),
+		Discoverable:   document.Get(vocab.PropertyTootDiscoverable).Bool(),
+		Moved:          movedAccount(factory.Host(), document),
 	}, factory.Host())
+}
+
+// movedAccount returns a placeholder for the account an actor has moved to, or nil when it has not moved
+func movedAccount(host string, document streams.Document) *object.Account {
+
+	// Built without fetching it, since apps only show its name and link
+
+	movedTo := document.Get("movedTo").String()
+
+	if !webURL(movedTo) {
+		return nil
+	}
+
+	account := model.RemoteActorAccount(movedTo, "", "", time.Time{}, host)
+	return &account
 }
 
 /*******************************************
@@ -317,6 +335,24 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 
 		if t.Discoverable != nil {
 			user.IsPublic = *t.Discoverable
+		}
+
+		// Profile fields replace the User's profile links, in the order the client sent them
+		if t.FieldsAttributes != nil {
+
+			fields := make(map[string]profileField, len(t.FieldsAttributes))
+
+			for key, field := range t.FieldsAttributes {
+				fields[key] = profileField{Name: field.Name, Value: field.Value}
+			}
+
+			links, err := profileLinksFromFields(user.Links, sortedProfileFields(fields))
+
+			if err != nil {
+				return object.Account{}, derp.Wrap(err, location, "Reading profile fields")
+			}
+
+			user.Links = links
 		}
 
 		if t.Avatar != nil {
@@ -498,7 +534,7 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		}
 
 		// Query all posts by this user that are visible to the caller (only the pinned ones, if asked)
-		criteria := queryExpression(t)
+		criteria := queryExpressionWithCursors(t, "createDate", streamCursor(factory, session))
 
 		if t.Pinned {
 			criteria = criteria.AndEqual("isFeatured", true)
@@ -540,17 +576,14 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 	}
 }
 
-// remoteAccountStatuses returns a remote account's recent public posts, read live
-// from its ActivityPub outbox. It falls back to whatever the News Feed holds when
-// the outbox can't be read (a server that hides it, a network failure) or is empty.
-//
-// Posts already in the News Feed keep their NewsItem ID, so favourite/boost keep
-// working on them. Any other post is identified by its encoded URL, which those
-// endpoints can't resolve to a NewsItem yet.
-//
-// The outbox has no stable cursor to map onto max_id/min_id, so this returns one
-// page, newest first, with no paging info.
+// remoteAccountStatuses returns one page of a remote account's recent public posts from its ActivityPub
+// outbox, or from the News Feed when the outbox cannot be read or is empty
 func remoteAccountStatuses(factory *service.Factory, session data.Session, auth model.Authorization, t txn.GetAccount_Statuses, accountURL string) ([]object.Status, toot.PageInfo, error) {
+
+	// RULE: this one page is all there is, so asking for older or newer posts must not repeat it
+	if hasPageCursor(t) {
+		return []object.Status{}, toot.PageInfo{}, nil
+	}
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
 	limit := int(pageLimit(t.Limit))
@@ -587,6 +620,8 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 			continue
 		}
 
+		// A post already in the News Feed keeps its NewsItem ID, so favourite and boost work on it. Any
+		// other post is identified by its encoded URL, which those endpoints cannot resolve yet.
 		status := remotePostStatus(client, factory, session, auth, accounts, post, account)
 
 		if t.OnlyMedia && len(status.MediaAttachments) == 0 {
@@ -630,6 +665,7 @@ func documentToStatus(document streams.Document, account object.Account) object.
 		Tags:             tags,
 		Mentions:         mentionsForDocument(document),
 		Emojis:           mapDocumentToEmojis(document),
+		Filtered:         labelFilterResults(document.Metadata.Labels),
 	}
 
 	applyDocumentCounts(&status, document)
@@ -1204,23 +1240,23 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
-// PostAccount_Pin is the Mastodon "pin account" endpoint, which Emissary does not implement
+// PostAccount_Pin is the Mastodon "feature account on profile" endpoint, which Emissary does not have
 func PostAccount_Pin(serverFactory *server.Factory) func(model.Authorization, txn.PostAccount_Pin) (object.Relationship, error) {
 
 	const location = "handler.mastodon_PostAccount_Pin"
 
 	return func(auth model.Authorization, t txn.PostAccount_Pin) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplemented(location)
+		return object.Relationship{}, errNotSupported(location, "Featured accounts")
 	}
 }
 
-// PostAccount_Unpin is the Mastodon "unpin account" endpoint, which Emissary does not implement
+// PostAccount_Unpin is the Mastodon "unfeature account" endpoint, which Emissary does not have
 func PostAccount_Unpin(serverFactory *server.Factory) func(model.Authorization, txn.PostAccount_Unpin) (object.Relationship, error) {
 
 	const location = "handler.mastodon_PostAccount_Unpin"
 
 	return func(auth model.Authorization, t txn.PostAccount_Unpin) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplemented(location)
+		return object.Relationship{}, errNotSupported(location, "Featured accounts")
 	}
 }
 
@@ -1501,5 +1537,67 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 
 		// Success.
 		return result, nil
+	}
+}
+
+// PostAccount_RemoveFromFollowers stops an account following the User, and sends its server a Reject
+// https://docs.joinmastodon.org/methods/accounts/#remove_from_followers
+func PostAccount_RemoveFromFollowers(serverFactory *server.Factory) func(model.Authorization, txn.PostAccount_RemoveFromFollowers) (object.Relationship, error) {
+
+	// Removing someone who is not a follower counts as done
+
+	const location = "handler.mastodon.PostAccount_RemoveFromFollowers"
+
+	return func(auth model.Authorization, t txn.PostAccount_RemoveFromFollowers) (object.Relationship, error) {
+
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
+
+		if err != nil {
+			return object.Relationship{}, err
+		}
+
+		defer cancel()
+
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized account", t.ID, derp.WithNotFound())
+		}
+
+		followerService := factory.Follower()
+		follower := model.NewFollower()
+
+		if err := followerService.LoadByActor(session, auth.UserID, accountURL, &follower); err != nil {
+
+			if derp.IsNotFound(err) {
+				return buildRelationship(factory, session, auth, t.ID), nil
+			}
+
+			return object.Relationship{}, derp.Wrap(err, location, "Loading follower", accountURL)
+		}
+
+		// RULE: Only a follower of the User themself, not of one of their Streams
+		if follower.ParentType != model.FollowerTypeUser {
+			return buildRelationship(factory, session, auth, t.ID), nil
+		}
+
+		if err := followerService.Delete(session, &follower, "Removed via Mastodon API"); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Removing follower", accountURL)
+		}
+
+		// Tell the follower's server, which otherwise still thinks the follow stands
+		if follower.Method == model.FollowerMethodActivityPub {
+
+			user := model.NewUser()
+
+			if err := factory.User().LoadByID(session, auth.UserID, &user); err != nil {
+				return object.Relationship{}, derp.Wrap(err, location, "Loading user")
+			}
+
+			rejectID := followerService.ActivityPubID(&follower) + "#reject"
+			factory.Outbox().SendRejectFollow(session, user.ActivityPubURL(), rejectID, accountURL)
+		}
+
+		return buildRelationship(factory, session, auth, t.ID), nil
 	}
 }
