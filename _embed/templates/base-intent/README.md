@@ -27,4 +27,4 @@ A `reply` falls back to the visitor's Object intent when their server's Create t
 
 Adding an account loads the visitor's actor through `/.proxy`, which answers anonymous visitors for actor documents only (see [handler/AGENTS.md](../../../handler/AGENTS.md)). Nothing else in the modal calls Emissary. The Go handlers this modal used before 2026-10-29, `/.intents/discover` and `/.intents/:intent`, are kept until the CAMPERJS-MIGRATION plan retires them.
 
-Accounts that the older modal saved under the localStorage key `accounts` are copied into CamperJS's `camper` key the first time CamperJS loads, so a returning visitor keeps them.
+Accounts that the older modal saved under the localStorage key `accounts` are not carried over: a returning visitor enters their handle again (CAMPERJS-MIGRATION D23).
