@@ -50,7 +50,7 @@ require (
 	github.com/hairyhenderson/go-fsimpl v0.5.0
 	github.com/hjson/hjson-go/v4 v4.7.1
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.16.2
+	github.com/labstack/echo/v4 v4.16.3
 	github.com/labstack/gommon v0.5.0
 	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27
@@ -69,7 +69,7 @@ require (
 	github.com/xhit/go-simple-mail/v2 v2.17.0
 	github.com/yeqown/go-qrcode/v2 v2.3.0
 	github.com/yeqown/go-qrcode/writer/standard v1.4.0
-	github.com/yuin/goldmark v1.8.6
+	github.com/yuin/goldmark v1.8.7
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.10
 	go.yaml.in/yaml/v3 v3.0.5
