@@ -114,25 +114,30 @@ Emisary implements a subset of the [Mastodon API](https://docs.joinmastodon.org/
 
 [Fediverse Enhancement Proposals](https://w3id.org/fep) extend ActivityPub and ActivityStreams.
 
-| FEP | Status | Notes |
-| --- | ------ | ----- |
-| [FEP-3b86: Activity Intents](https://w3id.org/fep/3b86) | Implemented | WebFinger for a public profile advertises `Announce`, `Create`, `Dislike`, `Follow`, and `Like` intents. Emissary also uses other servers' intents, so a visitor can respond from their own account. |
-| [FEP-d556: Server-Level Actor Discovery Using WebFinger](https://w3id.org/fep/d556) | Implemented | WebFinger exposes the server-level actor. |
-| [FEP-2677: Identifying the Application Actor](https://w3id.org/fep/2677) | Implemented | The Application actor is published and discoverable. |
-| [FEP-f1d5: NodeInfo in Fediverse Software](https://w3id.org/fep/f1d5) | Implemented | NodeInfo 2.0 is published at `/.well-known/nodeinfo/2.0`. |
-| [FEP-0151: NodeInfo in Fediverse Software (2025 edition)](https://w3id.org/fep/0151) | Implemented | NodeInfo 2.1 is published at `/.well-known/nodeinfo/2.1`, and both versions are linked from `/.well-known/nodeinfo`. |
-| [FEP-7888: Demystifying the `context` Property](https://w3id.org/fep/7888) | Implemented | Public posts carry a `context`, and inbound `Add` activities backfill it. |
-| [FEP-2931: Representing Context with a Collection](https://w3id.org/fep/2931) | Implemented | Each context is a collection, served at `/@<user>/pub/collections/<id>`. |
-| [FEP-f228: Backfilling Conversations](https://w3id.org/fep/f228) | Implemented | Emissary crawls a thread's context and reply tree to fill in the conversation. |
-| [FEP-5feb: Search Indexing Consent for Actors](https://w3id.org/fep/5feb) | Implemented | Actors publish `indexable` from each user's setting. |
-| [FEP-67ff: FEDERATION.md](https://w3id.org/fep/67ff) | Implemented | This document. |
-| [FEP-1b12: Group Federation](https://w3id.org/fep/1b12) | Partial | Stream rebroadcasting is available to templates as Content Actors. |
-| [FEP-e232: Object Links](https://w3id.org/fep/e232) | Partial | Quote links are read only to hide posts that quote a blocked or muted account. |
-| [FEP-7628: Move Actor](https://w3id.org/fep/7628) | Partial | `Move` is sent and received, but actors publish no `movedTo` or `alsoKnownAs`. |
-| [FEP-11dd: Context Ownership and Inheritance](https://w3id.org/fep/11dd) | Partial | Contexts carry `attributedTo`. A reply takes the first `context` found within five ancestors rather than the root's, and starts a new context when it finds none. |
-| [FEP-b2b8: Long-form Text](https://w3id.org/fep/b2b8) | Partial | Templates publish long-form posts as `Article`. `summary` is omitted, because Mastodon shows it as a content warning, and no `preview` is sent. |
-| [FEP-eb48: Hashtags](https://w3id.org/fep/eb48) | Partial | Hashtags are published as `Hashtag` tags. The parser also accepts non-ASCII letters, which the FEP excludes. |
-| [FEP-9f9f: Collections](https://w3id.org/fep/9f9f) | Partial | Collections are paged with `first` and `next`, but carry no `last` or `prev`. |
-| [FEP-a974: All Actor Types Should Be Followable](https://w3id.org/fep/a974) | Partial | Actors of any type can follow and be followed, but `Update` refreshes the profiles of only five actor types. |
-| [FEP-fe34: Origin-Based Security Model](https://w3id.org/fep/fe34) | Partial | An activity's `id` must share its actor's origin, and a `Delete` must name an object on that origin. |
-| [FEP-c0e0: Emoji Reactions](https://w3id.org/fep/c0e0) | Not implemented | `EmojiReact` is received as a `Like`, and the emoji is discarded. |
+### Implemented
+
+| FEP | Notes |
+| --- | ----- |
+| [FEP-3b86: Activity Intents](https://w3id.org/fep/3b86) | WebFinger for a public profile advertises `Announce`, `Create`, `Dislike`, `Follow`, and `Like` intents. Emissary also uses other servers' intents, so a visitor can respond from their own account. |
+| [FEP-d556: Server-Level Actor Discovery Using WebFinger](https://w3id.org/fep/d556) | WebFinger exposes the server-level actor. |
+| [FEP-2677: Identifying the Application Actor](https://w3id.org/fep/2677) | The Application actor is published and discoverable. |
+| [FEP-f1d5: NodeInfo in Fediverse Software](https://w3id.org/fep/f1d5) | NodeInfo 2.0 is published at `/.well-known/nodeinfo/2.0`. |
+| [FEP-0151: NodeInfo in Fediverse Software (2025 edition)](https://w3id.org/fep/0151) | NodeInfo 2.1 is published at `/.well-known/nodeinfo/2.1`, and both versions are linked from `/.well-known/nodeinfo`. |
+| [FEP-7888: Demystifying the `context` Property](https://w3id.org/fep/7888) | Public posts carry a `context`, and inbound `Add` activities backfill it. |
+| [FEP-2931: Representing Context with a Collection](https://w3id.org/fep/2931) | Each context is a collection, served at `/@<user>/pub/collections/<id>`. |
+| [FEP-f228: Backfilling Conversations](https://w3id.org/fep/f228) | Emissary crawls a thread's context and reply tree to fill in the conversation. |
+| [FEP-5feb: Search Indexing Consent for Actors](https://w3id.org/fep/5feb) | Actors publish `indexable` from each user's setting. |
+| [FEP-67ff: FEDERATION.md](https://w3id.org/fep/67ff) | This document. |
+
+### Partial
+| FEP | Notes |
+| --- | ----- |
+| [FEP-1b12: Group Federation](https://w3id.org/fep/1b12) | Stream rebroadcasting is available to templates as Content Actors. |
+| [FEP-e232: Object Links](https://w3id.org/fep/e232) | Quote links are read only to hide posts that quote a blocked or muted account. |
+| [FEP-7628: Move Actor](https://w3id.org/fep/7628) | `Move` is sent and received, but actors publish no `movedTo` or `alsoKnownAs`. |
+| [FEP-11dd: Context Ownership and Inheritance](https://w3id.org/fep/11dd) | Contexts carry `attributedTo`. A reply takes the first `context` found within five ancestors rather than the root's, and starts a new context when it finds none. |
+| [FEP-b2b8: Long-form Text](https://w3id.org/fep/b2b8) | Templates publish long-form posts as `Article`. `summary` is omitted, because Mastodon shows it as a content warning, and no `preview` is sent. |
+| [FEP-eb48: Hashtags](https://w3id.org/fep/eb48) | Hashtags are published as `Hashtag` tags. The parser also accepts non-ASCII letters, which the FEP excludes. |
+| [FEP-9f9f: Collections](https://w3id.org/fep/9f9f) | Collections are paged with `first` and `next`, but carry no `last` or `prev`. |
+| [FEP-a974: All Actor Types Should Be Followable](https://w3id.org/fep/a974) | Actors of any type can follow and be followed, but `Update` refreshes the profiles of only five actor types. |
+| [FEP-fe34: Origin-Based Security Model](https://w3id.org/fep/fe34) | An activity's `id` must share its actor's origin, and a `Delete` must name an object on that origin. |
