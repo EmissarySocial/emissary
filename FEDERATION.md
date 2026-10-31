@@ -1,7 +1,5 @@
 # Federation
 
-Last verified against Emissary commit `52238532` on 2026-08-09.
-
 Emissary supports many standard ways of following and sharing content.  The goal is to accept the highest-fidelity connections from as many sites as possible, whatever specific protocols they are using at the time.  In many cases, Emissary will support several competing standards, defaulting to its preferred methods, but accepting connections in whatever form they are offered.
 
 ## ActivityPub
