@@ -48,10 +48,12 @@ Inboxes apply these rules before any row in the table above:
 
 Emissary signs and verifies requests with [draft-cavage-http-signatures-12](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12), following the SWICG report [ActivityPub and HTTP Signatures](https://swicg.github.io/activitypub-http-signature/). It does not support [RFC 9421](https://www.rfc-editor.org/rfc/rfc9421.html).
 
-* **Inbound POSTs** must sign `(request-target)`, `host`, `date`, and `digest`. The `Digest` may use SHA-256 or SHA-512, and the `Date` must be less than 12 hours old.
-* **Outbound requests** use `rsa-sha256` with the actor's 2048-bit RSA key. POSTs sign the same four headers with a SHA-256 `Digest`, and GETs sign `(request-target)`, `host`, and `date`.
-* **Outbound GETs are signed** by the actor they are made for. Background fetches, such as key lookups, thread backfill, and the anonymous `/.proxy`, are signed by the Application actor.
-* **Inbound GETs need no signature.** Emissary has no authorized-fetch mode.
+| Request | Headers signed | Details |
+| ------- | -------------- | ------- |
+| Inbound POST | `(request-target)`, `host`, `date`, `digest` | Required. The `Digest` may use SHA-256 or SHA-512, and the `Date` must be less than 12 hours old. |
+| Inbound GET | None | Not required. Emissary has no authorized-fetch mode. |
+| Outbound POST | `(request-target)`, `host`, `date`, `digest` | Signed with `rsa-sha256` by the sending actor's 2048-bit RSA key, with a SHA-256 `Digest`. |
+| Outbound GET | `(request-target)`, `host`, `date` | Signed with `rsa-sha256` by the actor the fetch is made for. Background fetches, such as key lookups, thread backfill, and the anonymous `/.proxy`, are signed by the Application actor. |
 
 
 ## Notifications
@@ -69,24 +71,30 @@ WebFinger also discovers Stream, Domain, Search, and Application actors, and adv
 
 ## Additional Federation Features
 
-* [ActivityPub](https://www.w3.org/TR/activitypub) actors — Users, Streams, Domains, saved Searches, and the Application actor publish profiles, inboxes, outboxes, and followable collections.
-* [MLS over ActivityPub](https://swicg.github.io/activitypub-e2ee/mls) — Users publish KeyPackages and receive MLS direct messages through dedicated collections and SSE topics.
+| Feature | Details |
+| ------- | ------- |
+| [ActivityPub](https://www.w3.org/TR/activitypub) actors | Users, Streams, Domains, saved Searches, and the Application actor publish profiles, inboxes, outboxes, and followable collections. |
+| [MLS over ActivityPub](https://swicg.github.io/activitypub-e2ee/mls) | Users publish KeyPackages and receive MLS direct messages through dedicated collections and SSE topics. |
 
 ## ActivityPub Extensions
 
 Emissary publishes and reads these properties from outside the core ActivityStreams vocabulary:
 
-* **Mastodon's `toot:` terms.** Actors publish `discoverable`, which is always true, and `indexable`, which follows each user's search-indexing setting. Profile links are published as Mastodon-style `PropertyValue` attachments.
-* **GoToSocial's `interactionPolicy`.** Each Stream publishes `canReply.automaticApproval`: Public, or only its author when replies are closed. Emissary never publishes `manualApproval`, because it does not answer a `ReplyRequest`. It also reads other servers' policies, and hides its reply button where a policy refuses the user.
-* **Quote posts.** Emissary reads `quoteUrl`, `quoteUri`, `_misskey_quote`, and [FEP-e232](https://w3id.org/fep/e232) `Link` tags whose `rel` names a quote, but only to hide posts that quote an account the user has blocked or muted.
-* **The `emissary:` namespace.** Some Emissary documents, including actors, carry properties prefixed `emissary:`. They are for Emissary's own use, and the prefix is not yet declared in `@context`. Other servers should ignore them.
+| Extension | Details |
+| --------- | ------- |
+| Mastodon's `toot:` terms | Actors publish `discoverable`, which is always true, and `indexable`, which follows each user's search-indexing setting. Profile links are published as Mastodon-style `PropertyValue` attachments. |
+| GoToSocial's `interactionPolicy` | Each Stream publishes `canReply.automaticApproval`: Public, or only its author when replies are closed. Emissary never publishes `manualApproval`, because it does not answer a `ReplyRequest`. It also reads other servers' policies, and hides its reply button where a policy refuses the user. |
+| Quote posts | Emissary reads `quoteUrl`, `quoteUri`, `_misskey_quote`, and [FEP-e232](https://w3id.org/fep/e232) `Link` tags whose `rel` names a quote, but only to hide posts that quote an account the user has blocked or muted. |
+| The `emissary:` namespace | Some Emissary documents, including actors, carry properties prefixed `emissary:`. They are for Emissary's own use, and the prefix is not yet declared in `@context`. Other servers should ignore them. |
 
 ## Other Ways to Follow and Embed
 
-* **Bluesky.** A Bluesky handle such as `@alice.bsky.social` is followed through [Bridgy Fed](https://fed.brid.gy), at `bsky.brid.gy`.
-* **Hashtags.** A `#hashtag` is followed through [tags.pub](https://tags.pub).
-* **Email.** Visitors can follow by email, confirming through a link that Emissary sends them, and then receive new posts by email. The form posts to `/.follower/new`.
-* **oEmbed.** Emissary serves [oEmbed](https://oembed.com) in JSON and XML at `/.oembed?url=<permalink>`.
+| Method | Details |
+| ------ | ------- |
+| Bluesky | A Bluesky handle such as `@alice.bsky.social` is followed through [Bridgy Fed](https://fed.brid.gy), at `bsky.brid.gy`. |
+| Hashtags | A `#hashtag` is followed through [tags.pub](https://tags.pub). |
+| Email | Visitors can follow by email, confirming through a link that Emissary sends them, and then receive new posts by email. The form posts to `/.follower/new`. |
+| oEmbed | Emissary serves [oEmbed](https://oembed.com) in JSON and XML at `/.oembed?url=<permalink>`. |
 
 ## RSS and Extensions
 
