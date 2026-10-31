@@ -146,6 +146,10 @@ func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONA
 		derp.Report(err)
 	}
 
+	if err := sync.Outbox2(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.OAuthClient(ctx, session); err != nil {
 		derp.Report(err)
 	}

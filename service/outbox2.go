@@ -243,6 +243,75 @@ func (service *Outbox2) RangeByActor(session data.Session, actorType string, act
 	return service.Range(session, criteria, options...)
 }
 
+// QueryByParentAndDate returns one page of an actor's outbox created before maxDate, newest first, filtered by the caller's permissions
+func (service *Outbox2) QueryByParentAndDate(session data.Session, actorType string, actorID primitive.ObjectID, permissions model.Permissions, maxDate int64, maxRows int) ([]model.OutboxItem, error) {
+
+	const location = "service.Outbox2.QueryByParentAndDate"
+
+	// RULE: A caller with no permissions sees nothing. A nil list would also send `$in: null`, which MongoDB rejects.
+	if len(permissions) == 0 {
+		return make([]model.OutboxItem, 0), nil
+	}
+
+	// RULE: An item is visible only to a caller who holds one of its permissions
+	criteria := exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
+		AndIn("permissions", permissions).
+		And(exp.LessThan("createDate", maxDate))
+
+	result, err := service.Query(session, criteria, option.SortDesc("createDate"), option.MaxRows(int64(maxRows)))
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Querying outbox", "actorType: "+actorType, "actorId: "+actorID.Hex())
+	}
+
+	return result, nil
+}
+
+// CountByParent returns the number of items in an actor's outbox that the caller's permissions can see
+func (service *Outbox2) CountByParent(session data.Session, actorType string, actorID primitive.ObjectID, permissions model.Permissions) (int64, error) {
+
+	const location = "service.Outbox2.CountByParent"
+
+	// RULE: A caller with no permissions sees nothing. A nil list would also send `$in: null`, which MongoDB rejects.
+	if len(permissions) == 0 {
+		return 0, nil
+	}
+
+	// RULE: Count only what the caller could read, so totalItems does not reveal private activity
+	criteria := exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
+		AndIn("permissions", permissions)
+
+	count, err := service.Count(session, criteria)
+
+	if err != nil {
+		return 0, derp.Wrap(err, location, "Counting outbox", "actorType: "+actorType, "actorId: "+actorID.Hex())
+	}
+
+	return count, nil
+}
+
+// RangeByObjectID returns an iterator over every OutboxItem in an actor's outbox that acts on the provided object
+func (service *Outbox2) RangeByObjectID(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) (iter.Seq[model.OutboxItem], error) {
+
+	criteria := exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
+		AndEqual("objectId", objectID)
+
+	return service.Range(session, criteria)
+}
+
+// RangeByActivityURL returns an iterator over every OutboxItem in an actor's outbox whose activity URL matches
+func (service *Outbox2) RangeByActivityURL(session data.Session, actorType string, actorID primitive.ObjectID, activityURL string) (iter.Seq[model.OutboxItem], error) {
+
+	criteria := exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
+		AndEqual("url", activityURL)
+
+	return service.Range(session, criteria)
+}
+
 // LoadByID retrieves a single OutboxItem that matches the provided actor and activityID
 func (service *Outbox2) LoadByID(session data.Session, actorType string, actorID primitive.ObjectID, activityID primitive.ObjectID, item *model.OutboxItem) error {
 	criteria := exp.Equal("_id", activityID).

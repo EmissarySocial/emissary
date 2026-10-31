@@ -28,6 +28,10 @@ A slot runs the first time any server boots with it, and a dev server started fr
 
 `indexer.Sync` builds indexes at boot; a unique index over legacy data E11000s on every start and never builds, with no path to recovery except code. Either clean the data in a new upgrade slot before the index first ships (v027/v028), or dedupe inside the sync function itself immediately before `indexer.Sync` (`deduplicateResponses`, `deduplicateFollowing` in [sync](sync/)) with the dedupe failure reported, not fatal, so the query indexes still build.
 
+`idx_Outbox2_URL` ([sync/outbox2.go](sync/outbox2.go)) is the one exception, and it holds only while every writer derives `url` from the row's own `_id` through `Locator.ActivityURL`, as every version of `Outbox2.Save` has. Its partial filter (`url > ""`) leaves out the empty string that `ActivityURL` returns for an unknown actor type, so the index builds over any existing rows without a reconcile (`TestOutbox2Index_BuildsOverExistingRows`). OUTBOX2-MIGRATION's migration of legacy rows stores each row's old `ActivityPubURL()` as `url`, which is not derived from the row's own `_id`, so it must report URLs shared between legacy rows before it writes them.
+
+Outbox2 also has no recycle index and is not in `factory.Collections()`, because `service.Outbox2` only hard-deletes. If anything ever soft-deletes an `OutboxItem`, add `deleteDate: 0` to the unique index's partial filter and add the collection to `Collections()`.
+
 ## `parentId` never means "owner", and on Follower it is shared across types
 
 Follower's `parentId` holds a User, Stream, OR Search ID depending on `type`, so a filter on `parentId` alone is correct only by the accident that ObjectIDs don't collide — always AND a `type` clause ([followers.go](followers.go)). CollectionItem's `parentId` holds the parent object's ID (the Stream for Likes/Replies), not the owning User's: a count or delete filter fed a UserID matches zero rows, and the failure is silent — counters refresh to 0, deletes orphan rows. Before writing any hand-built bson/exp filter that touches `userId` or `parentId`, check which identity the field actually stores on that model.
