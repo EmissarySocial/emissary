@@ -34,3 +34,7 @@ Hyperscript's `call` awaits an async `def`, and a `def` becomes async as soon as
 
 Two more traps found on the way. `wait for animationend or 3s from node` parses without error but never times out; the timeout works only with an argument list, as in `wait for animationend(animationName) or 3s from node`. And `02-accessibility.css` shortens every animation to 0.01ms under `prefers-reduced-motion`, so an animation that carries meaning needs its own reduced-motion rule: `.flash-highlight` uses a class selector with `!important`, which outranks the universal one, and a `step-end` timing that holds the color without fading.
 
+## The reduced-motion reset sets transitions to `0s`, never to a tiny duration
+
+`transition-property` defaults to `all`, so a non-zero `transition-duration` on `*` gives every element a transition on every property, including the elements that never declared one. Most of them finish unseen. But Safari on iOS drew theme-minimal's mobile menu links in a stale, dark color on the dark background, until a scroll forced a repaint, while Web Inspector reported the correct white. It happened only in dark mode with Reduce Motion on, and removing the 0.01ms duration fixed it (*Ben, 2026-11-02*). Nothing in this repo listens for `transitionend`, and hyperscript's `transition` command stops waiting after 100ms when no transition starts, so no script waits on a transition that `0s` stops from running. Animations keep 0.01ms, because `animation-name` defaults to `none` and the same trap cannot occur.
+
