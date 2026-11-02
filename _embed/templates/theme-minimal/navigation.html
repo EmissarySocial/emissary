@@ -1,6 +1,4 @@
-<!-- Four pieces: the skip link, the desktop <nav> bar, the mobile .nav-menu, and the signed-in
-     .floating-menu. The bar and the menu render the same links twice on purpose. The rules
-     that hold this together are in AGENTS.md; read it first. -->
+<!-- Skip link, desktop <nav> bar, mobile .nav-menu, and .floating-menu. The menu repeats the other two's links (see AGENTS.md). -->
 
 <!-- Read once: .Navigation runs a database query, and it is ranged twice below. -->
 {{- $navigation := .Navigation -}}
@@ -16,7 +14,17 @@
 	{{- end -}}
 {{- end -}}
 
-{{- if ne "false" (.ThemeData "showNavigation") -}}
+{{- $showNavigation := ne "false" (.ThemeData "showNavigation") -}}
+
+<!-- RULE: the menu also holds the .floating-menu's links, so it renders without the bar (see AGENTS.md). -->
+{{- $showMenu := $showNavigation -}}
+{{- if .IsAuthenticated -}}
+	{{- $showMenu = true -}}
+{{- else if .IsIdentity -}}
+	{{- $showMenu = true -}}
+{{- end -}}
+
+{{- if $showNavigation -}}
 
 	<!-- RULE: the skip link sits outside both layouts, which are each hidden at some width (see AGENTS.md). -->
 	<a href="#main" class="hide-visual">Skip navigation</a>
@@ -55,6 +63,9 @@
 
 		</div>
 	</nav>
+{{- end -}}
+
+{{- if $showMenu -}}
 
 	<!-- RULE: the mobile landmark is a div with a role, never a second <nav> (see AGENTS.md). -->
 	<div class="nav-menu" role="navigation" aria-label="Menu">
@@ -71,69 +82,127 @@
 		<label for="nav-menu-toggle" class="nav-menu-button">
 			<span class="icon nav-menu-open" aria-hidden="true">{{icon "menu"}}</span>
 			<span class="icon nav-menu-close" aria-hidden="true">{{icon "cancel"}}</span>
+			<!-- RULE: unread dot with no id, shown by CSS from the .floating-menu badge (see AGENTS.md). -->
+			<span class="nav-menu-badge" aria-hidden="true">&#9679;</span>
 		</label>
 
 		<!-- RULE: sheet links carry no id and not .nav-item, and turboclick stays (see AGENTS.md). -->
 		<div id="nav-menu-panel" class="nav-menu-panel">
-			{{- if eq "STARTUP" .DomainStateID -}}
-				<a class="link nav-menu-item turboclick" href="/startup">{ Startup Checklist }</a>
-			{{- else}}
-				{{- range $navigation -}}
-					{{- $isCurrent := eq $navigationID .StreamID -}}
-					<a href="/{{.Token}}" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
-						{{- $icon := .Icon -}}
-						{{- if ne "" $icon -}}
-							<span class="icon selected-hide">{{icon $icon}}</span>
-							<span class="icon selected-show">{{icon (join $icon "-fill")}}</span>
-						{{- end }}
-						<span class="label">{{.Label}}</span>
+			{{- if $showNavigation -}}
+				{{- if eq "STARTUP" .DomainStateID -}}
+					<a class="link nav-menu-item turboclick" href="/startup">{ Startup Checklist }</a>
+				{{- else}}
+					{{- range $navigation -}}
+						{{- $isCurrent := eq $navigationID .StreamID -}}
+						<a href="/{{.Token}}" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+							{{- $icon := .Icon -}}
+							{{- if ne "" $icon -}}
+								<span class="icon selected-hide">{{icon $icon}}</span>
+								<span class="icon selected-show">{{icon (join $icon "-fill")}}</span>
+							{{- end }}
+							<span class="label">{{.Label}}</span>
+						</a>
+					{{- end -}}
+				{{- end -}}
+
+				{{- if $showSignin -}}
+
+					<a href="/signin" class="nav-menu-item turboclick">
+						<span class="icon">{{icon "user"}}</span>
+						<span class="label">Sign In</span>
 					</a>
+
+					{{- if .DomainHasRegistrationForm -}}
+						<a href="/register" class="nav-menu-item primary turboclick">
+							<span class="label">Join Now</span>
+						</a>
+					{{- end -}}
 				{{- end -}}
 			{{- end -}}
 
-			{{- if $showSignin -}}
-
-				<a href="/signin" class="nav-menu-item turboclick">
-					<span class="icon">{{icon "user"}}</span>
-					<span class="label">Sign In</span>
-				</a>
-
-				{{- if .DomainHasRegistrationForm -}}
-					<a href="/register" class="nav-menu-item primary turboclick">
-						<span class="label">Join Now</span>
+			<!-- The .floating-menu's links, which that menu hides below 640px. -->
+			{{- if .IsAuthenticated -}}
+				<div class="nav-menu-section">
+					{{- $isCurrent := eq $navigationID "outbox" -}}
+					<a href="/@me" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+						<span class="icon selected-hide">{{icon "user"}}</span>
+						<span class="icon selected-show">{{icon "user-fill"}}</span>
+						<span class="label">Profile</span>
 					</a>
-				{{- end -}}
+
+					{{- $isCurrent = eq $navigationID "inbox" -}}
+					<a href="/@me/newsfeed" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+						<span class="icon selected-hide">{{icon "inbox"}}</span>
+						<span class="icon selected-show">{{icon "inbox-fill"}}</span>
+						<span class="label">Inbox</span>
+					</a>
+
+					{{- $isCurrent = eq $navigationID "conversations" -}}
+					<a href="/@me/conversations" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+						<span class="icon selected-hide">{{icon "chat"}}</span>
+						<span class="icon selected-show">{{icon "chat-fill"}}</span>
+						<span class="label">Conversations</span>
+					</a>
+
+					{{- $isCurrent = eq $navigationID "notifications" -}}
+					<a href="/@me/notifications/replies" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+						<span class="icon selected-hide">{{icon "bell"}}</span>
+						<span class="icon selected-show">{{icon "bell-fill"}}</span>
+						<span class="label">Notifications</span>
+						<span class="nav-menu-badge" aria-hidden="true">&#9679;</span>
+					</a>
+
+					{{- $isCurrent = eq $navigationID "settings" -}}
+					<a href="/@me/settings" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+						<span class="icon selected-hide">{{icon "settings"}}</span>
+						<span class="icon selected-show">{{icon "settings-fill"}}</span>
+						<span class="label">Settings</span>
+					</a>
+
+					{{- if .IsOwner -}}
+						{{- $isCurrent = eq $navigationID "admin" -}}
+						<a href="/admin/domain" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+							<span class="icon selected-hide">{{icon "database"}}</span>
+							<span class="icon selected-show">{{icon "database-fill"}}</span>
+							<span class="label">Server</span>
+						</a>
+					{{- end -}}
+				</div>
+
+			{{- else if .IsIdentity -}}
+				<div class="nav-menu-section">
+					<a href="/@guest" class="nav-menu-item turboclick">
+						<span class="icon">{{icon "user"}}</span>
+						<span class="label">Profile</span>
+					</a>
+				</div>
 			{{- end -}}
 
 		</div>
 	</div>
 {{- end -}}
 
-<!-- Floating menu at bottom of page -->
+<!-- RULE: the floating menu is hidden below 640px but stays in the page, for its SSE badge (see AGENTS.md). -->
 {{- if .IsAuthenticated -}}
 	<div class="floating-menu card padding-xs">
 		<a href="/@me" id="nav-outbox" class="turboclick" aria-label="Profile">
 			<span class="icon selected-hide">{{icon "user"}}</span>
 			<span class="icon selected-show">{{icon "user-fill"}}</span>
-			<span class="mobile-show label">Profile</span>
 		</a>
 
 		<a href="/@me/newsfeed" id="nav-inbox" class="turboclick" aria-label="Inbox">
 			<span class="icon selected-hide">{{icon "inbox"}}</span>
 			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
-			<span class="mobile-show label">Inbox</span>
 		</a>
 
 		<a href="/@me/conversations" id="nav-conversations" class="turboclick" aria-label="Conversations">
 			<span class="icon selected-hide">{{- icon "chat" }}</span>
 			<span class="icon selected-show">{{- icon "chat-fill" }}</span>
-			<span class="mobile-show label">Conversations</span>
 		</a>
 
 		<a href="/@me/notifications/replies" id="nav-notifications" class="turboclick" aria-label="Notifications">
 			<span class="icon selected-hide">{{icon "bell"}}</span>
 			<span class="icon selected-show">{{icon "bell-fill"}}</span>
-			<span class="mobile-show label">Notifications</span>
 			<span id="nav-notifications-badge" class="nav-badge text-red text-sm {{if not .HasUnreadNotifications}}hide{{end}}">&#9679;</span>
 		</a>
 
@@ -151,14 +220,12 @@
 		<a href="/@me/settings" id="nav-settings" class="turboclick" aria-label="Settings">
 			<span class="icon selected-hide">{{icon "settings"}}</span>
 			<span class="icon selected-show">{{icon "settings-fill"}}</span>
-			<span class="mobile-show label">Settings</span>
 		</a>
 
 		{{- if .IsOwner -}}
 			<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
 				<span class="icon selected-hide">{{icon "database"}}</span>
 				<span class="icon selected-show">{{icon "database-fill"}}</span>
-				<span class="mobile-show label">Server</span>
 			</a>
 		{{- end -}}
 	</div>

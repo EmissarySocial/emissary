@@ -269,10 +269,28 @@ main:has(> .app) {
 		}
 	}
 
-	/* RULE: .floating-menu is z-index 1000 and would paint over the sheet. It sits outside .nav-menu,
-	   so :has on <body> is the only selector that reaches it. */
-	body:has(.nav-menu-toggle:checked) .floating-menu {
+	/* RULE: the unread dot has no id and no htmx target. It mirrors the .floating-menu badge, which
+	   that menu's SSE listener keeps current while the menu is display:none (see AGENTS.md). */
+	.nav-menu-badge {
 		display: none;
+		color: var(--red60);
+		font-size: 8px;
+		line-height: 1;
+	}
+
+	.nav-menu-button > .nav-menu-badge {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+	}
+
+	body:has(#nav-notifications-badge:not(.hide)) .nav-menu-panel .nav-menu-badge {
+		display: inline;
+	}
+
+	/* On the control the dot marks the hamburger only, never the close glyph. */
+	body:has(#nav-notifications-badge:not(.hide)) .nav-menu-toggle:not(:checked) + .nav-menu-button > .nav-menu-badge {
+		display: block;
 	}
 
 	/* Sheet rows: a row with a leading glyph, sized to match the Inbox's own mobile menu in
@@ -333,6 +351,12 @@ main:has(> .app) {
 			color: var(--button-primary-color-hover);
 		}
 	}
+
+	/* The signed-in user's own links, set apart from the site's sections when both are present. */
+	.nav-menu-section:not(:first-child) {
+		margin-top: calc(var(--rhythm) * 2);
+		border-top: solid 1px var(--gray15);
+	}
 }
 
 /******************************************
@@ -364,7 +388,7 @@ main:has(> .app) {
  * The signed-in user's own links, pinned to the bottom-right corner outside <nav>, so none
  * of the `nav a` rules above reach them. This block mirrors those rules so the two sets of
  * items stay visually identical: change one, change the other. Nothing selects `.nav-item`.
- * Pair it with `card padding-xs` for the visual treatment.
+ * Pair it with `card padding-xs` for the visual treatment. Below 640px the sheet holds these links.
  ******************************************/
 
 .floating-menu {
@@ -413,28 +437,11 @@ main:has(> .app) {
 			background-color: var(--gray20);
 			color: var(--gray100);
 		}
-
-		& > .icon {
-			font-size: 24px;
-		}
-
-		& > .label {
-			font-size: 10px;
-			line-height: 14px;
-		}
-	}
-}
-
-/* Desktop drops the stacked label exactly as the nav bar does: .mobile-show hides the label,
-   leaving only the icon. The anchor stays a centered column, which holds the badge over the icon. */
-@media screen and (width >= 640px) {
-
-	.floating-menu a > .icon {
-		font-size: unset;
 	}
 
-	.floating-menu a > .label {
-		font-size: unset;
-		line-height: unset;
+	/* RULE: display:none, never removed from the page, and last in this rule so it overrides
+	   display:flex. Its SSE listener keeps the badge the sheet's dot reads (see AGENTS.md). */
+	@media screen and (width < 640px) {
+		& {display: none;}
 	}
 }
