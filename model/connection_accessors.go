@@ -34,8 +34,10 @@ func ConnectionSchema() schema.Element {
 			}},
 			// vault holds secrets (API keys, tokens); it uses unsafe-any so the no-html default
 			// does not strip characters or collapse whitespace and silently corrupt a secret.
-			"vault":  schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 8192}},
-			"data":   schema.Object{Wildcard: schema.String{MaxLength: 4096}},
+			"vault": schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 8192}},
+			// data is each provider's own settings, validated by its form; Any keeps non-strings,
+			// such as Bluesky's shareGroups array, from being converted to strings on save.
+			"data":   schema.Object{Wildcard: schema.Any{}},
 			"active": schema.Boolean{},
 		},
 	}
