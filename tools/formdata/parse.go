@@ -3,9 +3,9 @@
 package formdata
 
 import (
+	"mime"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/benpate/derp"
 )
@@ -52,8 +52,16 @@ func parse(request *http.Request, location string) error {
 
 	contentType := request.Header.Get("Content-Type")
 
+	// RULE: Match the media type alone, as net/http does, so parameters such as the
+	// "charset" that fetch adds never refuse a form.  A malformed header is refused.
+	mediaType, _, err := mime.ParseMediaType(contentType)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unsupported encoding", contentType, derp.WithBadRequest())
+	}
+
 	// Try to parse URL encoded Values
-	if contentType == "application/x-www-form-urlencoded" {
+	if mediaType == "application/x-www-form-urlencoded" {
 
 		if err := request.ParseForm(); err != nil {
 			return derp.Wrap(err, location, "Parsing form body")
@@ -63,7 +71,7 @@ func parse(request *http.Request, location string) error {
 	}
 
 	// Try to parse multipart form data
-	if strings.HasPrefix(contentType, "multipart/form-data") {
+	if mediaType == "multipart/form-data" {
 
 		if err := request.ParseMultipartForm(multipartMaxMemory); err != nil { // #nosec G120 -- bounded by the multipartMaxMemory constant declared above
 			return derp.Wrap(err, location, "Parsing multipart form")
