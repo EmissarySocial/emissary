@@ -35,8 +35,8 @@
  *
  * Guards: left button only; no modifier keys (ctrl/cmd-click still opens new
  * tabs, shift-click still works); mousedowns starting inside .folder-handle
- * are ignored so SortableJS drag-to-reorder (see user-inbox/newsfeed-menu.html)
- * still starts cleanly.
+ * or .drag-handle are ignored so SortableJS drag-to-reorder (see
+ * user-inbox/newsfeed-menu.html) still starts cleanly.
  *
  * Keyboard activation (Enter/Space) fires a trusted click with no mousedown,
  * so it is never suppressed and works exactly as before.
@@ -59,10 +59,10 @@
 		var node = target.closest(".turboclick");
 		if (!node) { return; }
 
-		// RULE: Don't hijack drag handles.  SortableJS starts folder drags from
-		// .folder-handle (see user-inbox/newsfeed-menu.html); a synthetic click
-		// here would navigate instead of letting the drag begin.
-		if (target.closest(".folder-handle")) { return; }
+		// RULE: Don't hijack drag handles.  SortableJS starts drags from .folder-handle
+		// and .drag-handle; a synthetic click here would navigate instead of letting
+		// the drag begin.
+		if (target.closest(".folder-handle, .drag-handle")) { return; }
 
 		// Fire a synthetic click on the ELEMENT ACTUALLY PRESSED (not the
 		// .turboclick region).  A real click on `target` bubbles through the same
