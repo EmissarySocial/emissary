@@ -33,7 +33,7 @@ Beyond its own configuration, each step declares what the surrounding Template m
 - **RequiredRoles** — roles the step names (for example `set-simple-sharing`'s `role`) must be defined in the Template's `roles` map.
 - **RequiredTemplateRoles** — a narrower restriction than the model: the Template must declare one of these `templateRole` values. Only `startup-create-streams` and `setup-complete` use it today, both requiring `admin`.
 
-Container steps (`if`, `as-modal`, `with-*`, and friends) roll their sub-steps' requirements up into their own, except that the `with-*` steps deliberately drop *state* requirements, since the child object they switch to has its own state machine. `with-draft` is the exception, because a draft shares its Stream's states.
+Container steps (`if`, `switch`, `as-modal`, `with-*`, and friends) roll their sub-steps' requirements up into their own, except that the `with-*` steps deliberately drop *state* requirements, since the child object they switch to has its own state machine. `with-draft` is the exception, because a draft shares its Stream's states.
 
 ## Value Templates
 

@@ -244,6 +244,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "startup-save-task":
 		return NewStartupSaveTask(stepInfo)
 
+	case "switch":
+		return NewSwitch(stepInfo, funcMap)
+
 	case "trigger-event":
 		return NewTriggerEvent(stepInfo, funcMap)
 
