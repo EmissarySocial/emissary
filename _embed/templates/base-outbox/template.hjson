@@ -18,10 +18,14 @@
 
 	actions: {
 
+		// The settings page's first tab: whichever tab ?tab= names, or General
 		settings-general: {
 			roles:["self"]
 			steps:[
-				{do:"view-html"}
+				{do:"switch", expression:"{{.QueryParam `tab`}}", cases:{
+					images: {do:"view-html", file:"settings-images"}
+					links: {do:"view-html", file:"settings-links"}
+				}, default:{do:"view-html"}}
 			]
 		}
 

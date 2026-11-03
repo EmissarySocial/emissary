@@ -127,6 +127,12 @@ Three actions are opened by URLs written in Go, never by a link in a template: t
 
 Each tab in `settings-tabs.html` is an `hx-get` to `/@me/settings-<tab>` with `hx-target="#profile-settings"` and `hx-push-url="false"`. Neither the tab nor `#profile-settings` may set `hx-swap`: the swap inherits the body's `innerHTML transition:true`, and a plain `hx-swap="innerHTML"` on either silently turns off the view transition between tabs. A boosted link pushes `/@me/settings-<tab>` into the address bar, and reloading that URL renders a bare fragment inside the outbox's page layout. A form that refreshes after a save must reload only its own card, as `settings-images` does, or the user is sent back to General.
 
+## `settings-general` can draw any Profile tab, so a tab bar cannot trust `.IsAction`
+
+The settings page draws its first tab by running the outbox's `settings-general` with the page's own request, and `base-outbox` makes that action a `switch` on `?tab=`. Under `settings-general`, then, `.IsAction` names the action and not the tab on screen, and a tab bar that highlights by `.IsAction` alone highlights General above the Images form. Nothing errors.
+
+The stock `settings-tabs.html` reads the same parameter, trimmed and case-sensitive like the switch, and accepts only the names its cases list. **The two lists must agree.** An outbox that overrides the action replaces the whole switch, so its cases repeat the stock ones (Qwerty's adds `collections`), and an outbox with a tab bar of its own must read `?tab=` the same way, whether or not it overrides the action. Every tab click is a new request to `/@me/settings-*` with no query, so the parameter only ever affects the first draw.
+
 ## `base-outbox` declares `model: Outbox` on purpose
 
 Template validation checks every form path against the template's own schema. Under `model: None` its schema has no User fields, so the Profile forms fail validation. `Outbox` gives it `UserSchema`, and leaving out `templateRole` keeps it out of the profile template picker, which lists by `templateRole: user-outbox`.

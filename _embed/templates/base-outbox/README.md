@@ -6,6 +6,8 @@ Shared base template (category: Base, model: Outbox, no `templateRole`) that sup
 
 The settings page at `/@me/settings/general` ([../user-settings/general.html](../user-settings/general.html)) draws the settings sidebar and a `#profile-settings` area, and renders the General tab into that area on the server through the Settings builder's `.OutboxView "settings-general"`, which runs the action from the user's own outbox template. So the page arrives complete, and the navigation's view transition goes straight to real content. Each tab is its own outbox action, and clicking one swaps the area for that action with `hx-push-url="false"`, so the address stays `/@me/settings/general` and a reload returns to General. The swap inherits the page's `hx-swap="innerHTML transition:true"`, so moving between tabs runs a view transition too.
 
+A link can open the page on another tab. `settings-general` is a `switch` on `?tab=`, so `/@me/settings/general?tab=images` or `?tab=links` draws that tab first, and any other value draws General. The action is still `settings-general` then, so [settings-tabs.html](settings-tabs.html) picks its selected tab from the same parameter.
+
 Each tab is a pair of actions:
 
 - **A page,** `settings-<tab>`, which renders [settings-tabs.html](settings-tabs.html) and then a card holding the tab's form through `{{.View "settings-<tab>-form"}}`.
@@ -19,8 +21,8 @@ Inheritance works by name, so an outbox overrides exactly what it defines:
 
 - **One form:** define `settings-<tab>-form`. The stock tab bar and card stay.
 - **One tab:** define the page action `settings-<tab>` and its HTML file.
-- **The tab bar:** add a `settings-tabs.html` file. Every inherited tab then draws it. It renders against the Outbox builder, so `.IsAction` marks the selected tab and `.IsDesktop` picks a layout.
-- **A new tab:** add a `settings-<tab>` page, a `settings-<tab>-form` action, and a link to it in your own `settings-tabs.html`.
+- **The tab bar:** add a `settings-tabs.html` file. Every inherited tab then draws it. It renders against the Outbox builder, so `.IsAction` marks the selected tab and `.IsDesktop` picks a layout. Under `settings-general`, read `?tab=` instead, the way the stock tab bar does, because that action can draw any tab.
+- **A new tab:** add a `settings-<tab>` page, a `settings-<tab>-form` action, and a link to it in your own `settings-tabs.html`. To open it from `?tab=`, override `settings-general` with a `switch` that repeats the stock cases and adds yours, as Qwerty does for Collections.
 
 A tab link is an `hx-get` to `/@me/settings-<tab>` with `hx-target="#profile-settings"` and `hx-push-url="false"`, never a boosted link, and it sets no `hx-swap`, so it keeps the page's view transition. Each tab renders inside the settings page, so it uses the settings page's markup (`#menu-bar`, then a `card` with `transition-main-card`) rather than the outbox theme's.
 
