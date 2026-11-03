@@ -99,6 +99,14 @@ A required field whose enum holds one value reads like something the schema hand
 
 A property declared in a schema is only as good as its accessors. rosetta skips a declared property that the getter cannot read, with no error, so a new property and its `GetStringOK`/`SetString` (or `GetPointer`) cases go in together. `SetString` must return TRUE for every write it makes; `streamWidgetId` once wrote the ID and returned FALSE, so `schema.Set` reported a failure that had actually succeeded. `TestStreamSchema_WidgetsAreNormalized` proves that a Stream's Normalize reaches every widget, and `TestStreamWidget_SetString` that every write is reported.
 
+## `publishDateTime` must stay a lossless view of `PublishDate`
+
+It is a virtual string over `Stream.PublishDate` (Unix seconds), so a `datetime` widget can edit a publish date. It reads as RFC 3339 in UTC, which is the zone `longDate` and `shortDate` display in. It writes a posted time back as Unix seconds. An edit form posts the field back on every save, so three rules keep that round trip from moving the date:
+
+- **A time in the same minute keeps the stored seconds.** The widget posts whole minutes, so without this rule every save would truncate the date.
+- **A blank leaves the date alone.** An unpublished Stream reads blank, and clearing the field must never unpublish.
+- **The field reads and writes nothing past year 9999.** RFC 3339 cannot write such a year, and the `math.MaxInt64` "unscheduled" sentinel is far beyond it. `FuzzStream_PublishDateTime` found this edge.
+
 ## Every `schema.Array` that a request can write into needs a `MaxLength`
 
 Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An Array with no `MaxLength` lets one path such as `tags.5000000` build a list of 5,000,001 items. Set `MaxLength` on any Array that a form post, request key, or socialRules mapping can reach. Apart from `ActivityStreamSchema`, whose every Array has one, `UserSchema`'s `links` (6) and `DomainSchema`'s `startupTasks` (16) are the only two that set one today (BUG-244).

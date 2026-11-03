@@ -47,6 +47,7 @@ func StreamSchema() schema.Element {
 			"location":         geo.AddressSchema(),
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
+			"publishDateTime":  schema.String{MaxLength: 64},
 			"unpublishDate":    schema.Integer{BitSize: 64},
 			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
@@ -268,6 +269,14 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 	case "endDate":
 		return stream.EndDate.String(), true
 
+	// A virtual field over PublishDate, so a datetime widget can edit it.  Empty while unpublished
+	// or unscheduled (math.MaxInt64), and past year 9999, which RFC 3339 cannot write.
+	case "publishDateTime":
+		if (stream.PublishDate <= 0) || (stream.PublishDate > maxPublishDateTime) {
+			return "", true
+		}
+		return time.Unix(stream.PublishDate, 0).UTC().Format(time.RFC3339), true
+
 	default:
 		return "", false
 	}
@@ -299,9 +308,39 @@ func (stream *Stream) SetString(name string, value string) bool {
 
 	case "endDate":
 		return setDateTime(&stream.EndDate, value)
+
+	case "publishDateTime":
+		return setPublishDateTime(stream, value)
 	}
 
 	return false
+}
+
+// maxPublishDateTime is the last moment that "publishDateTime" can read or write
+var maxPublishDateTime = time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC).Unix()
+
+// setPublishDateTime sets PublishDate from a date-time string read as UTC.  An empty string changes
+// nothing, so clearing the field never unpublishes, and a value in the same minute keeps the seconds.
+func setPublishDateTime(stream *Stream, value string) bool {
+
+	if value == "" {
+		return true
+	}
+
+	publishTime, ok := convert.TimeOk(value, time.Time{})
+
+	// RULE: Only a moment after the Unix epoch, because 0 means "unpublished", and one it can read back
+	if !ok || (publishTime.Unix() <= 0) || (publishTime.Unix() > maxPublishDateTime) {
+		return false
+	}
+
+	// RULE: A datetime widget posts whole minutes, so an unchanged minute keeps the stored seconds
+	if (stream.PublishDate > 0) && (publishTime.Unix()/60 == stream.PublishDate/60) {
+		return true
+	}
+
+	stream.PublishDate = publishTime.Unix()
+	return true
 }
 
 // setDateTime sets a date from any value that convert.TimeOk understands.  An empty string clears it,
