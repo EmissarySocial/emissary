@@ -44,8 +44,10 @@ func generateList(b *html.Builder, style string, items []mapof.Any) string {
 	}
 
 	for _, item := range items {
-		li := b.Container("li")
-		li.InnerText(item.GetString("content"))
+
+		// RULE: an item's content is inline HTML from the editor, and its child list goes inside the item
+		li := b.Container("li").EndBracket()
+		b.WriteString(item.GetString("content")) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 
 		if children := item.GetSliceOfMap("items"); len(children) > 0 {
 			generateList(b.SubTree(), style, children)
