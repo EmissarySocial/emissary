@@ -1,25 +1,39 @@
 package step
 
 import (
+	"strings"
+
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
 // Sort is a Step that can update multiple records at once
 type Sort struct {
-	Model   string
-	Keys    string
-	Values  string
-	Message string
+	Model     string
+	Keys      string
+	Values    string
+	Direction string
+	Message   string
 }
 
 // NewSort returns a fully initialized Sort step, or an error if its configuration is invalid
 func NewSort(stepInfo mapof.Any) (Sort, error) {
 
+	const location = "step.NewSort"
+
+	// RULE: Direction must be "asc" (the default) or "desc"
+	direction := strings.ToLower(first(stepInfo.GetString("direction"), "asc"))
+
+	if direction != "asc" && direction != "desc" {
+		return Sort{}, derp.BadRequest(location, "Direction must be 'asc' or 'desc'", direction)
+	}
+
 	return Sort{
-		Model:   stepInfo.GetString("model"),
-		Keys:    first(stepInfo.GetString("keys"), "_id"),
-		Values:  first(stepInfo.GetString("values"), "rank"),
-		Message: stepInfo.GetString("message"),
+		Model:     stepInfo.GetString("model"),
+		Keys:      first(stepInfo.GetString("keys"), "_id"),
+		Values:    first(stepInfo.GetString("values"), "rank"),
+		Direction: direction,
+		Message:   stepInfo.GetString("message"),
 	}, nil
 }
 
