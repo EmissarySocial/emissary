@@ -21,8 +21,8 @@ func DomainSchema() schema.Element {
 			"label":                schema.String{MaxLength: 128},
 			"description":          schema.String{MaxLength: 1024},
 			"forward":              schema.String{Format: "url", Required: false},
-			"data":                 schema.Object{Wildcard: schema.String{MaxLength: 4096}},
-			"themeData":            schema.Object{Wildcard: schema.String{MaxLength: 1048576}},
+			"data":                 schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 4096}}, // verbatim: keys and flags
+			"themeData":            schema.Object{Wildcard: schema.Any{}},                                         // each theme's form validates its own keys, which include CSS and booleans
 			"colorMode":            schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
 			"mlsMode":              schema.String{Enum: []string{DomainMLSModeAll, DomainMLSModeGroups, DomainMLSModeNone}},
 			"defaultAnonymous":     schema.String{MaxLength: 128},
@@ -30,7 +30,7 @@ func DomainSchema() schema.Element {
 			"defaultOwner":         schema.String{MaxLength: 128},
 			"mlsGroupIds":          schema.String{MaxLength: 2048},
 			"syndication":          schema.Array{Items: form.LookupCodeSchema()},
-			"registrationData":     schema.Object{Wildcard: schema.String{MaxLength: 8192}},
+			"registrationData":     schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 8192}}, // verbatim: signup settings and keys
 			"startupTasks":         schema.Array{Items: schema.String{MaxLength: 32}, MaxLength: 16},
 			"stateId":              schema.String{Enum: []string{DomainStateStartup, DomainStateLive}},
 		},

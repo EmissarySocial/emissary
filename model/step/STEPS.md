@@ -1654,6 +1654,41 @@ Records one completed startup-wizard task on the Domain, so the wizard can tell 
 
 ---
 
+## switch
+
+Renders `expression` as a template, then runs the case whose key equals the result, in the current phase. When no key matches, it runs `default`, or nothing if there is no `default`. Matching is exact and case-sensitive, after trimming whitespace from both ends of the rendered value. A case that matches but holds an empty list runs nothing; it does not fall through to `default`. The state and role requirements of every case and the default are rolled into this step's own, as with [`if`](#if).
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| expression | **Required.** Template expression whose rendered value picks the case. An expression that fails to render halts the pipeline with an error |
+| cases | **Required.** Map of values to sub-pipelines, with at least one entry. Each sub-pipeline is a single step or a list of steps |
+| default | Sub-pipeline run when no case matches: a single step or a list of steps |
+
+<br>
+
+**Example**
+
+```hjson
+{
+	do: "switch"
+	expression: "{{.Data `layout`}}"
+	cases: {
+		podcast: [
+			{do: "view-html", file: "edit-podcast"}
+			{do: "save", comment: "Podcast updated"}
+		]
+		gallery: {do: "view-html", file: "edit-gallery"}
+	}
+	default: [
+		{do: "view-html", file: "edit-articles"}
+	]
+}
+```
+
+---
+
 ## trigger-event
 
 Fires one named HX-Trigger event with a template-evaluated value, on `POST`. Use [`add-event`](#add-event) when the event needs to fire on `GET`.

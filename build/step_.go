@@ -210,6 +210,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.TableEditor:
 		return StepTableEditor(s)
 
+	case step.Switch:
+		return StepSwitch(s)
+
 	case step.TriggerEvent:
 		return StepTriggerEvent(s)
 

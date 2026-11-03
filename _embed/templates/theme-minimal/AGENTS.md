@@ -10,6 +10,18 @@ See [README.md](README.md) for what the theme is and how [navigation.html](navig
 
 One element cannot be both a horizontal bar and a full-screen sheet without every rule in one layout undoing a rule in the other, on markup the bar shares with pages that are not navigation at all. So `<nav>` is desktop-only, `.nav-menu` is mobile-only, and both range over the same `$navigation` variable, which is read once because `.Navigation` runs a database query. The cost is duplicate links, and the next rule is where it is paid.
 
+The sheet also repeats the `.floating-menu`'s links, in a `.nav-menu-section` after the site's sections, because that menu is hidden below 640px. The same rules apply to those copies, and they are marked from the `.NavigationID` values SelectNav receives for the floating menu: `outbox`, `inbox`, `conversations`, `notifications`, `settings`, and `admin`.
+
+## The menu renders whenever it has links, not only when the bar does
+
+`showNavigation:false` removes `<nav>` and the site's sections from the sheet, but a signed-in user or a guest identity still gets the menu, holding only their own links. Tying the menu to `showNavigation` alone would leave a phone with no way to reach them. An anonymous visitor on such a Domain gets no menu, because there is nothing to put in it.
+
+## The `.floating-menu` is hidden below 640px with CSS, and must stay in the page
+
+Its hidden SSE listener keeps `#nav-notifications-badge` current, and the sheet reads that badge. The badge endpoint answers with one element carrying that id and swaps it by `outerHTML`, so the dots on the menu control and the sheet's Notifications row cannot be second swap targets: a duplicate id updates only the first match, and a different id is never refreshed. They carry no id and are shown by `body:has(#nav-notifications-badge:not(.hide))`. Moving the floating menu behind a server-side condition, or the listener into the sheet, silently freezes the dot.
+
+The `display:none` sits last inside `.floating-menu`. Under CSS nesting, declarations written after a nested rule apply after it, so the rule's own `display:flex` would win if it came later, and the floating menu would stay visible on phones with no error.
+
 ## Sheet links carry no `id` and not the `nav-item` class, and both omissions are important
 
 [SelectNav](../theme-global/hyperscript/selectNav._hs) resolves the current section with `document.getElementById('nav-' + id)`, which returns the first match in the document rather than the visible one, then runs `take .selected from .nav-item` and removes `aria-current` from every `.nav-item`. A duplicate id would make it pick the wrong copy, and the class would make it strip the sheet's mark. So the bar is marked client-side by SelectNav and the sheet is marked server-side from `.NavigationID`. A class token is matched whole, so `nav-menu-item` is invisible to `.nav-item`.
@@ -48,7 +60,7 @@ On a touch device the browser only synthesizes `mousedown` once it has resolved 
 
 ## The control is `position:fixed`, and its z-index sits between the sheet and the 1000 tier
 
-The control is the close button over a fixed full-screen sheet, so an absolutely positioned one would scroll away while the sheet stayed. The sheet is 900 and the control 901. `.floating-menu`, `.popUp-content` and `#modal` share 1000, so a modal still opens over everything, and `.floating-menu` would paint over the open sheet if the stylesheet did not hide it. Because `.floating-menu` sits outside `.nav-menu`, no sibling combinator reaches it and `body:has(.nav-menu-toggle:checked)` is the only selector that does. Not pinned by a test.
+The control is the close button over a fixed full-screen sheet, so an absolutely positioned one would scroll away while the sheet stayed. The sheet is 900 and the control 901. `.popUp-content` and `#modal` are 1000, so a modal still opens over everything. `.floating-menu` is 1000 too, but it is hidden at every width where the sheet exists, so the two never meet. Not pinned by a test.
 
 ## The control's backdrop is opaque and uses `--gray10`, not `--gray00`
 

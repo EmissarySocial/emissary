@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"testing"
 	"unicode/utf8"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -15,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/stretchr/testify/require"
 )
 
 // postCase is one step that applies POSTed values to an object, in the context its
@@ -151,7 +153,8 @@ func (c *collection) walk(group *loadedGroup, prefix string, steps []step.Step, 
 	}
 }
 
-// nestedSteps returns every exported []step.Step field of a step, by field name
+// nestedSteps returns every exported []step.Step field of a step by field name, and every entry
+// of a map[string][]step.Step field (a switch's cases) as "Field[key]"
 func nestedSteps(current step.Step) map[string][]step.Step {
 
 	result := map[string][]step.Step{}
@@ -162,16 +165,56 @@ func nestedSteps(current step.Step) map[string][]step.Step {
 	}
 
 	stepSlice := reflect.TypeOf([]step.Step{})
+	stepMap := reflect.TypeOf(map[string][]step.Step{})
 
 	for index := range value.NumField() {
-		if field := value.Type().Field(index); field.IsExported() && (field.Type == stepSlice) {
+
+		field := value.Type().Field(index)
+
+		if !field.IsExported() {
+			continue
+		}
+
+		switch field.Type {
+
+		case stepSlice:
 			if subSteps := value.Field(index).Interface().([]step.Step); len(subSteps) > 0 {
 				result[field.Name] = subSteps
+			}
+
+		case stepMap:
+			for key, subSteps := range value.Field(index).Interface().(map[string][]step.Step) {
+				if len(subSteps) > 0 {
+					result[field.Name+"["+key+"]"] = subSteps
+				}
 			}
 		}
 	}
 
 	return result
+}
+
+// TestNestedSteps_Switch verifies that the walker reaches every case and the default of a switch
+func TestNestedSteps_Switch(t *testing.T) {
+
+	parsed, err := step.NewSwitch(mapof.Any{
+		"expression": "{{.Label}}",
+		"cases": map[string]any{
+			"A": []any{map[string]any{"do": "halt"}, map[string]any{"do": "halt"}},
+			"B": map[string]any{"do": "halt"},
+			"C": []any{},
+		},
+		"default": map[string]any{"do": "halt"},
+	}, nil)
+	require.NoError(t, err)
+
+	result := nestedSteps(parsed)
+
+	// An empty case has nothing to walk, so it is left out, as an empty []step.Step field is
+	require.Len(t, result, 3)
+	require.Len(t, result["Cases[A]"], 2)
+	require.Len(t, result["Cases[B]"], 1)
+	require.Len(t, result["Default"], 1)
 }
 
 // unpinnedPostReaders names every step that reads the request body but is not pinned
