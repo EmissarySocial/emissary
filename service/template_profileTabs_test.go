@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -14,17 +15,27 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	emissarytemplates "github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/first"
 	"github.com/stretchr/testify/require"
 )
 
 // profileTabsBuilder is the smallest dot that the base-outbox Profile tabs render against
 type profileTabsBuilder struct {
 	action string
+	tab    string // The ?tab= query parameter
 }
 
 // IsAction returns TRUE if this stub is rendering the named action
 func (builder profileTabsBuilder) IsAction(actionID string) bool {
 	return builder.action == actionID
+}
+
+// QueryParam returns the stub's ?tab= value, and an empty string for every other parameter
+func (builder profileTabsBuilder) QueryParam(param string) string {
+	if param == "tab" {
+		return builder.tab
+	}
+	return ""
 }
 
 // IsDesktop returns TRUE, so that the tabs render their desktop layout
@@ -120,6 +131,63 @@ func TestProfileTabs_UserOutboxInheritsBaseOutbox(t *testing.T) {
 		require.Contains(t, html, `hx-get="/@me/settings-`+tab+`" hx-target="#profile-settings" hx-push-url="false" class="turboclick selected"`)
 		require.Contains(t, html, "[view:settings-"+tab+"-form]")
 		require.NotContains(t, html, "hx-boost=\"true\">General", "a tab must not push the URL")
+	}
+}
+
+// TestProfileTabs_TabQuery confirms that settings-general draws the tab that ?tab= names, and the tab bar selects that same tab
+func TestProfileTabs_TabQuery(t *testing.T) {
+
+	templateService := loadProfileTabsTemplates(t, nil)
+	userOutbox := templateService.templatePrep["user-outbox"]
+
+	// settings-general is a single switch, inherited from base-outbox
+	action := userOutbox.Actions["settings-general"]
+	require.Len(t, action.Steps, 1)
+
+	selector, ok := action.Steps[0].(step.Switch)
+	require.True(t, ok, "settings-general must be a switch, not %T", action.Steps[0])
+
+	tests := []struct {
+		tab      string
+		expected string
+	}{
+		{tab: "", expected: "general"},
+		{tab: "general", expected: "general"},
+		{tab: "images", expected: "images"},
+		{tab: "links", expected: "links"},
+		{tab: " links\n", expected: "links"},
+		{tab: "Images", expected: "general"},
+		{tab: "collections", expected: "general"},
+		{tab: "bogus", expected: "general"},
+	}
+
+	for _, test := range tests {
+
+		builder := profileTabsBuilder{action: "settings-general", tab: test.tab}
+
+		// Find the view that the switch draws, as build.StepSwitch chooses it
+		var value bytes.Buffer
+		require.NoError(t, selector.Expression.Execute(&value, builder))
+
+		steps, matched := selector.Cases[strings.TrimSpace(value.String())]
+		if !matched {
+			steps = selector.Default
+		}
+
+		require.Len(t, steps, 1, "tab %q", test.tab)
+		view, ok := steps[0].(step.ViewHTML)
+		require.True(t, ok, "tab %q draws a %T", test.tab, steps[0])
+
+		file := first.String(view.File, "settings-general")
+		require.Equal(t, "settings-"+test.expected, file, "tab %q", test.tab)
+
+		// RULE: The tab bar selects the tab that was drawn, and only that one
+		var html bytes.Buffer
+		require.NoError(t, userOutbox.HTMLTemplate.ExecuteTemplate(&html, file, builder))
+
+		require.Equal(t, 1, strings.Count(html.String(), "turboclick selected"), "tab %q", test.tab)
+		require.Contains(t, html.String(), `hx-get="/@me/settings-`+test.expected+`" hx-target="#profile-settings" hx-push-url="false" class="turboclick selected"`, "tab %q", test.tab)
+		require.Contains(t, html.String(), "[view:settings-"+test.expected+"-form]", "tab %q", test.tab)
 	}
 }
 
