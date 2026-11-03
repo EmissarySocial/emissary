@@ -34,7 +34,7 @@ func (step StepIfCondition) execute(builder Builder, buffer io.Writer, method Ac
 
 	factory := builder.factory()
 
-	condition, err := step.evaluateCondition(builder)
+	condition, err := evaluateCondition(step.Condition, builder)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Evaluating condition"))
@@ -52,12 +52,13 @@ func (step StepIfCondition) execute(builder Builder, buffer io.Writer, method Ac
 	return UseResult(result)
 }
 
-// evaluateCondition executes the conditional template and
-func (step StepIfCondition) evaluateCondition(builder Builder) (bool, error) {
+// evaluateCondition renders a condition template, and returns TRUE only when it renders exactly "true".
+// The "if" and "require" steps share it, so that they always agree on what is true.
+func evaluateCondition(condition *template.Template, builder Builder) (bool, error) {
 
 	var buffer bytes.Buffer
 
-	if err := step.Condition.Execute(&buffer, builder); err != nil {
+	if err := condition.Execute(&buffer, builder); err != nil {
 		return false, derp.Wrap(err, "build.execute", "Executing template")
 	}
 

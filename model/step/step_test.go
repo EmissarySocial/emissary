@@ -62,6 +62,7 @@ func TestNew_Dispatch(t *testing.T) {
 		{"refresh-page", mapof.Any{}, "refresh-page"},
 		{"reload-page", mapof.Any{}, "reload-page"},
 		{"remove-event", mapof.Any{}, "remove-event"},
+		{"require", mapof.Any{"condition": "{{true}}"}, "require"},
 		{"require-password", mapof.Any{}, "requirePassword"},
 		{"save", mapof.Any{}, "save"},
 		{"save-and-publish", mapof.Any{}, "save-and-publish"},

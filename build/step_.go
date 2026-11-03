@@ -123,6 +123,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.RemoveEvent:
 		return StepRemoveEvent(s)
 
+	case step.Require:
+		return StepRequire(s)
+
 	case step.RequirePassword:
 		return StepRequirePassword(s)
 

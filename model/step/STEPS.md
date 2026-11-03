@@ -1007,6 +1007,29 @@ Strips an HX-Trigger event that an earlier step added. Runs in both phases.
 
 ---
 
+## require
+
+Evaluates `condition` as a template, and halts the pipeline with a `400 Bad Request` error unless it renders exactly `true`. Runs in both phases. It reads the condition the same way [`if`](#if) does, so `{do: "require", condition: "X"}` refuses exactly the requests that `{do: "if", condition: "X", else: [{do: "halt"}]}` would stop, with an error in place of a silent halt. A condition that fails to render halts with a server error instead.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| condition | **Required.** Template expression that must render `true`. An empty condition is a load-time error |
+
+<br>
+
+**Example**
+
+```hjson
+{
+	do: "require"
+	condition: "{{eq (.Data `layout`) `notes`}}"
+}
+```
+
+---
+
 ## require-password
 
 Interposes a password-confirmation dialog before a sensitive action. The `title` and `message` defaults are inherited from the delete dialog, so set both explicitly.
