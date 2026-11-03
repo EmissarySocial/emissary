@@ -36,7 +36,9 @@ def selectGroup_setLinkedOptions(linkedSelect, options, value)
 
 	for option in options
 		if option.group == value then
-			put `<option value="${option.value}">${option.label}</option>` at the end of linkedSelect
+			-- The label and value are data, so build a node rather than parsing them as HTML
+			make an Option from option.label, option.value called optionElement
+			call linkedSelect.add(optionElement)
 		end
 	end
 

@@ -21,11 +21,9 @@
 
 		{{- if $document.Metadata.IsRuleHidden -}}
 
-			{{- /* D2 placeholder: this message is hidden by the viewer's rules. Selecting it opens
-			       the message view with ?reveal=true (the one click-to-reveal mechanism). */ -}}
-			<div class="message max-width-640">
-				<hr class="noselect">
-				<div role="button" class="padding-vertical-sm"
+			<!-- Placeholder for a message hidden by the viewer's rules; click to open it revealed. -->
+			<div class="message max-width-640 card padding margin-bottom">
+				<div role="button" class="padding-vertical-sm turboclick"
 					hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&folderId={{$folderID}}&origin.followingId={{$internalID}}&reveal=true"
 					hx-push-url="false">
 					{{- template "hidden-placeholder" $document -}}
@@ -39,14 +37,12 @@
 
 			<div 
 				id="item_{{$message.ID}}" 
-				class="message max-width-640"
+				class="message max-width-640 card padding margin-bottom"
 				script="install blockselect()">
-				
-				<hr class="noselect">
-				
+
 				<div script="install listItem(messageId:'{{$message.ID}}')">
 
-					<span hx-get="/@me/newsfeed/browse?url={{$document.ID}}" hidden></span>
+					<span class="turboclick" hx-get="/@me/newsfeed/browse?url={{$document.ID}}" hidden></span>
 
 					{{- if eq "NEW-REPLIES" $message.StateID -}}
 						<div class="flex-row">
@@ -95,7 +91,7 @@
 							</div>
 						</div>
 					</div>
-					
+
 					<div class="flex-row width-100% clickable margin-top-sm">
 						<div class="width-32 flex-shrink-0 noselect"></div>
 
@@ -134,7 +130,7 @@
 				<div class="flex-row">
 					<div class="width-32 flex-shrink-0"></div>
 					<div>
-						{{- $args := array $message $document $folderID $internalID -}}
+						{{- $args := array $message $document $folderID $internalID $ -}}
 						{{- template "message-responses" $args -}}
 					</div>
 				</div>
@@ -142,7 +138,7 @@
 			</div>
 
 		{{- end -}}
-		
+
 	{{- end -}}
 
 	{{- if $inbox.IsLength 6 -}}
@@ -157,8 +153,19 @@
 {{- else -}}
 
 	{{- if eq "" (.QueryParam "remote") -}}
-		<h2 class="text-gray">This inbox is empty. When you <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="nowrap link">follow someone</span> then their posts will show up here.</h2>
+
+		{{- if eq "inbox" (.QueryParam "welcome") -}}
+			{{- template "newsfeed-welcome-inbox" . -}}
+		{{- else if eq "folder" (.QueryParam "welcome") -}}
+			{{- template "newsfeed-welcome-folder" . -}}
+
+		{{- else -}}
+			<h2 class="text-gray">This inbox is empty. When you <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="nowrap link turboclick">follow someone</span> then their posts will show up here.</h2>
+			<div style="height:100vw"></div>
+		{{- end -}}
+
+	{{- else -}}
+		<div style="height:100vw"></div>
 	{{- end -}}
 
-	<div style="height:100vw"></div>
 {{- end -}}

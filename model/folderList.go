@@ -33,11 +33,11 @@ func (list FolderList) Selected() Folder {
 		}
 	}
 
-	// Otherwise, make a synthetic "All Folders" result.
+	// Otherwise, make a synthetic "My Inbox" result, the view of every folder at once.
 	all := NewFolder()
 	all.FolderID = primitive.NilObjectID
-	all.Label = "All Folders"
-	all.Icon = "folder"
+	all.Label = "My Inbox"
+	all.Icon = "inbox"
 	all.Layout = "SOCIAL"
 	return all
 }

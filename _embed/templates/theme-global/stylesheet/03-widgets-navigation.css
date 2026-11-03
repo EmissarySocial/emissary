@@ -1,0 +1,11 @@
+/******************************************
+ * Navigation List Widget
+ *
+ * Default look for widget-navigation-list.
+ * Each nested tier is indented under its relative.
+ ******************************************/
+
+.widget-navigation .navigation-children {
+	padding-left: 8px;
+	font-size: 0.9em;
+}

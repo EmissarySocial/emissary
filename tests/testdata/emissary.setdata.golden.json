@@ -130,11 +130,7 @@
 						"data.mls-active": "string NONE"
 					}
 				},
-				"GET/prefilled": {
-					"changes": {
-						"data.mls-active": "string NONE"
-					}
-				},
+				"GET/prefilled": {},
 				"GET/typical": {
 					"changes": {
 						"data": "removed",
@@ -159,11 +155,7 @@
 						"data.mls-active": "string NONE"
 					}
 				},
-				"POST/prefilled": {
-					"changes": {
-						"data.mls-active": "string NONE"
-					}
-				},
+				"POST/prefilled": {},
 				"POST/typical": {
 					"changes": {
 						"data": "removed",
@@ -259,11 +251,7 @@
 						"data.mls-active": "string NONE"
 					}
 				},
-				"GET/prefilled": {
-					"changes": {
-						"data.mls-active": "string NONE"
-					}
-				},
+				"GET/prefilled": {},
 				"GET/typical": {
 					"changes": {
 						"data": "removed",
@@ -288,11 +276,7 @@
 						"data.mls-active": "string NONE"
 					}
 				},
-				"POST/prefilled": {
-					"changes": {
-						"data.mls-active": "string NONE"
-					}
-				},
+				"POST/prefilled": {},
 				"POST/typical": {
 					"changes": {
 						"data": "removed",
@@ -1594,6 +1578,54 @@
 				}
 			}
 		},
+		"template:base-outbox/follower-confirm/0:with-follower.SubSteps@with-follower/0:set-data": {
+			"fields": [
+				"stateId (values, schema.String)"
+			],
+			"values": {
+				"stateId": "ACTIVE (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"GET/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"GET/prefilled": {},
+				"GET/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"POST/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/prefilled": {},
+				"POST/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				}
+			}
+		},
 		"template:base-social/btn-social-outline/1:set-data": {
 			"fields": [],
 			"results": {
@@ -1883,6 +1915,50 @@
 				"POST/literal": {},
 				"POST/prefilled": {},
 				"POST/typical": {}
+			}
+		},
+		"template:outbox-message/edit/0:as-modal.SubSteps/4:set-data": {
+			"fields": [
+				"isFeatured (values, schema.Boolean)"
+			],
+			"values": {
+				"isFeatured": "{{eq (.GetString `isFeatured`) `true`}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"GET/hostile": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"isFeatured": "bool false"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					}
+				},
+				"POST/empty": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"POST/hostile": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"isFeatured": "bool false"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					}
+				}
 			}
 		},
 		"template:outbox-message/like-button/1:set-data": {

@@ -124,6 +124,12 @@ func (step StepSetCircleSharing) Post(builder Builder, _ io.Writer) PipelineBeha
 			break
 		}
 
+		// RULE: "Not Shared" grants the role to no one, so only the author keeps access.  Its button carries
+		// the Owners ID as a marker, because storing that Group would also admit the domain's owners.
+		if circleID == model.MagicGroupIDOwners {
+			return nil
+		}
+
 		// Otherwise, add the CircleID to the list of allowed Circles
 		stream.Circles[step.Role] = append(stream.Circles[step.Role], circleID)
 	}
@@ -164,7 +170,19 @@ func (step StepSetCircleSharing) form(lookupProvider form.LookupProvider) (form.
 					"icon":   "globe",
 					"class":  "checkbutton-public",
 					"value":  model.MagicGroupIDAnonymous,
-					"script": "on change if my.checked tell .checkbutton-circle set your.checked to false end else set my.checked to true",
+					"script": "on change if my.checked tell .checkbutton-circle set your.checked to false end set .checkbutton-private.checked to false else set my.checked to true",
+				},
+			},
+			{
+				Type:        "check-button",
+				Path:        "circles",
+				Label:       "Not Shared",
+				Description: "Visible only to you.",
+				Options: mapof.Template{
+					"icon":   "lock",
+					"class":  "checkbutton-private",
+					"value":  model.MagicGroupIDOwners,
+					"script": "on change if my.checked tell .checkbutton-circle set your.checked to false end set .checkbutton-public.checked to false else set my.checked to true",
 				},
 			},
 		},
@@ -179,28 +197,29 @@ func (step StepSetCircleSharing) form(lookupProvider form.LookupProvider) (form.
 			Options: mapof.Template{
 				"class":    "checkbutton-circle",
 				"provider": "circles",
-				"script":   "on change if my.checked then set .checkbutton-public.checked to false",
+				"script":   "on change if my.checked then set .checkbutton-public.checked to false then set .checkbutton-private.checked to false",
 			},
 		})
 
-		return result, nil
-	}
+	} else {
 
-	// Otherwise, add a message about no circles being available
-	result.Children = append(result.Children, form.Element{
-		Type:        "check-button",
-		Label:       "No Circles Defined",
-		Description: "Create circles to share this content with specific groups of people.",
-		Options: mapof.Template{
-			"icon":     "circle",
-			"disabled": true,
-		},
-	})
+		// Otherwise, add a message about no circles being available
+		result.Children = append(result.Children, form.Element{
+			Type:        "check-button",
+			Label:       "No Circles Defined",
+			Description: "Create circles to share this content with specific groups of people.",
+			Options: mapof.Template{
+				"icon":     "circle",
+				"disabled": true,
+			},
+		})
+	}
 
 	return result, nil
 }
 
-// calculateValue returns the Circles this Stream is shared with, defaulting to "anonymous" when it has none
+// calculateValue returns the choice this Stream is shared with: its Circles, "Everyone" when it is
+// public, or "Not Shared" otherwise, because a Stream that grants the role to no Group is private.
 func (step StepSetCircleSharing) calculateValue(stream *model.Stream) mapof.Object[id.Slice] {
 
 	if circles := stream.Circles[step.Role]; circles.NotEmpty() {
@@ -209,7 +228,13 @@ func (step StepSetCircleSharing) calculateValue(stream *model.Stream) mapof.Obje
 		}
 	}
 
+	if stream.Groups[step.Role].Contains(model.MagicGroupIDAnonymous) {
+		return mapof.Object[id.Slice]{
+			"circles": id.Slice{model.MagicGroupIDAnonymous},
+		}
+	}
+
 	return mapof.Object[id.Slice]{
-		"circles": id.Slice{model.MagicGroupIDAnonymous},
+		"circles": id.Slice{model.MagicGroupIDOwners},
 	}
 }

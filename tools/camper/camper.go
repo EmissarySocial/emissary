@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/tools/nodeinfo"
-	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
@@ -68,38 +66,37 @@ func (camper *Camper) Lookup(accountID string) (digit.Resource, error) {
 	return digit.Lookup(accountID, camper.options...)
 }
 
-// GetTemplate looks up the Activity Intent URL Template for a given accountID.
-// If none is found, then this function returns an empty string
+// GetTemplate looks up the Activity Intent URL Template for a given accountID. Every intent
+// but Create falls back to the Object intent. If none is found, this returns an empty string.
 func (camper *Camper) GetTemplate(intentType string, accountID string) string {
-
-	// Get server name from account
-	server := camper.getServername(accountID)
 
 	// Use standard capitalization for intent types
 	intentType = CanonicalCapitalization(intentType)
 
-	// If the server publishes Activity Intents, use them first
-	if result := camper.getTemplateFromWebfinger(intentType, accountID); result != "" {
+	// Each remote document is requested at most once, however many intents are tried
+	account := camper.newAccountLookup(accountID)
+
+	switch intentType {
+
+	// Create never falls back: its template takes {content}, not {object}
+	case vocab.ActivityTypeCreate:
+		return account.template(intentType)
+
+	// Reply uses a Create that names the post being answered, or else opens that post
+	case intentNameReply:
+		if result := account.template(vocab.ActivityTypeCreate); strings.Contains(result, "{inReplyTo}") {
+			return result
+		}
+		return account.template(intentNameObject)
+	}
+
+	// Use the requested intent if any source publishes it
+	if result := account.template(intentType); result != "" {
 		return result
 	}
 
-	// Check hard-coded service names
-	if result := camper.getTemplateFromKnownServices(intentType, server); result != "" {
-		return result
-	}
-
-	// Try using NodeInfo to look up the server's capabilities
-	if result := camper.getTemplateFromNodeInfo(intentType, server); result != "" {
-		return result
-	}
-
-	// Try the common /share path
-	if result := camper.getTemplateFromAssumeSharePath(intentType, accountID); result != "" {
-		return result
-	}
-
-	// No dice.
-	return ""
+	// Otherwise open the object on the visitor's home server (FEP-3b86 §5.1)
+	return account.template(intentNameObject)
 }
 
 // getTemplateFromKnownServices returns a URL for a known service
@@ -119,19 +116,11 @@ func (camper *Camper) getTemplateFromKnownServices(intentType string, server str
 	return ""
 }
 
-// getTemplateFromWebfinger uses WebFinger to look up any Activity Intents
-// published by this server: http://w3id.org/fep/3b86
-func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID string) string {
+// getTemplateFromWebfinger returns the Activity Intent that an account's WebFinger
+// resource publishes for the requested type: http://w3id.org/fep/3b86
+func (camper *Camper) getTemplateFromWebfinger(intentType string, resource digit.Resource) string {
 
 	const location = "camper.getTemplateFromWebfinger"
-
-	// Use digit to look up the account's WebFinger info
-	resource, err := digit.Lookup(accountID, camper.options...)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Locating WebFinger resource"))
-		return ""
-	}
 
 	// If the webfinger resource has an Activity Intents for the requested type, return it
 	intentRelation := "https://w3id.org/fep/3b86/" + intentType
@@ -157,53 +146,38 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 	}
 
 	// This test has failed
-	log.Trace().Str("location", location).Msg("No Activity Intents found for" + accountID)
+	log.Trace().Str("location", location).Msg("No " + intentType + " intent found for " + resource.Subject)
 	return ""
 }
 
-// getTemplateFromNodeInfo tries to use "nodeInfo" to look up an activity type from
-// a list of known server software types
-func (camper *Camper) getTemplateFromNodeInfo(intentType string, server string) string {
-
-	server = uri.PrependProtocol(server)
-
-	// This only works with https://w3id.org/fep/3b86/Create activities
-	if intentType != vocab.ActivityTypeCreate {
-		return ""
-	}
-
-	// Create a client and try to load the server information. Fail silently.
-	nodeClient := nodeinfo.NewClient(camper.options...)
-	info, err := nodeClient.Load(server)
-
-	if err != nil {
-		derp.Report(err)
-		return ""
-	}
-
-	// If we think we know what software they're using, we should be able
-	// to determine the correct intent URL
-	if path := camper.getTemplateFromKnownSoftware(intentType, info.Software.Name); path != "" {
-		return uri.PrependProtocol(server) + path
-	}
-
-	// Nope. Just nope.
-	return ""
+// isKnownSoftwareIntent reports whether getTemplateFromKnownSoftware can answer an intent
+// for any software, so NodeInfo is requested only when it could help
+func isKnownSoftwareIntent(intentType string) bool {
+	return (intentType == vocab.ActivityTypeCreate) || (intentType == intentNameObject)
 }
 
-// getTemplateFromKnownSoftware returns a `Create` intent for various known software packages
-// Endpoint list found on: https://palant.info/2023/10/19/implementing-a-share-on-mastodon-button-for-a-blog/
+// getTemplateFromKnownSoftware returns the path of a `Create` or `Object` intent for well-known
+// server software. Create endpoints: https://palant.info/2023/10/19/implementing-a-share-on-mastodon-button-for-a-blog/
 func (camper *Camper) getTemplateFromKnownSoftware(intentType string, software string) string {
+
+	switch intentType {
+
+	case vocab.ActivityTypeCreate:
+		return getCreateFromKnownSoftware(software)
+
+	case intentNameObject:
+		return getObjectFromKnownSoftware(software)
+	}
+
+	return ""
+}
+
+// getCreateFromKnownSoftware returns the path that composes a new post, for software known to have one
+func getCreateFromKnownSoftware(software string) string {
 
 	// Most Misskey/Mastodon-family servers share this path
 	const sharePath = "/share?text={content}"
 
-	// This only works with https://w3id.org/fep/3b86/Create activities
-	if intentType != vocab.ActivityTypeCreate {
-		return ""
-	}
-
-	// Look up the "Create" endpoint for this server software
 	switch strings.ToLower(software) {
 
 	case "calckey":
@@ -261,6 +235,19 @@ func (camper *Camper) getTemplateFromKnownSoftware(intentType string, software s
 	return ""
 }
 
+// getObjectFromKnownSoftware returns the path that opens a remote object, for software known to have one
+func getObjectFromKnownSoftware(software string) string {
+
+	switch strings.ToLower(software) {
+
+	// Mastodon's remote-interaction page, which its own WebFinger publishes as the Object intent
+	case "hometown", "mastodon":
+		return "/authorize_interaction?uri={object}"
+	}
+
+	return ""
+}
+
 // getTemplateFromAssumeSharePath queries the server to see if it supports the /share path
 func (camper *Camper) getTemplateFromAssumeSharePath(intentType string, server string) string {
 
@@ -279,7 +266,7 @@ func (camper *Camper) getTemplateFromAssumeSharePath(intentType string, server s
 	}
 
 	// If successful, then our guess was correct
-	return result + "?text={inReplyTo}"
+	return result + "?text={content}"
 }
 
 // getServername extracts a server name from an accountID
@@ -305,8 +292,8 @@ func (camper *Camper) PopulateTemplate(template string, data url.Values) string 
 	tokens := getTemplateTokens(template)
 
 	for _, token := range tokens {
-		value := data.Get(token)
-		value = url.QueryEscape(value)
+		// Encode spaces as %20, as encodeURIComponent does, because "+" is a space only in forms
+		value := strings.ReplaceAll(url.QueryEscape(data.Get(token)), "+", "%20")
 		template = strings.Replace(template, "{"+token+"}", value, 1)
 	}
 

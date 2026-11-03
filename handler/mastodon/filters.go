@@ -3,7 +3,6 @@ package mastodon
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/benpate/derp"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
@@ -29,7 +28,7 @@ func GetFilter(serverFactory *server.Factory) func(model.Authorization, txn.GetF
 func PostFilter(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PostFilter) (object.Filter, error) {
-		return object.Filter{}, derp.NotImplemented("handler.mastodon.PostFilter")
+		return object.Filter{}, errNotSupported("handler.mastodon.PostFilter", "Filters")
 	}
 }
 
@@ -37,7 +36,7 @@ func PostFilter(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PutFilter) (object.Filter, error) {
-		return object.Filter{}, derp.NotImplemented("handler.mastodon.PutFilter")
+		return object.Filter{}, errNotSupported("handler.mastodon.PutFilter", "Filters")
 	}
 }
 
@@ -45,7 +44,7 @@ func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutF
 func DeleteFilter(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter) (struct{}, error) {
-		return struct{}{}, derp.NotImplemented("handler.mastodon.DeleteFilter")
+		return struct{}{}, errNoSuch("handler.mastodon.DeleteFilter", "Filter")
 	}
 }
 
@@ -61,7 +60,7 @@ func GetFilter_Keywords(serverFactory *server.Factory) func(model.Authorization,
 func PostFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
 
 	return func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
-		return struct{}{}, derp.NotImplemented("handler.mastodon.PostFilter_Keyword")
+		return struct{}{}, errNotSupported("handler.mastodon.PostFilter_Keyword", "Filters")
 	}
 }
 
@@ -77,7 +76,7 @@ func GetFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, 
 func PutFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter_Keyword) (object.FilterKeyword, error) {
 
 	return func(model.Authorization, txn.PutFilter_Keyword) (object.FilterKeyword, error) {
-		return object.FilterKeyword{}, derp.NotImplemented("handler.mastodon.PutFilter_Keyword")
+		return object.FilterKeyword{}, errNoSuch("handler.mastodon.PutFilter_Keyword", "Filter keyword")
 	}
 }
 
@@ -85,7 +84,7 @@ func PutFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, 
 func DeleteFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_Keyword) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_Keyword) (struct{}, error) {
-		return struct{}{}, derp.NotImplemented("handler.mastodon.DeleteFilter_Keyword")
+		return struct{}{}, errNoSuch("handler.mastodon.DeleteFilter_Keyword", "Filter keyword")
 	}
 }
 
@@ -101,7 +100,7 @@ func GetFilter_Statuses(serverFactory *server.Factory) func(model.Authorization,
 func PostFilter_Status(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_Status) (object.FilterStatus, error) {
 
 	return func(model.Authorization, txn.PostFilter_Status) (object.FilterStatus, error) {
-		return object.FilterStatus{}, derp.NotImplemented("handler.mastodon.PostFilter_Status")
+		return object.FilterStatus{}, errNotSupported("handler.mastodon.PostFilter_Status", "Filters")
 	}
 }
 
@@ -117,7 +116,7 @@ func GetFilter_Status(serverFactory *server.Factory) func(model.Authorization, t
 func DeleteFilter_Status(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_Status) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_Status) (struct{}, error) {
-		return struct{}{}, derp.NotImplemented("handler.mastodon.DeleteFilter_Status")
+		return struct{}{}, errNoSuch("handler.mastodon.DeleteFilter_Status", "Filter status")
 	}
 }
 
@@ -141,7 +140,7 @@ func GetFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.G
 func PostFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_V1) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PostFilter_V1) (object.Filter, error) {
-		return object.Filter{}, derp.NotImplemented("handler.mastodon.PostFilter_V1")
+		return object.Filter{}, errNotSupported("handler.mastodon.PostFilter_V1", "Filters")
 	}
 }
 
@@ -149,7 +148,7 @@ func PostFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.
 func PutFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter_V1) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PutFilter_V1) (object.Filter, error) {
-		return object.Filter{}, derp.NotImplemented("handler.mastodon.PutFilter_V1")
+		return object.Filter{}, errNotSupported("handler.mastodon.PutFilter_V1", "Filters")
 	}
 }
 
@@ -157,6 +156,6 @@ func PutFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.P
 func DeleteFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_V1) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_V1) (struct{}, error) {
-		return struct{}{}, derp.NotImplemented("handler.mastodon.DeleteFilter_V1")
+		return struct{}{}, errNoSuch("handler.mastodon.DeleteFilter_V1", "Filter")
 	}
 }

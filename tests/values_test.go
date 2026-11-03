@@ -2,6 +2,8 @@ package tests
 
 import (
 	"net/url"
+	"regexp"
+	"regexp/syntax"
 	"strings"
 
 	"github.com/benpate/rosetta/schema"
@@ -72,7 +74,7 @@ func typicalValue(field postField) []string {
 		if len(element.Enum) > 0 {
 			return []string{element.Enum[0]}
 		}
-		return []string{typicalString(field.Path, element.Format)}
+		return []string{typicalPatternString(typicalString(field.Path, element.Format), element.Pattern)}
 	}
 
 	return []string{"Sample " + field.Path}
@@ -115,6 +117,132 @@ func typicalString(path string, format string) string {
 	}
 
 	return "Sample " + path
+}
+
+// typicalPatternString returns value when it fits pattern, and otherwise a short value built from
+// the pattern itself, the way a visitor pastes in a value of the right shape.
+func typicalPatternString(value string, pattern string) string {
+
+	// A field with no pattern takes the value as it is
+	if pattern == "" {
+		return value
+	}
+
+	// A pattern that does not compile is the schema's problem to report, not this generator's
+	matched, err := regexp.MatchString(pattern, value)
+
+	if err != nil {
+		return value
+	}
+
+	// Keep a value that already fits, so a pattern changes the golden files only where it must
+	if matched {
+		return value
+	}
+
+	// Otherwise, build a value from the pattern itself
+	if example, ok := patternExample(pattern); ok {
+		return example
+	}
+
+	return value
+}
+
+// patternExample returns a short, non-empty string that matches pattern, built from the pattern's
+// syntax tree, or false for a pattern it cannot build from.
+func patternExample(pattern string) (string, bool) {
+
+	// Parse the pattern the way regexp compiles it
+	parsed, err := syntax.Parse(pattern, syntax.Perl)
+
+	if err != nil {
+		return "", false
+	}
+
+	// Write the shortest match for each node of its syntax tree
+	var builder strings.Builder
+
+	if !writePatternExample(&builder, parsed.Simplify()) {
+		return "", false
+	}
+
+	// RULE: Keep only an example the real matcher accepts, so a misread construct pins nothing
+	example := builder.String()
+
+	if example == "" {
+		return "", false
+	}
+
+	if matched, err := regexp.MatchString(pattern, example); err != nil || !matched {
+		return "", false
+	}
+
+	return example, true
+}
+
+// writePatternExample writes the shortest match for one node of a pattern's syntax tree, and
+// reports false for a construct it cannot write.
+func writePatternExample(builder *strings.Builder, node *syntax.Regexp) bool {
+
+	switch node.Op {
+
+	case syntax.OpEmptyMatch, syntax.OpBeginLine, syntax.OpEndLine, syntax.OpBeginText, syntax.OpEndText, syntax.OpWordBoundary, syntax.OpNoWordBoundary:
+		return true
+
+	case syntax.OpLiteral:
+		builder.WriteString(string(node.Rune))
+		return true
+
+	case syntax.OpCharClass:
+		if len(node.Rune) == 0 {
+			return false
+		}
+		builder.WriteRune(classExample(node.Rune))
+		return true
+
+	case syntax.OpAnyChar, syntax.OpAnyCharNotNL:
+		builder.WriteRune('a')
+		return true
+
+	case syntax.OpCapture, syntax.OpPlus, syntax.OpAlternate:
+		return writePatternExample(builder, node.Sub[0])
+
+	case syntax.OpStar, syntax.OpQuest:
+		return true
+
+	case syntax.OpRepeat:
+		for range node.Min {
+			if !writePatternExample(builder, node.Sub[0]) {
+				return false
+			}
+		}
+		return true
+
+	case syntax.OpConcat:
+		for _, sub := range node.Sub {
+			if !writePatternExample(builder, sub) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return false
+}
+
+// classExample picks a readable member of a character class, given as low and high pairs: a
+// lowercase letter, an uppercase letter, or a digit when the class has one.
+func classExample(ranges []rune) rune {
+
+	for _, preferred := range []rune{'a', 'A', '0'} {
+		for index := 0; index+1 < len(ranges); index += 2 {
+			if ranges[index] <= preferred && preferred <= ranges[index+1] {
+				return preferred
+			}
+		}
+	}
+
+	return ranges[0]
 }
 
 // hostileValue returns input that a careless or malicious visitor might send

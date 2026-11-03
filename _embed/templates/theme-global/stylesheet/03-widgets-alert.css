@@ -1,6 +1,6 @@
 .alert-red {
     background-color: var(--red70);
-    color: var(--white);
+    color: var(--gray00);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 	border-radius:calc(var(--rhythm) * 0.75);
@@ -16,7 +16,7 @@
 
 .alert-green {
     background-color: var(--green70);
-    color: var(--white);
+    color: var(--gray00);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 	border-radius:calc(var(--rhythm) * 0.75);

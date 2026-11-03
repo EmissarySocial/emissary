@@ -201,6 +201,13 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 		return 0, derp.Internal(location, "Push service returned no response", endpoint, subscriber)
 	}
 
+	return pushResponseStatus(response, location, endpoint, subscriber), nil
+}
+
+// pushResponseStatus closes a push service's response and returns its status code, logging the
+// service's stated reason when it rejected the message
+func pushResponseStatus(response *http.Response, location string, endpoint string, subscriber string) int {
+
 	defer func() {
 		if err := response.Body.Close(); err != nil {
 			derp.Report(derp.Wrap(err, location, "Closing response body", endpoint, subscriber))
@@ -223,7 +230,7 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 			Msg("WebPush: push service REJECTED this message")
 	}
 
-	return response.StatusCode, nil
+	return response.StatusCode
 }
 
 // EndpointIsAllowed reports whether a Web Push endpoint may be registered or delivered to.  A

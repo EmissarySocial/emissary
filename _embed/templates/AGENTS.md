@@ -29,7 +29,9 @@ In hyperscript 0.9.93, on a fresh element `:foo is nil` is FALSE and `:foo is no
 
 ## Legacy resource folders still ship, and a stale reference fails silently
 
-`theme-global/resources/` carries both the current versioned folders (`hyperscript-0.9.93/`, `htmx-1.9.12/`, `sortable-1.15.7/`) and unversioned or older legacy ones. A theme referencing a legacy path gets the old engine, which cannot parse the shared behaviors bundle — bare `focus` is 0.9.93+ — so the whole bundle dies with "Expected 'end' but found 'focus'" and every behavior (Modal, tabs, menu, multiselect) stops installing. The legacy folders are kept deliberately, because **database-stored themes cannot be scanned** and a missing folder 404s into `Sortable is not defined`. Check which folder a theme actually references before debugging a dead behavior.
+`theme-global/resources/` carries both the current versioned folders (`hyperscript-0.9.93/`, `htmx-1.9.12/`, `sortable-1.15.7/`, `camperjs-0.2.0/`) and unversioned or older legacy ones. A theme referencing a legacy path gets the old engine, which cannot parse the shared behaviors bundle — bare `focus` is 0.9.93+ — so the whole bundle dies with "Expected 'end' but found 'focus'" and every behavior (Modal, tabs, menu, multiselect) stops installing. The legacy folders are kept deliberately, because **database-stored themes cannot be scanned** and a missing folder 404s into `Sortable is not defined`. Check which folder a theme actually references before debugging a dead behavior.
+
+**A bundle whose markup contract changes needs a new folder, not a new file in the old one.** `handler/resources.go` serves every resource with `Cache-Control: public, max-age=2592000` and no `ETag`, so a browser reuses its copy for 30 days without asking, even across a server restart. `camperjs/` holds CamperJS from before its `data-camper-*` rename and `camperjs-0.2.0/` holds the current one; a browser that kept the old bundle while the templates changed filled every intent placeholder empty, so Follow opened `/@me/intent/follow?object=`. `TestEmbeddedTemplates_LoadVersionedCamperJS` fails if an embedded template names `resources/camperjs/` again.
 
 ## Third-party bundles are not self-contained just because they are vendored
 
@@ -83,6 +85,10 @@ A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an uploa
 
 `html/template` escapes a `script="…"` attribute as plain HTML, not as hyperscript, and the browser decodes that escaping before hyperscript parses it. A URL from a remote document can hold a `'`, so `install refreshPeers(id:'{{$url}}')` let a remote actor's ID end the string and inject hyperscript. Put the value in a `data-` attribute and have the behavior read it with `@data-…`, as `refreshPeers` and `annotationPeer` in theme-global do. Compare those values in hyperscript rather than building a CSS selector from them, which breaks on `]` and quotes.
 
+## A behavior builds an element from data, never an HTML string
+
+`put` parses a string as HTML, so `select` and `selectGroup` once built each choice with ``put `<option value="${option.value}">${option.label}</option>` ``, and a lookup label could run an `onerror` handler while a value could end its attribute. Both now `make an Option from option.label, option.value` and `add()` it, which sets the label and value as text. Any behavior that writes data into the page must do the same: `make` the element and `set` its properties or `textContent`. `colorpicker._hs` still interpolates its stored value into markup, which is safe only because every colorpicker path today has `Format: "color"`.
+
 ## Only four template directories are parsed by any test — add yours to the list
 
 `TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.
@@ -102,3 +108,29 @@ Vendored `easymde.min.js` still opens three `_blank` links without it; that is u
 ## Every `type: array` in a schema needs a `maxLength`
 
 Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An array with no `maxLength` lets one form field such as `feeds.5000000` build a list of 5,000,001 items. Give every array in a template's `schema` or `socialSchema` a `maxLength` sized to its real use.
+
+## Profile settings come from the user's outbox, so every outbox extends `base-outbox`
+
+`/@me/settings/general` renders `settings-general` from the user's own outbox template through the Settings builder's `.OutboxView`, so an outbox without `base-outbox` in its `extends` shows only a "not available" notice where the Profile tabs belong. `service.Template.missingProfileTabs` reports such an outbox on every load, and never halts. List `base-outbox` in every outbox's own `extends`, even one that already gets it through `user-outbox`, so a reader sees it without following the chain.
+
+**Never ship a package that names `base-outbox` before the Emissary release that defines it.** An `extends` that names an unknown template stops the template load and halts first boot.
+
+**Customize Profile through the outbox, never by reusing the ID `user-settings`.** The last definition of an ID wins for every user on the server. `Template.Add` reports a replaced ID, but it still replaces it.
+
+## Go builds the URLs of three email pages, so every outbox gets them from `base-outbox`
+
+Three actions are opened by URLs written in Go, never by a link in a template: the redirect after `/.follower/new` saves a follower (`follow-email-sent`), the link in the confirmation email (`follower-confirm`), and the unsubscribe link and `List-Unsubscribe` header of every email a follower receives (`follower-unsubscribe`). An outbox without them answers each one with 400 "Action is not valid", and nothing reports it. Qwertylicious's outbox defined only its own `follow` until 2026-10-29, so its email signup ended on that 400, and so did both email links. These actions now live in `base-outbox` with the rest of the Follow modal, and `missingProfileTabs` names any outbox that lacks one.
+
+**The Follow modal belongs in `base-outbox`, not `base-intent`.** Stream templates extend `base-intent` too, and these views call Outbox builder methods (`.UserID`, `.DisplayName`, `.IsBridgeBluesky`) that the Stream builder lacks, so every Stream would inherit actions that fail when they render. `follow-email` and `follow-email-sent` were in `base-intent` until 2026-09-17.
+
+## A Profile tab is an htmx swap, never a boosted link
+
+Each tab in `settings-tabs.html` is an `hx-get` to `/@me/settings-<tab>` with `hx-target="#profile-settings"` and `hx-push-url="false"`. Neither the tab nor `#profile-settings` may set `hx-swap`: the swap inherits the body's `innerHTML transition:true`, and a plain `hx-swap="innerHTML"` on either silently turns off the view transition between tabs. A boosted link pushes `/@me/settings-<tab>` into the address bar, and reloading that URL renders a bare fragment inside the outbox's page layout. A form that refreshes after a save must reload only its own card, as `settings-images` does, or the user is sent back to General.
+
+## `base-outbox` declares `model: Outbox` on purpose
+
+Template validation checks every form path against the template's own schema. Under `model: None` its schema has no User fields, so the Profile forms fail validation. `Outbox` gives it `UserSchema`, and leaving out `templateRole` keeps it out of the profile template picker, which lists by `templateRole: user-outbox`.
+
+## An outbox's schema validates profile saves, and only its `data` strings count
+
+The Outbox builder validates against `model.UserSchemaForTemplate`, which is `UserSchema` plus the String rules the outbox declares under `data`. Every other field keeps `UserSchema`'s rules, even where the outbox redeclares it, and every `data` value stays capped at 4096 characters. A non-String `data` rule is ignored, because `User.Data` holds only strings. An invalid value is dropped, not refused: `form.SetURLValues` logs a field that fails and saves the rest.

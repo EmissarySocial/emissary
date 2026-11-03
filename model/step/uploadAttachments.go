@@ -6,7 +6,7 @@ import (
 
 // UploadAttachments represents an action that can upload attachments.  It can only be used on a StreamBuilder
 type UploadAttachments struct {
-	Action         string // Action to perform when uploading the attachment ("append" or "replace")
+	Action         string // Action to perform when uploading the attachment ("append", "replace", or "fill")
 	Fieldname      string // Name of the form field that contains the file data (Default: "file")
 	AttachmentPath string // Path name to store the AttachmentID
 	DownloadPath   string // Path name to store the download URL
@@ -30,10 +30,11 @@ type UploadAttachments struct {
 // NewUploadAttachments returns a fully parsed UploadAttachments object
 func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 
-	// Default behavior is "append".  Only other option is "replace"
+	// Default behavior is "append", which deletes the oldest attachments to make room for new ones.
+	// "replace" deletes them all, and "fill" deletes none, adding only as many new ones as fit.
 	action := stepInfo.GetString("action")
 
-	if action != "replace" {
+	if action != "replace" && action != "fill" {
 		action = "append"
 	}
 

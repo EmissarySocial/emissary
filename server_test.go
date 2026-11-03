@@ -87,3 +87,59 @@ func TestErrorHandler_SignedRequestIsNotRedirected(t *testing.T) {
 		})
 	}
 }
+
+// TestRegisterWithHEAD_MirrorsEachGET pins that every GET route added inside registerWithHEAD gains
+// a HEAD route with the same path, handler, and middleware, and that other methods do not.
+func TestRegisterWithHEAD_MirrorsEachGET(t *testing.T) {
+
+	// Register one GET route with its own middleware, and one POST route
+	e := echo.New()
+	middlewareRuns := 0
+
+	countMiddleware := func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			middlewareRuns++
+			return next(ctx)
+		}
+	}
+
+	registerWithHEAD(e, func() {
+		e.GET("/api/v1/things/:id", func(ctx echo.Context) error { return ctx.String(http.StatusOK, "thing") }, countMiddleware)
+		e.POST("/api/v1/things", func(ctx echo.Context) error { return ctx.NoContent(http.StatusCreated) })
+	})
+
+	// Only the GET route gains a HEAD
+	methods := make(map[string]bool)
+
+	for _, route := range e.Routes() {
+		methods[route.Method+" "+route.Path] = true
+	}
+
+	require.True(t, methods["HEAD /api/v1/things/:id"])
+	require.False(t, methods["HEAD /api/v1/things"], "only GET routes gain a HEAD")
+
+	// The HEAD route answers through the GET route's own handler and middleware
+	recorder := httptest.NewRecorder()
+	e.ServeHTTP(recorder, httptest.NewRequest(http.MethodHead, "/api/v1/things/42", nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Equal(t, 1, middlewareRuns)
+}
+
+// TestRegisterWithHEAD_RestoresTheHook pins that registerWithHEAD passes each route to a hook that was
+// already installed, and puts that hook back when it finishes.
+func TestRegisterWithHEAD_RestoresTheHook(t *testing.T) {
+
+	e := echo.New()
+	seen := make([]string, 0)
+
+	e.OnAddRouteHandler = func(_ string, route echo.Route, _ echo.HandlerFunc, _ []echo.MiddlewareFunc) {
+		seen = append(seen, route.Method+" "+route.Path)
+	}
+
+	registerWithHEAD(e, func() {
+		e.GET("/api/v1/things", func(ctx echo.Context) error { return ctx.NoContent(http.StatusOK) })
+	})
+
+	require.NotNil(t, e.OnAddRouteHandler)
+	require.Equal(t, []string{"GET /api/v1/things", "HEAD /api/v1/things"}, seen)
+}

@@ -1,6 +1,9 @@
 package model
 
-import "github.com/benpate/rosetta/schema"
+import (
+	"github.com/EmissarySocial/emissary/tools/markdown"
+	"github.com/benpate/rosetta/schema"
+)
 
 // ContentSchema returns the JSON Schema for a Content object
 func ContentSchema() schema.Element {
@@ -8,7 +11,9 @@ func ContentSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"format": schema.String{Enum: []string{ContentFormatHTML, ContentFormatEditorJS, ContentFormatMarkdown, ContentFormatText}},
 			"raw":    schema.String{Format: "unsafe-any", MaxLength: ContentMaxLength},
-			"html":   schema.String{Format: "html", MaxLength: ContentMaxLength},
+			// The application's own sanitizing policy, which keeps the classes and iframes that
+			// rosetta's "html" format strips.  Every Stream template inherits this (BUG-278)
+			"html": schema.String{Format: markdown.SchemaFormat, MaxLength: ContentMaxLength},
 		},
 	}
 }

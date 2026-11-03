@@ -15,6 +15,8 @@ func PushSubscriptionSchema() schema.Element {
 			"p256dh":             schema.String{Required: true, MaxLength: 256},
 			"auth":               schema.String{Required: true, MaxLength: 256},
 			"userAgent":          schema.String{MaxLength: 512},
+			"format":             schema.String{Enum: []string{PushSubscriptionFormatWeb, PushSubscriptionFormatMobile}},
+			"oauthUserTokenId":   schema.String{Format: "objectId"},
 		},
 	}
 }
@@ -38,6 +40,9 @@ func (sub *PushSubscription) GetPointer(name string) (any, bool) {
 
 	case "userAgent":
 		return &sub.UserAgent, true
+
+	case "format":
+		return &sub.Format, true
 	}
 
 	return nil, false
@@ -52,6 +57,9 @@ func (sub *PushSubscription) GetStringOK(name string) (string, bool) {
 
 	case "userId":
 		return sub.UserID.Hex(), true
+
+	case "oauthUserTokenId":
+		return sub.OAuthUserTokenID.Hex(), true
 	}
 
 	return "", false
@@ -70,6 +78,12 @@ func (sub *PushSubscription) SetString(name string, value string) bool {
 	case "userId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			sub.UserID = objectID
+			return true
+		}
+
+	case "oauthUserTokenId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			sub.OAuthUserTokenID = objectID
 			return true
 		}
 	}

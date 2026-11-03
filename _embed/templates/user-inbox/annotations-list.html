@@ -1,5 +1,4 @@
-<!-- One page of notes.  A row opens its annotation: the Notes tab of an actor, or a post with
-     its note editor below.  Pages after the first load on scroll with ?createDate=LT:n. -->
+<!-- One page of notes; later pages load on scroll with ?createDate=LT:n. -->
 {{- $type := .QueryParam "type" -}}
 {{- $isFirstPage := eq "" (.QueryParam "createDate") -}}
 {{- $annotations := .Annotations.Top30.Slice -}}
@@ -62,8 +61,43 @@
 
 {{- else if $isFirstPage -}}
 
-	<div class="text-lg bold text-gray">
-		<div class="margin-bottom">Notes help you to keep track of important posts from your newsfeed.</div>
-		<div class="margin-bottom">To save a new note, click the <i class="bi bi-bookmark"></i> icon on any post.</div>
+	<!-- No notes yet: a welcome for the selected tab, under the page's own heading and tabs. -->
+	<div class="align-center margin-vertical-xl">
+		{{- if eq $type "actor" -}}
+
+			<div class="text-light-gray" style="font-size:96px;">{{icon "person"}}</div>
+			<div class="text-2xl margin-none">Notes About People</div>
+			<div class="margin-vertical max-width-512 margin-horizontal-auto">
+				Keep track of the people you meet on the social web: where you found them, what they
+				care about, or why you followed them.
+			</div>
+			<div class="margin-vertical max-width-512 margin-horizontal-auto">
+				To add a note, open anyone's profile and click its {{icon "bookmark"}} Notes tab.
+			</div>
+
+		{{- else if eq $type "document" -}}
+
+			<div class="text-light-gray" style="font-size:96px;">{{icon "file"}}</div>
+			<div class="text-2xl margin-none">Notes About Posts</div>
+			<div class="margin-vertical max-width-512 margin-horizontal-auto">
+				Save the posts you want to come back to, and add your own thoughts beside them.
+				To add a note, click the {{icon "bookmark"}} Notes button on any post.
+			</div>
+
+		{{- else -}}
+
+			<div class="text-light-gray" style="font-size:96px;">{{icon "bookmark"}}</div>
+			<div class="text-2xl margin-none">Welcome to Your Notes</div>
+			<div class="margin-vertical max-width-512 margin-horizontal-auto">
+				Notes are your private record of the people and posts that matter to you.
+				They are never shared, and nobody else can see them.
+			</div>
+			<div class="margin-vertical max-width-512 margin-horizontal-auto">
+				To add a note, click the {{icon "bookmark"}} Notes button on any post,
+				or the Notes tab on anyone's profile.
+			</div>
+
+		{{- end -}}
 	</div>
+
 {{- end -}}

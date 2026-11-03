@@ -14,11 +14,11 @@
 
 		{{- range $index, $ancestor := $parentBuilder.Ancestors.Slice -}}
 
-			<div class="ellipsis"><a href="/{{$ancestor.Token}}" hx-get="/{{$ancestor.Token}}" class="turboclick">{{$ancestor.Label}}</a></div>
+			<div class="ellipsis navigation-item"><a href="/{{$ancestor.Token}}" hx-get="/{{$ancestor.Token}}" class="turboclick">{{$ancestor.Label}}</a></div>
 
 			{{- if eq $grandparentID $ancestor.StreamID -}}
 				{{- $hasGrandparentTier = true -}}
-				<div style="padding-left:8px; font-size:0.9em;">{{- template "parents" $root -}}</div>
+				<div class="navigation-children">{{- template "parents" $root -}}</div>
 			{{- end -}}
 
 		{{- end -}}
@@ -27,8 +27,8 @@
 
 		{{- $grandparent := .Grandparent "view" -}}
 		{{- $hasGrandparentTier = true -}}
-		<div class="ellipsis"><a href="/{{$grandparent.Token}}" hx-get="/{{$grandparent.Token}}" class="turboclick">{{- $grandparent.Label -}}</a></div>
-		<div style="padding-left:8px; font-size:0.9em;">{{- template "parents" $root -}}</div>
+		<div class="ellipsis navigation-item"><a href="/{{$grandparent.Token}}" hx-get="/{{$grandparent.Token}}" class="turboclick">{{- $grandparent.Label -}}</a></div>
+		<div class="navigation-children">{{- template "parents" $root -}}</div>
 
 	{{- end -}}
 

@@ -213,14 +213,14 @@ func (response *Response) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Mastodon API
  ******************************************/
 
-// Toot returns this Response as a Mastodon API Status object
-func (response Response) Toot() object.Status {
+// Toot returns this Response as a Mastodon API Status object, with default images from host (e.g. "https://example.com")
+func (response Response) Toot(host string) object.Status {
 
 	return object.Status{
 		ID:  response.ActivityPubURL(),
 		URI: response.ActivityPubURL(),
-		Account: object.Account{
+		Account: WithMastodonDefaultImages(object.Account{
 			ID: response.Actor,
-		},
+		}, host),
 	}
 }

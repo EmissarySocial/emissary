@@ -17,6 +17,14 @@
 		}}
 	}}
 	actions: {
+		// The admin console's full-page menu on small screens, where menubar.html has no sidebar
+		mobile: {
+			roles:["owner"]
+			steps: [
+				{do: "view-html"}
+			]
+		}
+
 		index: {
 			roles:["owner"]
 			steps: [

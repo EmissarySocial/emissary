@@ -10,6 +10,7 @@ type LoadConfig struct {
 	databaseTimeout time.Duration
 	fetchTimeout    time.Duration
 	minAge          time.Duration
+	allowStale      bool
 }
 
 // LoadOption is a functional option that can be passed to the Load() method.
@@ -123,5 +124,13 @@ func WithMinAge(minAge time.Duration) LoadOption {
 	// will, naming any keyId host they like. The cooldown caps that at one fetch per minAge. (BUG-22)
 	return func(config *LoadConfig) {
 		config.minAge = minAge
+	}
+}
+
+// WithStaleAllowed is a functional option that lets a normal read return an expired cached copy at once,
+// refreshing it in the background. Use it only for display: never where a fresh key or state matters.
+func WithStaleAllowed() LoadOption {
+	return func(config *LoadConfig) {
+		config.allowStale = true
 	}
 }

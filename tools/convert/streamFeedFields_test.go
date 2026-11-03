@@ -27,7 +27,7 @@ func TestStreamFeedFields_ProjectionKeepsFeedOutput(t *testing.T) {
 	stream.PublishDate = 1_700_000_000
 	stream.UpdateDate = 1_700_000_500_000
 	stream.Hashtags = []string{"unrelated"}
-	stream.Data = map[string]any{"unrelated": "value"}
+	stream.Data = map[string]any{"unrelated": "value", "enclosureUrl": "https://example.com/blog/post/audio", "enclosureType": "audio/ogg"}
 
 	projected := projectStream(t, stream, StreamFeedFields())
 

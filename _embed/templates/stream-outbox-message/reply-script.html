@@ -1,0 +1,14 @@
+<!-- reply-script: goToUrl, which each reply-row calls to open a reply or its author: in the visitor's own inbox when signed in, else in a new tab -->
+<script>
+	function goToUrl(element, isAuthenticated) {
+
+		const url = element.dataset.url
+
+		if (isAuthenticated) {
+			htmx.ajax("GET", "/@me/newsfeed/browse?url=" + encodeURIComponent(url))
+			return
+		}
+
+		window.open(url, "_blank")
+	}
+</script>

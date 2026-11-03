@@ -7,12 +7,18 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -21,6 +27,7 @@ type NewsFeed struct {
 	importItemService *ImportItem
 	folderService     *Folder
 	ruleService       *Rule
+	queue             *queue.Queue
 	host              string
 	counter           int
 	mutex             *sync.Mutex
@@ -42,6 +49,7 @@ func (service *NewsFeed) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
 	service.folderService = factory.Folder()
 	service.ruleService = factory.Rule()
+	service.queue = factory.Queue()
 	service.host = factory.Host()
 }
 
@@ -119,6 +127,9 @@ func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, not
 	// Calculate a (hopefully unique) rank for this message
 	service.CalculateRank(message)
 
+	// Saving sets the CreateDate, so check for a new item first
+	isNew := message.IsNew()
+
 	// Save the value to the database
 	if err := service.collection(session).Save(message, note); err != nil {
 		return derp.Wrap(err, location, "Saving NewsFeed", message, note)
@@ -129,10 +140,28 @@ func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, not
 		return derp.Wrap(err, location, "Recalculating unread count", message)
 	}
 
+	// Publish a realtime nudge for new items only (best-effort, published post-commit)
+	if isNew {
+		service.publishRealtime(session, message)
+	}
+
 	// Wait 1 millisecond between each document to guarantee sorting by CreateDate
 	time.Sleep(1 * time.Millisecond)
 
 	return nil
+}
+
+// publishRealtime sends a realtime nudge for a new NewsItem, published post-commit and inline
+func (service *NewsFeed) publishRealtime(session data.Session, newsItem *model.NewsItem) {
+
+	// Post-commit, so the nudge cannot arrive before the NewsItem is visible; inline, because the
+	// broker holds live sockets in this process
+	postcommit.Publish(session, service.queue, "PublishRealtimeMessage", mapof.Any{
+		"hostname": uri.Hostname(service.host),
+		"objectId": newsItem.UserID.Hex(),
+		"recordId": newsItem.NewsItemID.Hex(),
+		"topic":    realtime.TopicNewsItem,
+	}, queue.WithInline())
 }
 
 // Delete removes an NewsFeed from the database (virtual delete)
@@ -522,27 +551,35 @@ func (service *NewsFeed) setResponse(session data.Session, userID primitive.Obje
 
 	const location = "service.NewsFeed.setResponse"
 
-	// Load the message that is being responded to
-	message := model.NewNewsItem()
-	if err := service.LoadByURL(session, userID, url, &message); err != nil {
+	// RULE: a User's feed can hold more than one NewsItem for the same URL (the same post
+	// arriving through several Followings), and a client may be showing any of them. Update
+	// every copy, or a reaction only lights up on whichever one happened to load first.
+	criteria := exp.Equal("userId", userID).AndEqual("url", url)
+	messages, err := service.Query(session, criteria)
 
-		// Exceptional case: If there is no message to respond to, then do not return an error.
-		if derp.IsNotFound(err) {
-			return nil
+	if err != nil {
+		return derp.Wrap(err, location, "Loading messages by URL", url)
+	}
+
+	// Exceptional case: If there is no message to respond to, then do nothing.
+	for _, message := range messages {
+
+		// RULE: Response is "omitempty", so a NewsItem with no reactions yet decodes here
+		// with a nil map (service.Query hands back zero-valued structs, unlike a load into
+		// an already-initialized NewNewsItem()) -- SetDelta assigning into that nil map panics.
+		if message.Response == nil {
+			message.Response = id.NewMap()
 		}
 
-		// Failure and Shame!
-		return derp.Wrap(err, location, "Loading message by URL", url)
-	}
+		// Set the response on the message
+		if changed := message.Response.SetDelta(responseType, responseID); !changed {
+			continue
+		}
 
-	// Set the response on the message
-	if changed := message.Response.SetDelta(responseType, responseID); !changed {
-		return nil
-	}
-
-	// Save the message
-	if err := service.Save(session, &message, "Set Response"); err != nil {
-		return derp.Wrap(err, location, "Saving message with response")
+		// Save the message
+		if err := service.Save(session, &message, "Set Response"); err != nil {
+			return derp.Wrap(err, location, "Saving message with response")
+		}
 	}
 
 	// Silence is GoLdEN.

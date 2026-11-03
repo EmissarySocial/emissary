@@ -118,6 +118,13 @@
 
 {{- else if eq "" $createDate -}}
 
-	<h2 class="text-gray">Nothing here yet. When someone messages you, mentions you, or replies to your posts, it will show up here.</h2>
+	<!-- No notifications of this kind yet: a welcome, styled and placed as user-inbox/newsfeed-welcome-inbox.html -->
+	<div class="align-center margin-vertical-xl">
+		<div class="text-light-gray" style="font-size:96px;">{{icon "chat"}}</div>
+		<div class="text-2xl margin-none">Messages &amp; Replies</div>
+		<div class="margin-vertical max-width-512 margin-horizontal-auto">
+			When someone sends you a message, mentions you in a post, or replies to something you wrote, it lands here, so you never miss a conversation.
+		</div>
+	</div>
 
 {{- end -}}

@@ -76,6 +76,13 @@
 
 {{- else if eq "" $createDate -}}
 
-	<h2 class="text-gray">No shares yet. When someone shares your posts, it will show up here.</h2>
+	<!-- No notifications of this kind yet: a welcome, styled and placed as user-inbox/newsfeed-welcome-inbox.html -->
+	<div class="align-center margin-vertical-xl">
+		<div class="text-light-gray" style="font-size:96px;">{{icon "announce"}}</div>
+		<div class="text-2xl margin-none">Shares</div>
+		<div class="margin-vertical max-width-512 margin-horizontal-auto">
+			When someone shares one of your posts with their own followers, you'll see it here, along with who helped your words travel further.
+		</div>
+	</div>
 
 {{- end -}}

@@ -43,7 +43,8 @@ func TestPostResetCode_RejectsShortPassword(t *testing.T) {
 	ctx := resetCodeRequest("a") // 1 character: far below steranko's 8-character default
 	factory := &service.Factory{}
 
-	err := PostResetCode(ctx, factory, nil)
+	// unusedSession panics on any database work, which the rejection must come before
+	err := PostResetCode(ctx, factory, unusedSession{})
 
 	require.NotNil(t, err, "a password below the policy minimum must be rejected")
 }

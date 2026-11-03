@@ -209,7 +209,7 @@ func TestNavigationWidget_TopLevelStream(t *testing.T) {
 	result := renderNavigationWidget(t, context)
 
 	// The current Stream is bold, and is NOT a link
-	require.Contains(t, result, `<div class="bold ellipsis">Content Pages</div>`)
+	require.Contains(t, result, `<div class="bold ellipsis navigation-item navigation-current" aria-current="page">Content Pages</div>`)
 	require.NotContains(t, result, `href="/content"`)
 
 	// Its peers are still links
@@ -235,7 +235,7 @@ func TestNavigationWidget_TopLevelStreamWithSchemaDefaults(t *testing.T) {
 
 	result := renderNavigationWidget(t, context)
 
-	require.Contains(t, result, `<div class="bold ellipsis">Content Pages</div>`)
+	require.Contains(t, result, `<div class="bold ellipsis navigation-item navigation-current" aria-current="page">Content Pages</div>`)
 	require.Contains(t, result, `href="/about"`)
 
 	// "children" is unset, so no child ever renders
@@ -255,7 +255,7 @@ func TestNavigationWidget_TopLevelStreamWithAllTiers(t *testing.T) {
 
 	result := renderNavigationWidget(t, context)
 
-	require.Contains(t, result, `<div class="bold ellipsis">Content Pages</div>`)
+	require.Contains(t, result, `<div class="bold ellipsis navigation-item navigation-current" aria-current="page">Content Pages</div>`)
 	require.Contains(t, result, `href="/markdown"`)
 }
 
@@ -327,7 +327,7 @@ func TestNavigationWidget_FullHierarchy(t *testing.T) {
 	require.Contains(t, result, `href="/example"`)
 
 	// The current Stream is bold, and is NOT a link
-	require.Contains(t, result, `<div class="bold ellipsis">Markdown</div>`)
+	require.Contains(t, result, `<div class="bold ellipsis navigation-item navigation-current" aria-current="page">Markdown</div>`)
 	require.NotContains(t, result, `href="/markdown"`)
 
 	// Each tier nests below the relative it belongs to, and each nested tier interrupts its
@@ -343,7 +343,7 @@ func TestNavigationWidget_FullHierarchy(t *testing.T) {
 	order := []string{
 		`href="/root"`,
 		`href="/content"`,
-		`<div class="bold ellipsis">Markdown</div>`,
+		`<div class="bold ellipsis navigation-item navigation-current" aria-current="page">Markdown</div>`,
 		`href="/example"`,
 		`href="/wysiwyg"`,
 		`href="/photos"`,
@@ -354,6 +354,11 @@ func TestNavigationWidget_FullHierarchy(t *testing.T) {
 		require.Less(t, strings.Index(result, order[index-1]), strings.Index(result, order[index]),
 			"%s must precede %s", order[index-1], order[index])
 	}
+
+	// Themes style the tiers through classes, so nothing is styled inline
+	require.Equal(t, 3, strings.Count(result, `<div class="navigation-children">`))
+	require.Equal(t, 7, strings.Count(result, `navigation-item`))
+	require.NotContains(t, result, `style=`)
 }
 
 // TestNavigationWidget_ParentMissingFromAncestors verifies that a parent which is filtered out of
@@ -389,7 +394,7 @@ func TestNavigationWidget_ParentMissingFromAncestors(t *testing.T) {
 
 	result := renderNavigationWidget(t, context)
 
-	require.Contains(t, result, `<div class="bold ellipsis">Markdown</div>`)
+	require.Contains(t, result, `<div class="bold ellipsis navigation-item navigation-current" aria-current="page">Markdown</div>`)
 	require.Contains(t, result, `href="/wysiwyg"`)
 	require.Contains(t, result, `href="/example"`)
 }

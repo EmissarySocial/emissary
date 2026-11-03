@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
@@ -180,6 +181,48 @@ func (service *Outbox2) Send(session data.Session, activity mapof.Any) error {
 
 	// boom.
 	return nil
+}
+
+// PutUserActivity saves a User's own addressed (non-public) activity into their outbox, which
+// delivers it to every recipient it names. It returns the activity's server-assigned URL.
+func (service *Outbox2) PutUserActivity(session data.Session, userID primitive.ObjectID, activity streams.Document) (string, error) {
+
+	const location = "service.Outbox2.PutUserActivity"
+
+	// RULE: Public posts are Streams; only addressed activities are delivered from here
+	if activity.IsPublic() {
+		return "", derp.NotImplemented(location, "Public notes are not supported at this time.")
+	}
+
+	// RULE: A User may only send activities as themselves
+	actorID, err := service.locator.ParseUser(activity.ActorID())
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Parsing userID from actorID", "actorID: "+activity.ActorID(), activity.Map())
+	}
+
+	if actorID != userID {
+		return "", derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+activity.ActorID(), activity.Map())
+	}
+
+	outboxItem := model.NewOutboxItem()
+	outboxItem.URL = service.locator.ActivityURL(model.ActorTypeUser, userID, outboxItem.ActivityID)
+
+	// RULE: The server assigns the activity's canonical id, replacing any client-provided
+	// value (ActivityPub §6.1). Client-generated ids (e.g. "urn:uuid:...") are not
+	// dereferenceable URLs, and remote servers reject activities that carry them.
+	activity.SetProperty(vocab.PropertyID, outboxItem.URL)
+
+	outboxItem.ActorType = model.ActorTypeUser
+	outboxItem.ActorID = userID
+	outboxItem.Activity = activity.Map()
+	outboxItem.Recipients = activity.Recipients()
+
+	if err := service.Save(session, &outboxItem, "Created via ActivityPub Outbox2"); err != nil {
+		return "", derp.Wrap(err, location, "Saving Outbox2 activity")
+	}
+
+	return outboxItem.URL, nil
 }
 
 // Delete removes an OutboxItem from the database (HARD delete)

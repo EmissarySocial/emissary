@@ -135,7 +135,7 @@ func TestIntegration_RateLimitedContext(t *testing.T) {
 }
 
 // TestIntegration_HTMLInsteadOfActivityPub verifies that a remote answering an ActivityPub
-// request with an HTML page is classified as Skip, and carries a 500 rather than a 4xx
+// request with an HTML page is classified as Skip, and carries a 502 rather than a 4xx
 func TestIntegration_HTMLInsteadOfActivityPub(t *testing.T) {
 
 	if testing.Short() {
@@ -157,8 +157,8 @@ func TestIntegration_HTMLInsteadOfActivityPub(t *testing.T) {
 	require.Equal(t, time.Duration(0), retryAfter)
 
 	// RULE: This is the assertion that makes derp.IsClientError the wrong gate for this bug.
-	// The response really was a 200, and the error really is a 500, so no 4xx test matches it.
-	require.Equal(t, http.StatusInternalServerError, derp.ErrorCode(err))
+	// The response really was a 200, and the error really is a 502, so no 4xx test matches it.
+	require.Equal(t, http.StatusBadGateway, derp.ErrorCode(err))
 	require.False(t, derp.IsClientError(err))
 }
 

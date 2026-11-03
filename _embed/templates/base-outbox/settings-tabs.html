@@ -1,0 +1,16 @@
+<div id="menu-bar">
+	<div class="left">
+		{{- if not .IsDesktop -}}
+			<a href="/@me/settings/mobile" class="turboclick" hx-boost="true">{{icon "back"}}</a>
+		{{- end -}}
+		<a href="#" hx-get="/@me/settings-general" hx-target="#profile-settings" hx-push-url="false" class="turboclick {{if .IsAction `settings-general`}}selected{{end}}">General</a>
+		<a href="#" hx-get="/@me/settings-images" hx-target="#profile-settings" hx-push-url="false" class="turboclick {{if .IsAction `settings-images`}}selected{{end}}">Images</a>
+		<a href="#" hx-get="/@me/settings-links" hx-target="#profile-settings" hx-push-url="false" class="turboclick {{if .IsAction `settings-links`}}selected{{end}}">Links</a>
+	</div>
+	<div class="right">
+		<a href="https://emissary.dev/user-profile" target="_blank" rel="noopener noreferrer" class="link">
+			{{icon "help"}}
+			{{ if .IsDesktop }} Help {{ end }}
+		</a>
+	</div>
+</div>

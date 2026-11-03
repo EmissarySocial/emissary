@@ -2,11 +2,11 @@
 {{- $imports := .Imports -}}
 
 <div class="app" script="init send SelectNav(id:'settings')">
-	<title>Profile | Import</title>
+	<title>Migration | Import</title>
 
 	{{- if $isDesktop -}}
-		<div id="app-sidebar" class="expanded">
-			{{- template "menu" "general" -}}
+		<div id="app-sidebar" class="flex-column flex-justify-between expanded">
+			{{- template "menu" "migration" -}}
 		</div>
 	{{- end -}}
 	
@@ -17,16 +17,13 @@
 				{{ if not $isDesktop }}
 					<a href="/@me/settings/mobile" class="turboclick" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
-				<a href="/@me/settings/general" class="turboclick" hx-boost="true">General</a>
-				<a href="/@me/settings/images" class="turboclick" hx-boost="true">Images</a>
-				<a href="/@me/settings/links" class="turboclick" hx-boost="true">Links</a>
 				<a href="/@me/settings/import" class="turboclick selected" hx-boost="true">Import</a>
 				<a href="/@me/settings/export" class="turboclick" hx-boost="true">Export</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/migration" target="_blank" rel="noopener noreferrer" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Imports {{ end }}
+					{{ if $isDesktop }} Help {{ end }}
 				</a>
 			</div>
 		</div>
@@ -45,12 +42,12 @@
 				<div class="flex-grow">
 					<div class="text-xs text-gray">You're signed in to <b>{{.Hostname}}</b> as:</div>
 					<div class="text-sm bold">
-						<a href="/@me">@{{.Username}}@{{.Hostname}}</a>
+						<a class="turboclick" href="/@me">@{{.Username}}@{{.Hostname}}</a>
 					</div>
 				</div>
 			</div>
 				
-			<div class="card padding max-width-640 transition-main-card">
+			<div class="card border padding transition-main-card">
 
 				{{- if $imports.IsEmpty -}}
 
@@ -74,7 +71,7 @@
 						<a href="https://emissary.dev/migration" target="_blank" rel="noopener noreferrer" class="nowrap">Learn More {{icon "link-outbound"}}</a>
 					</div>
 
-					<button hx-get="/@me/settings/import-authenticate" class="primary">Import My Data...</button>
+					<button hx-get="/@me/settings/import-authenticate" class="primary turboclick">Import My Data...</button>
 
 				{{- else -}}
 				
@@ -89,8 +86,8 @@
 								<div class="bold text-red text-lg">Your Import Could Not Be Started</div>
 								<div>{{$import.Message}}</div>
 								<div class="margin-top">
-									<button class="primary" hx-get="/@me/settings/import-authenticate?importId={{$import.ID}}">Edit Account</button>
-									<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
+									<button class="primary turboclick" hx-get="/@me/settings/import-authenticate?importId={{$import.ID}}">Edit Account</button>
+									<button class="turboclick" hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
 								</div>
 							</div>
 						</div>
@@ -107,7 +104,7 @@
 						</div>
 						<div>
 							<a href="{{$import.OAuthCodeURL}}" class="button primary">Approve Now</a>
-							<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
+							<button class="turboclick" hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
 						</div>
 
 					{{- else if eq "AUTHORIZED" $import.StateID -}}
@@ -147,7 +144,7 @@
 							</div>
 							<div>
 								<button hx-post="/@me/settings/import-start?importId={{$import.ID}}" hx-push-url="false" class="primary success">Start Import</button>
-								<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}" hx-push-url="false">Cancel Import</button>
+								<button class="turboclick" hx-get="/@me/settings/import-cancel?importId={{$import.ID}}" hx-push-url="false">Cancel Import</button>
 							</div>
 
 						{{- else -}}
@@ -157,7 +154,7 @@
 								Contact your system administrator for assistance.
 							</div>
 							<div>
-								<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
+								<button class="turboclick" hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
 							</div>
 						{{- end -}}
 
@@ -248,7 +245,7 @@
 								the import, return to this page to finalize the migration.
 							</div>
 							<div>
-								<a href="/@me">View My Profile &rarr;</a>
+								<a class="turboclick" href="/@me">View My Profile &rarr;</a>
 							</div>
 							<hr class="margin-top-lg">
 							<div class="text-lg bold">Next Step: Move Your Account</div>
@@ -268,7 +265,7 @@
 								which will delete all content that was imported from your original server.
 							</div>
 							<div>
-								<button hx-get="/@me/settings/import-undo?importId={{$import.ID}}">Undo Import</button>
+								<button class="turboclick" hx-get="/@me/settings/import-undo?importId={{$import.ID}}">Undo Import</button>
 							</div>
 
 					{{- else if eq "DONE" $import.StateID -}}

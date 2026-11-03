@@ -1,3 +1,8 @@
-<button class="turboclick" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{.}}">
+<!-- reply-button takes (array $builder $url); an Inbox builder hides it when the post's own reply policy refuses the User -->
+{{- $builder := index . 0 -}}
+{{- $url := index . 1 -}}
+{{- if $builder.CanReplyTo $url -}}
+<button class="turboclick" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{$url}}">
 	{{icon "reply"}} Reply
 </button>
+{{- end -}}

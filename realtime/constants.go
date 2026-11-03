@@ -34,3 +34,11 @@ const TopicNotification = 9
 // It is addressed by the STREAM's ID, not the StreamSource's: the settings screen that watches it
 // is a Stream page, and a Stream has at most one source.
 const TopicStreamSourceUpdated = 10
+
+// TopicNewsItem is triggered when a new NewsItem lands in a User's home timeline.
+// It is addressed by the USER's ID, and carries the NewsItem's ID in Message.RecordID.
+const TopicNewsItem = 11
+
+// TopicDirectMessageSent is triggered when a User sends a direct message.
+// It is addressed by the USER's ID, and carries the sent Object's ID in Message.RecordID.
+const TopicDirectMessageSent = 12

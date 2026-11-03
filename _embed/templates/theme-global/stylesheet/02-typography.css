@@ -169,10 +169,12 @@ input.text-md {
  * Text Colors
  ******************************************/
 
-.text-white,
+.text-white {
+	color: var(--white);
+}
 .text-gray-00,
 .gray00 .white {
-	color: var(--white);
+	color: var(--gray00);
 }
 .text-gray-01,
 .gray01 {
@@ -237,7 +239,7 @@ input.text-md {
 }
 
 .text-black {
-	color: var(--black);
+	color: var(--gray100);
 	text-decoration: none;
 }
 

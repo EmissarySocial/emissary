@@ -12,7 +12,7 @@
 	padding: 8px 16px;
 	text-align:left;
 	font-weight:500;
-	color:var(--black);
+	color:var(--gray100);
 }
 
 .e-content table td {

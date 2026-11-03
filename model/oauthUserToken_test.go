@@ -73,3 +73,26 @@ func TestOAuthUserToken_Toot(t *testing.T) {
 		require.Zero(t, toot.ExpiresIn, "no expiry advertised when no refresh token is issued")
 	})
 }
+
+// TestOAuthUserToken_MastodonAppLifetime confirms a Mastodon app's grant issues tokens with no
+// expiry and advertises none, while other grants keep the standard lifetime
+func TestOAuthUserToken_MastodonAppLifetime(t *testing.T) {
+
+	standard := NewOAuthUserToken()
+	standard.RefreshToken = "grantid.1.secret"
+	require.Equal(t, OAuthAccessTokenLifetime, standard.AccessTokenLifetime())
+	require.Equal(t, 3600, standard.JSONResponse()["expires_in"])
+
+	mastodon := NewOAuthUserToken()
+	mastodon.MastodonApp = true
+	mastodon.RefreshToken = "grantid.1.secret"
+	require.Equal(t, OAuthMastodonAppTokenLifetime, mastodon.AccessTokenLifetime())
+
+	response := mastodon.JSONResponse()
+	require.NotContains(t, response, "expires_in", "a token that never expires advertises no expiry")
+	require.Equal(t, "grantid.1.secret", response["refresh_token"], "the refresh token is still offered")
+
+	toot := mastodon.Toot()
+	require.Zero(t, toot.ExpiresIn)
+	require.Equal(t, "grantid.1.secret", toot.RefreshToken)
+}

@@ -44,7 +44,7 @@
 
 <div class="margin-top-xl">
 	{{- if not $privilege.IsPurchase -}}
-		<span hx-get="/@me/settings/circle-member-delete?privilegeId={{$privilege.ID}}" class="text-red clickable float-right">Remove from Circle</span>
+		<span hx-get="/@me/settings/circle-member-delete?privilegeId={{$privilege.ID}}" class="text-red clickable float-right turboclick">Remove from Circle</span>
 	{{- end -}}
 	<button script="on click trigger closeModal">Close Window</button>
 </div>

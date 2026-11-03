@@ -51,7 +51,7 @@
 	border: solid 1px var(--gray20);
 	border-radius: calc(var(--rhythm) / 2);
 	box-shadow: 0px var(--rhythm) var(--rhythm) 0px rgba(0, 0, 0, 0.2);
-	color: var(--black);
+	color: var(--gray100);
 	padding: var(--rhythm);
 
 	/* RULE: The panel is the ONE scroll container. The UA stylesheet already gives

@@ -16,28 +16,27 @@ func GetScheduledStatuses(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
-// GetScheduledStatus implements the Mastodon "get scheduled status" endpoint, and always returns an empty status
+// GetScheduledStatus implements the Mastodon "get scheduled status" endpoint, always a 404 (there are none)
 func GetScheduledStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetScheduledStatus) (object.ScheduledStatus, error) {
 
 	return func(model.Authorization, txn.GetScheduledStatus) (object.ScheduledStatus, error) {
-		return object.ScheduledStatus{}, nil
-
+		return object.ScheduledStatus{}, errNoSuch("handler.mastodon.GetScheduledStatus", "Scheduled post")
 	}
 }
 
-// PutScheduledStatus implements the Mastodon "update scheduled status" endpoint as a no-op
+// PutScheduledStatus implements the Mastodon "update scheduled status" endpoint, always a 404 (there are none)
 func PutScheduledStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutScheduledStatus) (object.ScheduledStatus, error) {
 
 	return func(model.Authorization, txn.PutScheduledStatus) (object.ScheduledStatus, error) {
-		return object.ScheduledStatus{}, nil
+		return object.ScheduledStatus{}, errNoSuch("handler.mastodon.PutScheduledStatus", "Scheduled post")
 
 	}
 }
 
-// DeleteScheduledStatus implements the Mastodon "delete scheduled status" endpoint as a no-op
+// DeleteScheduledStatus implements the Mastodon "delete scheduled status" endpoint, always a 404 (there are none)
 func DeleteScheduledStatus(serverFactory *server.Factory) func(model.Authorization, txn.DeleteScheduledStatus) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteScheduledStatus) (struct{}, error) {
-		return struct{}{}, nil
+		return struct{}{}, errNoSuch("handler.mastodon.DeleteScheduledStatus", "Scheduled post")
 	}
 }

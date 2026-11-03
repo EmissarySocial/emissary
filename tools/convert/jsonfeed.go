@@ -47,7 +47,8 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 		}
 	}
 
-	// TODO: LOW: Attachments for podcasts, etc.
+	// A podcast episode's audio, and any other enclosure the Stream offers
+	result.Attachments = jsonFeedAttachments(stream)
 
 	return result
 }

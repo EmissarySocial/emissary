@@ -138,7 +138,7 @@
     padding:8px 12px;
 
     background-color:var(--gray15);
-    color:var(--black);
+    color:var(--gray100);
 }
 
 [role="tablist"].pills > [role="tab"][disabled] {
@@ -155,7 +155,7 @@
     padding:8px 12px;
 
     border: solid 1px var(--blue60);
-	background-color:var(--white);
+	background-color:var(--gray00);
     color:var(--blue60);
 }
 
@@ -253,7 +253,7 @@
 
 [role="tablist"].wizard > [role="tab"].done .step-number {
 	background-color:var(--green70);
-	color:var(--white);
+	color:var(--gray00);
 }
 
 [role="tablist"].wizard > [role="tab"].done .step-label {
@@ -273,7 +273,7 @@
 
 [role="tablist"].wizard > [role="tab"][disabled] .step-number {
 	background-color:var(--gray40);
-	color:var(--white);
+	color:var(--gray00);
 }
 
 [role="tablist"].wizard > [role="tab"][disabled] .step-label {

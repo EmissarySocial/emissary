@@ -4,11 +4,17 @@ import (
 	"iter"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,6 +22,8 @@ import (
 type Object struct {
 	host           string
 	locatorService *Locator
+	outbox2Service *Outbox2
+	queue          *queue.Queue
 }
 
 // NewObject returns a fully populated Object service
@@ -31,6 +39,8 @@ func NewObject() Object {
 func (service *Object) Refresh(factory *Factory) {
 	service.host = factory.Host()
 	service.locatorService = factory.Locator()
+	service.outbox2Service = factory.Outbox2()
+	service.queue = factory.Queue()
 }
 
 // Close stops any background processes controlled by this service
@@ -137,6 +147,64 @@ func (service *Object) RangeByUser(session data.Session, userID primitive.Object
 // ActivityPubURL returns the ActivityPub URL of the provided Object
 func (service *Object) ActivityPubURL(userID primitive.ObjectID, objectID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex() + "/pub/objects/" + objectID.Hex()
+}
+
+// CreateAddressed saves a User's Create activity's object as an Object only its recipients may read,
+// puts the activity into the User's outbox for delivery, and returns both server-assigned URLs
+func (service *Object) CreateAddressed(session data.Session, userID primitive.ObjectID, activity streams.Document) (objectURL string, activityURL string, err error) {
+
+	const location = "service.Object.CreateAddressed"
+
+	// RULE: Refuse a public activity BEFORE saving anything, so a refused post leaves no Object behind
+	if activity.IsPublic() {
+		return "", "", derp.NotImplemented(location, "Public notes are not supported at this time.")
+	}
+
+	document := activity.Object()
+	object := model.NewObject()
+
+	// RULE: The server assigns the created object's canonical id, replacing any client-
+	// provided value (ActivityPub §6). Recipients key incoming messages by this id, so it
+	// must travel inside the delivered activity — not just the Location header.
+	objectURL = service.ActivityPubURL(userID, object.ObjectID)
+	objectValue := document.Map()
+	objectValue[vocab.PropertyID] = objectURL
+	activity.SetProperty(vocab.PropertyObject, objectValue)
+
+	object.Context = document.Context()
+	object.UserID = userID
+	object.Permissions = document.Recipients()
+	object.Value = objectValue
+
+	if err := service.Save(session, &object, "Created via ActivityPub Outbox"); err != nil {
+		return "", "", derp.Wrap(err, location, "Saving object", object)
+	}
+
+	activityURL, err = service.outbox2Service.PutUserActivity(session, userID, activity)
+
+	if err != nil {
+		return "", "", derp.Wrap(err, location, "Putting activity into outbox")
+	}
+
+	// A sent direct message updates the sender's conversations in their other apps
+	if document.Type() == vocab.ObjectTypeNote {
+		service.publishDirectMessageSent(session, &object)
+	}
+
+	return objectURL, activityURL, nil
+}
+
+// publishDirectMessageSent sends a realtime nudge for a User's new direct message, published post-commit and inline
+func (service *Object) publishDirectMessageSent(session data.Session, object *model.Object) {
+
+	// Post-commit, so the nudge cannot arrive before the Object is visible; inline, because the
+	// broker holds live sockets in this process
+	postcommit.Publish(session, service.queue, "PublishRealtimeMessage", mapof.Any{
+		"hostname": uri.Hostname(service.host),
+		"objectId": object.UserID.Hex(),
+		"recordId": object.ObjectID.Hex(),
+		"topic":    realtime.TopicDirectMessageSent,
+	}, queue.WithInline())
 }
 
 /******************************************

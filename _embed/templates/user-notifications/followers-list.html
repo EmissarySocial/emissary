@@ -76,6 +76,13 @@ to that type; ?createDate= drives the infinite scroll.  The row markup is inline
 
 {{- else if eq "" $createDate -}}
 
-	<h2 class="text-gray">No followers yet. When someone follows you, it will show up here.</h2>
+	<!-- No notifications of this kind yet: a welcome, styled and placed as user-inbox/newsfeed-welcome-inbox.html -->
+	<div class="align-center margin-vertical-xl">
+		<div class="text-light-gray" style="font-size:96px;">{{icon "person"}}</div>
+		<div class="text-2xl margin-none">New Followers</div>
+		<div class="margin-vertical max-width-512 margin-horizontal-auto">
+			When someone follows you, they'll appear here, so you can see who's listening and follow them back.
+		</div>
+	</div>
 
 {{- end -}}

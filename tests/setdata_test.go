@@ -211,10 +211,9 @@ func (use setDataUse) apply(method string, scenario setDataScenario, object any,
 		}
 	}
 
-	// Defaults read the current value through the BUILDER, which implements none of the
-	// schema getter interfaces, so the read always fails and every default is applied
+	// Defaults apply only where the object's current value is empty, as in StepSetData.setDefaults
 	for _, name := range defaultsOrder {
-		if currentValue, _ := s.Get(builderStandIn{}, name); compare.IsZero(currentValue) {
+		if currentValue, _ := s.Get(object, name); compare.IsZero(currentValue) {
 			if err := s.Set(object, name, use.Step.Defaults[name]); err != nil {
 				return err
 			}
@@ -223,10 +222,6 @@ func (use setDataUse) apply(method string, scenario setDataScenario, object any,
 
 	return nil
 }
-
-// builderStandIn stands in for a Builder in schema.Get.  No production builder implements
-// a schema getter interface; TestEmulatedSources fails if one ever does.
-type builderStandIn struct{}
 
 // fields lists every path a set-data step writes, and where its value comes from
 func (use setDataUse) fields() []postField {

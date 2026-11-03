@@ -20,7 +20,7 @@ A real `Builder` needs a factory and a database, so `cases_test.go` makes the sa
 
 **`values` render against a builder, which this suite does not have.** Each scenario supplies the rendered text instead, and the golden labels every template `(literal)` or `(renders against the builder; mocked)`. Only the literal ones are exact in the `literal` and `prefilled` scenarios; a mocked one renders as `""`, which is what `executeTemplate` returns when rendering fails.
 
-**`defaults` read the current value through the builder, not the object.** `schema.Get(builder, name)` fails for every builder, because none implements a schema getter interface, so every default is applied every time (BUG-240). `builderStandIn` reproduces that. If a builder ever gains `GetPointer` or `GetStringOK`, `TestEmulatedSources` fails, and `builderStandIn` must change to match.
+**`defaults` read the current value from the object.** `StepSetData.setDefaults` applies a default only where `schema.Get(object, name)` returns an empty value, and a path that cannot be read yet counts as empty. It used to read through the builder, which no builder can answer, so every default overwrote the stored value (BUG-240). The `prefilled` scenario is what pins this: each of its results should show no change at a `defaults` path.
 
 ## What is not reproduced
 

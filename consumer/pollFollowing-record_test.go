@@ -119,12 +119,14 @@ func httpStatus(code int) derp.HTTPError {
 // arrives intact but cannot be decoded.
 func answeredWith(code int, contentType string) error {
 
-	// WithInternalError below makes the OUTER code 500 while the response underneath says 200
+	// WithBadGateway below makes the OUTER code 502 while the response underneath says 200
 
 	header := http.Header{}
+	answered := "with no Content-Type"
 
 	if contentType != "" {
 		header.Set("Content-Type", contentType)
+		answered = contentType
 	}
 
 	inner := derp.HTTPError{
@@ -133,7 +135,8 @@ func answeredWith(code int, contentType string) error {
 			Status:     strconv.Itoa(code) + " " + http.StatusText(code),
 			Header:     header,
 		},
+		Message: "Server answered " + answered + ", which cannot be decoded into the requested result",
 	}
 
-	return derp.Wrap(inner, "remote.Transaction.decodeResponseBody", "HTML must be read into an io.Writer, *string, or *byte[]", derp.WithInternalError())
+	return derp.Wrap(inner, "remote.Transaction.decodeResponseBody", inner.Message, derp.WithBadGateway())
 }

@@ -1,76 +1,170 @@
-<div hx-push-url="true" hx-swap="transition:true" class="framed">
-	<a href="#main" class="hide-visual">Skip navigation</a>
-	{{- if eq "STARTUP" .DomainStateID -}}
-		<a class="link nav-item turboclick" href="/startup">{ Startup Checklist }</a>
-	{{- else -}}
-		{{- range .Navigation -}}
-			<a href="/{{.Token}}" id="nav-{{.StreamID}}" class="nav-item turboclick" aria-label="{{.Label}}">
-				<span class="label">{{.Label}}</span>
-			</a>
+<!-- Three pieces: the skip link, the desktop <nav> bar, and the mobile .nav-menu, following
+     theme-minimal's mobile menu. The bar and the menu render the same links twice on purpose;
+     the rules that hold this together are in theme-minimal/AGENTS.md. -->
+
+<!-- Read once: .Navigation runs a database query, and it is ranged twice below. -->
+{{- $navigation := .Navigation -}}
+
+<!-- Marks the current section in the sheet only. The bar is marked client-side by SelectNav. -->
+{{- $navigationID := .NavigationID -}}
+
+<!-- RULE: the skip link sits outside both layouts, which are each hidden at some width. -->
+<a href="#main" class="hide-visual">Skip navigation</a>
+
+<nav>
+	<div hx-push-url="true" hx-swap="transition:true" class="framed">
+		{{- if eq "STARTUP" .DomainStateID -}}
+			<a class="link nav-item turboclick" href="/startup">{ Startup Checklist }</a>
+		{{- else -}}
+			{{- range $navigation -}}
+				<a href="/{{.Token}}" id="nav-{{.StreamID}}" class="nav-item turboclick" aria-label="{{.Label}}">
+					<span class="label">{{.Label}}</span>
+				</a>
+			{{- end -}}
 		{{- end -}}
-	{{- end -}}
-	<span class="spacer"></span>
 
-	{{- if .IsAuthenticated -}}
-		<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
-			<span class="icon selected-hide">{{icon "user"}}</span>
-			<span class="icon selected-show">{{icon "user-fill"}}</span>
-			<span class="mobile-show label">Profile</span>
-		</a>
+		<span class="spacer"></span>
 
-		<a href="/@me/newsfeed" id="nav-inbox" class="nav-item turboclick" aria-label="Inbox">
-			<span class="icon selected-hide">{{icon "inbox"}}</span>
-			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
-			<span class="mobile-show label">Inbox</span>
-		</a>
+		{{- if .IsAuthenticated -}}
+			<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
+				<span class="icon selected-hide">{{icon "user"}}</span>
+				<span class="icon selected-show">{{icon "user-fill"}}</span>
+				<span class="mobile-show label">Profile</span>
+			</a>
 
-		<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
-			<span class="icon selected-hide">{{- icon "chat" }}</span>
-			<span class="icon selected-show">{{- icon "chat-fill" }}</span>
-			<span class="mobile-show label">Conversations</span>
-		</a>
+			<a href="/@me/newsfeed" id="nav-inbox" class="nav-item turboclick" aria-label="Inbox">
+				<span class="icon selected-hide">{{icon "inbox"}}</span>
+				<span class="icon selected-show">{{icon "inbox-fill"}}</span>
+				<span class="mobile-show label">Inbox</span>
+			</a>
 
-		<a href="/@me/notifications/replies" id="nav-notifications" class="nav-item turboclick" aria-label="Notifications">
-			<span class="icon selected-hide">{{icon "bell"}}</span>
-			<span class="icon selected-show">{{icon "bell-fill"}}</span>
-			<span class="mobile-show label">Notifications</span>
-			<span id="nav-notifications-badge" class="nav-badge text-red text-sm {{if not .HasUnreadNotifications}}hide{{end}}">&#9679;</span>
-		</a>
+			<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
+				<span class="icon selected-hide">{{- icon "chat" }}</span>
+				<span class="icon selected-show">{{- icon "chat-fill" }}</span>
+				<span class="mobile-show label">Conversations</span>
+			</a>
 
-		<div hx-ext="sse" sse-connect="/@me/sse/notifications" style="display:none;">
-			<div
-				hx-get="/@me/notifications/badge"
-				hx-trigger="sse:message, refreshSidebar from:window"
-				hx-target="#nav-notifications-badge"
-				hx-swap="outerHTML"
-				hx-push-url="false">
+			<a href="/@me/notifications/replies" id="nav-notifications" class="nav-item turboclick" aria-label="Notifications">
+				<span class="icon selected-hide">{{icon "bell"}}</span>
+				<span class="icon selected-show">{{icon "bell-fill"}}</span>
+				<span class="mobile-show label">Notifications</span>
+				<span id="nav-notifications-badge" class="nav-badge text-red text-sm {{if not .HasUnreadNotifications}}hide{{end}}">&#9679;</span>
+			</a>
+
+			<div hx-ext="sse" sse-connect="/@me/sse/notifications" style="display:none;">
+				<div
+					hx-get="/@me/notifications/badge"
+					hx-trigger="sse:message, refreshSidebar from:window"
+					hx-target="#nav-notifications-badge"
+					hx-swap="outerHTML"
+					hx-push-url="false">
+				</div>
 			</div>
+
+			{{- if .IsOwner -}}
+				<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
+					<span class="icon selected-hide">{{icon "database"}}</span>
+					<span class="icon selected-show">{{icon "database-fill"}}</span>
+					<span class="mobile-show label">Server</span>
+				</a>
+			{{- end -}}
+		{{- else if .IsIdentity -}}
+			<a href="/@guest" id="nav-profile" class="nav-item turboclick" aria-label="Profile">
+				<span class="icon selected-hide">{{icon "user"}}</span>
+				<span class="label">Profile</span>
+			</a>
+		{{- else -}}
+
+			<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
+				<span class="icon">{{icon "user"}}</span>
+				<span class="label">Sign In</span>
+			</a>
+
+			{{- if .DomainHasRegistrationForm -}}
+				<a href="/register" id="nav-signup" class="nav-item primary turboclick" aria-label="join now">
+					<span class="label">Join Now</span>
+				</a>
+			{{- end -}}
+
+		{{- end -}}
+	</div>
+</nav>
+
+<!-- RULE: the mobile landmark is a div with a role, never a second <nav>: every `nav` rule would reach it. -->
+<div class="nav-menu" role="navigation" aria-label="Menu">
+
+	<!-- RULE: a checkbox, not <details>, and it precedes the label and the sheet. role=button stays here,
+	     and the Escape branch sets aria-expanded itself because setting .checked fires no change event. -->
+	<input type="checkbox" id="nav-menu-toggle" class="nav-menu-toggle hide-visual" autocomplete="off"
+		role="button" aria-controls="nav-menu-panel" aria-expanded="false" aria-label="Navigation menu"
+		script="on change set @aria-expanded to my.checked end on keydown[key=='Escape'] from window if my.checked set my.checked to false then set @aria-expanded to 'false' then focus me end end">
+
+	<!-- One control, two glyphs: CSS swaps them on :checked, so this is the close button too. -->
+	<label for="nav-menu-toggle" class="nav-menu-button">
+		<span class="icon nav-menu-open" aria-hidden="true">{{icon "menu"}}</span>
+		<span class="icon nav-menu-close" aria-hidden="true">{{icon "cancel"}}</span>
+	</label>
+
+	<!-- RULE: sheet links carry no id and not .nav-item, so SelectNav never finds or unmarks them. -->
+	<div id="nav-menu-panel" class="nav-menu-panel">
+		{{- if eq "STARTUP" .DomainStateID -}}
+			<a class="link nav-menu-item turboclick" href="/startup">{ Startup Checklist }</a>
+		{{- else -}}
+			{{- range $navigation -}}
+				{{- $isCurrent := eq $navigationID .StreamID -}}
+				<a href="/{{.Token}}" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+					<span class="label">{{.Label}}</span>
+				</a>
+			{{- end -}}
+		{{- end -}}
+
+		<!-- The bar's account links, which the hidden bar no longer shows on a phone -->
+		<div class="nav-menu-account">
+			{{- if .IsAuthenticated -}}
+				<a href="/@me" class="nav-menu-item turboclick">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">Profile</span>
+				</a>
+
+				<a href="/@me/newsfeed" class="nav-menu-item turboclick">
+					<span class="icon">{{icon "inbox"}}</span>
+					<span class="label">Inbox</span>
+				</a>
+
+				<a href="/@me/conversations" class="nav-menu-item turboclick">
+					<span class="icon">{{icon "chat"}}</span>
+					<span class="label">Conversations</span>
+				</a>
+
+				<a href="/@me/notifications/replies" class="nav-menu-item turboclick">
+					<span class="icon">{{icon "bell"}}</span>
+					<span class="label">Notifications</span>
+				</a>
+
+				{{- if .IsOwner -}}
+					<a href="/admin/domain" class="nav-menu-item turboclick">
+						<span class="icon">{{icon "database"}}</span>
+						<span class="label">Server</span>
+					</a>
+				{{- end -}}
+			{{- else if .IsIdentity -}}
+				<a href="/@guest" class="nav-menu-item turboclick">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">Profile</span>
+				</a>
+			{{- else -}}
+				<a href="/signin" class="nav-menu-item turboclick">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">Sign In</span>
+				</a>
+
+				{{- if .DomainHasRegistrationForm -}}
+					<a href="/register" class="nav-menu-item primary turboclick">
+						<span class="label">Join Now</span>
+					</a>
+				{{- end -}}
+			{{- end -}}
 		</div>
 
-		{{- if .IsOwner -}}
-			<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
-				<span class="icon selected-hide">{{icon "database"}}</span>
-				<span class="icon selected-show">{{icon "database-fill"}}</span>
-				<span class="mobile-show label">Server</span>
-			</a>
-		{{- end -}}
-	{{- else if .IsIdentity -}}
-		<a href="/@guest" id="nav-profile" class="nav-item turboclick" aria-label="Profile">
-			<span class="icon selected-hide">{{icon "user"}}</span>
-			<span class="label">Profile</span>
-		</a>
-	{{- else -}}
-
-		<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
-			<span class="icon">{{icon "user"}}</span>
-			<span class="label">Sign In</span>
-		</a>
-
-		{{- if .DomainHasRegistrationForm -}}
-			<a href="/register" id="nav-signup" class="nav-item primary turboclick" aria-label="join now">
-				<span class="label">Join Now</span>
-			</a>
-		{{- end -}}
-
-	{{- end -}}
+	</div>
 </div>

@@ -1,20 +1,28 @@
+-- ShowMore clips a long post to the max-height its template sets on .ShowMore-content, and
+-- reveals .ShowMore-button only when enough is hidden to be worth a click.  A post that fits,
+-- or that overflows by no more than a quarter of the cap, opens in full instead.
 behavior ShowMore
 
-	init
+	-- Measure again whenever an image finishes loading, because a lazy image without stored
+	-- dimensions is 0px tall at init and can push an open post past the cap later
+	on load from <img/> in me
+		send measure to me
+	end
 
-		set :button to the first <.ShowMore-button /> in me
-		set :content to the first <.ShowMore-content /> in me
+	-- scrollHeight is the content's full height, including what the cap hides.  Each measure
+	-- either opens the post in full or puts the cap back with its button, until a click opens
+	-- it for good.
+	on measure
+		if :expanded then exit end
 
-		add .blockselect-ignore to :button
-
-		measure the :content's height
-		if the height is less than maxHeight
-			trigger showMore
+		if :content.scrollHeight <= :limit * 1.25
+			set :content.style.maxHeight to ""
+			add @hidden to :button
 			exit
 		end
 
-		set :content.style.overflowY to "hidden"
-		remove @hidden from the :button
+		set :content.style.maxHeight to `${:limit}px`
+		remove @hidden from :button
 	end
 
 	on click from <.ShowMore-button /> in me
@@ -22,10 +30,20 @@ behavior ShowMore
 		trigger showMore
 	end
 
-	on showMore 
+	-- :expanded, not the button's presence, marks this as done: a removed element still exists
+	on showMore
+		set :expanded to true
 		set :content.style.maxHeight to ""
-		remove .ShowMore-content from :button
 		remove :button
+	end
+
+	-- The cap is read from the content's own style, so the 220px or 320px stays in the template alone
+	init
+		set :button to the first <.ShowMore-button /> in me
+		set :content to the first <.ShowMore-content /> in me
+		set :limit to parseInt(getComputedStyle(:content).maxHeight)
+		add .blockselect-ignore to :button
+		send measure to me
 	end
 
 end

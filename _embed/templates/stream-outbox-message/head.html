@@ -1,0 +1,13 @@
+<!-- The note's <head> values, which as-modal puts into the full page so a shared link previews the note -->
+<title>{{.DomainLabel}} - {{.Author.Name}}</title>
+<link rel="canonical" href="{{.Permalink}}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="{{.DomainLabel}}">
+<meta property="og:title" content="{{.Author.Name}}">
+<meta property="og:url" content="{{.Permalink}}">
+{{- if ne "" .IconURL }}
+<meta property="og:image" content="{{.IconURL}}">
+<meta name="twitter:card" content="summary_large_image">
+{{- end }}
+<meta name="description" content="{{.ContentHTML}}">
+<meta property="og:description" content="{{.ContentHTML}}">

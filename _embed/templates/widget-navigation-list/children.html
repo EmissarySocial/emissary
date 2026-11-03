@@ -1,7 +1,7 @@
 {{- if eq "All" (.Widget.Data.GetString "children") -}}
 
 	{{- range $index, $child := .Children.Slice -}}
-		<div class="ellipsis"><a href="/{{$child.Token}}" hx-get="/{{$child.Token}}" class="turboclick">{{$child.Label}}</a></div>
+		<div class="ellipsis navigation-item"><a href="/{{$child.Token}}" hx-get="/{{$child.Token}}" class="turboclick">{{$child.Label}}</a></div>
 	{{- end -}}
 
 {{- end -}}

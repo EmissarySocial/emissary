@@ -18,3 +18,11 @@ func WithIgnoreHeaders() ClientOptionFunc {
 		client.obeyHeaders = false
 	}
 }
+
+// WithFailureMemo shares a FailureMemo with this Client, so URLs that recently failed with a server
+// or network error or a 403 are not fetched again until its window passes.
+func WithFailureMemo(memo *FailureMemo) ClientOptionFunc {
+	return func(client *Client) {
+		client.failures = memo
+	}
+}

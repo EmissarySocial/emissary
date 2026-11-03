@@ -41,6 +41,7 @@ func PostApplication(serverFactory *server.Factory) func(model.Authorization, tx
 		oauthClient.Website = t.Website
 		oauthClient.RedirectURIs = convert.SliceOfString(t.RedirectURIs)
 		oauthClient.Scopes = strings.Split(t.Scopes, " ")
+		oauthClient.MastodonApp = true
 
 		// Save the application to the database
 		oauthClientService := factory.OAuthClient()

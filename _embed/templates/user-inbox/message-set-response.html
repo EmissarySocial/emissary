@@ -2,6 +2,6 @@
 {{- $document := .ActivityStream $message.URL -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $internalID := .QueryParam "origin.followingId" -}}
-{{- $args := array $message $document $folderID $internalID -}}
+{{- $args := array $message $document $folderID $internalID $ -}}
 
 {{- template "message-responses" $args -}}

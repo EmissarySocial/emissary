@@ -2,11 +2,11 @@
 {{- $oauthUserTokens := .OAuthUserTokensForExports -}}
 
 <div class="app" script="init send SelectNav(id:'settings')">
-	<title>Profile | Export</title>
+	<title>Migration | Export</title>
 
 	{{- if $isDesktop -}}
-		<div id="app-sidebar" class="expanded">
-			{{- template "menu" "general" -}}
+		<div id="app-sidebar" class="flex-column flex-justify-between expanded">
+			{{- template "menu" "migration" -}}
 		</div>
 	{{- end -}}
 	
@@ -17,16 +17,13 @@
 				{{ if not $isDesktop }}
 					<a href="/@me/settings/mobile" class="turboclick" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
-				<a href="/@me/settings/general" class="turboclick" hx-boost="true">General</a>
-				<a href="/@me/settings/images" class="turboclick" hx-boost="true">Images</a>
-				<a href="/@me/settings/links" class="turboclick" hx-boost="true">Links</a>
 				<a href="/@me/settings/import" class="turboclick" hx-boost="true">Import</a>
 				<a href="/@me/settings/export" class="turboclick selected" hx-boost="true">Export</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/migration" target="_blank" rel="noopener noreferrer" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Exports {{ end }}
+					{{ if $isDesktop }} Help {{ end }}
 				</a>
 			</div>
 		</div>
@@ -43,14 +40,14 @@
 			<div class="flex-grow">
 				<div class="text-xs text-gray">You're signed in to <b>{{.Hostname}}</b> as:</div>
 				<div class="text-sm bold">
-					<a href="/@me">@{{.Username}}@{{.Hostname}}</a>
+					<a class="turboclick" href="/@me">@{{.Username}}@{{.Hostname}}</a>
 				</div>
 			</div>
 		</div>
 
 		{{- if $oauthUserTokens.IsEmpty -}}
 
-			<div class="card padding max-width-640 transition-main-card">
+			<div class="card border padding transition-main-card">
 				<div class="text-lg bold"><i class="bi bi-database-up"></i> Export to Other Servers</div>
 
 				<div>
@@ -81,7 +78,7 @@
 				{{- $actorIconURL := $actor.Icon.Href -}}
 				{{- $startDate := $oauthUserToken.data.startDate -}}
 
-				<div class="card padding max-width-640 margin-bottom transition-main-card" role="link">
+				<div class="card padding margin-bottom transition-main-card" role="link">
 				
 					<div class="flex-row margin-bottom-lg">
 						<div class="flex-grow">
@@ -120,7 +117,7 @@
 							If you have double-checked your new profile and are ready to move your profile to your new server,
 							use this button to close this account and notify your followers.
 						</div>
-						<button hx-get="/@me/settings/export-finish?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="primary">Move Permanently</button>
+						<button hx-get="/@me/settings/export-finish?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="primary turboclick">Move Permanently</button>
 					</div>
 
 					<hr class="margin-vertical-lg">
@@ -133,7 +130,7 @@
 							from accessing any more data.
 						</div>
 
-						<button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="text-red">Disconnect Client</button>
+						<button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="text-red turboclick">Disconnect Client</button>
 					</div>
 				</div>
 

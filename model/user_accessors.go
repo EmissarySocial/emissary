@@ -45,6 +45,51 @@ func UserSchema() schema.Element {
 	}
 }
 
+// userDataMaxLength is the longest value that any key in a User's `data` map may hold
+const userDataMaxLength = 4096
+
+// UserSchemaForTemplate returns UserSchema plus the string rules that an outbox Template declares
+// for keys in the User's `data` map. Every other field keeps the rules in UserSchema.
+func UserSchemaForTemplate(templateSchema schema.Schema) schema.Element {
+
+	result, _ := UserSchema().(schema.Object)
+
+	// Find the `data` object that the Template declares, if any
+	templateObject, isObject := templateSchema.Element.(schema.Object)
+
+	if !isObject {
+		return result
+	}
+
+	templateData, isObject := templateObject.Properties["data"].(schema.Object)
+
+	if !isObject {
+		return result
+	}
+
+	// RULE: Data holds only strings, so only String rules apply, each capped at userDataMaxLength
+	data, _ := result.Properties["data"].(schema.Object)
+	data.Properties = make(schema.ElementMap, len(templateData.Properties))
+
+	for name, element := range templateData.Properties {
+
+		stringElement, isString := element.(schema.String)
+
+		if !isString {
+			continue
+		}
+
+		if (stringElement.MaxLength == 0) || (stringElement.MaxLength > userDataMaxLength) {
+			stringElement.MaxLength = userDataMaxLength
+		}
+
+		data.Properties[name] = stringElement
+	}
+
+	result.Properties["data"] = data
+	return result
+}
+
 /*********************************
  * Getter/Setter Interfaces
  *********************************/

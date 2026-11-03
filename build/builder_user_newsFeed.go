@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"math"
 	"net/http"
+	"slices"
+	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -14,6 +16,7 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
@@ -715,6 +718,93 @@ func (w Inbox) AmFollowing(url string) model.Following {
 
 	// Return the (possibly empty) Following record
 	return following
+}
+
+// CanReplyTo returns TRUE unless the document's interactionPolicy refuses this User's reply (REPLY-CONTROLS §3.2).
+// A reply held for the author's approval is allowed: the remote server keeps it pending.
+func (w Inbox) CanReplyTo(url string) bool {
+
+	if w._user == nil {
+		return false
+	}
+
+	document := w.ActivityStream(url)
+	request := newReplyRequest(document, w._user.ActivityPubURL(), w.followsActor, w.isFollowedBy)
+
+	return document.InteractionPolicy().CanInteract(vocab.PropertyCanReply, request) != streams.InteractionDenied
+}
+
+// newReplyRequest describes the actor's reply to the document, for its InteractionPolicy.  The follow
+// checks receive the author's ID, and each runs at most once per collection.
+func newReplyRequest(document streams.Document, actorID string, followsAuthor func(string) bool, followedByAuthor func(string) bool) streams.InteractionRequest {
+
+	author := document.AttributedTo()
+	authorID := author.ID()
+
+	// RULE: Load the author at most once, and only when the policy names an IRI that might be one of its collections
+	collections := sync.OnceValues(func() (string, string) {
+		loaded := author.LoadLink()
+		return loaded.Followers().ID(), loaded.Following().ID()
+	})
+
+	// Remember each answer, because a policy may list one IRI many times.  CanInteract asks one at a time.
+	answers := make(map[string]bool)
+
+	return streams.InteractionRequest{
+		ActorID:   actorID,
+		AuthorID:  authorID,
+		Mentioned: slices.Collect(document.RangeMentions()),
+		IsMember: func(collectionID string) bool {
+
+			if answer, asked := answers[collectionID]; asked {
+				return answer
+			}
+
+			answer := false
+
+			switch followersID, followingID := collections(); collectionID {
+			case followersID:
+				answer = followsAuthor(authorID)
+			case followingID:
+				answer = followedByAuthor(authorID)
+			}
+
+			answers[collectionID] = answer
+			return answer
+		},
+	}
+}
+
+// followsActor returns TRUE if this User follows the actor over ActivityPub.  Emissary does not record
+// whether a Follow was accepted, so a blocked or not-yet-sent follow is the only one that does not count.
+func (w Inbox) followsActor(actorID string) bool {
+
+	if actorID == "" {
+		return false
+	}
+
+	following := model.NewFollowing()
+
+	if err := w._factory.Following().LoadByURL(w._session, w._user.UserID, actorID, &following); err != nil {
+		return false
+	}
+
+	if following.Method != model.FollowingMethodActivityPub {
+		return false
+	}
+
+	return (following.Status != model.FollowingStatusBlocked) && (following.Status != model.FollowingStatusImportPending)
+}
+
+// isFollowedBy returns TRUE if the actor follows this User
+func (w Inbox) isFollowedBy(actorID string) bool {
+
+	if actorID == "" {
+		return false
+	}
+
+	follower := model.NewFollower()
+	return w._factory.Follower().LoadByActor(w._session, w._user.UserID, actorID, &follower) == nil
 }
 
 // HasRule returns a rule that matches the current user, rule type, and trigger.

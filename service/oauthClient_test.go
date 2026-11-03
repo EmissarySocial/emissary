@@ -73,3 +73,15 @@ func newTestOAuthClient() model.OAuthClient {
 	client.ClientSecret = testClientSecret
 	return client
 }
+
+// TestOAuthClient_LoadByToken_RejectsEmpty requires an empty client_id to fail before any lookup, never matching an arbitrary client
+func TestOAuthClient_LoadByToken_RejectsEmpty(t *testing.T) {
+
+	service := OAuthClient{}
+	client := model.NewOAuthClient()
+
+	// brokenSession fails any database call, so reaching the database would report a different site
+	err := service.LoadByToken(brokenSession{}, "", &client)
+	require.Error(t, err)
+	require.Equal(t, "service.OAuthClient.LoadByToken", derp.Location(err))
+}

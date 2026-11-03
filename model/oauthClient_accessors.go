@@ -9,13 +9,17 @@ import (
 func OAuthClientSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"clientId":     schema.String{Format: "objectId", Required: true},
-			"clientUrl":    schema.String{Format: "url"},
-			"name":         schema.String{Format: "text", MaxLength: 64, Required: true},
-			"summary":      schema.String{Format: "text", MaxLength: 256},
-			"iconUrl":      schema.String{Format: "url"},
-			"website":      schema.String{Format: "url"},
-			"redirectUris": schema.Array{Items: schema.String{Format: "url"}},
+			"clientId":  schema.String{Format: "objectId", Required: true},
+			"clientUrl": schema.String{Format: "url"},
+			"name":      schema.String{Format: "text", MaxLength: 64, Required: true},
+			"summary":   schema.String{Format: "text", MaxLength: 256},
+			"iconUrl":   schema.String{Format: "url"},
+			"website":   schema.String{Format: "url"},
+			// "url" (http/https/mailto only) rejects the custom app-scheme redirect URIs real
+			// Mastodon clients register (e.g. "mastodon://joinmastodon.org/oauth"). "uri" accepts
+			// any scheme as long as the value is a syntactically valid, absolute URI -- matching
+			// what real Mastodon servers actually accept here.
+			"redirectUris": schema.Array{Items: schema.String{Format: "uri"}},
 			"scopes":       schema.Array{Items: schema.String{Format: "unsafe-any", MaxLength: 128}}, // OAuth scopes are colon-delimited; unsafe-any bounds length without the token format's rejection.
 		},
 	}

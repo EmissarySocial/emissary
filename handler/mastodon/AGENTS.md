@@ -25,7 +25,7 @@ A list handler can't call `userCanStream` on results it already fetched — by t
 
 [utils.go](utils.go) parses the caller-supplied URL and calls `ByHostname(parsedURL.Host)`, so the factory and permission service can belong to a different domain than the request. The per-handler authorization now gates content, so this is not an open confidentiality hole, but two things remain to revisit when returning to this API: a caller can still trigger a lookup against an arbitrary domain on the server, and `GetStatus` evaluates `UserCan` with a foreign domain's permission service against the caller's home-domain `Authorization` (the UserID is meaningless in that domain).
 
-Used by `GetStatus`, `DeleteStatus`, and `PostStatus_Translate`. `GetStatus_Source` and `PutStatus` instead resolve from the request host (`t.Host`) and load via `streamService.LoadByURL` directly.
+Used by `GetStatus`'s own URL-permalink fallback and by `PostStatus_Translate`, both of which still take the gap above. `DeleteStatus`, `GetStatus_Source`, and `PutStatus` instead resolve the request's own domain from `t.Host` and load the Stream via `loadStreamByStatusID` (a hex status ID, falling back to a URL) -- `DeleteStatus` used to call `getStreamFromURL` directly, which parses the *status ID* as a URL to find the domain; a bare hex ID has no host, so every delete failed with 421 regardless of who owned the post. `PostStatus_Translate` has the identical latent bug (an ID-shaped `t.ID` fails the same way) and has not been fixed.
 
 ## Every implemented handler must use one of three authorization shapes
 

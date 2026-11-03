@@ -180,6 +180,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetThumbnail:
 		return StepSetThumbnail(s)
 
+	case step.ShareReplyPolicy:
+		return StepShareReplyPolicy(s)
+
 	case step.Sleep:
 		return StepSleep(s)
 

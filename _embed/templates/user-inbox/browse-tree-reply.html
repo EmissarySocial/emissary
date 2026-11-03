@@ -4,9 +4,8 @@
 
 {{- if and $document.Metadata.IsRuleHidden (not $reveal) -}}
 
-	{{- /* D2 placeholder: this reply is hidden by the viewer's rules. Selecting it re-fetches
-	       this same card with ?reveal=true and swaps it in place. */ -}}
-	<div class="card padding margin-bottom" role="button"
+	<!-- Placeholder for a reply hidden by the viewer's rules; click to reveal it in place. -->
+	<div class="card padding margin-bottom turboclick" role="button"
 		hx-get="/@me/newsfeed/browse-tree-reply?url={{$url}}&reveal=true"
 		hx-target="this"
 		hx-swap="outerHTML"
@@ -73,7 +72,7 @@
 					</div>
 
 					<div class="margin-top-lg text-xs">
-						{{template "reply-button" $documentID }}
+						{{template "reply-button" (array $ $documentID) }}
 						<span 
 							hx-get="/@me/newsfeed/like-button?url={{$documentID}}" 
 							hx-trigger="intersect once"
@@ -85,10 +84,10 @@
 					</div>
 
 					<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">
-						<button hx-get="/@me/newsfeed/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
-						<button hx-get="/@me/newsfeed/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
+						<button class="turboclick" hx-get="/@me/newsfeed/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
+						<button class="turboclick" hx-get="/@me/newsfeed/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
 						<span class="margin-horizontal-sm"></span>
-						<button hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
+						<button class="turboclick" hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
 						<a href="{{$documentID}}" target="_blank" rel="noopener noreferrer" class="button" title="View Original Website" aria-label="Visit Original Website">{{icon "globe"}}</a>
 					</div>
 
@@ -118,7 +117,7 @@
 								{{$replies.Length}} 
 								{{pluralize $replies.Length "Reply" "Replies"}}
 							</div>
-							
+
 							<div class="ToggleContent" style="display:none;">
 								{{- range $index, $replyURL := $replies -}}
 									<div 
@@ -137,7 +136,7 @@
 									</div>
 								{{- end -}}
 							</div>
-							
+
 						</div>
 
 					{{- end -}}

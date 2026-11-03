@@ -16,7 +16,7 @@ import (
 
 // StepUploadAttachments represents an action that can upload attachments.  It can only be used on a StreamBuilder
 type StepUploadAttachments struct {
-	Action         string // Action to perform when uploading the attachment ("append" or "replace")
+	Action         string // Action to perform when uploading the attachment ("append", "replace", or "fill")
 	Fieldname      string // Name of the form field that contains the file data (Default: "file")
 	AttachmentPath string // Path name to store the AttachmentID
 	DownloadPath   string // Path name to store the download URL
@@ -61,11 +61,6 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		return Continue()
 	}
 
-	// Number of files must be less or equal to the maximum
-	if len(files) > step.Maximum {
-		files = files[:step.Maximum]
-	}
-
 	// Required services and objects
 	factory := builder.factory()
 	attachmentService := factory.Attachment()
@@ -79,7 +74,30 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		objectType = "Stream"
 	}
 
-	// Make room for new attachments
+	// Number of files must be less or equal to the maximum.  "fill" keeps every existing
+	// attachment, so it accepts only as many new files as there is room left for.
+	limit := step.Maximum
+
+	if step.Action == "fill" {
+
+		existing, err := attachmentService.QueryByCategory(builder.session(), objectType, objectID, step.Category)
+
+		if err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Counting existing Attachments"))
+		}
+
+		limit = roomLeft(step.Maximum, len(existing))
+	}
+
+	if len(files) > limit {
+		files = files[:limit]
+	}
+
+	if len(files) == 0 {
+		return Continue()
+	}
+
+	// Make room for new attachments.  For "fill", the files already fit, so nothing is deleted.
 	if err := attachmentService.MakeRoom(builder.session(), objectType, objectID, step.Category, step.Action, step.Maximum, len(files)); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Making room for new Attachments"))
 	}
@@ -196,6 +214,12 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 	// After all files are uploaded, tell the client that we're done.
 	return Continue().WithEvent("attachments-updated", "true")
+}
+
+// roomLeft returns how many more attachments fit beneath the maximum, when there are already
+// "existing" of them.  It is never negative, even when a lower maximum leaves too many already.
+func roomLeft(maximum int, existing int) int {
+	return max(maximum-existing, 0)
 }
 
 // verifyContentType sniffs an uploaded file to determine its actual content-type, and

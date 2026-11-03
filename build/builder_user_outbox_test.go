@@ -74,6 +74,27 @@ func TestReportedBug_NonOwnerProfileNo500(t *testing.T) {
 
 // TestOutbox_IsIndexable proves the profile's "Index on Search Engines" setting
 // drives Outbox.IsIndexable, which overrides the indexable-by-default Common.
+// TestOutbox_HasPassword verifies that HasPassword reports whether any password is stored, and nothing more
+func TestOutbox_HasPassword(t *testing.T) {
+
+	// A magic-link account has no password
+	require.False(t, Outbox{_user: &model.User{}}.HasPassword())
+
+	// Any stored value counts: a bcrypt hash, a legacy plaintext, even whitespace
+	for _, stored := range []string{"$2a$12$abcdefghijklmnopqrstuuDJ0n8m1Wj6bqT6n0u1sWQ3HPZ5R8Q2W", "demo", " "} {
+		require.True(t, Outbox{_user: &model.User{Password: stored}}.HasPassword(), "stored password %q", stored)
+	}
+
+	// Wizard steps branch on it through an "if" condition, which must render a plain boolean
+	condition := template.Must(template.New("condition").Parse(`{{.HasPassword}}`))
+
+	for want, user := range map[string]*model.User{"true": {Password: "demo"}, "false": {}} {
+		var buffer strings.Builder
+		require.Nil(t, condition.Execute(&buffer, Outbox{_user: user}))
+		require.Equal(t, want, buffer.String())
+	}
+}
+
 func TestOutbox_IsIndexable(t *testing.T) {
 
 	// A brand-new/opted-out profile (isIndexable=false) is NOT indexable...

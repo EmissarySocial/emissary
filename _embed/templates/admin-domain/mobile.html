@@ -1,0 +1,25 @@
+{{- /* mobile.html is the admin console's full-page menu on small screens, where menubar.html leaves out the sidebar
+       and its back arrow comes here instead.  It mirrors user-settings/mobile.html. */ -}}
+<div class="page padding" script="init send SelectNav(id:'admin')">
+	<h1 class="text-xl bold margin-bottom-lg">Server Admin</h1>
+	{{- template "admin-menu" "" -}}
+</div>
+
+<style>
+	.page {
+
+		min-height: 100dvh;
+
+		.menu-item {
+			display: block;
+			font-size: calc(var(--rhythm) * 2.5);
+			padding: calc(var(--rhythm) * 2) 0;
+			color: var(--gray80);
+			border-bottom: solid 1px var(--gray20);
+
+			&:last-child {
+				border-bottom: none;
+			}
+		}
+	}
+</style>

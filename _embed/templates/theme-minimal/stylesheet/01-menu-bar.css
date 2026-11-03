@@ -70,7 +70,7 @@
 #menu-bar button.selected:hover,
 #menu-bar button.selected:hover {
 	background-color: var(--gray20);
-	color: var(--black);
+	color: var(--gray100);
 }
 
 #menu-bar a.text-red,
@@ -109,7 +109,7 @@
 
 #menu-bar-sub a.selected {
 	background-color:var(--gray20);
-	color:var(--black);
+	color:var(--gray100);
 }
 
 

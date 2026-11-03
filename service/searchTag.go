@@ -295,6 +295,15 @@ func (service *SearchTag) FindAllowedTags(session data.Session, query string) ([
 	return result, nil
 }
 
+// QueryAllowedByPrefix returns the ALLOWED and FEATURED tags whose value begins with the prefix, alphabetically.
+func (service *SearchTag) QueryAllowedByPrefix(session data.Session, prefix string, limit int64) ([]model.SearchTag, error) {
+
+	criteria := exp.BeginsWith("value", model.ToToken(prefix)).
+		AndIn("stateId", []int{model.SearchTagStateAllowed, model.SearchTagStateFeatured})
+
+	return service.Query(session, criteria, option.SortAsc("value"), option.MaxRows(limit))
+}
+
 // QueryByValue returns all tags in a list
 func (service *SearchTag) QueryByValue(session data.Session, values []string, options ...option.Option) (sliceof.Object[model.SearchTag], error) {
 	criteria := exp.In("value", values)

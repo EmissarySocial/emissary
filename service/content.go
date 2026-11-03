@@ -67,6 +67,9 @@ func (service *Content) Format(content *model.Content) {
 		// harmless (and required for the other formats), so it runs regardless.
 		content.HTML = markdown.ToHTML(content.Raw)
 
+	case model.ContentFormatText:
+		content.HTML = textToHTML(content.Raw)
+
 	default:
 		content.HTML = ""
 	}

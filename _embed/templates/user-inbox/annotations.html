@@ -1,5 +1,4 @@
-<!-- The Notes page: the signed-in User's private notes, newest first, filtered by
-     ?type=actor|document.  The annotations action sets ?section=ANNOTATIONS so the sidebar highlights it. -->
+<!-- The Notes page: the User's private notes, newest first, filtered by ?type=actor|document. -->
 {{- $isMobile := .IsMobile -}}
 {{- $isDesktop := not $isMobile -}}
 {{- $type := .QueryParam "type" -}}
@@ -31,7 +30,7 @@
 		<div role="tablist" class="pills margin-bottom-lg">
 			<a role="tab" href="/@me/newsfeed/annotations" class="turboclick" aria-selected="{{$isAll}}">All</a>
 			<a role="tab" href="/@me/newsfeed/annotations?type=actor" class="turboclick" aria-selected="{{$isActors}}">{{icon "person"}} Actors</a>
-			<a role="tab" href="/@me/newsfeed/annotations?type=document" class="turboclick" aria-selected="{{$isDocuments}}">{{icon "file"}} Documents</a>
+			<a role="tab" href="/@me/newsfeed/annotations?type=document" class="turboclick" aria-selected="{{$isDocuments}}">{{icon "file"}} Posts</a>
 		</div>
 
 		<div

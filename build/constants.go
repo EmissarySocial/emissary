@@ -11,3 +11,6 @@ const ActionMethodPost ActionMethod = 1
 
 // feedMaxItems is the number of child streams in an RSS, Atom, or JSON feed, matching the HTML child list
 const feedMaxItems = 60
+
+// maxTreeDepth is the most ancestors NextAfterParent climbs before giving up
+const maxTreeDepth = 32

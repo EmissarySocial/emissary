@@ -12,10 +12,25 @@ So: when you add or edit a dark gray, check `G == B` before checking anything el
 
 Nothing catches a violation. CSS has no notion of a palette, the ramp is not covered by a test, and the defect only shows up as an unpleasant page that no one can quite diagnose.
 
-## `--white` and `--black` are roles, not brightnesses
+## `--white` and `--black` are pure white and pure black in both schemes
 
-Both flip in the dark block: `--white` becomes the near-black page color (and must stay equal to `--gray00`, which it shadows) and `--black` becomes `#fffafa`, the warm white at the top of the ramp (and must stay equal to `--gray100`). Neither endpoint is a pure `#ffffff` or `#000000` in dark mode: pure white is the only color at L\* 100, so carrying the ramp's warmth all the way up costs a little brightness. `#fffafa` spends 1.4 L\* to land at chroma 1.76, matching `--gray90`'s 1.77 exactly, and the contrast against the page only moves from 18.3:1 to 17.7:1. A value that must be light in **both** schemes is therefore a literal `#ffffff`, never `var(--white)`; `--button-primary-color` is the worked example, and it stays a neutral white on purpose, because it labels a blue accent button in both schemes rather than sitting on the warm gray family, and the comment on it in [stylesheet/01-colors.css](stylesheet/01-colors.css) explains why the warning and success buttons do not need the same treatment. The same trap applies to any token picked for contrast: check its value in both blocks, because the name describes a role.
+`--white` is always `#ffffff` and `--black` always `#000000`; the dark block does not redefine either. Use them only for color on something that keeps its color in both schemes: a photo, a map, or an accent that stays saturated in dark mode. The page's own surfaces and the text on them use `--gray00` and `--gray100`, which flip.
+
+- **The color ramps flip unevenly.** In dark mode the -70 steps turn light, `--blue50` and `--red50` turn darker, and `--blue60` stays the same, so check a background's dark value before choosing `--white` or `--gray00` for the text on it.
+- **The dark ramp's top is `#fffafa`, not pure white.** Pure white is the only color at L\* 100, so carrying the ramp's warmth all the way up costs a little brightness. `#fffafa` spends 1.4 L\* to land at chroma 1.76, matching `--gray90`'s 1.77 exactly, and the contrast against the page only moves from 18.3:1 to 17.7:1.
+- **`--button-primary-color` stays a literal `#ffffff`.** Some themes outside Emissary still redefine `--white` per scheme, and `var(--white)` there would turn the label dark on a saturated button.
 
 ## The extended palette is a second, unrelated ramp
 
 [stylesheet/01-more-colors.css](stylesheet/01-more-colors.css) defines `--color-gray-50`…`--color-gray-900` in a Spectrum-style scale, and those grays are **neutral in both schemes**. They are not the same family as `--gray00`…`--gray100` and do not follow the warm-gray rule above. Mixing the two ramps in one component is what makes a panel look subtly cold against its own page; pick one ramp per surface.
+
+## Every file in `javascript/` ends with a semicolon
+
+The `javascript` bundle joins its files with nothing between them, and the minifier then reads the result as one program. A file ending in `})()` followed by one starting with `(function` becomes `…})()(function…`, a call on the first file's return value: it throws, and every script after it in the bundle (turboclick, for one) silently never runs. `prism.js` was first written this way during EMISSARY-DEV-WEBSITE §1.7, and only running the minified bundle caught it. [service/theme_javascript_bundle_test.go](../../../service/theme_javascript_bundle_test.go) checks every bundled javascript file under `_embed/templates`.
+
+## A `def` that waits makes its caller wait, and an `on` handler queues behind it
+
+Hyperscript's `call` awaits an async `def`, and a `def` becomes async as soon as it contains `wait`. An `on click` handler that calls one stays busy until the wait ends, and hyperscript queues every later click on that element behind it, so a second click looks ignored for seconds. 0.9.93 has no `async` command to detach the wait. [hyperscript/highlight._hs](hyperscript/highlight._hs) avoids waiting at all: its animation runs once and ends on the normal background, so `.flash-highlight` can stay on the element, and removing and re-adding it (with a layout read between) replays the flash.
+
+Two more traps found on the way. `wait for animationend or 3s from node` parses without error but never times out; the timeout works only with an argument list, as in `wait for animationend(animationName) or 3s from node`. And `02-accessibility.css` shortens every animation to 0.01ms under `prefers-reduced-motion`, so an animation that carries meaning needs its own reduced-motion rule: `.flash-highlight` uses a class selector with `!important`, which outranks the universal one, and a `step-end` timing that holds the color without fading.
+

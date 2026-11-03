@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -37,6 +38,7 @@ import (
 	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
+	tootecho "github.com/benpate/toot-echo"
 	"github.com/benpate/uri"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -306,8 +308,25 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/security.txt", handler.TBD)
 	e.GET("/poco", handler.TBD) // Friendica polls this route
 	e.HEAD("/poco", handler.TBD)
-	e.GET("/api/**", handler.TBD) // Mastodon API?
-	e.HEAD("/api/**", handler.TBD)
+	// Not in toot: an empty list, since translation is off
+	e.GET("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
+	e.HEAD("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
+	// Not in toot: Ice Cubes' Explore tab reads these. Trending tags are the admins' featured tags
+	e.GET("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
+	e.HEAD("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
+	e.GET("/api/v1/suggestions", handler.GetEmptyList)
+	e.HEAD("/api/v1/suggestions", handler.GetEmptyList)
+	// Not in toot: Mastodon's streaming API, over a websocket
+	e.GET("/api/v1/streaming", handler.MastodonStreaming(factory))
+	e.HEAD("/api/v1/streaming", handler.MastodonStreaming(factory))
+	e.GET("/api/v1/streaming/health", handler.GetStreamingHealth)
+	e.HEAD("/api/v1/streaming/health", handler.GetStreamingHealth)
+	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
+	e.HEAD("/api/**", handler.APINotFound)
+	e.POST("/api/**", handler.APINotFound) // Every method, because Dome scores the 405 Echo would send
+	e.PUT("/api/**", handler.APINotFound)
+	e.PATCH("/api/**", handler.APINotFound)
+	e.DELETE("/api/**", handler.APINotFound)
 	e.GET("/favicon.ico", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 	e.HEAD("/favicon.ico", handler.TBD)
 	e.GET("/favicon.png", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
@@ -362,7 +381,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/.ostatus/discover", handler.WithFactory(factory, handler.PostOStatusDiscover))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	e.HEAD("/.ostatus/tunnel", handler.GetFollowingTunnel)
-	e.POST("/.proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
+	e.POST("/.proxy", handler.WithFactory(factory, handler.PostProxyURL))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.HEAD("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
@@ -577,6 +596,9 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 
+	e.GET("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.GetIntent_Announce))
+	e.HEAD("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.GetIntent_Announce))
+	e.POST("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.PostIntent_Announce))
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.HEAD("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))
@@ -732,7 +754,6 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.HEAD("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
-	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 
 	// Removed these routes for now...
 	// e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
@@ -785,14 +806,51 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
-	// Mastodon API
-	// toot.Register(e, handler.Mastodon(factory))
+	// Mastodon API, which toot-echo registers with GET routes alone
+	registerWithHEAD(e, func() {
+		tootecho.Register(e, handler.Mastodon(factory))
+	})
 }
 
 // refuseHead answers 405 Method Not Allowed, naming GET as the method this route serves.
 func refuseHead(ctx echo.Context) error {
 	ctx.Response().Header().Set(echo.HeaderAllow, "OPTIONS, GET") // RFC 9110 s15.5.6 requires Allow on a 405
 	return echo.ErrMethodNotAllowed
+}
+
+// registerWithHEAD runs register, then adds a HEAD route beside every GET route it added, with the
+// same handler and middleware.
+func registerWithHEAD(e *echo.Echo, register func()) {
+
+	// Note each GET route as it is added
+	type getRoute struct {
+		path       string
+		handler    echo.HandlerFunc
+		middleware []echo.MiddlewareFunc
+	}
+
+	added := make([]getRoute, 0)
+	previous := e.OnAddRouteHandler
+
+	e.OnAddRouteHandler = func(host string, route echo.Route, handler echo.HandlerFunc, middleware []echo.MiddlewareFunc) {
+
+		if route.Method == http.MethodGet {
+			added = append(added, getRoute{path: route.Path, handler: handler, middleware: middleware})
+		}
+
+		if previous != nil {
+			previous(host, route, handler, middleware)
+		}
+	}
+
+	// Run the registration, then put back whatever hook was there before
+	register()
+	e.OnAddRouteHandler = previous
+
+	// Answer HEAD wherever GET was added (RFC 9110 s9.3.2), because Echo never derives one
+	for _, route := range added {
+		e.HEAD(route.path, route.handler, route.middleware...)
+	}
 }
 
 /******************************************
@@ -923,6 +981,12 @@ func errorHandler(err error, ctx echo.Context) {
 
 	const location = "server.errorHandler"
 
+	// RULE: An error can reach this handler more than once (a middleware that handles errors passes
+	// it on too). Once a response has been sent, a second body would corrupt it, so stop here.
+	if ctx.Response().Committed {
+		return
+	}
+
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
@@ -930,7 +994,8 @@ func errorHandler(err error, ctx echo.Context) {
 	// error is just noise (HTMX aborts in-flight requests when the user navigates).
 	// Log quietly and move on.
 	if request.Context().Err() != nil {
-		log.Debug().Str("url", request.URL.String()).Msg("Request canceled by client")
+		// The cause and the handler's own error tell a dropped connection from a server-side cancel
+		log.Debug().Err(err).AnErr("cause", context.Cause(request.Context())).Str("url", request.URL.String()).Msg("Request canceled by client")
 		return
 	}
 
@@ -960,6 +1025,14 @@ func errorHandler(err error, ctx echo.Context) {
 		// misconfigured Accept is exactly the population being diagnosed. (BUG-20)
 		if sigs.HasSignature(request) {
 			_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+			return
+		}
+
+		// RULE: The JSON API (Mastodon-compatible and otherwise) is a machine too. An OAuth client
+		// needs the real 401 and a JSON body to know its bearer token expired and refresh it; a 303
+		// to the HTML /signin page is something it cannot parse, and its decoder fails on the HTML.
+		if strings.HasPrefix(request.URL.Path, "/api/") {
+			_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": apiErrorMessage(err)})
 			return
 		}
 
@@ -996,6 +1069,13 @@ func errorHandler(err error, ctx echo.Context) {
 		)
 	}
 
+	// RULE: Mastodon clients show the "error" text of a JSON body, and fall back to a generic
+	// failure for anything else, so every JSON API error answers in that shape
+	if strings.HasPrefix(request.URL.Path, "/api/") {
+		_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": apiErrorMessage(err)})
+		return
+	}
+
 	// If this is a local request, then show developers a full error dump
 	// X-Forwarded-Host is not needed here because this is for development only.
 	if uri.IsLocalHostname(request.Host) {
@@ -1010,6 +1090,17 @@ func errorHandler(err error, ctx echo.Context) {
 
 	// Fall through to general error handler that only returns the error code and message
 	_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+}
+
+// apiErrorMessage returns the text an API client is shown for an error: the original message for a
+// 4xx, and a generic one for a server failure, whose details stay in the error log
+func apiErrorMessage(err error) string {
+
+	if derp.ErrorCode(err) >= http.StatusInternalServerError {
+		return http.StatusText(http.StatusInternalServerError)
+	}
+
+	return derp.RootMessage(err)
 }
 
 // handleActivityPubError displays a simple JSON error message for ActivityPub requests

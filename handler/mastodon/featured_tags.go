@@ -3,7 +3,6 @@ package mastodon
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/benpate/derp"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 )
@@ -20,7 +19,7 @@ func GetFeaturedTags(serverFactory *server.Factory) func(model.Authorization, tx
 func PostFeaturedTag(serverFactory *server.Factory) func(model.Authorization, txn.PostFeaturedTag) (object.FeaturedTag, error) {
 
 	return func(model.Authorization, txn.PostFeaturedTag) (object.FeaturedTag, error) {
-		return object.FeaturedTag{}, derp.NotImplemented("handler.mastodon.PostFeaturedTag")
+		return object.FeaturedTag{}, errNotSupported("handler.mastodon.PostFeaturedTag", "Featured tags")
 	}
 }
 
@@ -28,7 +27,7 @@ func PostFeaturedTag(serverFactory *server.Factory) func(model.Authorization, tx
 func DeleteFeaturedTag(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFeaturedTag) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFeaturedTag) (struct{}, error) {
-		return struct{}{}, derp.NotImplemented("handler.mastodon.PostFeaturedTag")
+		return struct{}{}, errNoSuch("handler.mastodon.DeleteFeaturedTag", "Featured tag")
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"iter"
 	"math"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -199,6 +200,150 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 	return stream, nil
 }
 
+// CreateDefaultChildrenForUser creates the starter Streams in a new User's outbox, as defined by their outbox Template
+func (service *Stream) CreateDefaultChildrenForUser(session data.Session, user *model.User) error {
+
+	const location = "service.Stream.CreateDefaultChildrenForUser"
+
+	// Find the outbox Template, which declares the Streams
+	outboxTemplate, err := service.templateService.Load(user.OutboxTemplate)
+
+	// A missing outbox Template declares nothing, and User.Save tolerates it for the tag settings too
+	if derp.IsNotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading outbox Template", user.OutboxTemplate)
+	}
+
+	for _, entry := range outboxTemplate.DefaultChildren {
+
+		// Build a Stream from the outbox Template's entry, in the User's outbox
+		stream, err := service.newDefaultChildForUser(entry, user)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Building default child", outboxTemplate.TemplateID)
+		}
+
+		// Save is the single validation gate, the same as for startup Streams
+		if err := service.Save(session, &stream, "Created with profile"); err != nil {
+			return derp.Wrap(err, location, "Saving default child", outboxTemplate.TemplateID, stream.TemplateID)
+		}
+	}
+
+	// Welcome to the neighborhood
+	return nil
+}
+
+// CreateDefaultChildrenForStream creates the starter Streams beneath a new Stream, as defined by its Template.
+// The Streams it creates get no default children of their own.
+func (service *Stream) CreateDefaultChildrenForStream(session data.Session, parent *model.Stream) error {
+
+	const location = "service.Stream.CreateDefaultChildrenForStream"
+
+	// RULE: Only a saved Stream can hold children, so one that its "create" action did not save gets none
+	if parent.IsNew() {
+		return nil
+	}
+
+	// Find the parent's Template, which declares the Streams
+	parentTemplate, err := service.templateService.Load(parent.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading parent Template", parent.TemplateID)
+	}
+
+	for _, entry := range parentTemplate.DefaultChildren {
+
+		// Build a Stream from the parent Template's entry, beneath the parent
+		stream, err := service.newDefaultChildForStream(entry, parent)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Building default child", parentTemplate.TemplateID)
+		}
+
+		// Save is the single validation gate, and it pulls the parent's sharing when its Template shares with children
+		if err := service.Save(session, &stream, "Created with parent"); err != nil {
+			return derp.Wrap(err, location, "Saving default child", parentTemplate.TemplateID, stream.TemplateID)
+		}
+	}
+
+	// Cheaper by the dozen
+	return nil
+}
+
+// newDefaultChildForUser builds one Stream from an outbox Template's "defaultChildren" entry, placed in the
+// User's outbox and attributed to them.  The returned Stream is NOT yet normalized or persisted.
+func (service *Stream) newDefaultChildForUser(entry mapof.Any, user *model.User) (model.Stream, error) {
+
+	const location = "service.Stream.newDefaultChildForUser"
+
+	stream, template, err := service.newDefaultChild(entry)
+
+	if err != nil {
+		return stream, derp.Wrap(err, location, "Applying entry")
+	}
+
+	// RULE: Place the Stream after the entry, so that no entry can move it out of this User's outbox
+	if err := service.SetLocationOutbox(&template, &stream, user.UserID); err != nil {
+		return stream, derp.Wrap(err, location, "Placing Stream in outbox", stream.TemplateID)
+	}
+
+	// RULE: The User is the author, whatever the entry says, as they are of a collection they add themselves
+	stream.AttributedTo = user.PersonLink()
+
+	return stream, nil
+}
+
+// newDefaultChildForStream builds one Stream from a Template's "defaultChildren" entry, placed beneath the
+// parent Stream and attributed to the parent's author.  The returned Stream is NOT yet normalized or persisted.
+func (service *Stream) newDefaultChildForStream(entry mapof.Any, parent *model.Stream) (model.Stream, error) {
+
+	const location = "service.Stream.newDefaultChildForStream"
+
+	stream, template, err := service.newDefaultChild(entry)
+
+	if err != nil {
+		return stream, derp.Wrap(err, location, "Applying entry")
+	}
+
+	// RULE: Place the Stream after the entry, so that no entry can move it out from beneath its parent
+	if err := service.SetLocationChild(&template, &stream, parent); err != nil {
+		return stream, derp.Wrap(err, location, "Placing Stream beneath parent", stream.TemplateID, parent.StreamID)
+	}
+
+	// RULE: The parent's author is the author, whatever the entry says, as they are the one who added the parent
+	stream.AttributedTo = parent.AttributedTo
+
+	return stream, nil
+}
+
+// newDefaultChild builds one Stream from a "defaultChildren" entry, set through the Template that the entry names,
+// and returns that Template too.  The returned Stream has no location or author yet.
+func (service *Stream) newDefaultChild(entry mapof.Any) (model.Stream, model.Template, error) {
+
+	const location = "service.Stream.newDefaultChild"
+
+	stream := model.NewStream()
+
+	// Load the Template that the entry names
+	templateID := entry.GetString("templateId")
+	template, err := service.templateService.Load(templateID)
+
+	if err != nil {
+		return stream, template, derp.Wrap(err, location, "Loading Template", templateID)
+	}
+
+	// Apply the entry's values, which are schema paths like set-data's.  The Template's own schema
+	// checks them, the same way that the Template service checks them when it loads the Template.
+	if err := template.Schema.SetAll(&stream, entry); err != nil {
+		return stream, template, derp.Wrap(err, location, "Setting stream data", templateID)
+	}
+
+	return stream, template, nil
+}
+
 /******************************************
  * Common Methods
  ******************************************/
@@ -388,6 +533,19 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	stream.IsSubscribable = template.IsSubscribable()
 	stream.URL = service.host + "/" + stream.StreamID.Hex()
 
+	// RULE: A Stream whose parent's Template shares with children takes the parent's sharing,
+	// before its "defaultAllow" groups are calculated from that sharing
+	if err := service.inheritPermissions(session, stream); err != nil {
+		return derp.Wrap(err, location, "Inheriting permissions from parent", stream.ParentID)
+	}
+
+	// A Template that shares with children pushes its sharing down, but only when that sharing changed
+	shareWithChildren, err := service.sharingChanged(session, &template, stream, wasNew)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Comparing sharing with the saved Stream", stream.StreamID)
+	}
+
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	service.calcDefaultAllow(&template, stream)
 
@@ -426,6 +584,13 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// Try to save the Stream to the database
 	if err := service.collection(session).Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Saving Stream", stream, note)
+	}
+
+	// Stamp the new sharing on every child, after the parent is saved so that each child reads it
+	if shareWithChildren {
+		if err := service.saveChildPermissions(session, stream.StreamID); err != nil {
+			return derp.Wrap(err, location, "Sharing with child streams", stream.StreamID)
+		}
 	}
 
 	// Send SSE notifications to `InReplyTo` streams (if possible)
@@ -548,6 +713,60 @@ func (service *Stream) DeleteMany(session data.Session, criteria exp.Expression,
 	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
 		if err := service.Delete(session, &stream, note); err != nil {
 			return derp.Wrap(err, location, "Deleting stream", stream)
+		}
+	}
+
+	return nil
+}
+
+// saveChildPermissions re-saves every child of the parent Stream, so that each one takes up the parent's sharing
+// when Save calls inheritPermissions.  Save writes the whole document, so a concurrent edit to a child can lose.
+func (service *Stream) saveChildPermissions(session data.Session, parentID primitive.ObjectID) error {
+
+	const location = "service.Stream.saveChildPermissions"
+
+	it, err := service.List(session, exp.Equal("parentId", parentID).AndEqual("deleteDate", 0))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Listing child streams", parentID)
+	}
+
+	for child := model.NewStream(); it.Next(&child); child = model.NewStream() {
+		if err := service.Save(session, &child, "Sharing inherited from parent"); err != nil {
+			return derp.Wrap(err, location, "Saving child stream", child.StreamID)
+		}
+	}
+
+	// I'm sharing!
+	return nil
+}
+
+// SetOutboxReplyPolicy stamps a ReplyPolicy on every Stream in a User's outbox that uses the Template,
+// saving only the Streams whose policy differs.
+func (service *Stream) SetOutboxReplyPolicy(session data.Session, userID primitive.ObjectID, templateID string, replyPolicy string) error {
+
+	const location = "service.Stream.SetOutboxReplyPolicy"
+
+	criteria := exp.Equal("parentId", userID).
+		AndEqual("templateId", templateID).
+		AndEqual("deleteDate", 0)
+
+	it, err := service.List(session, criteria)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Listing outbox streams", userID, templateID)
+	}
+
+	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
+
+		if stream.ReplyPolicy == replyPolicy {
+			continue
+		}
+
+		stream.ReplyPolicy = replyPolicy
+
+		if err := service.Save(session, &stream, "Reply policy shared from the outbox"); err != nil {
+			return derp.Wrap(err, location, "Saving outbox stream", stream.StreamID)
 		}
 	}
 
@@ -1238,6 +1457,117 @@ func (service *Stream) calcParentIDs(session data.Session, stream *model.Stream)
 
 	// Fall through: Just use the Parent (probably a User)
 	stream.ParentIDs = []primitive.ObjectID{stream.ParentID}
+}
+
+// inheritPermissions copies the parent Stream's sharing onto this Stream when the parent's Template shares with
+// its children.  A Stream with no parent Stream, such as a User's outbox item, keeps its own sharing.
+func (service *Stream) inheritPermissions(session data.Session, stream *model.Stream) error {
+
+	const location = "service.Stream.inheritPermissions"
+
+	// RULE: Only a child of a Stream whose Template shares with children inherits; ParentTemplateID avoids a read
+	if stream.ParentID.IsZero() || (stream.ParentTemplateID == "") {
+		return nil
+	}
+
+	parentTemplate, err := service.templateService.Load(stream.ParentTemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading parent template", stream.ParentTemplateID)
+	}
+
+	if !parentTemplate.ShareWithChildren {
+		return nil
+	}
+
+	// Load the parent, whose sharing the child takes
+	parent := model.NewStream()
+
+	if err := service.LoadByID(session, stream.ParentID, &parent); err != nil {
+
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading parent stream", stream.ParentID)
+	}
+
+	applyInheritedPermissions(stream, &parent)
+	return nil
+}
+
+// sharingChanged returns TRUE if this Stream's Template shares with children and its sharing differs from the
+// saved copy.  A new Stream has no children yet, so it never needs to push.
+func (service *Stream) sharingChanged(session data.Session, template *model.Template, stream *model.Stream, wasNew bool) (bool, error) {
+
+	const location = "service.Stream.sharingChanged"
+
+	if !template.ShareWithChildren || wasNew {
+		return false, nil
+	}
+
+	// Compare against the copy in the database, before this Save overwrites it
+	saved := model.NewStream()
+
+	if err := service.LoadByID(session, stream.StreamID, &saved); err != nil {
+
+		if derp.IsNotFound(err) {
+			return false, nil
+		}
+
+		return false, derp.Wrap(err, location, "Loading saved stream", stream.StreamID)
+	}
+
+	return !sameSharing(stream, &saved), nil
+}
+
+// sameSharing returns TRUE if two Streams grant the same Groups, Circles, and Products, and have the same ReplyPolicy
+func sameSharing(a *model.Stream, b *model.Stream) bool {
+	return (a.ReplyPolicy == b.ReplyPolicy) &&
+		sameRoleMap(a.Groups, b.Groups) &&
+		sameRoleMap(a.Circles, b.Circles) &&
+		sameRoleMap(a.Products, b.Products)
+}
+
+// sameRoleMap returns TRUE if two role maps grant the same IDs to every role, treating a missing role as empty
+func sameRoleMap(a mapof.Object[id.Slice], b mapof.Object[id.Slice]) bool {
+
+	for role, ids := range a {
+		if !slices.Equal(ids, b[role]) {
+			return false
+		}
+	}
+
+	for role, ids := range b {
+		if !slices.Equal(ids, a[role]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// applyInheritedPermissions gives the child its parent's Groups, Circles, and Products, as copies that share
+// no slices with the parent.  All three are needed: set-circle-sharing records "Share with Everyone" in
+// Groups (the anonymous group), and specific circles in Circles.  The child also takes its parent's
+// ReplyPolicy, so a collection decides whether its items accept replies.
+func applyInheritedPermissions(child *model.Stream, parent *model.Stream) {
+	child.Groups = cloneRoleMap(parent.Groups)
+	child.Circles = cloneRoleMap(parent.Circles)
+	child.Products = cloneRoleMap(parent.Products)
+	child.ReplyPolicy = parent.ReplyPolicy
+}
+
+// cloneRoleMap copies a map of roles to IDs, so that a child Stream never shares its parent's slices
+func cloneRoleMap(value mapof.Object[id.Slice]) mapof.Object[id.Slice] {
+
+	result := make(mapof.Object[id.Slice], len(value))
+
+	for role, ids := range value {
+		result[role] = slices.Clone(ids)
+	}
+
+	return result
 }
 
 // calcDefaultAllow denormalizes the permissions that grant the Stream's default (VIEW) action

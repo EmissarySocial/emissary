@@ -1,0 +1,120 @@
+package mastodon
+
+import (
+	"testing"
+
+	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/toot/object"
+	"github.com/stretchr/testify/require"
+)
+
+// TestMapDocumentToEmojis_ReadsFreshAndStoredTags covers both shapes a tag arrives in: the image nested
+// under "icon" as fetched from a server, and as a plain URL once stored.
+func TestMapDocumentToEmojis_ReadsFreshAndStoredTags(t *testing.T) {
+
+	document := streams.NewDocument(map[string]any{
+		"type": "Person",
+		"id":   "https://example.com/users/joel",
+		"tag": []any{
+			map[string]any{"type": "Emoji", "name": ":casio:", "icon": map[string]any{"type": "Image", "url": "https://cdn.example.com/casio.png"}},
+			map[string]any{"type": "Emoji", "name": ":stored:", "icon": "https://cdn.example.com/stored.png"},
+			map[string]any{"type": "Emoji", "name": ":noimage:"},
+			map[string]any{"type": "Hashtag", "name": "#go", "href": "https://example.com/tags/go"},
+		},
+	})
+
+	emojis := mapDocumentToEmojis(document)
+
+	require.Len(t, emojis, 2, "a hashtag, and an emoji with no image, are not emoji")
+	require.Equal(t, "casio", emojis[0].ShortCode)
+	require.Equal(t, "https://cdn.example.com/casio.png", emojis[0].URL)
+	require.Equal(t, "https://cdn.example.com/casio.png", emojis[0].StaticURL)
+	require.Equal(t, "stored", emojis[1].ShortCode)
+	require.Equal(t, "https://cdn.example.com/stored.png", emojis[1].URL)
+}
+
+// TestMapDocumentToEmojis_NoTagsGivesAnEmptyList confirms a post with no tags yields a list, not nil.
+func TestMapDocumentToEmojis_NoTagsGivesAnEmptyList(t *testing.T) {
+
+	emojis := mapDocumentToEmojis(streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/1"}))
+
+	require.NotNil(t, emojis)
+	require.Empty(t, emojis)
+}
+
+// TestApplyDocumentCounts_ReadsTotalsAndEditTime covers a post that reports likes, shares and an edit time,
+// and one that reports none (which must stay at zero with no edit time).
+func TestApplyDocumentCounts_ReadsTotalsAndEditTime(t *testing.T) {
+
+	reported := streams.NewDocument(map[string]any{
+		"type":    "Note",
+		"id":      "https://example.com/n/1",
+		"likes":   map[string]any{"type": "Collection", "totalItems": 7},
+		"shares":  map[string]any{"type": "Collection", "totalItems": 3},
+		"updated": "2026-10-01T12:30:00Z",
+	})
+
+	status := object.Status{}
+	applyDocumentCounts(&status, reported)
+
+	require.Equal(t, 7, status.FavouritesCount)
+	require.Equal(t, 3, status.ReblogsCount)
+	require.Equal(t, "2026-10-01T12:30:00.000Z", status.EditedAt)
+
+	silent := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/2", "likes": "https://example.com/n/2/likes"})
+
+	status = object.Status{}
+	applyDocumentCounts(&status, silent)
+
+	require.Equal(t, 0, status.FavouritesCount)
+	require.Equal(t, 0, status.ReblogsCount)
+	require.Equal(t, "", status.EditedAt)
+}
+
+// TestMapDocumentToFields_KeepsOnlyNameValuePairs covers a profile with link fields, a file attachment, and unsafe markup.
+func TestMapDocumentToFields_KeepsOnlyNameValuePairs(t *testing.T) {
+
+	document := streams.NewDocument(map[string]any{
+		"type": "Person",
+		"id":   "https://example.com/users/ben",
+		"attachment": []any{
+			map[string]any{"type": "PropertyValue", "name": "GitHub", "value": `<a href="https://github.com/benpate" rel="me">github.com/benpate</a>`},
+			map[string]any{"type": "PropertyValue", "name": "Evil", "value": `<script>alert(1)</script>ok`},
+			map[string]any{"type": "PropertyValue", "name": "", "value": "no name"},
+			map[string]any{"type": "Image", "name": "banner", "url": "https://example.com/b.png"},
+		},
+	})
+
+	fields := mapDocumentToFields(document)
+
+	require.Len(t, fields, 2)
+	require.Equal(t, "GitHub", fields[0].Name)
+	require.Contains(t, fields[0].Value, `href="https://github.com/benpate"`)
+	require.Equal(t, "Evil", fields[1].Name)
+	require.NotContains(t, fields[1].Value, "<script")
+}
+
+// TestActorIsBot covers each actor type: only an Application or a Service is an automated account.
+func TestActorIsBot(t *testing.T) {
+
+	for actorType, expected := range map[string]bool{"Person": false, "Group": false, "Organization": false, "Service": true, "Application": true} {
+		document := streams.NewDocument(map[string]any{"type": actorType, "id": "https://example.com/users/x"})
+		require.Equal(t, expected, actorIsBot(document), actorType)
+	}
+}
+
+// TestDocumentVisibility covers a stored audience, a post not yet normalized, an unknown value, and no audience at all.
+func TestDocumentVisibility(t *testing.T) {
+
+	stored := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/1", "visibility": "private"})
+	require.Equal(t, "private", documentVisibility(stored))
+
+	raw := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/2", "to": []any{"https://other.example/users/amy"}})
+	require.Equal(t, "direct", documentVisibility(raw))
+
+	unknown := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/3", "visibility": "friends-only"})
+	require.Equal(t, "public", documentVisibility(unknown), "a value clients would not understand is not passed on")
+
+	none := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/4"})
+	require.Equal(t, "public", documentVisibility(none))
+}

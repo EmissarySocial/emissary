@@ -4,8 +4,8 @@
 
 {{- $following := .Following.ByName.Slice -}}
 
-<div class="page">
    	
+	{{- /* menubar opens .app and .app-content; this page's closing </div> closes .app-content */ -}}
 	{{template "menubar" .}}
 
 	<div class="info">

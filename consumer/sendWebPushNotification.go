@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -14,16 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// webPushPayload is the JSON delivered to the service worker's "push" handler.
-type webPushPayload struct {
-	Title string `json:"title"`
-	Body  string `json:"body"`
-	Icon  string `json:"icon,omitempty"`
-	URL   string `json:"url"`
-}
-
-// SendWebPushNotification delivers a single Notification to all of the recipient User's Web Push
-// subscriptions.  Subscriptions that the push service reports as gone (404/410) are pruned.
+// SendWebPushNotification delivers a Notification to every push subscription of its recipient,
+// browsers and mobile apps alike, and prunes those the push service reports as gone (404/410)
 func SendWebPushNotification(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendWebPushNotification"
@@ -37,7 +28,7 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 	log.Debug().
 		Str("userId", args.GetString("userId")).
 		Str("notificationId", args.GetString("notificationId")).
-		Msg("WebPush: task STARTED")
+		Msg("Push: task STARTED")
 
 	userID, err := primitive.ObjectIDFromHex(args.GetString("userId"))
 
@@ -72,21 +63,16 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 		// "born read" (service.Notification.notify), so it lands here and delivers nothing.
 		log.Debug().
 			Str("notificationId", notificationID.Hex()).
-			Msg("WebPush: notification is already READ -- nothing to deliver")
+			Msg("Push: notification is already READ -- nothing to deliver")
 
 		return queue.Success()
 	}
 
-	// Build the push payload once (server-side, so the service worker stays dumb).
-	payload, err := json.Marshal(webPushPayload{
-		Title: notificationTitle(&notification),
-		Body:  notification.ObjectSummary,
-		Icon:  notification.Actor.IconURL,
-		URL:   notificationURL(factory.Host(), &notification),
-	})
+	// Build each payload once, server-side, so the browser and the mobile apps stay dumb.
+	payloads, err := newPushPayloads(factory.Host(), &notification)
 
 	if err != nil {
-		return queue.Failure(derp.Wrap(err, location, "Marshaling push payload"))
+		return queue.Failure(derp.Wrap(err, location, "Building push payloads"))
 	}
 
 	// Load the recipient's push subscriptions
@@ -100,7 +86,7 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 
 	for subscription := range subscriptions {
 		subscriptionCount = subscriptionCount + 1
-		sendWebPushToSubscription(factory, session, &subscription, payload)
+		sendPushToSubscription(factory, session, &subscription, payloads)
 	}
 
 	// DIAGNOSTIC: zero subscriptions is not an error -- but it is the quietest way for a push to do
@@ -108,23 +94,30 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 	if subscriptionCount == 0 {
 		log.Debug().
 			Str("userId", userID.Hex()).
-			Msg("WebPush: User has NO push subscriptions -- nothing to deliver")
+			Msg("Push: User has NO push subscriptions -- nothing to deliver")
 	}
 
 	return queue.Success()
 }
 
-// sendWebPushToSubscription delivers one payload to one subscription, pruning subscriptions
-// that the push service reports as gone (404/410).  Errors are reported, never returned — a
-// failure on one endpoint must not abort delivery to the others.
-func sendWebPushToSubscription(factory *service.Factory, session data.Session, subscription *model.PushSubscription, payload []byte) {
+// sendPushToSubscription delivers one notification to one subscription through the service that matches
+// it (WebPush for a browser, MobilePush for a mobile app), pruning one the push service reports as gone
+func sendPushToSubscription(factory *service.Factory, session data.Session, subscription *model.PushSubscription, payloads pushPayloads) {
 
-	const location = "consumer.sendWebPushToSubscription"
+	// Errors are reported, never returned: a failure on one endpoint must not stop delivery to the others
 
-	statusCode, err := factory.WebPush().Send(session, subscription.Endpoint, subscription.P256DH, subscription.Auth, payload)
+	const location = "consumer.sendPushToSubscription"
+
+	send, payload := factory.WebPush().Send, payloads.web
+
+	if subscription.IsMobile() {
+		send, payload = factory.MobilePush().Send, payloads.mobile
+	}
+
+	statusCode, err := send(session, subscription.Endpoint, subscription.P256DH, subscription.Auth, payload)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Sending Web Push", subscription.Endpoint))
+		derp.Report(derp.Wrap(err, location, "Sending push", subscription.Endpoint))
 		return
 	}
 
@@ -134,7 +127,7 @@ func sendWebPushToSubscription(factory *service.Factory, session data.Session, s
 		log.Debug().
 			Int("statusCode", statusCode).
 			Str("endpoint", subscription.Endpoint).
-			Msg("WebPush: subscription is GONE -- pruning it")
+			Msg("Push: subscription is GONE -- pruning it")
 
 		if err := factory.PushSubscription().DeleteByEndpoint(session, subscription.Endpoint, "expired"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Deleting expired PushSubscription", subscription.Endpoint))
@@ -144,9 +137,8 @@ func sendWebPushToSubscription(factory *service.Factory, session data.Session, s
 	}
 
 	// RULE: Any other non-2xx is the push service REFUSING to deliver -- a rejected VAPID JWT, an
-	// oversized payload, rate limiting.  These used to fall through in silence, which made a push
-	// the service rejected indistinguishable from one that was never attempted.  WebPush.Send logs
-	// the service's own stated reason; report it here so the failure also reaches the error log.
+	// oversized payload, rate limiting. Both services log its stated reason; report it here too,
+	// so a refused push reaches the error log instead of looking like one never attempted.
 	if (statusCode < 200) || (statusCode > 299) {
 		derp.Report(derp.Internal(location, "Web Push service refused delivery", subscription.Endpoint, statusCode))
 		return
@@ -155,54 +147,5 @@ func sendWebPushToSubscription(factory *service.Factory, session data.Session, s
 	log.Debug().
 		Int("statusCode", statusCode).
 		Str("endpoint", subscription.Endpoint).
-		Msg("WebPush: DELIVERED to push service")
-}
-
-// notificationTitle builds the push notification title (actor + verb).
-func notificationTitle(notification *model.Notification) string {
-
-	actor := notification.Actor.Name
-	if actor == "" {
-		actor = notification.Actor.UsernameOrID()
-	}
-
-	switch notification.Type {
-	case model.NotificationTypeDirect:
-		return actor + " sent you a message"
-	case model.NotificationTypeMention:
-		return actor + " mentioned you"
-	case model.NotificationTypeReply:
-		return actor + " replied to you"
-	case model.NotificationTypeLike:
-		return actor + " liked your post"
-	case model.NotificationTypeDislike:
-		return actor + " disliked your post"
-	case model.NotificationTypeAnnounce:
-		return actor + " boosted your post"
-	case model.NotificationTypeFollow:
-		return actor + " followed you"
-	default:
-		return actor
-	}
-}
-
-// notificationURL returns the URL that clicking the OS notification should open.
-func notificationURL(host string, notification *model.Notification) string {
-
-	// RULE: A private message opens the Conversations app -- the only surface that owns it --
-	// never a public one. This mirrors the same decision in the notification list templates;
-	// model.Notification.IsConversation is the single source for both. See MESSAGE-AUDIENCE.md D2.
-	if notification.IsConversation() {
-		return host + "/@me/conversations"
-	}
-
-	// Reactions link to the local content; everything else opens the notifications section.
-	switch notification.Type {
-	case model.NotificationTypeLike, model.NotificationTypeDislike, model.NotificationTypeAnnounce:
-		if notification.ObjectURL != "" {
-			return notification.ObjectURL
-		}
-	}
-
-	return host + "/@me/notifications"
+		Msg("Push: DELIVERED to push service")
 }

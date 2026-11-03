@@ -76,6 +76,9 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		user:    user,
 	}
 
+	// Keep the start of the body, so a refused account deletion can be recognized below
+	inspected := peekRequestBody(ctx.Request(), accountDeletePeekLimit)
+
 	// Get ActivityStream service for this User
 	activityService := factory.ActivityStream()
 	client := activityService.UserClient(user.UserID)
@@ -94,6 +97,13 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	)
 
 	if err != nil {
+
+		// RULE: A deleted account's key is already gone, so its farewell Delete can never verify. Accept it
+		// without acting on it, as Mastodon does, so the sending server stops retrying.
+		if derp.ErrorCode(err) == http.StatusUnauthorized && isAccountSelfDelete(inspected) {
+			return ctx.NoContent(http.StatusAccepted)
+		}
+
 		return derp.Wrap(err, location, "Receiving ActivityPub request")
 	}
 

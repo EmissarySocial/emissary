@@ -50,6 +50,8 @@ func StreamSchema() schema.Element {
 			"unpublishDate":    schema.Integer{BitSize: 64},
 			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
+			"replyPolicy":      schema.String{Enum: []string{"", ReplyPolicyEveryone, ReplyPolicyNobody}},
+			"allowReplies":     schema.Boolean{},
 			"replyCount":       schema.Integer{Minimum: null.NewInt64(0)},
 			"likeCount":        schema.Integer{Minimum: null.NewInt64(0)},
 			"dislikeCount":     schema.Integer{Minimum: null.NewInt64(0)},
@@ -59,12 +61,11 @@ func StreamSchema() schema.Element {
 	}
 }
 
-// WidgetSchema defines the structure for the "widgets" container.
+// WidgetSchema defines the "widgets" list, which holds one StreamWidget per item
 func WidgetSchema() schema.Element {
-	return schema.Object{
-		Wildcard: schema.Array{
-			Items: schema.String{Format: "token"},
-		},
+	return schema.Array{
+		Items:     StreamWidgetSchema(),
+		MaxLength: 128,
 	}
 }
 
@@ -178,6 +179,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "isFeatured":
 		return &stream.IsFeatured, true
 
+	case "replyPolicy":
+		return &stream.ReplyPolicy, true
+
 	case "replyCount":
 		return &stream.ReplyCount, true
 
@@ -213,6 +217,10 @@ func (stream *Stream) GetBoolOK(name string) (bool, bool) {
 	// This is a READ-ONLY, virtual field that's computed based on Publish and UnPublish dates.
 	case "isPublished":
 		return stream.IsPublished(), true
+
+	// A virtual field over ReplyPolicy, so a form can offer replies as one toggle
+	case "allowReplies":
+		return stream.ReplyPolicy != ReplyPolicyNobody, true
 	}
 
 	return false, false
@@ -227,6 +235,15 @@ func (stream *Stream) SetBool(name string, value bool) bool {
 	// This is a READ-ONLY, Virtual field.  To prevent errors, we're going to
 	// lie and say we set the value, but not actually change anything.
 	case "isPublished":
+		return true
+
+	// A virtual field over ReplyPolicy: TRUE opens replies to everyone, and FALSE closes them
+	case "allowReplies":
+		if value {
+			stream.ReplyPolicy = ReplyPolicyEveryone
+		} else {
+			stream.ReplyPolicy = ReplyPolicyNobody
+		}
 		return true
 	}
 
@@ -278,16 +295,27 @@ func (stream *Stream) SetString(name string, value string) bool {
 		return true
 
 	case "startDate":
-		if dateTime, ok := convert.TimeOk(value, time.Time{}); ok {
-			stream.StartDate.Time = dateTime
-			return true
-		}
+		return setDateTime(&stream.StartDate, value)
 
 	case "endDate":
-		if dateTime, ok := convert.TimeOk(value, time.Time{}); ok {
-			stream.EndDate.Time = dateTime
-			return true
-		}
+		return setDateTime(&stream.EndDate, value)
+	}
+
+	return false
+}
+
+// setDateTime sets a date from any value that convert.TimeOk understands.  An empty string clears it,
+// so that an optional date field (an event's end) can be left blank on a form.
+func setDateTime(target *datetime.DateTime, value any) bool {
+
+	if value == "" {
+		target.Time = time.Time{}
+		return true
+	}
+
+	if dateTime, ok := convert.TimeOk(value, time.Time{}); ok {
+		target.Time = dateTime
+		return true
 	}
 
 	return false

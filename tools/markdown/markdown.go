@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
-	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
@@ -91,10 +90,9 @@ func newConverter() goldmark.Markdown {
 			extension.Linkify,
 			extension.Typographer,
 			extension.DefinitionList,
+			// Code blocks are not highlighted here: they keep a language-* class,
+			// and themes color them in the browser
 			anchorExtension,
-			highlighting.NewHighlighting(
-				highlighting.WithStyle("github"),
-			),
 		),
 		goldmark.WithRendererOptions(
 			// Raw HTML embedded in Markdown is passed through to the renderer

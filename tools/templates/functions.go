@@ -15,6 +15,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/groupie"
 	"github.com/EmissarySocial/emissary/tools/markdown"
 	"github.com/EmissarySocial/emissary/tools/parse"
@@ -33,6 +34,9 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 	result["markdown"] = func(value any) template.HTML {
 		return template.HTML(markdown.ToHTML(convert.String(value))) // #nosec G203 -- markdown.ToHTML sanitizes its output
 	}
+
+	// toTime reads a time, including an Emissary DateTime or a "2006-01-02" string, for templates to format
+	result["toTime"] = toTime
 
 	result["humanizeTime"] = func(value any) string {
 		valueTime := convert.Time(value)
@@ -126,4 +130,23 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 	}
 
 	return result
+}
+
+// toTime reads a time from a datetime.DateTime (which convert.Time does not recognize) or from
+// anything that convert.Time understands
+func toTime(value any) time.Time {
+
+	switch typed := value.(type) {
+
+	case datetime.DateTime:
+		return typed.Time
+
+	case *datetime.DateTime:
+		if typed == nil {
+			return time.Time{}
+		}
+		return typed.Time
+	}
+
+	return convert.Time(value)
 }

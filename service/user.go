@@ -287,6 +287,11 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		if err := service.folderService.CreateDefaultFolders(session, user.UserID); err != nil {
 			return derp.Wrap(err, location, "Creating default folders for User", user, note)
 		}
+
+		// RULE: Create the Streams that this user's outbox Template starts every profile with
+		if err := service.streamService.CreateDefaultChildrenForUser(session, user); err != nil {
+			return derp.Wrap(err, location, "Creating default children for User", user.UserID)
+		}
 	}
 
 	// Handle Bluesky bridging opt-in/out
@@ -825,6 +830,28 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 	return nil
 }
 
+// DeleteImage removes the User's banner image and clears the reference to it.
+func (service *User) DeleteImage(session data.Session, user *model.User, note string) error {
+
+	const location = "service.User.DeleteImage"
+
+	if user.ImageID.IsZero() {
+		return nil
+	}
+
+	if err := service.attachmentService.DeleteByID(session, model.AttachmentObjectTypeUser, user.UserID, user.ImageID, note); err != nil {
+		return derp.Wrap(err, location, "Deleting banner attachment", user)
+	}
+
+	user.ImageID = primitive.NilObjectID
+
+	if err := service.Save(session, user, note); err != nil {
+		return derp.Wrap(err, location, "Saving User", user)
+	}
+
+	return nil
+}
+
 // DeleteAvatar removes the User's avatar attachment and clears its reference on the User record
 func (service *User) DeleteAvatar(session data.Session, user *model.User, note string) error {
 
@@ -957,12 +984,18 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubIconURL()).
 		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL()).
 		Link(digit.RelationTypeOpenIDIssuer, "", service.host).
+		Link(camper.IntentTypeAnnounce, "", service.AnnounceIntentURL()).
 		Link(camper.IntentTypeCreate, "", service.CreateIntentURL()).
 		Link(camper.IntentTypeDislike, "", service.DislikeIntentURL()).
 		Link(camper.IntentTypeFollow, "", service.FollowIntentURL()).
 		Link(camper.IntentTypeLike, "", service.LikeIntentURL())
 
 	return result, nil
+}
+
+// AnnounceIntentURL returns the URL template for this server's "announce" Activity Intent endpoint
+func (service *User) AnnounceIntentURL() string {
+	return service.host + "/@me/intent/announce?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
 // RemoteFollowURL returns the URL template for this server's remote-follow ("subscribe request") endpoint

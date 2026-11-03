@@ -24,6 +24,7 @@ type OAuthUserToken struct {
 	Generation       int                `json:"-" bson:"generation"`      // Monotonic refresh-token generation counter (1 on first issuance)
 	RotatedAt        int64              `json:"-" bson:"rotatedAt"`       // Unix seconds of the last refresh rotation, for the grace window
 	CodeRedeemed     bool               `json:"-" bson:"codeRedeemed"`    // TRUE once the authorization code has been exchanged (single-use)
+	MastodonApp      bool               `json:"-" bson:"mastodonApp"`     // TRUE if this grant was issued to a Mastodon app's Client (copied from OAuthClient.MastodonApp)
 	Data             mapof.Any          `json:"D" bson:"data"`            // Additional data associated with this token
 
 	// Token (the access-token JWT) and RefreshToken (the "grantID.gen.secret"
@@ -99,19 +100,35 @@ func (token OAuthUserToken) Code() string {
 	return token.OAuthUserTokenID.Hex()
 }
 
-// JSONResponse returns the token as a map suitable for JSON API responses
-// (RFC 6749 §5.1). It includes the access token, its lifetime (expires_in), and
-// the rotating refresh token the client uses to obtain the next access token.
+// JSONResponse returns the token as an RFC 6749 §5.1 response: the access token, its lifetime
+// (expires_in, when it has one), and the rotating refresh token
 func (token OAuthUserToken) JSONResponse() map[string]any {
 
-	return map[string]any{
+	result := map[string]any{
 		"access_token":  token.Token,
 		"token_type":    "Bearer",
 		"scope":         strings.Join(token.Scopes, " "),
-		"expires_in":    int(OAuthAccessTokenLifetime.Seconds()),
 		"refresh_token": token.RefreshToken,
 		"created_at":    time.Now().Unix(),
 	}
+
+	// A token with no expiry advertises none, as Mastodon does
+	if lifetime := token.AccessTokenLifetime(); lifetime > 0 {
+		result["expires_in"] = int(lifetime.Seconds())
+	}
+
+	return result
+}
+
+// AccessTokenLifetime returns how long this grant's access tokens are valid, where zero means they
+// do not expire
+func (token OAuthUserToken) AccessTokenLifetime() time.Duration {
+
+	if token.MastodonApp {
+		return OAuthMastodonAppTokenLifetime
+	}
+
+	return OAuthAccessTokenLifetime
 }
 
 // IsCodeExpired reports whether this record's authorization code is too old to
@@ -134,9 +151,10 @@ func (token OAuthUserToken) Toot() object.Token {
 		CreatedAt:   time.Now().Unix(),
 	}
 
-	// Only advertise expiry + refresh when a refresh token was actually issued.
+	// Only advertise expiry + refresh when a refresh token was actually issued, and expiry only
+	// when the access token has one.
 	if token.RefreshToken != "" {
-		result.ExpiresIn = int64(OAuthAccessTokenLifetime.Seconds())
+		result.ExpiresIn = int64(token.AccessTokenLifetime().Seconds())
 		result.RefreshToken = token.RefreshToken
 	}
 

@@ -220,6 +220,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "set-thumbnail":
 		return NewSetThumbnail(stepInfo)
 
+	case "share-reply-policy":
+		return NewShareReplyPolicy(stepInfo)
+
 	case "sleep":
 		return NewSleep(stepInfo)
 

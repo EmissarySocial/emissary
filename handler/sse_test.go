@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -21,8 +22,8 @@ func TestServerSentEvent_HeadReturnsHeadersWithoutStreaming(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	ctx := &steranko.Context{Context: echo.New().NewContext(request, recorder)}
 
-	// A nil Factory proves the broker is never reached: dereferencing it would panic
-	err := serverSentEvent(ctx, nil, primitive.NewObjectID(), realtime.TopicUpdated)
+	// A zero Factory has no broker, so reaching it would panic: a clean return proves it never is
+	err := serverSentEvent(ctx, &service.Factory{}, primitive.NewObjectID(), realtime.TopicUpdated)
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, recorder.Code)

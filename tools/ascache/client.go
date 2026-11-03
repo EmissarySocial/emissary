@@ -39,6 +39,7 @@ type Client struct {
 	actorType      string
 	actorID        primitive.ObjectID
 	obeyHeaders    bool
+	failures       *FailureMemo
 }
 
 // New returns a fully initialized Client object
@@ -121,10 +122,10 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 				return client.asCachedDocument(value), nil
 			}
 
-			// If the cache is allowed then check it here.
-			if config.isReadAllowed() && value.NotExpired() {
+			// If the cache is allowed then check it here. A caller that allows stale copies also takes an expired one.
+			if config.isReadAllowed() && (value.NotExpired() || config.allowStale) {
 
-				// If this value is stale-but-not-expired, then
+				// If this value is stale (or expired), then
 				// trigger a background revalidation.
 				if value.ShouldRevalidate() {
 					client.revalidate(&value)
@@ -134,6 +135,11 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 				return client.asCachedDocument(value), nil
 			}
 		}
+	}
+
+	// RULE: A normal read does not wait on a server that just failed; a forced reload still tries
+	if client.failures != nil && config.isReadAllowed() && client.failures.failedRecently(url) {
+		return streams.NilDocument(), derp.BadGateway(location, "Document failed to load recently; not retrying yet", url)
 	}
 
 	// Pass the request to the inner client, bounding the fetch by its own budget. Our context
@@ -148,6 +154,11 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 	if err != nil {
 
+		// A server or network failure or a 403 is remembered; other 4xx answers are real and come back quickly
+		if client.failures != nil && isRememberedFailure(err) {
+			client.failures.remember(url)
+		}
+
 		// If the original document is gone, and we're forcing a reload, then remove the value from the cache
 		if derp.IsNotFound(err) && config.isWriteAllowed() {
 			if inner := client.Delete(url); inner != nil {
@@ -156,6 +167,10 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		}
 
 		return result, derp.Wrap(err, location, "Loading document from inner client", url)
+	}
+
+	if client.failures != nil {
+		client.failures.forget(url)
 	}
 
 	// RULE: A document from the interweb does not get to claim it came from our cache.
@@ -471,7 +486,7 @@ func (client *Client) loadByURL(session data.Session, url string, value *Value) 
 func (client *Client) revalidate(value *Value) {
 
 	// If we're allowed to write to the cache, then do it.
-	if value.ShouldRevalidate() {
+	if client.queue != nil && value.ShouldRevalidate() {
 
 		documentID := value.DocumentID()
 

@@ -1,0 +1,60 @@
+/******************************************
+ * Previous/Next Buttons Widget
+ *
+ * Default look for widget-prev-next: two bordered
+ * buttons, previous on the left and next on the right.
+ ******************************************/
+
+/* --prev-next-gap is the space between the buttons; themes may set it */
+.widget-prev-next {
+	--prev-next-gap: calc(var(--rhythm) * 2);
+	display: flex;
+	justify-content: space-between;
+	gap: var(--prev-next-gap);
+	margin-top: calc(var(--rhythm) * 4);
+}
+
+.widget-prev-next .prev-next-link {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	max-width: calc((100% - var(--prev-next-gap)) / 2);
+	padding: calc(var(--rhythm) * 1.5) calc(var(--rhythm) * 2);
+	border: solid 1px var(--gray20);
+	border-radius: var(--border-radius);
+	color: var(--text-color);
+	text-decoration: none;
+}
+
+.widget-prev-next .prev-next-link:hover {
+	border-color: var(--link-color);
+}
+
+/* A lone next button stays on the right */
+.widget-prev-next .prev-next-link.next {
+	margin-left: auto;
+	align-items: flex-end;
+	text-align: right;
+}
+
+.widget-prev-next .prev-next-direction {
+	font-size: calc(var(--rhythm) * 1.5);
+	opacity: 0.66;
+}
+
+.widget-prev-next .prev-next-summary {
+	font-size: calc(var(--rhythm) * 1.75);
+	opacity: 0.66;
+}
+
+/* The arrow sits beside the title, larger than the text */
+.widget-prev-next .prev-next-heading {
+	display: flex;
+	align-items: center;
+	gap: var(--rhythm);
+}
+
+.widget-prev-next .prev-next-arrow {
+	font-size: calc(var(--rhythm) * 3);
+	line-height: 1;
+}

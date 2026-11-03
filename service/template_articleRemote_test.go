@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	modelStep "github.com/EmissarySocial/emissary/model/step"
+	"github.com/EmissarySocial/emissary/tools/markdown"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -38,23 +39,27 @@ func articleRemoteTemplate(t *testing.T) model.Template {
 	return result
 }
 
-// TestArticleRemoteTemplate_ContentHTMLIsUnsafeAny pins the property that decides whether syntax
-// highlighting and embeds survive a sync.  article-base declares this same property as `html`, and
-// rosetta's `html` format re-sanitizes on every save with a plain UGCPolicy that allows neither --
-// while the Markdown renderer already sanitized it with Emissary's own policy, which calls
-// AllowStyling() and permits iframe.  Losing the override deletes both, and reports nothing.
-func TestArticleRemoteTemplate_ContentHTMLIsUnsafeAny(t *testing.T) {
+// TestArticleRemoteTemplate_ContentFormats pins the two content formats a sync depends on.
+// content.raw holds Markdown source, so it must be unsafe-any or the default no-html strips it.
+// content.html must be the application's policy inherited from model.ContentSchema, which keeps
+// syntax-highlighting classes and embeds and still sanitizes on every save (BUG-278).
+func TestArticleRemoteTemplate_ContentFormats(t *testing.T) {
 
 	template := articleRemoteTemplate(t)
 
-	for _, path := range []string{"content.html", "content.raw"} {
+	expected := map[string]string{
+		"content.raw":  "unsafe-any",
+		"content.html": markdown.SchemaFormat,
+	}
+
+	for path, format := range expected {
 
 		element, exists := template.Schema.GetElement(path)
 		require.True(t, exists, "%s must be declared", path)
 
 		stringElement, isString := element.(schema.String)
 		require.True(t, isString, "%s must be a string", path)
-		require.Equal(t, "unsafe-any", stringElement.Format, "%s lost its override of article-base", path)
+		require.Equal(t, format, stringElement.Format, "%s has the wrong format", path)
 	}
 }
 

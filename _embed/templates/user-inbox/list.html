@@ -14,7 +14,8 @@
 	{{- $folderID := .QueryParam "folderId" -}}
 	{{- $internalID := .QueryParam "origin.followingId" -}}
 
-	{{- if eq "" (.QueryParam "remote") -}}
+	<!-- The welcome has no read posts, so it drops the Older Posts divider. -->
+	{{- if and (eq "" (.QueryParam "remote")) (eq "" (.QueryParam "welcome")) -}}
 
 		<div 
 			hx-get="/@me/newsfeed/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}000"
@@ -32,7 +33,7 @@
 				&darr; New Posts
 			</div>
 		</div>
-		
+
 	{{- end -}}
 
 	{{- if gt (len  $inbox) 0 -}}
@@ -57,9 +58,9 @@
 				{{- else -}}
 					{{- template "list-social" (array $inboxBuilder $message) -}}
 				{{- end -}}
-				
+
 			</div>
-			
+
 			<hr>
 
 		{{- end -}}
@@ -77,11 +78,18 @@
 
 	{{- else -}}
 
-		{{if eq "" (.QueryParam "remote") -}}
-			<h2 class="text-gray">This inbox is empty. When you <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="nowrap link">follow someone</span> then their posts will show up here.</h2>
+		{{- if eq "" (.QueryParam "remote") -}}
+			{{- if eq "inbox" (.QueryParam "welcome") -}}
+				{{- template "newsfeed-welcome-inbox" . -}}
+			{{- else if eq "folder" (.QueryParam "welcome") -}}
+				{{- template "newsfeed-welcome-folder" . -}}
+			{{- else -}}
+				<h2 class="text-gray">This inbox is empty. When you <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="nowrap link turboclick">follow someone</span> then their posts will show up here.</h2>
+				<div style="height:100dvh"></div>
+			{{- end -}}
+		{{- else -}}
+			<div style="height:100dvh"></div>
 		{{- end -}}
-
-		<div style="height:100dvh"></div>
 	{{- end -}}
 
 {{- end -}}

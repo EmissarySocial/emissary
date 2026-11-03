@@ -2,6 +2,7 @@ package model
 
 import (
 	"crypto/subtle"
+	"strings"
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
@@ -22,6 +23,7 @@ type OAuthClient struct {
 	Website      string             `json:"website"      bson:"website"`      // Human-friendly website URL for the Client
 	RedirectURIs sliceof.String     `json:"redirectUris" bson:"redirectUris"` // Slice of URLs that the Client is allowed to redirect Users to
 	Scopes       sliceof.String     `json:"scopes"       bson:"scopes"`       // OAuth authorization scopes approved for use by this Client
+	MastodonApp  bool               `json:"mastodonApp"  bson:"mastodonApp"`  // TRUE if a Mastodon app registered this Client through POST /api/v1/apps (set by the server only)
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -73,8 +75,12 @@ func (app OAuthClient) ValidateSecret(clientSecret string) error {
 // Toot converts this object into a Mastodon-compatible Application object
 func (app OAuthClient) Toot() object.Application {
 	return object.Application{
+		ID:           app.ClientID.Hex(),
 		Name:         app.Name,
 		Website:      app.Website,
+		Scopes:       app.Scopes,
+		RedirectURIs: app.RedirectURIs,
+		RedirectURI:  strings.Join(app.RedirectURIs, "\n"),
 		ClientID:     first.String(app.ClientURL, app.ClientID.Hex()),
 		ClientSecret: app.ClientSecret,
 	}

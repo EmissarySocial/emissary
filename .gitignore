@@ -20,9 +20,16 @@
 # Node OMG
 node_modules/
 
+# Local Go workspace override -- lets local sibling checkouts (../toot,
+# ../toot-echo) take precedence over go.mod's committed replace directives,
+# without touching go.mod itself. Machine-specific, never committed.
+go.work
+go.work.sum
+
 # Application config info
 config-env.json
 .emissary
 /emissary
 config.json
+.local-native-config.json
 /service/geocoder/apikeys_test.go

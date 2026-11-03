@@ -10,7 +10,7 @@
 		{{- $attributedTo := $document.AttributedTo -}}
 		{{- if $attributedTo.NotEmpty -}}
 			<div class="margin-bottom-lg flex-row">
-				<div hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" class="flex-shrink-0 flex-row flex-align-center clickable">
+				<div hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" class="flex-shrink-0 flex-row flex-align-center clickable turboclick">
 					{{- if $attributedTo.Icon.NotNil -}}
 						<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
 					{{- end -}}
@@ -42,9 +42,11 @@
 		<div class="margin-top-lg text-xs">
 			<!-- The Reply or Notes button is selected while its panel is open below this card -->
 			{{- if eq "reply" $panel -}}
-				<button class="turboclick selected" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{$document.ID}}">{{icon "reply"}} Reply</button>
+				{{- if $builder.CanReplyTo $document.ID -}}
+					<button class="turboclick selected" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{$document.ID}}">{{icon "reply"}} Reply</button>
+				{{- end -}}
 			{{- else -}}
-				{{template "reply-button" $document.ID }}
+				{{template "reply-button" (array $builder $document.ID) }}
 			{{- end -}}
 			<span 
 				hx-get="/@me/newsfeed/like-button?url={{$document.ID}}" 
@@ -59,11 +61,11 @@
 		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">
 			<span class="margin-right text-light-gray">{{ $document.Published | tinyDate }} ago</span>
 			{{ if eq $document.ID ($builder.QueryParam "url") }}
-				<button hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout" class="selected">{{icon "focus"}}</button>
+				<button hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout" class="selected turboclick">{{icon "focus"}}</button>
 			{{else}}
-				<button hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "focus"}}</button>
+				<button class="turboclick" hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "focus"}}</button>
 			{{end}}
-			<button hx-get="/@me/newsfeed/browse-index?url={{$document.ID}}" aria-label="Use Index Layout">{{icon "list"}}</button>
+			<button class="turboclick" hx-get="/@me/newsfeed/browse-index?url={{$document.ID}}" aria-label="Use Index Layout">{{icon "list"}}</button>
 			<span class="margin-horizontal-sm"></span>
 			<a href="{{$attributedTo.ID}}" target="_blank" rel="noopener noreferrer" class="button" aria-label="Visit Actor Profile">{{icon "person"}}</a>
 			<a href="{{$document.URL}}" target="_blank" rel="noopener noreferrer" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>

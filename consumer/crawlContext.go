@@ -111,7 +111,7 @@ func classifyContext(context streams.Document, err error) (contextOutcome, time.
 		}
 
 		// RULE: Every other failure is the remote's own and repeats identically on every
-		// future crawl.  A context answering HTML is reported as 500, so no class is exempt.
+		// future crawl.  A context answering HTML is reported as 502, so no class is exempt.
 		return contextOutcomeSkip, 0
 	}
 
