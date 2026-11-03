@@ -1,38 +1,25 @@
-{{- $selected := .ThemeID -}}
-{{- $themes := .Themes -}}
+{{- $currentID := (.Theme .ThemeID).ThemeID -}}
 
-<h1><i class="bi bi-palette"></i> Website Theme</h1>
+<h1 id="modal-title">{{icon "palette"}} Choose Theme</h1>
 
-<div class="margin-vertical">
-	Themes determine how your website looks. They may also change setup checklist items and other website defaults.
+<!-- RULE: Choosing a theme only opens theme-confirm; theme-switch is the one step that saves (see AGENTS.md) -->
+<div class="margin-bottom-lg">
+	{{- range .Themes -}}
+		{{- if eq .ThemeID $currentID -}}
+			<div class="button selected flex-row flex-align-center width-100% margin-bottom-sm" style="pointer-events:none" aria-current="true">
+				{{- template "theme-icon" . -}}
+				<div class="flex-grow bold" style="white-space:normal">{{.Label}}</div>
+			</div>
+		{{- else -}}
+			<button hx-get="/admin/domain/theme-confirm?themeId={{.ThemeID}}" class="flex-row flex-align-center width-100% margin-bottom-sm">
+				{{- template "theme-icon" . -}}
+				<div class="flex-grow" style="white-space:normal">{{.Label}}</div>
+				<div class="text-lg">{{icon "chevron-right"}}</div>
+			</button>
+		{{- end -}}
+	{{- end -}}
 </div>
 
-<form hx-post="/admin/domain/themes">
-
-	<div>
-		{{- range $themes -}}
-			{{- $id := .ThemeID -}}
-			{{- $selected := eq $id $.ThemeID -}}
-			{{- $selected := iif $selected "checked" "" -}}
-
-			<label for="theme-{{$id}}">
-				<div class="radiobutton padding">
-					<div class="margin-right">
-						<img src="/.themes/{{.ThemeID}}/resources/startup/icon.png" class="width-64">
-					</div>
-					<div>
-						<input type="radio" id="theme-{{$id}}" name="themeId" value="{{$id}}" {{- $selected -}} />
-						<div class="bold margin-none">{{.Label}}</div>
-						<div class="text-sm text-gray margin-none">{{.Description}}</div>
-					</div>
-				</div>
-			</label>
-		{{- end -}}
-	</div>
-
-	<div class="margin-top-lg">
-		<button type="submit" class="primary">Select Theme</button>
-		<button script="on click trigger closeModal">Cancel</button>
-	</div>
-
-</form>
+<div>
+	<button script="on click trigger closeModal">Close Window</button>
+</div>

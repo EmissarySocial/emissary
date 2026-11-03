@@ -44,18 +44,41 @@
 				{do: "reload-page"}
 			]
 		}
+		// Changing the theme, step one: lists the installed themes, and saves nothing
 		themes: {
 			roles:["owner"]
-			steps: [{
-				do: as-modal
-				options: {size: "large"}
-				steps: [
-					{do: "view-html"}
-					{do: "set-data", from-form:["themeId"]}
-					{do: "save"}
+			steps: [
+				{do: "as-modal", steps: [
+					{do: "view-html", method:"get"}
+				]}
+			]
+		}
+
+		// Step two: names what changes, and posts to theme-switch
+		theme-confirm: {
+			roles:["owner"]
+			steps: [
+				{do: "as-modal", steps: [
+					{do: "view-html", method:"get"}
+				]}
+			]
+		}
+
+		// Step three, the only one that saves.  Outside as-modal, which would close the modal on a refusal
+		theme-switch: {
+			roles:["owner"]
+			steps: [
+				// RULE: Only an installed theme other than the current one, as theme-confirm.html shows it (see AGENTS.md)
+				{do: "if", condition: "{{$id := .QueryParam `themeId`}}{{if ne $id (.Theme .ThemeID).ThemeID}}{{range .Themes}}{{if eq .ThemeID $id}}true{{end}}{{end}}{{end}}",
+				then: [
+					{do: "set-data", from-url:["themeId"]}
+					{do: "save", comment:"Theme changed"}
 					{do: "reload-page"}
-				]
-			}]
+				],
+				else: [
+					{do: "view-html", file:"theme-confirm", method:"post"}
+				]}
+			]
 		}
 
 		defaults: {

@@ -1,19 +1,42 @@
 {
 	"uses": {
-		"template:admin-domain/themes@theme=default/0:as-modal.SubSteps/1:set-data": {
+		"template:admin-domain/theme-switch@theme=default/0:if.Then/0:set-data": {
 			"fields": [
-				"themeId (from-form, schema.String)"
+				"themeId (from-url, schema.String)"
 			],
 			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
+				"GET/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/hostile": {
 					"changes": {
-						"themeId": "string "
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/empty": {
 					"types": {
 						"themeId": "string"
 					}
@@ -27,17 +50,11 @@
 					}
 				},
 				"POST/literal": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
 				},
 				"POST/prefilled": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
@@ -52,20 +69,43 @@
 				}
 			}
 		},
-		"template:admin-domain/themes@theme=minimal/0:as-modal.SubSteps/1:set-data": {
+		"template:admin-domain/theme-switch@theme=minimal/0:if.Then/0:set-data": {
 			"fields": [
-				"themeId (from-form, schema.String)"
+				"themeId (from-url, schema.String)"
 			],
 			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
+				"GET/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/hostile": {
 					"changes": {
-						"themeId": "string "
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/empty": {
 					"types": {
 						"themeId": "string"
 					}
@@ -79,17 +119,11 @@
 					}
 				},
 				"POST/literal": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
 				},
 				"POST/prefilled": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
