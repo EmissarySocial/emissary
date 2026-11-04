@@ -330,11 +330,7 @@ func (service *Outbox) HasObject(session data.Session, actorType string, actorID
 
 	const location = "service.Outbox.HasObject"
 
-	criteria := exp.Equal("actorType", actorType).
-		AndEqual("actorId", actorID).
-		AndEqual("objectId", objectID)
-
-	count, err := service.Count(session, criteria)
+	count, err := service.Count(session, publishedObjectCriteria(actorType, actorID, objectID))
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Counting outbox messages", actorType, actorID, objectID)

@@ -345,6 +345,30 @@ func (service *Outbox2) RangeByObjectID(session data.Session, actorType string, 
 	return service.Range(session, criteria)
 }
 
+// HasObject returns TRUE if an actor's outbox holds an activity that publishes the provided object
+func (service *Outbox2) HasObject(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) (bool, error) {
+
+	const location = "service.Outbox2.HasObject"
+
+	count, err := service.Count(session, publishedObjectCriteria(actorType, actorID, objectID))
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Counting outbox activities", "actorType: "+actorType, "actorId: "+actorID.Hex(), objectID)
+	}
+
+	return count > 0, nil
+}
+
+// publishedObjectCriteria matches the activities in an actor's legacy outbox or Outbox2 that publish the provided object
+func publishedObjectCriteria(actorType string, actorID primitive.ObjectID, objectID string) exp.Expression {
+
+	// RULE: Only a Create or Update publishes an object. A Delete names the object too, but withdraws it.
+	return exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
+		AndEqual("objectId", objectID).
+		AndIn("activityType", []string{vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate})
+}
+
 // RangeByActivityURL returns an iterator over every OutboxItem in an actor's outbox whose activity URL matches
 func (service *Outbox2) RangeByActivityURL(session data.Session, actorType string, actorID primitive.ObjectID, activityURL string) (iter.Seq[model.OutboxItem], error) {
 

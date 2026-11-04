@@ -362,6 +362,12 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 		return derp.Wrap(err, location, "Deleting User's outbox messages", user, note)
 	}
 
+	// Delete related Outbox2 activities.  Like the legacy outbox, this must run before the User's
+	// Streams are deleted, or each Stream would send its own Delete to followers of a vanishing User.
+	if err := service.outbox2Service.DeleteByActor(session, model.ActorTypeUser, user.UserID); err != nil {
+		return derp.Wrap(err, location, "Deleting User's Outbox2 activities", user.UserID, note)
+	}
+
 	// Delete related Responses
 	if err := service.responseService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
 		return derp.Wrap(err, location, "Deleting User's responses", user, note)
