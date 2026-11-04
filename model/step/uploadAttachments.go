@@ -1,6 +1,7 @@
 package step
 
 import (
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -15,6 +16,7 @@ type UploadAttachments struct {
 	AcceptType string // Mime Type(s) to accept (e.g. "image/*")
 	Category   string // Category to apply to the Attachment
 	Maximum    int    // Maximum number of uploads to allow (Default: 1)
+	Minimum    int    // Fewest attachments the category may hold once the upload is done (Default: 0)
 	JSONResult bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
 
 	Label                string // Value to set as the attachment.label
@@ -30,12 +32,22 @@ type UploadAttachments struct {
 // NewUploadAttachments returns a fully parsed UploadAttachments object
 func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 
+	const location = "step.NewUploadAttachments"
+
 	// Default behavior is "append", which deletes the oldest attachments to make room for new ones.
 	// "replace" deletes them all, and "fill" deletes none, adding only as many new ones as fit.
 	action := stepInfo.GetString("action")
 
 	if action != "replace" && action != "fill" {
 		action = "append"
+	}
+
+	maximum := max(stepInfo.GetInt("maximum"), 1)
+	minimum := max(stepInfo.GetInt("minimum"), 0)
+
+	// RULE: A minimum above the maximum could never be met
+	if minimum > maximum {
+		return UploadAttachments{}, derp.BadRequest(location, "The 'minimum' attribute cannot exceed the 'maximum'", minimum, maximum)
 	}
 
 	rules := stepInfo.GetMap("rules")
@@ -47,7 +59,8 @@ func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 		DownloadPath:   stepInfo.GetString("download-path"),
 		FilenamePath:   stepInfo.GetString("filename-path"),
 		AcceptType:     stepInfo.GetString("accept-type"),
-		Maximum:        max(stepInfo.GetInt("maximum"), 1),
+		Maximum:        maximum,
+		Minimum:        minimum,
 		Category:       stepInfo.GetString("category"),
 		JSONResult:     stepInfo.GetBool("json-result"),
 

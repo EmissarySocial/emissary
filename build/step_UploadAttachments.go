@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"mime/multipart"
+	"strconv"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -25,6 +27,7 @@ type StepUploadAttachments struct {
 	AcceptType string // Mime Type(s) to accept (e.g. "image/*")
 	Category   string // Category to apply to the Attachment
 	Maximum    int    // Maximum number of uploads to allow (Default: 1)
+	Minimum    int    // Fewest attachments the category may hold once the upload is done (Default: 0)
 	JSONResult bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
 
 	Label                string // Value to set as the attachment.label
@@ -45,7 +48,7 @@ func (step StepUploadAttachments) Get(builder Builder, _ io.Writer) PipelineBeha
 // Post applies this step during a POST request. Implements the Step interface.
 func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	const location = "handler.StepUploadAttachments.Post"
+	const location = "build.StepUploadAttachments.Post"
 
 	// Read the multipart form from the request
 	form, err := multipartForm(builder.request())
@@ -56,10 +59,6 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 	// Retrieve upload files from the POST
 	files := form.File[step.Fieldname]
-
-	if len(files) == 0 {
-		return Continue()
-	}
 
 	// Required services and objects
 	factory := builder.factory()
@@ -74,18 +73,18 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		objectType = "Stream"
 	}
 
+	// Load what the category already holds: the count decides what fits, and the ranks decide where new files go
+	existing, err := attachmentService.QueryByCategory(builder.session(), objectType, objectID, step.Category)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Loading existing Attachments"))
+	}
+
 	// Number of files must be less or equal to the maximum.  "fill" keeps every existing
 	// attachment, so it accepts only as many new files as there is room left for.
 	limit := step.Maximum
 
 	if step.Action == "fill" {
-
-		existing, err := attachmentService.QueryByCategory(builder.session(), objectType, objectID, step.Category)
-
-		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Counting existing Attachments"))
-		}
-
 		limit = roomLeft(step.Maximum, len(existing))
 	}
 
@@ -93,44 +92,43 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		files = files[:limit]
 	}
 
+	// RULE: The category must hold at least the minimum once these files are stored
+	if count := countAfterUpload(step.Action, step.Maximum, len(existing), len(files)); count < step.Minimum {
+		return Halt().WithError(derp.Validation(minimumMessage(step.Minimum), "minimum", step.Minimum, "count", count))
+	}
+
 	if len(files) == 0 {
 		return Continue()
 	}
+
+	// Sniff every file before storing any, so a file the step refuses halts with nothing written
+	uploads, err := openUploads(files, step.AcceptType)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Checking uploaded files"))
+	}
+
+	defer closeUploads(uploads)
 
 	// Make room for new attachments.  For "fill", the files already fit, so nothing is deleted.
 	if err := attachmentService.MakeRoom(builder.session(), objectType, objectID, step.Category, step.Action, step.Maximum, len(files)); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Making room for new Attachments"))
 	}
 
+	// New files rank after everything the category holds, in the order posted
+	nextRank := nextRankAfter(step.Action, existing)
+
 	// Make attachments for each uploaded file
-	for index, fileHeader := range files {
+	for index, upload := range uploads {
 
-		log.Trace().Str("Filename", fileHeader.Filename).Msg("Found file")
-
-		// Open the uploaded file contents
-		source, err := fileHeader.Open()
-
-		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Reading file from multi-part header", fileHeader))
-		}
-
-		defer derp.ReportFunc(source.Close)
-
-		// Sniff the actual file contents (NOT the attacker-controlled filename or
-		// Content-Type header) and, if this step restricts the accepted content-types,
-		// reject anything that does not match.  `reader` re-assembles the bytes we
-		// peeked so the full stream is still available for MediaServer.Put.
-		reader, contentType, err := verifyContentType(source, fileHeader.Filename, step.AcceptType)
-
-		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Uploaded file is not an allowed type", fileHeader.Filename, step.AcceptType))
-		}
+		log.Trace().Str("Filename", upload.header.Filename).Msg("Found file")
 
 		// Create a new Attachment object
 		attachment := model.NewAttachment(objectType, objectID)
-		attachment.Original = fileHeader.Filename
-		attachment.ContentType = contentType
+		attachment.Original = upload.header.Filename
+		attachment.ContentType = upload.contentType
 		attachment.Category = step.Category
+		attachment.Rank = nextRank + index
 
 		// Try to set labels from the stepInfo and form
 		if step.Label != "" {
@@ -148,7 +146,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		// Add the document into the media server.
 		// If it's an image or video, then save the dimensions as well.
-		if err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), reader); err != nil {
+		if err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), upload.reader); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Saving attachment to mediaserver", attachment))
 		}
 
@@ -156,7 +154,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		attachment.SetRules(step.RuleWidth, step.RuleHeight, step.RuleTypes)
 
 		// Try to save the Attachment
-		if err := attachmentService.Save(builder.session(), &attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
+		if err := attachmentService.Save(builder.session(), &attachment, "Uploaded file: "+upload.header.Filename); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Saving attachment", attachment))
 		}
 
@@ -220,6 +218,103 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 // "existing" of them.  It is never negative, even when a lower maximum leaves too many already.
 func roomLeft(maximum int, existing int) int {
 	return max(maximum-existing, 0)
+}
+
+// countAfterUpload returns how many attachments the category will hold once "posted" new files
+// are stored under the action: "replace" keeps only the new files, "fill" adds them to the
+// existing ones (the caller has already trimmed them to the room left), and "append" adds them
+// and then deletes whatever overflows the maximum.
+func countAfterUpload(action string, maximum int, existing int, posted int) int {
+
+	switch action {
+
+	case "replace":
+		return posted
+
+	case "fill":
+		return existing + posted
+
+	default:
+		return min(existing+posted, maximum)
+	}
+}
+
+// minimumMessage returns the message shown inline when an upload would leave the category
+// holding fewer files than the step requires
+func minimumMessage(minimum int) string {
+
+	if minimum == 1 {
+		return "At least 1 file is required"
+	}
+
+	return "At least " + strconv.Itoa(minimum) + " files are required"
+}
+
+// upload is one posted file, opened and sniffed, ready to store
+type upload struct {
+	header      *multipart.FileHeader
+	source      multipart.File
+	reader      io.Reader
+	contentType string
+}
+
+// openUploads opens and sniffs every posted file before any is stored, so a file the step refuses
+// halts the upload with nothing written to the media server. The caller closes what it returns.
+func openUploads(files []*multipart.FileHeader, acceptType string) ([]upload, error) {
+
+	const location = "build.openUploads"
+
+	result := make([]upload, 0, len(files))
+
+	for _, header := range files {
+
+		// Open the uploaded file contents
+		source, err := header.Open()
+
+		if err != nil {
+			closeUploads(result)
+			return nil, derp.Wrap(err, location, "Reading file from multi-part header", header.Filename)
+		}
+
+		// Sniff the actual file contents (NOT the attacker-controlled filename or
+		// Content-Type header) and, if this step restricts the accepted content-types,
+		// reject anything that does not match.  `reader` re-assembles the bytes we
+		// peeked so the full stream is still available for MediaServer.Put.
+		reader, contentType, err := verifyContentType(source, header.Filename, acceptType)
+
+		if err != nil {
+			derp.Report(source.Close())
+			closeUploads(result)
+			return nil, derp.Wrap(err, location, "Uploaded file is not an allowed type", header.Filename, acceptType)
+		}
+
+		result = append(result, upload{header: header, source: source, reader: reader, contentType: contentType})
+	}
+
+	return result, nil
+}
+
+// closeUploads closes the files that openUploads opened
+func closeUploads(uploads []upload) {
+	for _, upload := range uploads {
+		derp.Report(upload.source.Close())
+	}
+}
+
+// nextRankAfter returns the rank the first new file takes: 1 when the action replaces
+// everything, and otherwise one past the highest rank the category holds
+func nextRankAfter(action string, existing []model.Attachment) int {
+
+	if action == "replace" {
+		return 1
+	}
+
+	if len(existing) == 0 {
+		return 1
+	}
+
+	// The category is in rank order, so its last file holds the highest rank; a rank below 1 is unset
+	return max(existing[len(existing)-1].Rank, 0) + 1
 }
 
 // verifyContentType sniffs an uploaded file to determine its actual content-type, and

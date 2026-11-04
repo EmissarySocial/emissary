@@ -51,6 +51,34 @@ func TestUploadAttachments_Defaults(t *testing.T) {
 	require.Equal(t, "append", step.Action)
 }
 
+// TestUploadAttachments_Minimum verifies that the minimum defaults to 0, never goes below it, and never exceeds the maximum
+func TestUploadAttachments_Minimum(t *testing.T) {
+
+	step, err := NewUploadAttachments(mapof.Any{})
+	require.Nil(t, err)
+	require.Equal(t, 0, step.Minimum)
+
+	step, err = NewUploadAttachments(mapof.Any{"minimum": 2, "maximum": 5})
+	require.Nil(t, err)
+	require.Equal(t, 2, step.Minimum)
+	require.Equal(t, 5, step.Maximum)
+
+	step, err = NewUploadAttachments(mapof.Any{"minimum": 1, "maximum": 1})
+	require.Nil(t, err)
+	require.Equal(t, 1, step.Minimum)
+
+	step, err = NewUploadAttachments(mapof.Any{"minimum": -3})
+	require.Nil(t, err)
+	require.Equal(t, 0, step.Minimum)
+
+	// A minimum above the maximum (which defaults to 1) fails to load
+	_, err = NewUploadAttachments(mapof.Any{"minimum": 2})
+	require.Error(t, err)
+
+	_, err = NewUploadAttachments(mapof.Any{"minimum": 6, "maximum": 5})
+	require.Error(t, err)
+}
+
 // TestUploadAttachments_Actions verifies that only "replace" and "fill" survive parsing, and every other action becomes "append"
 func TestUploadAttachments_Actions(t *testing.T) {
 
