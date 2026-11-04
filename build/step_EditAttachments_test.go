@@ -485,24 +485,23 @@ func TestStepEditAttachments_LimitSave(t *testing.T) {
 		return result
 	}
 
-	keeps := func(name string, minimum int, maximum int, existing int, files []*multipart.FileHeader, stagedFiles []model.Attachment, wantFiles []string, wantStaged []string) {
+	// keeps names the files kept in rank order, the posted ones and then the staged ones
+	keeps := func(name string, minimum int, maximum int, existing int, files []*multipart.FileHeader, stagedFiles []model.Attachment, want ...string) {
 		t.Helper()
 
 		gotFiles, gotStaged, err := photoEdit(minimum, maximum).limitSave(existing, files, stagedFiles)
 		require.NoError(t, err, name)
 
-		fileNames := make([]string, 0, len(gotFiles))
+		kept := make([]string, 0, len(gotFiles)+len(gotStaged))
 		for _, file := range gotFiles {
-			fileNames = append(fileNames, file.Filename)
+			kept = append(kept, file.Filename)
 		}
 
-		stagedNames := make([]string, 0, len(gotStaged))
 		for _, attachment := range gotStaged {
-			stagedNames = append(stagedNames, attachment.Original)
+			kept = append(kept, attachment.Original)
 		}
 
-		require.Equal(t, wantFiles, fileNames, name)
-		require.Equal(t, wantStaged, stagedNames, name)
+		require.Equal(t, append([]string{}, want...), kept, name)
 	}
 
 	refuses := func(name string, minimum int, maximum int, existing int, files []*multipart.FileHeader, stagedFiles []model.Attachment) {
@@ -515,15 +514,15 @@ func TestStepEditAttachments_LimitSave(t *testing.T) {
 		require.Nil(t, gotStaged, name)
 	}
 
-	keeps("everything fits", 1, 4, 0, posted("a", "b"), staged("c", "d"), []string{"a", "b"}, []string{"c", "d"})
-	keeps("the staged tail is dropped", 1, 3, 0, posted("a", "b"), staged("c", "d"), []string{"a", "b"}, []string{"c"})
-	keeps("every staged file is dropped", 1, 2, 0, posted("a", "b"), staged("c", "d"), []string{"a", "b"}, []string{})
-	keeps("the posted tail is dropped", 1, 1, 0, posted("a", "b"), staged("c"), []string{"a"}, []string{})
-	keeps("staged alone", 1, 2, 0, nil, staged("a", "b", "c"), []string{}, []string{"a", "b"})
-	keeps("existing files take room first", 1, 3, 2, posted("a"), staged("b"), []string{"a"}, []string{})
-	keeps("existing files over the maximum leave no room", 1, 2, 3, posted("a"), staged("b"), []string{}, []string{})
-	keeps("nothing posted with no minimum", 0, 2, 0, nil, nil, []string{}, []string{})
-	keeps("exactly the minimum", 2, 2, 0, posted("a"), staged("b"), []string{"a"}, []string{"b"})
+	keeps("everything fits", 1, 4, 0, posted("a", "b"), staged("c", "d"), "a", "b", "c", "d")
+	keeps("the staged tail is dropped", 1, 3, 0, posted("a", "b"), staged("c", "d"), "a", "b", "c")
+	keeps("every staged file is dropped", 1, 2, 0, posted("a", "b"), staged("c", "d"), "a", "b")
+	keeps("the posted tail is dropped", 1, 1, 0, posted("a", "b"), staged("c"), "a")
+	keeps("staged alone", 1, 2, 0, nil, staged("a", "b", "c"), "a", "b")
+	keeps("existing files take room first", 1, 3, 2, posted("a"), staged("b"), "a")
+	keeps("existing files over the maximum leave no room", 1, 2, 3, posted("a"), staged("b"))
+	keeps("nothing posted with no minimum", 0, 2, 0, nil, nil)
+	keeps("exactly the minimum", 2, 2, 0, posted("a"), staged("b"), "a", "b")
 
 	refuses("nothing posted", 1, 2, 0, nil, nil)
 	refuses("one short", 3, 4, 0, posted("a"), staged("b"))
