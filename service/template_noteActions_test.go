@@ -76,7 +76,7 @@ func TestNoteActions_OneClickTwins(t *testing.T) {
 	require.Equal(t, 2, strings.Count(html, `class="camper-show-if-ready" data-camper-action="intent" hidden>`))
 
 	// RULE: The "..." button opens the account manager, and stays hidden until an account is saved
-	require.Contains(t, html, `class="camper-show-if-has-accounts" hx-get="/0123456789abcdef01234567/intent" aria-label="Manage Accounts" hidden>`)
+	require.Contains(t, html, `class="camper-show-if-has-accounts" hx-get="/0123456789abcdef01234567/intent" aria-label="Manage Accounts" hidden>⁂</button>`)
 
 	// The bar loads CamperJS itself
 	require.Contains(t, html, `src="/.themes/global/resources/camperjs-0.2.0/camper.js"`)

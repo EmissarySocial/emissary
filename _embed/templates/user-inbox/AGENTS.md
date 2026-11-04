@@ -22,6 +22,10 @@ A post hidden by the viewer's rules renders as a placeholder, and clicking it re
 
 `annotation-editor` posts to its own `endpoint`, not to the modal, because an `as-modal` POST always closes the modal. After a save it renders [browse-annotation-modal.html](browse-annotation-modal.html), which redraws the whole modal so the Notes / Noted label is current.
 
+## The Inbox redraws the browse modal, never `with-annotation`
+
+The `view-html` that renders `browse-annotation-modal` sits after `with-annotation` closes, in both `annotation-editor` and `annotation-delete`. Inside `with-annotation` the dot is the Annotation's `Model` builder, and `.View "browse-annotation"` would render the whole Notes tab with it. That tab reaches `reply-button`, whose `CanReplyTo` only the Inbox has, so the save answered 500 after writing the note (BUG-330). In `annotation-delete` the redraw also waits on `?url=`, because only a document note's Delete link (from `annotation-editor`) carries it; an actor note's Delete closes its modal instead.
+
 ## `remove-event` shares a pipeline with `delete`
 
 In `annotation-delete`, the `delete` step adds a `closeModal` event, and the `remove-event` that follows strips it so the browse modal stays open to be redrawn. Keep the two in the same branch: a `remove-event` anywhere else has no `closeModal` to remove.

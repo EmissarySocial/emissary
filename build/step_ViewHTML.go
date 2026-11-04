@@ -65,7 +65,7 @@ func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBeha
 	}
 
 	if err := builder.execute(buffer, filename, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepViewHTML.Get", "Executing template"))
+		return Halt().WithError(derp.Wrap(err, "build.StepViewHTML.execute", "Executing template", filename))
 	}
 
 	// If we have a valid object, then try to set ETag headers.
