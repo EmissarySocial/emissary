@@ -16,7 +16,7 @@
 	{{ if gt $metadata.Replies 0 }}
 		<span
 			role="button"
-			hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+			hx-get="/@me/newsfeed/browse?url={{$message.URL | urlquery}}"
 			hx-push-url="false"
 			tabIndex="0"
 			class="text-gray margin-left turboclick">{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}</span>

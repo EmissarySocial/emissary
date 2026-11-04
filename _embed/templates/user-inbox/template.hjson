@@ -45,112 +45,6 @@
 	}
 	actions: {
 
-		actor-button: {
-			roles:["self"]
-			steps: [
-				{do:"set-header", name:"Cache-Control", value:"no-store"}
-				{do:"set-header", name:"Hx-Reswap", value:"outerHTML"}
-				{do:"set-header", name:"Hx-Push-Url", value:"false"}
-				{do:"view-html"}
-			]
-		}
-
-		actor-button-follow: {
-			roles:["self"]
-			steps:[
-				{do:"with-following", steps:[
-					{do:"set-data", from-url:["folderId", "url"], values: {behavior:"POSTS+REPLIES"}}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"view-html", method:"post", file:"actor-button-follow"}
-				]}
-			]
-		}
-
-		actor-button-follow-update: {
-			roles:["self"]
-			steps:[
-				{do:"with-following", steps:[
-					{do:"set-data", from-form:["behavior", "isPublic"]}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"inline-success", message:"Saved"}
-				]}
-			]
-		}
-
-		actor-button-unfollow: {
-			roles:["self"]
-			steps:[
-				{do:"with-following", steps:[
-					{do:"delete"}
-				]}
-				{do:"view-html", method:"post", file:"actor-button-none"}
-				{do:"trigger-event", event:"refreshPeers"}
-				{do:"remove-event", event:"closeModal"}
-			]
-		}
-
-		actor-button-mute:{
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"set-data", values: {type:"ACTOR", action: "MUTE", trigger:"{{.QueryParam `url`}}"}}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"view-html", method:"post", file:"actor-button-mute"}
-				]}
-			]
-		}
-
-		actor-button-unmute:{
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"delete"}
-				]}
-				{do:"view-html", method:"post", file:"actor-button-none"}
-				{do:"trigger-event", event:"refreshPeers"}
-				{do:"remove-event", event:"closeModal"}
-			]
-		}
-
-		actor-button-block:{
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"set-data", values: {type:"ACTOR", action: "BLOCK", trigger: "{{.QueryParam `url`}}"}}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"view-html", method:"post", file:"actor-button-block"}
-				]}
-			]
-		}
-
-		actor-button-block-update: {
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"set-data", from-form:["summary"]}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"inline-success", message:"Saved"}
-				]}
-			]
-		}
-
-		actor-button-unblock:{
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"delete"}
-				]}
-				{do:"trigger-event", event:"refreshPeers"}
-				{do:"remove-event", event:"closeModal"}
-				{do:"view-html", method:"post", file:"actor-button-none"}
-			]
-		}
-
 		// The private annotation editor for ?url=; an empty note keeps the annotation
 		annotation: {
 			roles: ["self"]
@@ -263,14 +157,6 @@
 			]
 		}
 
-		browse-document-detail: {
-			roles: ["self"]
-			steps: [
-				{do:"set-header", name:"Cache-Control", value:"no-store"}
-				{do:"view-html"}
-			]
-		}
-
 		browse-index: {
 			roles: ["self"]
 			steps: [
@@ -296,20 +182,6 @@
 				{do:"as-modal", options:["class:large"], steps:[
 					{do:"view-html"}
 				]}
-			]
-		}
-
-		browse-timeline: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		browse-timeline-list: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
 			]
 		}
 
@@ -460,66 +332,6 @@
 			]
 		}
 
-		message: {
-			roles:["self"]
-			steps:[
-				{do:"as-modal", options:["xclass:large"], steps:[
-					{do:"set-header", name:"Cache-Control", value:"no-store"}
-					{do:"view-html"}
-				]}
-			]
-		}
-
-		message-code: {
-			roles:["self"]
-			steps:[
-				{do:"as-modal", options:["class:large"], steps:[
-					{do:"view-html"}
-				]}
-			]
-		}
-
-		message-mute-button:{
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps:[
-					{do:"view-html"}
-				]}
-			]
-		}
-
-		message-mute:{
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps:[
-					{do:"set-state", state:"MUTED"}
-					{do:"save"}
-					{do:"view-html", method:"both", file:"message-mute-button"}
-				]}
-			]
-		}
-
-		message-unmute:{
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps:[
-					{do:"set-state", state:"UNMUTED"}
-					{do:"save"}
-					{do:"view-html", method:"both", file:"message-mute-button"}
-				]}
-			]
-		}
-
-		message-delete: {
-			roles: ["self"]
-			steps: [
-				{do:"with-message", steps:[
-					{do:"delete", title:"Delete Message?", message:"Are you sure you want to delete this message?"}
-					{do:"reload-page"}
-				]}
-			]
-		}
-
 		message-read:{
 			roles:["self"]
 			steps:[
@@ -527,16 +339,6 @@
 					{do:"set-state", state:"READ"}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshSidebar"}
-				]}
-			]
-		}
-
-		message-set-response: {
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps: [
-					{do:"set-response"}
-					{do:"view-html", method:"both"}
 				]}
 			]
 		}
@@ -565,34 +367,6 @@
 						]}
 					]}
 				]}
-			]
-		}
-
-		responses-likes:{
-			roles:["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		responses-replies:{
-			roles:["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		responses-replies-list:{
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		responses-replies-recursive:{
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
 			]
 		}
 

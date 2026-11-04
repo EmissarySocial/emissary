@@ -9924,7 +9924,6 @@
 		"template:user-inbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-inbox/folder-sort/0:with-folder.SubSteps@with-folder/0:sort": "not pinned: POST keys are database record IDs",
 		"template:user-inbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:user-inbox/message-set-response/0:with-message.SubSteps@with-message/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-inbox/reply/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:user-notifications/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-notifications/like-button/0:set-response": "not pinned: writes a Response record through service.Response",

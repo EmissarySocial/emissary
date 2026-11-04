@@ -16,7 +16,11 @@ The one-row `.Inbox.Top1` query in [index.html](index.html) is the only test for
 
 ## Hidden posts reveal through `?reveal=true`
 
-A post hidden by the viewer's rules renders as a placeholder, and clicking it re-renders the same view with `?reveal=true`. That is the only click-to-reveal mechanism. In [message.html](message.html) it reveals only the message, and each reply below stays gated on its own rules.
+A post hidden by the viewer's rules renders as a placeholder. Inside a reply tree, clicking it re-renders the same view with `?reveal=true`, which lifts only that post's hide. In the list, the placeholder opens the `browse` modal instead, which shows its main post without a rule check, so only that post is revealed and each reply below stays gated on its own rules.
+
+## Every way into a post opens `browse`
+
+A list row, the "N Replies" link, and a hidden post's placeholder all open the `browse` modal. Do not add a second view of a post; extend `browse`. The inbox kept one until BUG-331, the `message` modal, and nobody noticed when it broke: its replies failed from August 2025, its Code button never worked, and its Prev and Next went nowhere after the `newsItemId` rename. `TestBuilderDots_UserInboxLinks` in [build/builderDots_test.go](../../../build/builderDots_test.go) fails when any link in this folder names an action that does not exist.
 
 ## The note form posts to itself
 
