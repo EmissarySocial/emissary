@@ -1,4 +1,4 @@
-<!-- The note's Reply, Like, and Share buttons, drawn beside the Replies, Likes, and Shares tabs in each responses-*.html -->
+<!-- The note's Reply, Like, and Boost buttons, drawn beside the Replies, Likes, and Boosts tabs in each responses-*.html -->
 <span class="text-sm nowrap">
 	<!-- Signed in, Reply opens the visitor's own inbox at this note with its reply form; otherwise an Activity Intent -->
 	{{if .AcceptsReplies}}
@@ -20,8 +20,8 @@
 			<button class="camper-show-if-ready" data-camper-action="intent" hidden><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
 		</span>
 		<span data-camper-intent="announce" data-camper-object="{{.Permalink}}">
-			<button class="camper-hide-if-ready" hx-get="/{{.StreamID}}/intent?intent=announce&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
-			<button class="camper-show-if-ready" data-camper-action="intent" hidden><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
+			<button class="camper-hide-if-ready" hx-get="/{{.StreamID}}/intent?intent=announce&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "announce"}}</span> Boost</button>
+			<button class="camper-show-if-ready" data-camper-action="intent" hidden><span aria-hidden="true" class="margin-left-xs">{{icon "announce"}}</span> Boost</button>
 		</span>
 		<!-- RULE: "..." manages saved accounts, so it is hidden until CamperJS finds one -->
 		<button class="camper-show-if-has-accounts" hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts" hidden>{{icon "more-horizontal"}}</button>

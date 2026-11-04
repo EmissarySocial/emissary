@@ -97,7 +97,7 @@ func getIntent_Announce(ctx *steranko.Context, user *model.User, icons icon.Prov
 		b.Div().Class("margin-top")
 		{
 			onCancel := firstOf(transaction.OnCancel, "/@me")
-			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("share") + " Share This").Close()
+			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("announce") + " Boost This").Close()
 			b.A("/@me/intent/continue?url=" + url.QueryEscape(onCancel)).Class("button").TabIndex("0").InnerText("Cancel")
 		}
 	}

@@ -13,14 +13,14 @@
 				{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
 			</span>
 			<span role="tab" hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" aria-selected="false">
-				{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
+				{{- .ShareCount }} {{pluralize .ShareCount "Boost" "Boosts" -}}
 			</span>
 		</div>
 	</div>
 
 	<hr class="margin-top-sm"/>
 
-	<!-- Reply sits in note-actions.html, beside Like and Share -->
+	<!-- Reply sits in note-actions.html, beside Like and Boost -->
 	<div id="replies" class="margin-vertical">
 		{{.View "replies"}}
 	</div>
