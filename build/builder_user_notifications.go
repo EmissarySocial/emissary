@@ -218,7 +218,7 @@ func (w Notifications) UnreadNotificationCount(notificationType string) int64 {
 // replies and direct messages (the classification ladder is DIRECT > REPLY > MENTION, so without
 // the expansion those would be invisible — there is no Replies section and no Messages section),
 // and LIKE includes dislikes (too rare for a section of their own).  ANNOUNCE passes through
-// unexpanded as the "Shares" section.  An empty section name returns nil, meaning "all types".
+// unexpanded as the "Boosts" section (the route keeps the name "shares").  An empty section name returns nil, meaning "all types".
 //
 // This helper (and notificationTypeFilter below) is package-level because both the Notifications
 // builder and the mark-notifications-read / with-notification steps expand `type` the same way.

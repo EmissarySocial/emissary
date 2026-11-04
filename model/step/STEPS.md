@@ -1007,6 +1007,29 @@ Strips an HX-Trigger event that an earlier step added. Runs in both phases.
 
 ---
 
+## require
+
+Evaluates `condition` as a template, and halts the pipeline with a `400 Bad Request` error unless it renders exactly `true`. Runs in both phases. It reads the condition the same way [`if`](#if) does, so `{do: "require", condition: "X"}` refuses exactly the requests that `{do: "if", condition: "X", else: [{do: "halt"}]}` would stop, with an error in place of a silent halt. A condition that fails to render halts with a server error instead.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| condition | **Required.** Template expression that must render `true`. An empty condition is a load-time error |
+
+<br>
+
+**Example**
+
+```hjson
+{
+	do: "require"
+	condition: "{{eq (.Data `layout`) `notes`}}"
+}
+```
+
+---
+
 ## require-password
 
 Interposes a password-confirmation dialog before a sensitive action. The `title` and `message` defaults are inherited from the delete dialog, so set both explicitly.
@@ -1538,7 +1561,9 @@ Pauses the pipeline in both phases. Debugging only.
 
 ## sort
 
-Re-ranks a set of records from a form POST containing a `keys` array of ObjectIDs, writing the 1-based index into each record's rank property. Responds with `HX-Reswap: none` so the page does not reload.
+Re-ranks a set of records from a form POST containing a `keys` array of ObjectIDs, in the order posted, and saves only the records whose rank changed. Responds with `HX-Reswap: none` so the page does not reload.
+
+With `direction: "asc"`, the posted records are numbered 1, 2, 3, and so on. With `direction: "desc"`, they are numbered down from the highest rank among them, so the first record keeps the top rank. That lets a list shown highest-rank-first post only its loaded pages, as an infinite scroll does, without moving the records below them.
 
 **Attributes**
 
@@ -1547,6 +1572,7 @@ Re-ranks a set of records from a form POST containing a `keys` array of ObjectID
 | model | Named model service to sort. Defaults to the builder's own service |
 | keys | Property matched against each posted key. Defaults to `_id` |
 | values | Property that receives the new rank. Defaults to `rank` |
+| direction | `asc` (the default) or `desc`, matching the order the list is shown in |
 | message | Audit comment recorded with each save |
 
 <br>

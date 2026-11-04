@@ -29,11 +29,14 @@ func Stream(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
+		// Enforces one live Stream per token and serves LoadByToken. Soft-deleted Streams are
+		// excluded, so a deleted Stream's token can be used again.
 		"idx_Stream_Token": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "token", Value: 1},
 			},
 			Options: options.Index().
+				SetUnique(true).
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 

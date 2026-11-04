@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/davidscottmills/goeditorjs"
 	"github.com/stretchr/testify/require"
 )
 
@@ -147,4 +148,40 @@ func TestContent_Format_UnknownFormatIsEmpty(t *testing.T) {
 	content := service.New("NOT-A-FORMAT", "<script>alert(1)</script>")
 
 	require.Equal(t, "", content.HTML)
+}
+
+// editorJSContent returns a Content service whose EditorJS engine has the paragraph handler,
+// with the block renderers that NewContent registers over it
+func editorJSContent() Content {
+	engine := goeditorjs.NewHTMLEngine()
+	engine.RegisterBlockHandlers(&goeditorjs.ParagraphHandler{})
+	return NewContent(engine)
+}
+
+// TestContent_Format_EditorJSKeepsInlineMarkup confirms that an EditorJS document publishes its
+// line breaks, links, and colors, in paragraphs and in list items alike
+func TestContent_Format_EditorJSKeepsInlineMarkup(t *testing.T) {
+
+	service := editorJSContent()
+	content := service.New(model.ContentFormatEditorJS, `{"blocks":[
+		{"type":"paragraph","data":{"text":"one<br>two <span class=\"cdx-text-color\" style=\"color: #0055cc;\">blue</span>"}},
+		{"type":"list","data":{"style":"unordered","items":[{"content":"<b>bold</b> <a href=\"https://example.com/\">link</a><br>next","items":[]}]}}
+	]}`)
+
+	require.Equal(t, `<p>one<br>two <span class="cdx-text-color" style="color: #0055cc">blue</span></p><ul><li><b>bold</b> <a href="https://example.com/" rel="nofollow">link</a><br>next</li></ul>`, content.HTML)
+}
+
+// TestContent_Format_EditorJSSanitizesListItems confirms that a list item's HTML, which its
+// renderer writes unescaped, is sanitized on the way out like every other block
+func TestContent_Format_EditorJSSanitizesListItems(t *testing.T) {
+
+	service := editorJSContent()
+	content := service.New(model.ContentFormatEditorJS, `{"blocks":[{"type":"list","data":{"style":"ordered","items":[
+		{"content":"<script>alert(1)</script><img src=\"x\" onerror=\"alert(2)\"><a href=\"javascript:alert(3)\">a</a><span style=\"position: fixed; color: red\">b</span>","items":[]}
+	]}}]}`)
+
+	require.Equal(t, `<ol><li><img src="x">a<span style="color: red">b</span></li></ol>`, content.HTML)
+	require.NotContains(t, strings.ToLower(content.HTML), "<script")
+	require.NotRegexp(t, contentEventHandler, content.HTML)
+	require.NotRegexp(t, contentScriptURL, content.HTML)
 }

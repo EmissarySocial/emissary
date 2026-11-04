@@ -44,7 +44,7 @@ The role enrolls the control in the [a11y extension](../theme-global/javascript/
 
 ## `turboclick` goes on the sheet's links and not on the `<label>`
 
-On a touch device the browser only synthesizes `mousedown` once it has resolved the gesture as a tap rather than a scroll, so a drag through the sheet never navigates and the class is as safe here as on the bar. On the label, the synthetic click toggles the menu twice and it lands back where it started. If a case ever needs excluding, the mechanism is turboclick's `.folder-handle` guard, not dropping the class.
+On a touch device the browser only synthesizes `mousedown` once it has resolved the gesture as a tap rather than a scroll, so a drag through the sheet never navigates and the class is as safe here as on the bar. On the label, the synthetic click toggles the menu twice and it lands back where it started. If a case ever needs excluding, the mechanism is turboclick's `.folder-handle` / `.drag-handle` guard, not dropping the class.
 
 ## The skip link is emitted before both layouts
 

@@ -15,13 +15,13 @@
 				class="turboclick outline"
 				hx-post="{{.BasePath}}/btn-social-outline?url={{$url}}" 
 				hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":false}'
-			><span aria-hidden="true" class="margin-left-xs">{{icon "announce-fill"}}</span> Shared</button>
+			><span aria-hidden="true" class="margin-left-xs">{{icon "announce-fill"}}</span> Boosted</button>
 		{{- else -}}
 			<button 
 				class="turboclick outline" 
 				hx-post="{{.BasePath}}/btn-social-outline?url={{$url}}" 
 				hx-vals='{"type":"Announce", "url": "{{$url}}", "exists":true}'
-				><span aria-hidden="true" class="margin-left-xs">{{icon "announce"}}</span> Share</button>
+				><span aria-hidden="true" class="margin-left-xs">{{icon "announce"}}</span> Boost</button>
 		{{- end -}}
 
 		{{- if $responses.Like -}}
@@ -48,8 +48,8 @@
 	</button>
 	
 	<button class="outline" hx-get="/{{.StreamID}}/intent?intent=announce&object={{$url}}">
-		{{icon "share"}}
-		<span class="show-desktop">Share</span>
+		{{icon "announce"}}
+		<span class="show-desktop">Boost</span>
 	</button>
 	
 	<button class="outline" hx-get="/{{.StreamID}}/intent?intent=like&object={{$url}}">

@@ -29,6 +29,7 @@ import (
 type userCollection struct {
 	record    model.User
 	found     bool
+	loads     int   // Number of Load calls, so a test can assert the collection was never consulted
 	loadError error // When set, every Load fails with this error
 }
 
@@ -52,6 +53,8 @@ func (c *userCollection) Iterator(exp.Expression, ...option.Option) (data.Iterat
 
 // Load copies the stored User into the target when the criteria match.
 func (c *userCollection) Load(criteria exp.Expression, target data.Object, options ...option.Option) error {
+
+	c.loads++
 
 	if c.loadError != nil {
 		return c.loadError

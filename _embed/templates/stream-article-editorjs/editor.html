@@ -76,6 +76,13 @@
 
 		const { ColorPicker } = window;
 
+		// RULE: paste keeps only the inline tools' tags, so the color picker carries <br> for every block (see AGENTS.md)
+		class ColorPickerKeepingBreaks extends ColorPicker.default {
+			static get sanitize() {
+				return { br: {}, ...super.sanitize }
+			}
+		}
+
 		// RULE: editor must be global -- save() in the hyperscript block below calls
 		// editor.save() to collect the content it POSTs.
 		window.editor = new EditorJS({
@@ -146,8 +153,8 @@
 					class: CodeTool,
 				},
 				ColorPicker: {
-	      			class: ColorPicker.default,
-	    		}
+					class: ColorPickerKeepingBreaks,
+				}
 			},
 		})
 	}

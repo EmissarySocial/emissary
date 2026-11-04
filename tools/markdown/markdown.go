@@ -109,6 +109,9 @@ func newPolicy() *bluemonday.Policy {
 	result := bluemonday.UGCPolicy()
 	result.AllowStyling()
 
+	// RULE: inline styles may color, emphasize, and align text, never load a URL or move content (see tools/AGENTS.md)
+	result.AllowStyles("color", "background-color", "font-style", "font-weight", "text-align", "text-decoration", "text-decoration-line").Globally()
+
 	result.AllowElements("iframe")
 	result.AllowAttrs("src").OnElements("img")
 	result.AllowAttrs("alt").OnElements("img")

@@ -37,6 +37,10 @@ In hyperscript 0.9.93, on a fresh element `:foo is nil` is FALSE and `:foo is no
 
 EasyMDE 2.21.0 fetches FontAwesome from a CDN on construction unless `autoDownloadFontAwesome: false` is set. Assume any vendored editor or widget issues its own runtime requests, and check for them rather than assuming the bundle is the whole dependency.
 
+## EditorJS's color picker is what keeps a pasted line break
+
+EditorJS 2.31 saves a block with the block tool's own rules, so a typed Shift+Enter `<br>` is kept. It cleans a paste with only the inline tools' rules (`baseSanitizeConfig`), so every pasted `<br>` was dropped and the lines ran together (BUG-326). `stream-article-editorjs/editor.html` therefore registers the color picker as `ColorPickerKeepingBreaks`, which adds `br` to that tool's rule and so to every block that allows inline tools. Removing the color picker, or registering the plain `ColorPicker.default`, brings the bug back without any error. qwertylicious's `qwerty-article` editor carries the same subclass, and its `tests/playwright/editorjs.spec.mjs` pastes into both editors. The scripts load at `@latest` (BUG-264), so a future EditorJS release can change this without any change here.
+
 ## `turboclick` on a CONTAINER is intentional
 
 `theme-global/javascript/turboclick.js` fires a synthetic `click()` on mousedown against **the element actually pressed**, not the nearest `.turboclick` ancestor, so nested links, buttons, `hx-get`, and hyperscript `on click` all fire as they would naturally. `class="turboclick"` on a container (modal header, sort-form rows) is therefore safe — do not "fix" it by moving the class onto children. Two guards must stay: the `.folder-handle` bail, without which pressing a SortableJS drag handle navigates instead of dragging (it was dropped once in a cleanup commit while the doc comment still promised it), and the left-button-only, no-modifier test that preserves open-in-new-tab. If a click does nothing inside a turboclick region, the synthetic-click targeting is not the likely cause; look at the htmx swap rule above first.

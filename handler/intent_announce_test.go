@@ -54,7 +54,7 @@ func TestGetIntent_Announce_FormPostsTheObject(t *testing.T) {
 	require.Regexp(t, `<input[^>]*name="object"[^>]*value="`+regexp.QuoteMeta(objectURL)+`"`, body)
 	require.Regexp(t, `<input[^>]*name="on-success"[^>]*value="\(close\)"`, body)
 	require.Contains(t, body, "Hello there", "the page shows the object being shared")
-	require.Contains(t, body, "Share This")
+	require.Contains(t, body, "Boost This")
 }
 
 // A remote object's name and a caller's object URL must reach the page escaped.

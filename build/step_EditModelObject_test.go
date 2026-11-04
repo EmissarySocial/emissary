@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
@@ -283,4 +284,47 @@ type optionTemplatePropertyBuilder struct {
 // PropertyForm returns the Theme's form, as the Domain builder does
 func (builder optionTemplatePropertyBuilder) PropertyForm() form.Element {
 	return builder.propertyForm
+}
+
+// TestEditModelObject_PublishDateTime covers a datetime widget over Stream's virtual "publishDateTime"
+// (qwerty-episode's Publish Date): it shows the stored date in UTC, and posting it back changes nothing
+func TestEditModelObject_PublishDateTime(t *testing.T) {
+
+	widget.UseAll()
+
+	element := form.Element{
+		Type: "layout-vertical",
+		Children: []form.Element{
+			{Type: "datetime", Path: "publishDateTime"},
+		},
+	}
+
+	editForm := form.New(schema.New(model.StreamSchema()), element)
+	original := time.Date(2026, 10, 15, 19, 0, 42, 0, time.UTC).Unix()
+
+	stream := model.NewStream()
+	stream.PublishDate = original
+
+	// The widget shows the stored date, to the minute
+	html, err := editForm.Editor(&stream, nil)
+	require.NoError(t, err)
+	require.Contains(t, html, `value="2026-10-15T19:00"`)
+
+	// Posting the minute it showed keeps the stored seconds
+	require.NoError(t, editForm.SetURLValues(&stream, url.Values{"publishDateTime": {"2026-10-15T19:00"}}, nil))
+	require.Equal(t, original, stream.PublishDate)
+
+	// Clearing the field leaves the date alone
+	require.NoError(t, editForm.SetURLValues(&stream, url.Values{"publishDateTime": {""}}, nil))
+	require.Equal(t, original, stream.PublishDate)
+
+	// A new minute replaces it, read as UTC
+	require.NoError(t, editForm.SetURLValues(&stream, url.Values{"publishDateTime": {"2026-11-03T08:15"}}, nil))
+	require.Equal(t, time.Date(2026, 11, 3, 8, 15, 0, 0, time.UTC).Unix(), stream.PublishDate)
+
+	// An unpublished Stream shows an empty field
+	unpublished := model.NewStream()
+	html, err = editForm.Editor(&unpublished, nil)
+	require.NoError(t, err)
+	require.NotContains(t, html, `value="2`)
 }

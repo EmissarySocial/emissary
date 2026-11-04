@@ -163,6 +163,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "remove-event":
 		return NewRemoveEvent(stepInfo)
 
+	case "require":
+		return NewRequire(stepInfo, funcMap)
+
 	case "require-password":
 		return NewRequirePassword(stepInfo, funcMap)
 
