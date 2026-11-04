@@ -9,11 +9,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepDeleteAttachments represents an action that can delete ine or more attachments.  It can only be used on a StreamBuilder
+// StepDeleteAttachments represents an action that can delete one or more attachments.  It can only be used on a StreamBuilder
 type StepDeleteAttachments struct {
 	All      bool
 	Field    string
 	Category string
+	Minimum  int
 }
 
 // Get renders this step during a GET request. Implements the Step interface.
@@ -24,7 +25,7 @@ func (step StepDeleteAttachments) Get(builder Builder, _ io.Writer) PipelineBeha
 // Post applies this step during a POST request. Implements the Step interface.
 func (step StepDeleteAttachments) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	const location = "builder.StepDeleteAttachments.Post"
+	const location = "build.StepDeleteAttachments.Post"
 
 	factory := builder.factory()
 
@@ -65,18 +66,37 @@ func (step StepDeleteAttachments) Post(builder Builder, _ io.Writer) PipelineBeh
 			criteria = criteria.AndEqual("category", step.Category)
 		}
 
-		// Filter on the AttachmentID in the query parameter
+		// RULE: An attachmentId that is present must be an ID. Dropping a bad one from the
+		// criteria would widen the delete from one file to the whole category.
 		if attachmentIDString := builder.QueryParam("attachmentId"); attachmentIDString != "" {
 
-			if attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString); err == nil {
-				criteria = criteria.AndEqual("_id", attachmentID)
+			attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
+
+			if err != nil {
+				return Halt().WithError(derp.BadRequest(location, "Invalid attachmentId", attachmentIDString))
 			}
+
+			criteria = criteria.AndEqual("_id", attachmentID)
 		}
 
 		// Require that there is at least one criteria OR that "ALL" has been specified.
 		// If the criteria is empty, then NOOP.
 		if criteria.IsEmpty() && !step.All {
 			return Continue()
+		}
+
+		// RULE: The category must keep at least the minimum, so a delete that would leave fewer is refused whole
+		if step.Minimum > 0 {
+
+			remaining, err := remainingAfterDelete(builder, objectType, objectID, step.Category, criteria)
+
+			if err != nil {
+				return Halt().WithError(derp.Wrap(err, location, "Counting attachments"))
+			}
+
+			if remaining < step.Minimum {
+				return Halt().WithError(derp.BadRequest(location, minimumMessage(step.Minimum), "minimum", step.Minimum, "remaining", remaining))
+			}
 		}
 	}
 
@@ -86,7 +106,28 @@ func (step StepDeleteAttachments) Post(builder Builder, _ io.Writer) PipelineBeh
 	}
 
 	// Notify the client
-	builder.response().Header().Set("HX-Trigger", `attachments-updated`)
+	return Continue().WithEvent("attachments-updated", "true")
+}
 
-	return nil
+// remainingAfterDelete returns how many attachments the category would still hold once the
+// ones matching the criteria are deleted
+func remainingAfterDelete(builder Builder, objectType string, objectID primitive.ObjectID, category string, criteria exp.Expression) (int, error) {
+
+	const location = "build.remainingAfterDelete"
+
+	attachmentService := builder.factory().Attachment()
+
+	holding, err := attachmentService.CountByCategory(builder.session(), objectType, objectID, category)
+
+	if err != nil {
+		return 0, derp.Wrap(err, location, "Counting the category", objectType, objectID, category)
+	}
+
+	deleting, err := attachmentService.CountByCriteria(builder.session(), objectType, objectID, criteria)
+
+	if err != nil {
+		return 0, derp.Wrap(err, location, "Counting the attachments to delete", objectType, objectID)
+	}
+
+	return holding - deleting, nil
 }

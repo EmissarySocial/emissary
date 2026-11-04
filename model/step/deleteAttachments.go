@@ -8,6 +8,7 @@ type DeleteAttachments struct {
 	All      bool   // If TRUE, then ALL ATTACHMENTS for this object will be deleted.
 	Field    string // If set, the the attachment named by this property will be deleted. (If zero, then NOOP)
 	Category string // If set, then all attachments from a specified group are deleted.
+	Minimum  int    // Fewest attachments the category may be left holding; a delete that would leave fewer is refused (Default: 0)
 }
 
 // NewDeleteAttachments returns a fully parsed DeleteAttachments object
@@ -16,6 +17,7 @@ func NewDeleteAttachments(stepInfo mapof.Any) (DeleteAttachments, error) {
 		All:      stepInfo.GetBool("all"),
 		Field:    stepInfo.GetString("field"),
 		Category: stepInfo.GetString("category"),
+		Minimum:  max(stepInfo.GetInt("minimum"), 0),
 	}, nil
 }
 
