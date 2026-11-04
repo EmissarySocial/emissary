@@ -190,11 +190,14 @@
 						{do: "delete", title:"Delete these Notes?", message:"Your private notes on this will be deleted.", submit:"Delete"}
 						{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
 						{do: "remove-event", event:"closeModal"}
-						{do: "view-html", method:"post", file:"browse-annotation-modal"}
 					], else:[
 						{do: "delete", title:"Delete these Notes?", message:"Your private notes on this will be deleted.", submit:"Delete"}
 						{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
 					]}
+				]}
+				// RULE: only a document note's Delete link carries ?url=, and only it redraws the browse modal (see AGENTS.md)
+				{do: "if", condition:"{{ne `` (.QueryParam `url`)}}", then:[
+					{do: "view-html", method:"post", file:"browse-annotation-modal"}
 				]}
 			]
 		}
@@ -607,8 +610,9 @@
 					}}
 					{do: "save"}
 					{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
-					{do: "view-html", method:"post", file:"browse-annotation-modal"}
 				]}
+				// RULE: the Inbox redraws the modal, never the Annotation's builder (see AGENTS.md)
+				{do: "view-html", method:"post", file:"browse-annotation-modal"}
 			]
 		}
 
