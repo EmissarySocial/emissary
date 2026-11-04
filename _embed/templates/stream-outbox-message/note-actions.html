@@ -23,8 +23,8 @@
 			<button class="camper-hide-if-ready" hx-get="/{{.StreamID}}/intent?intent=announce&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "announce"}}</span> Boost</button>
 			<button class="camper-show-if-ready" data-camper-action="intent" hidden><span aria-hidden="true" class="margin-left-xs">{{icon "announce"}}</span> Boost</button>
 		</span>
-		<!-- RULE: "..." manages saved accounts, so it is hidden until CamperJS finds one -->
-		<button class="camper-show-if-has-accounts" hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts" hidden>{{icon "more-horizontal"}}</button>
+		<!-- RULE: "⁂" manages saved accounts, so it is hidden until CamperJS finds one -->
+		<button class="camper-show-if-has-accounts" hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts" hidden>⁂</button>
 		<script src="/.themes/global/resources/camperjs-0.2.0/camper.js"></script>
 	{{- end -}}
 </span>
