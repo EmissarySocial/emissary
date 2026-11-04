@@ -52,7 +52,7 @@
 				{do: "with-annotation", steps: [
 
 					// Actor notes use the standard modal, document notes the large one; actor links pass ?type=ACTOR
-					{do: "as-modal", options:["class:{{iif .Object.IsActor `` `large`}}"], steps: [
+					{do: "as-modal", options:["class:{{iif .Object.IsActor `medium` `large`}}"], steps: [
 						{do: "view-html"}
 						{
 							do:"edit", 
@@ -134,7 +134,7 @@
 		browse-actor: {
 			roles: ["self"]
 			steps: [
-				{do:"as-modal", background:"inbox", steps:[
+				{do:"as-modal", options:["class:medium"], background:"inbox", steps:[
 					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do: "view-html"}
 				]}
