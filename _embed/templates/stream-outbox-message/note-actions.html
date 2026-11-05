@@ -1,4 +1,4 @@
-<!-- The note's Reply, Like, and Boost buttons, drawn beside the Replies, Likes, and Boosts tabs in each responses-*.html -->
+<!-- The note's Reply, Like, Boost, and Share buttons, drawn beside the Replies, Likes, and Boosts tabs in each responses-*.html -->
 <span class="text-sm nowrap">
 	<!-- Signed in, Reply opens the visitor's own inbox at this note with its reply form; otherwise an Activity Intent -->
 	{{if .AcceptsReplies}}
@@ -26,5 +26,7 @@
 		<!-- RULE: "⁂" manages saved accounts, so it is hidden until CamperJS finds one -->
 		<button class="camper-show-if-has-accounts" hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts" hidden>⁂</button>
 		<script src="/.themes/global/resources/camperjs-0.2.0/camper.js"></script>
-	{{- end -}}
+	{{- end}}
+	<!-- Share is last for every visitor, signed in or not -->
+	{{template "share-button" .Permalink}}
 </span>

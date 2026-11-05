@@ -110,6 +110,10 @@ Text inputs, `textarea`, `select`, and anything with `.input` or `[role="textbox
 - **`.barberpole`** — an animated diagonal-stripe progress state (there is a blue "working" version and a gray idle version).
 - **`.button-group`** — joins adjacent buttons into a single segmented control with shared borders and rounded ends.
 
+A Share button installs the `Share` behavior ([hyperscript/share._hs](hyperscript/share._hs)), which opens the OS share menu. The button carries `data-share-url`, plus optional `data-share-title` and `data-share-text`, and the menu gets a title or text only when the button carries one. The button is sent with `hidden`, and the behavior removes it only where the browser has `navigator.share`. That rules out desktop Firefox, and every browser on a site served over plain http from anywhere but localhost. Closing the menu is not an error, and nothing is logged.
+
+A copy control installs the `Clipboard` behavior ([hyperscript/clipboard._hs](hyperscript/clipboard._hs)). Clicking its `.clipboard-copy-button` copies the `innerText` of its `.clipboard-text`, then shows its `.clipboard-copy-feedback` for 1.5 seconds. On a plain-http site anywhere but localhost, where there is no clipboard API, it copies through a hidden textarea instead. A copy the browser refuses shows no feedback and is logged.
+
 ### Form layout
 
 `.layout-vertical` stacks label-over-input rows (`.layout-element`), and `.layout-horizontal` lays them out in a flex row. `.layout-title`, `.layout-description`, and `.layout-heading` provide the standard form headings.

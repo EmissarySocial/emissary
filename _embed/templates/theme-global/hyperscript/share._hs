@@ -1,0 +1,32 @@
+behavior Share
+
+	-- RULE: The button is sent hidden, and shows only where the browser has an OS share menu
+	init
+		if navigator.share then
+			remove @hidden from me
+		end
+	end
+
+	-- Open the share menu with the URL, adding a title and text only where the button carries them,
+	-- because the browser would share a missing attribute's null as the word "null"
+	on click
+		set shareData to {url: my @data-share-url}
+
+		if my @data-share-title then
+			set shareData.title to my @data-share-title
+		end
+
+		if my @data-share-text then
+			set shareData.text to my @data-share-text
+		end
+
+		call navigator.share(shareData)
+
+	-- Closing the menu rejects with an AbortError, which is the visitor's choice and not a failure
+	catch error
+		if error.name is not "AbortError" then
+			call console.error(error)
+		end
+	end
+
+end

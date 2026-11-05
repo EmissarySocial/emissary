@@ -6,9 +6,40 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
 )
+
+// bsonName returns the stored name of a struct field, without its bson options
+func bsonName(t *testing.T, structType reflect.Type, fieldName string) string {
+	t.Helper()
+
+	field, ok := structType.FieldByName(fieldName)
+	require.True(t, ok, "%s has no field %s", structType.Name(), fieldName)
+
+	name, _, _ := strings.Cut(field.Tag.Get("bson"), ",")
+	require.NotEmpty(t, name, "%s.%s has no bson name", structType.Name(), fieldName)
+	return name
+}
+
+// TestQueryBuilder_Tags_NoTags verifies that Tags with no names still filters, matching nothing
+func TestQueryBuilder_Tags_NoTags(t *testing.T) {
+
+	builder := NewEmptyQueryBuilder[model.StreamSummary]().Tags()
+	require.Equal(t, exp.In("tags.name", []string(nil)), builder.criteria)
+}
+
+// TestQueryBuilder_CaseInsensitive verifies that CaseInsensitive asks the database to ignore case,
+// and that a builder carries no case option until one is chosen
+func TestQueryBuilder_CaseInsensitive(t *testing.T) {
+
+	builder := NewEmptyQueryBuilder[model.StreamSummary]()
+	require.False(t, builder.caseSensitive.IsPresent())
+
+	require.Contains(t, builder.CaseInsensitive().makeOptions(), option.CaseSensitive(false))
+	require.Contains(t, builder.CaseSensitive().makeOptions(), option.CaseSensitive(true))
+}
 
 // TestEmptyQueryBuilder_Slice verifies that an empty QueryBuilder returns an empty (not nil)
 // slice without dereferencing the service or session it does not carry.
