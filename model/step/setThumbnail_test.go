@@ -12,6 +12,13 @@ func TestSetThumbnail(t *testing.T) {
 	step, err := NewSetThumbnail(mapof.Any{"path": "image"})
 	require.Nil(t, err)
 	require.Equal(t, "image", step.Path)
+	require.Equal(t, "", step.Category)
+
+	// A category narrows the scan to one kind of attachment
+	step, err = NewSetThumbnail(mapof.Any{"path": "iconUrl", "category": "photo"})
+	require.Nil(t, err)
+	require.Equal(t, "iconUrl", step.Path)
+	require.Equal(t, "photo", step.Category)
 
 	require.Equal(t, "set-thumbnail", step.Name())
 	require.Equal(t, "", step.RequiredModel())

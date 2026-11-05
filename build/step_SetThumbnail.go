@@ -6,9 +6,10 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepSetThumbnail is a Step that can update the data.DataMap custom data stored in a Stream
+// StepSetThumbnail is a Step that writes the object's first image attachment into a schema path
 type StepSetThumbnail struct {
-	Path string
+	Path     string
+	Category string
 }
 
 // Get renders this step during a GET request. Implements the Step interface.
@@ -16,23 +17,23 @@ func (step StepSetThumbnail) Get(builder Builder, _ io.Writer) PipelineBehavior 
 	return nil
 }
 
-// Post updates the stream with approved data from the request body.
+// Post writes the first image among the object's attachments into the step's path.
 func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	// Find best icon from attachments
+	// Find best icon from attachments, within the step's category when it names one
 	factory := builder.factory()
 
 	objectType := builder.service().ObjectType()
 	objectID := builder.objectID()
 	object := builder.object()
 
-	attachments, err := factory.Attachment().QueryByObjectID(builder.session(), objectType, objectID)
+	attachments, err := factory.Attachment().QueryByCategory(builder.session(), objectType, objectID, step.Category)
 
 	if err != nil {
 		return Halt().WithError(derp.BadRequest("build.StepSetThumbnail.Post", "Unable to list attachments"))
 	}
 
-	// Scan all attachments and use the first one that is an image.
+	// Scan the attachments in rank order and use the first one that is an image.
 
 	schema := builder.schema()
 
