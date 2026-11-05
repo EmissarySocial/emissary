@@ -38,6 +38,9 @@
 				><span aria-hidden="true" class="margin-left-xs">{{icon "like"}}</span> Like</button>
 		{{- end -}}
 
+		<!-- RULE: Share stays inside the span, because each POST swaps the whole span and would copy anything outside it -->
+		<button type="button" class="outline" script="install Share" data-share-url="{{$url}}" hidden><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
+
 	</span>
 
 {{- else -}}
@@ -55,6 +58,11 @@
 	<button class="outline" hx-get="/{{.StreamID}}/intent?intent=like&object={{$url}}">
 		{{icon "like"}}
 		<span class="show-desktop">Like</span>
+	</button>
+
+	<button type="button" class="outline" script="install Share" data-share-url="{{$url}}" hidden>
+		{{icon "share"}}
+		<span class="show-desktop">Share</span>
 	</button>
 
 {{- end -}}

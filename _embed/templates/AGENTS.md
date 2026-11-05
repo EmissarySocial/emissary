@@ -85,9 +85,9 @@ A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an uploa
 
 `event.target` is the innermost element pressed, so a click on an icon-only button lands on the `<i>`, not the `<button>`. `blockselect` used to test only `event.target` for `hx-get`, so a click on the icon of an annotation button inside a newsfeed row also opened the row's `browse` modal, and the two modal requests raced: the Notes view appeared for some posts and not others. Test with `event.target.closest(…)`, limited to elements inside the behavior's own element.
 
-## Never write a remote value into a `script` attribute
+## Never write a remote or user-edited value into a `script` attribute
 
-`html/template` escapes a `script="…"` attribute as plain HTML, not as hyperscript, and the browser decodes that escaping before hyperscript parses it. A URL from a remote document can hold a `'`, so `install refreshPeers(id:'{{$url}}')` let a remote actor's ID end the string and inject hyperscript. Put the value in a `data-` attribute and have the behavior read it with `@data-…`, as `refreshPeers` and `annotationPeer` in theme-global do. Compare those values in hyperscript rather than building a CSS selector from them, which breaks on `]` and quotes.
+`html/template` escapes a `script="…"` attribute as plain HTML, not as hyperscript, and the browser decodes that escaping before hyperscript parses it. A URL from a remote document can hold a `'`, so `install refreshPeers(id:'{{$url}}')` let a remote actor's ID end the string and inject hyperscript. A Stream's `Label` and `Summary` are no safer, because any author can type a quote into them. Put the value in a `data-` attribute and have the behavior read it with `@data-…`, as `refreshPeers`, `annotationPeer`, and `Share` in theme-global do. Compare those values in hyperscript rather than building a CSS selector from them, which breaks on `]` and quotes.
 
 ## A behavior builds an element from data, never an HTML string
 
