@@ -151,7 +151,9 @@ func (builder QueryBuilder[T]) Featured() QueryBuilder[T] {
 
 // Tags limits this query to records carrying at least one of the provided tags
 func (builder QueryBuilder[T]) Tags(tags ...string) QueryBuilder[T] {
-	builder.criteria = builder.criteria.AndIn("tags.Name", tags)
+
+	// RULE: The field is the bson name a Tag is stored under, and MongoDB matches field names by case
+	builder.criteria = builder.criteria.AndIn("tags.name", tags)
 	return builder
 }
 

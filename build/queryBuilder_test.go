@@ -1,9 +1,12 @@
 package build
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,4 +61,28 @@ func TestEmptyQueryBuilder_StaysEmptyWhenChained(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Zero(t, count)
+}
+
+// TestQueryBuilder_Tags_FiltersTheStoredField verifies that the tag filter names the field a Stream's
+// tags are stored under, which MongoDB matches by case
+func TestQueryBuilder_Tags_FiltersTheStoredField(t *testing.T) {
+
+	// Read the stored names from the bson tags, so a rename on either side fails here
+	bsonName := func(structType reflect.Type, fieldName string) string {
+		field, ok := structType.FieldByName(fieldName)
+		require.True(t, ok, fieldName)
+		name, _, _ := strings.Cut(field.Tag.Get("bson"), ",")
+		return name
+	}
+
+	stored := bsonName(reflect.TypeFor[model.StreamSummary](), "Tags") + "." + bsonName(reflect.TypeFor[model.Tag](), "Name")
+	require.Equal(t, bsonName(reflect.TypeFor[model.Stream](), "Tags"), bsonName(reflect.TypeFor[model.StreamSummary](), "Tags"))
+
+	builder := NewEmptyQueryBuilder[model.StreamSummary]().Tags("travel", "food")
+
+	predicate, isPredicate := builder.criteria.(exp.Predicate)
+	require.True(t, isPredicate)
+	require.Equal(t, stored, predicate.Field)
+	require.Equal(t, exp.OperatorIn, predicate.Operator)
+	require.Equal(t, []string{"travel", "food"}, predicate.Value)
 }
