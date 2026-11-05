@@ -105,6 +105,9 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case "PurgeNotifications":
 		return WithSession(consumer.serverFactory, args, PurgeNotifications)
 
+	case "PurgeStagedUploads":
+		return WithSession(consumer.serverFactory, args, PurgeStagedUploads)
+
 	case "Rule-Cleanup":
 		return WithSession(consumer.serverFactory, args, RuleCleanup)
 
