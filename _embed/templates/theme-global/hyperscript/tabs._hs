@@ -19,23 +19,26 @@ behavior TabContainer
 	--	send select to first <[role=tab]:focus/>
 	--	halt the event
 
-	-- handle mouse clicks directly on tabs
+	-- handle mouse clicks directly on tabs; a click, or Enter or Space on a tab, takes the focus into its panel
 	on mousedown(target)[button==0] from <[role=tablist] [role=tab] />
-		send selectTab to target
+		send selectTab(moveFocus:true) to target
 		halt the event
 	end
 
 	on click from <[role=tablist] [role=tab] />
-		send selectTab to target
+		send selectTab(moveFocus:true) to target
 		halt the event
+	end
 
 	-- handle touch events for phones and tablets
+	-- RULE: a tap keeps the focus where it was, because a focused text field opens the keyboard over the new panel
 	on touchstart(target) from <[role=tablist] [role=tab] />
 		send selectTab to target
 		halt the event
 	end
 
-	on selectTab(target)
+	-- RULE: init sends no moveFocus, so a page or modal never loses its focus to the first tab
+	on selectTab(target, moveFocus)
 
 		set target to the closest <[role=tab] /> to the target
 
@@ -57,11 +60,37 @@ behavior TabContainer
 			end
 		end
 
+		set selectedPanel to null
+
 		for panel in <[role=tabpanel] />
 			if panel.parentNode is me then
 				set {hidden: (panel[@id] != target[@aria-controls])} on panel
+				if panel[@id] == target[@aria-controls] then
+					set selectedPanel to panel
+				end
 			end
 		end
+
+		if moveFocus is true and selectedPanel is not null then
+			call tabContainerFocusFirst(selectedPanel)
+		end
 	end
+end
+
+js
+	// tabContainerFocusFirst moves the focus to the first control in the panel that a person can reach.
+	// RULE: Only // comments in this block, because hyperscript reads a slash-star comment as code (see AGENTS.md).
+	function tabContainerFocusFirst(panel) {
+
+		const selector = 'input:not([type="hidden"]), select, textarea, button, a[href], [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
+
+		const first = Array.from(panel.querySelectorAll(selector)).find((element) => {
+			return !element.disabled && element.getClientRects().length > 0
+		})
+
+		if (first !== undefined) {
+			first.focus()
+		}
+	}
 end
 
