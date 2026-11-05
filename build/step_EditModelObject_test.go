@@ -1,7 +1,10 @@
 package build
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -9,8 +12,10 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
+	"github.com/benpate/data"
 	"github.com/benpate/form"
 	"github.com/benpate/form/widget"
+	"github.com/benpate/html"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/require"
@@ -327,4 +332,159 @@ func TestEditModelObject_PublishDateTime(t *testing.T) {
 	html, err = editForm.Editor(&unpublished, nil)
 	require.NoError(t, err)
 	require.NotContains(t, html, `value="2`)
+}
+
+// TestEditModelObject_Options renders each option for the request, and drops "delete" options from a new object
+func TestEditModelObject_Options(t *testing.T) {
+
+	editStep := newVisibilityFormStep(t, "delete:/@me/settings/visibility-delete")
+
+	// A new User has nothing to delete
+	newUser := model.NewUser()
+	require.Equal(t,
+		[]string{"endpoint:/@me/settings/visibility-form", "cancel-button:hide", "show-bluesky:true"},
+		editStep.getOptions(newVisibilityFormBuilder(&newUser, true, nil)),
+	)
+
+	// A saved User keeps its delete option, and the policy renders for each User
+	savedUser := model.NewUser()
+	savedUser.SetCreated("test")
+	require.Equal(t,
+		[]string{"endpoint:/@me/settings/visibility-form", "cancel-button:hide", "show-bluesky:false", "delete:/@me/settings/visibility-delete"},
+		editStep.getOptions(newVisibilityFormBuilder(&savedUser, false, nil)),
+	)
+}
+
+// TestEditModelObject_PostSavesThroughTheOptions requires that Post builds its form with the
+// options that Get draws it with, which a form widget can read at save time
+func TestEditModelObject_PostSavesThroughTheOptions(t *testing.T) {
+
+	recorder := &optionRecorder{}
+	form.Use("test-option-recorder", recorder)
+
+	parsed, err := step.NewEditModelObject(mapof.Any{
+		"options": []any{"show-bluesky:{{.UserCanBridgeToBluesky}}"},
+		"form":    map[string]any{"type": "test-option-recorder", "path": "isPublic"},
+	}, nil)
+	require.NoError(t, err)
+
+	user := model.NewUser()
+	posted := url.Values{"isPublic": {"true"}}
+
+	require.Nil(t, StepEditModelObject(parsed).Post(newVisibilityFormBuilder(&user, true, posted), nil))
+	require.Equal(t, []string{"show-bluesky:true"}, recorder.options)
+}
+
+// TestEditModelObject_VisibilityForm_AllowedUser saves the Bluesky toggle for a User whom the
+// domain allows to bridge, which fails if Post loses the option that shows the toggle
+func TestEditModelObject_VisibilityForm_AllowedUser(t *testing.T) {
+
+	widget.UseAll()
+	editStep := newVisibilityFormStep(t)
+
+	user := model.NewUser()
+	posted := url.Values{"isPublic": {"true"}, "isIndexable": {"true"}, "isBridgeBluesky": {"true"}}
+
+	require.Nil(t, editStep.Post(newVisibilityFormBuilder(&user, true, posted), nil))
+	require.True(t, user.IsPublic)
+	require.True(t, user.IsBridgeBluesky.Bool())
+}
+
+// newVisibilityFormStep parses an edit step shaped like user-settings' visibility-form, with any
+// extra options appended after the template's own
+func newVisibilityFormStep(t *testing.T, extraOptions ...string) StepEditModelObject {
+
+	t.Helper()
+
+	options := []any{"endpoint:/@me/settings/visibility-form", "cancel-button:hide", "show-bluesky:{{.UserCanBridgeToBluesky}}"}
+
+	for _, option := range extraOptions {
+		options = append(options, option)
+	}
+
+	parsed, err := step.NewEditModelObject(mapof.Any{
+		"options": options,
+		"form": map[string]any{
+			"type": "layout-vertical",
+			"children": []any{
+				map[string]any{"type": "toggle", "path": "isPublic"},
+				map[string]any{"type": "toggle", "path": "isIndexable"},
+				map[string]any{"type": "toggle", "path": "isBridgeBluesky", "options": map[string]any{"show-if-option": "show-bluesky"}},
+			},
+		},
+	}, nil)
+
+	require.NoError(t, err)
+	return StepEditModelObject(parsed)
+}
+
+// newVisibilityFormBuilder returns a builder for one User's visibility-form, carrying a
+// urlencoded POST of the provided fields and the domain's Bluesky policy for that User
+func newVisibilityFormBuilder(user *model.User, canBridge bool, fields url.Values) visibilityFormBuilder {
+
+	request := httptest.NewRequest(http.MethodPost, "/@me/settings/visibility-form", strings.NewReader(fields.Encode()))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	return visibilityFormBuilder{req: request, user: user, canBridge: canBridge}
+}
+
+// visibilityFormBuilder is a Builder for one User's visibility-form
+type visibilityFormBuilder struct {
+	Builder
+	req       *http.Request
+	user      *model.User
+	canBridge bool
+}
+
+// request returns the POST being saved
+func (b visibilityFormBuilder) request() *http.Request { return b.req }
+
+// schema returns the User schema, as the User builder does
+func (b visibilityFormBuilder) schema() schema.Schema { return schema.New(model.UserSchema()) }
+
+// object returns the User being edited
+func (b visibilityFormBuilder) object() data.Object { return b.user }
+
+// lookupProvider returns a provider with no lookups, because the visibility form draws none
+func (b visibilityFormBuilder) lookupProvider() form.LookupProvider { return emptyLookupProvider{} }
+
+// emptyLookupProvider answers every group with no lookup codes
+type emptyLookupProvider struct{}
+
+// Group returns an empty, read-only group
+func (provider emptyLookupProvider) Group(_ string) form.LookupGroup {
+	return form.NewReadOnlyLookupGroup()
+}
+
+// UserCanBridgeToBluesky returns the domain's Bluesky policy for this User
+func (b visibilityFormBuilder) UserCanBridgeToBluesky() bool { return b.canBridge }
+
+// optionRecorder is a form widget that remembers the Form options it was last saved with
+type optionRecorder struct {
+	options []string
+}
+
+// View draws nothing
+func (w *optionRecorder) View(_ *form.Form, _ *form.Element, _ form.LookupProvider, _ any, _ *html.Builder) error {
+	return nil
+}
+
+// Edit draws nothing
+func (w *optionRecorder) Edit(_ *form.Form, _ *form.Element, _ form.LookupProvider, _ any, _ *html.Builder) error {
+	return nil
+}
+
+// ShowLabels returns FALSE, because the recorder draws nothing
+func (w *optionRecorder) ShowLabels() bool { return false }
+
+// ShowDescriptions returns "NONE", because the recorder draws nothing
+func (w *optionRecorder) ShowDescriptions() string { return "NONE" }
+
+// Encoding returns no special encoding
+func (w *optionRecorder) Encoding(_ *form.Element) string { return "" }
+
+// SetURLValue records the Form options that the save runs with, and writes nothing
+func (w *optionRecorder) SetURLValue(f *form.Form, _ *form.Element, _ any, _ url.Values) error {
+	w.options = slices.Clone(f.Options)
+	return nil
 }

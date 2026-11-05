@@ -27,7 +27,7 @@ type emulatedSource struct {
 }
 
 var emulatedSources = []emulatedSource{
-	{Pattern: "../build/step_EditModelObject.go", Names: []string{"StepEditModelObject.Post", "StepEditModelObject.getForm"}, UsedBy: "editModelObjectCase"},
+	{Pattern: "../build/step_EditModelObject.go", Names: []string{"StepEditModelObject.Post", "StepEditModelObject.getOptions", "StepEditModelObject.getForm"}, UsedBy: "editModelObjectCase, editModelObjectOptions"},
 	{Pattern: "../build/step_AddModelObject.go", Names: []string{"StepAddModelObject.Post"}, UsedBy: "addModelObjectCase"},
 	{Pattern: "../build/step_SetData.go", Names: []string{"StepSetData.Get", "StepSetData.Post", "StepSetData.setURLPaths", "StepSetData.setDefaults"}, UsedBy: "setDataUse.apply"},
 	{Pattern: "../build/step_EditTable.go", Names: []string{"StepTableEditor.Post"}, UsedBy: "editTableCase"},
