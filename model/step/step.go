@@ -241,9 +241,6 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "sort-widgets":
 		return NewSortWidgets(stepInfo)
 
-	case "stage-attachment":
-		return NewStageAttachment(stepInfo)
-
 	case "startup-complete":
 		return NewStartupComplete(stepInfo)
 
