@@ -354,7 +354,7 @@ func TestStepEditAttachments_GetDrawsTheZone(t *testing.T) {
 
 	base := "/" + fixture.objectID.Hex()
 
-	require.True(t, strings.HasPrefix(html, zoneOpen+`<div class="upload-multiple-tiles" data-url="`+base+`/photos" data-name="photos" data-accept="image/*" data-minimum="1" data-maximum="64" data-count="2" hx-post="`+base+`/photos" hx-trigger="upload-multiple-added, upload-multiple-sorted" hx-params="photos,photos.order" hx-target="this" hx-swap="outerHTML" hx-push-url="false" hx-sync="closest .upload-multiple:queue all" hx-encoding="multipart/form-data">`), html)
+	require.True(t, strings.HasPrefix(html, zoneOpen+`<div class="upload-multiple-tiles" data-url="`+base+`/photos" data-name="photos" data-accept="image/*" data-minimum="1" data-maximum="64" hx-params="photos,photos.order" hx-push-url="false" hx-sync="closest .upload-multiple:queue all" hx-encoding="multipart/form-data">`), html)
 	require.True(t, strings.HasSuffix(html, "</div></div>"+zoneControls+"</div>"), html)
 
 	// Every tile is its own handle and takes focus, with an X that shows on hover; an image tile
@@ -437,7 +437,7 @@ func TestStepEditAttachments_GetOnANewObjectWritesNothing(t *testing.T) {
 func TestStepEditAttachments_GetOnANewObjectDrawsTheStagingZone(t *testing.T) {
 
 	fixture := newStagingFixture(t)
-	row := `<div class="upload-multiple-tiles" data-staging-url="` + stagingRoute + `" data-name="photos" data-accept="image/*" data-minimum="1" data-maximum="16" data-count="0" hx-post="` + stagingRoute + `" hx-trigger="upload-multiple-added" hx-params="photos" hx-target="this" hx-swap="beforeend" hx-push-url="false" hx-sync="closest .upload-multiple:queue all" hx-encoding="multipart/form-data"></div>`
+	row := `<div class="upload-multiple-tiles" data-staging-url="` + stagingRoute + `" data-name="photos" data-accept="image/*" data-minimum="1" data-maximum="16" hx-params="photos" hx-push-url="false" hx-sync="closest .upload-multiple:queue all" hx-encoding="multipart/form-data"></div>`
 
 	result, html := fixture.getAt(photoEdit(1, 16), "/parent/add"+stagingQuery)
 
@@ -658,7 +658,6 @@ func TestStepEditAttachments_UploadAppendsAfterTheHighestRank(t *testing.T) {
 	require.Equal(t, "image/png", photos[3].ContentType)
 	fixture.requireStored(t, photos[2:]...)
 
-	require.Contains(t, html, `data-count="4"`)
 	require.Equal(t, 4, strings.Count(html, `class="upload-multiple-tile hover-trigger"`))
 	require.Less(t, strings.Index(html, photos[2].AttachmentID.Hex()), strings.Index(html, photos[3].AttachmentID.Hex()))
 }
@@ -718,7 +717,7 @@ func TestStepEditAttachments_UploadBelowTheMinimumIsStored(t *testing.T) {
 	require.False(t, result.Halt)
 	require.Len(t, fixture.photos(t), 1)
 	require.Contains(t, html, `data-minimum="3"`)
-	require.Contains(t, html, `data-count="1"`)
+	require.Equal(t, 1, strings.Count(html, `class="upload-multiple-tile hover-trigger"`))
 }
 
 // TestStepEditAttachments_SortBelowTheMinimumIsApplied re-ranks a saved object's files while the category is short of its minimum
@@ -745,7 +744,8 @@ func TestStepEditAttachments_SortOverTheMaximumIsApplied(t *testing.T) {
 	require.Equal(t, 2, fixture.rankOf(t, 2))
 	require.Equal(t, 3, fixture.rankOf(t, 1))
 	require.Equal(t, 3, fixture.photoCount(t))
-	require.Contains(t, html, `data-maximum="2" data-count="3"`)
+	require.Contains(t, html, `data-maximum="2"`)
+	require.Equal(t, 3, strings.Count(html, `class="upload-multiple-tile hover-trigger"`))
 }
 
 // TestStepEditAttachments_UploadOverAFullCategoryIsRefused refuses one more file on a saved object already over its maximum, and stores nothing
@@ -1071,7 +1071,7 @@ func TestStepEditAttachments_AdoptionJoinsTheSavedFiles(t *testing.T) {
 	require.Equal(t, 3, fixture.rankByID(t, c))
 
 	// The row comes back with the adopted file last, and the file is no longer staged
-	require.Contains(t, html, `data-count="3"`)
+	require.Equal(t, 3, strings.Count(html, `class="upload-multiple-tile hover-trigger"`))
 	require.Less(t, strings.Index(html, fixture.hex(1)), strings.Index(html, c.Hex()))
 	require.Empty(t, fixture.staged(t, fixture.userID))
 }

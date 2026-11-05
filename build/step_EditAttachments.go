@@ -470,9 +470,8 @@ func (step StepEditAttachments) loadAttachments(builder Builder) ([]model.Attach
 	return attachments, nil
 }
 
-// writeRow writes the tile row the theme's behavior expects, with the limits as attributes,
-// the sort wired to this action, and the multipart encoding its uploads need, which the form
-// around it no longer carries; or, read-only, the tiles alone with nothing wired
+// writeRow writes the tile row the theme's behavior expects, with this action's route, the limits, and the
+// request settings its uploads and sorts need; or, read-only, the tiles alone with nothing wired
 func (step StepEditAttachments) writeRow(b *html.Builder, builder Builder, attachments []model.Attachment, readOnly bool) {
 
 	// The action's own path, without the request's query string, which could carry a stale attachmentId
@@ -496,12 +495,7 @@ func (step StepEditAttachments) writeRow(b *html.Builder, builder Builder, attac
 			Data("accept", step.AcceptType).
 			Data("minimum", strconv.Itoa(step.Minimum)).
 			Data("maximum", strconv.Itoa(step.Maximum)).
-			Data("count", strconv.Itoa(len(attachments))).
-			Attr("hx-post", row.ActionURL).
-			Attr("hx-trigger", "upload-multiple-added, upload-multiple-sorted").
 			Attr("hx-params", step.Fieldname+","+row.OrderName).
-			Attr("hx-target", "this").
-			Attr("hx-swap", "outerHTML").
 			Attr("hx-push-url", "false").
 			Attr("hx-sync", "closest .upload-multiple:queue all").
 			Attr("hx-encoding", "multipart/form-data")
@@ -526,8 +520,8 @@ func maximumMessage(maximum int) string {
 }
 
 // uploadOrderSuffix is appended to a widget's field name to name the hidden input each tile carries,
-// which posts the tile's place in the order: one file ID per tile. The behavior and the
-// qwertylicious test server copy the literal.
+// which posts the tile's place in the order: one file ID per tile. The qwertylicious test server
+// copies the literal.
 const uploadOrderSuffix = ".order"
 
 // tileRow is what every tile in a row shares: where its preview and its delete are served from,

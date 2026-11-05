@@ -109,26 +109,18 @@ func (step StepEditAttachments) drawStagingZone(builder Builder, buffer io.Write
 	return nil
 }
 
-// writeStagingRow writes a new object's row: empty, wired to post each file back through this
-// request's own route under the step's field name, with the multipart encoding a file needs, and
-// carrying the step's limits and accepted types for the behavior to apply before a request
+// writeStagingRow writes a new object's row: empty, carrying this request's own route for the behavior to
+// stage each file through, with the step's field name, limits, and accepted types, and the multipart encoding
 func (step StepEditAttachments) writeStagingRow(b *html.Builder, builder Builder) {
-
-	route := stagingURL(builder)
 
 	b.Div().
 		Class("upload-multiple-tiles").
-		Data("staging-url", route).
+		Data("staging-url", stagingURL(builder)).
 		Data("name", step.Fieldname).
 		Data("accept", step.AcceptType).
 		Data("minimum", strconv.Itoa(step.Minimum)).
 		Data("maximum", strconv.Itoa(step.Maximum)).
-		Data("count", "0").
-		Attr("hx-post", route).
-		Attr("hx-trigger", "upload-multiple-added").
 		Attr("hx-params", step.Fieldname).
-		Attr("hx-target", "this").
-		Attr("hx-swap", "beforeend").
 		Attr("hx-push-url", "false").
 		Attr("hx-sync", "closest .upload-multiple:queue all").
 		Attr("hx-encoding", "multipart/form-data").

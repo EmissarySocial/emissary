@@ -50,9 +50,16 @@ On a new object the row posts to the staging route instead and the response is o
 
 - **It says why in two places.** The zone's status line shows the message, and so does `#htmx-response-message`, where `WrapInlineError` would put the server's refusal, because the zone may be on a tab that is hidden. The text is the step's own (`minimumMessage` and `maximumMessage`), so the browser and the server refuse in the same words.
 - **The limits come from the row in both modes.** A saved object's row carries the step's limits, and a new object's row, which the same step draws when it is reached through the parent's add, carries them too; the zone carries nothing, since the widget became a loader on 2026-11-04.
-- **A saved object's zone is not counted until its row loads.** Before then its files are unknown, so the guard lets a Save through, and the status line stays empty instead of flashing "1 more file needed".
 - **A staged tile's X never locks at the minimum.** A create form's minimum is enforced at its Save, so removing the only staged file must still work. Only a saved object's Xs lock, because the step refuses a delete below the minimum there.
 - **The widget's own requests ignore the count.** On a saved object an upload short of the minimum and a sort over the maximum both go through, because the step allows them, so a post outside its limits can be brought back within them.
+
+## An `upload-multiple` zone takes no file while its form's Save is in flight
+
+`onFormSending` in [javascript/upload-multiple.js](javascript/upload-multiple.js) marks every zone inside a form when that form's `htmx:beforeSend` fires, and `onFormSettled` clears the mark on its `htmx:afterRequest`. While a zone is marked, its plus is disabled, a drop is refused with a message, and a queued file waits. A file staged during a create form's Save is never adopted, because the Save has already posted its IDs. On a saved object, the widget's action can save the object while the form's Save writes it too: qwerty-photo's `photos` ends in `save`. The Save still never waits for an upload, as the rule above requires: an upload already in flight when the Save starts runs to the end.
+
+- **Only the form's own request marks its zones.** The listeners sit on the document and check that `detail.elt` is a form, because every request made inside the form, the zone's own uploads included, names its own element (see the root AGENTS.md on a listener that hears every htmx request inside a form).
+- **`htmx:beforeSend`, never `htmx:beforeRequest`.** A listener can cancel a request at `beforeRequest`, and a cancelled request never fires `afterRequest`, so a mark set there could refuse files until the page reloads. `beforeSend` fires only for a request that is sent, and `afterRequest` follows it on success, refusal, error, abort, and timeout.
+- **A Save whose response removes the form clears nothing, and needs to clear nothing.** The `afterRequest` of a removed form never reaches the document, and its zones are gone with it.
 
 ## `htmx:abort` must reach the element that `hx-sync` keeps the request on
 

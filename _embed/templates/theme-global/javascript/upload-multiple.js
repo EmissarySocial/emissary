@@ -34,10 +34,9 @@
  * can be sorted, but the form's Save is stopped until the files are back within them.
  *
  * The widget's requests are its own, not the form's.  They go through htmx.ajax with the row as
- * their source, so they take the row's hx-params and its hx-sync, which queues them on the zone
- * and never with the form's Save; the Save never waits for them.  Going through htmx.ajax also
- * means never depending on htmx having processed the row's own triggers, which it does only once
- * a swap has settled.
+ * their source, so they take the row's hx-params, hx-encoding, and hx-sync, which queues them on
+ * the zone and never with the form's Save; the Save never waits for them.  While the form's Save
+ * is in flight, the zone takes no new file and starts no queued upload.
  */
 
 (function() {
@@ -47,6 +46,9 @@
 	}
 
 	const SORTABLE_URL = "/.themes/global/resources/sortable-1.15.7/Sortable.min.js"
+
+	/** SAVING_MESSAGE is what the status line says when a file arrives during the form's Save */
+	const SAVING_MESSAGE = "Wait for the Save to finish before adding a file"
 
 	/** states holds each zone's working state, keyed by the zone element */
 	const states = new WeakMap()
@@ -71,7 +73,7 @@
 				refocus: null,      // The ID of the tile that takes focus after the next swap
 				deleteFocus: null,  // The ID of the tile that takes focus after a delete, or null for the plus
 				depth: 0,           // Drag enters minus drag leaves, so a child's dragleave does not clear the highlight
-				deferred: [],       // Files dropped before the row had loaded
+				saving: false,      // Whether the form around the zone has a Save in flight
 			}
 			states.set(zone, state)
 		}
@@ -115,8 +117,8 @@
 		return isLive(zone) ? row.dataset.url : row.dataset.stagingUrl
 	}
 
-	/** rowLoaded reports whether the row is ready to take files: it has arrived from the step, and it is not read-only */
-	function rowLoaded(zone) {
+	/** isEditable reports whether the zone takes changes, which a read-only row never does */
+	function isEditable(zone) {
 
 		const row = rowOf(zone)
 
@@ -291,7 +293,6 @@
 
 		const tile = document.createElement("div")
 		tile.className = "upload-multiple-tile upload-multiple-pending hover-trigger"
-		tile.uploadMultipleFile = file
 
 		const url = previewURL(file)
 
@@ -351,13 +352,13 @@
 
 		const state = stateOf(zone)
 
-		// A zone whose contents have not arrived keeps the files for when they do, and a read-only one takes none
-		if (rowOf(zone) === null) {
-			state.deferred.push(...Array.from(files))
+		if (!isEditable(zone)) {
 			return
 		}
 
-		if (!rowLoaded(zone)) {
+		// RULE: A file added during the form's Save would miss it, so the zone takes none until the Save settles
+		if (state.saving) {
+			announce(zone, SAVING_MESSAGE, true)
 			return
 		}
 
@@ -393,6 +394,11 @@
 		const state = stateOf(zone)
 
 		if (state.inflight !== null || state.queue.length === 0) {
+			return
+		}
+
+		// RULE: A queued file waits while the form's Save is in flight, and starts once it settles
+		if (state.saving) {
 			return
 		}
 
@@ -446,8 +452,9 @@
 		const add = addOf(zone)
 		const full = count >= limits.maximum
 
+		// The plus goes at the maximum, and stays in place but disabled while the form's Save is in flight
 		if (add !== null) {
-			add.disabled = full
+			add.disabled = full || stateOf(zone).saving
 			add.hidden = full
 		}
 
@@ -478,8 +485,8 @@
 			}
 		})
 
-		// The files are not counted until they are known, which on a saved object is once its row loads
-		if (!rowLoaded(zone)) {
+		// A read-only row has no limits to report
+		if (!isEditable(zone)) {
 			return
 		}
 
@@ -490,11 +497,11 @@
 		}
 	}
 
-	/** limitMessage returns why the zone's files cannot be saved, in the step's own words, or "" when their count is within its limits or not known yet */
+	/** limitMessage returns why the zone's files cannot be saved, in the step's own words, or "" when their count is within its limits */
 	function limitMessage(zone) {
 
-		// A saved object's files are not known until its row loads, and its Save does not carry them anyway
-		if (!rowLoaded(zone)) {
+		// A read-only row has no limits to keep
+		if (!isEditable(zone)) {
 			return ""
 		}
 
@@ -543,6 +550,46 @@
 			text.textContent = message
 			span.replaceChildren(text)
 		}
+	}
+
+	/** zonesSavedBy returns the widgets inside the form whose own request raised the event, or none for any other request */
+	function zonesSavedBy(event) {
+
+		// RULE: Only the form's own request names the form; a request made inside it names its own element
+		const form = event.detail && event.detail.elt
+
+		if (!(form instanceof HTMLFormElement)) {
+			return []
+		}
+
+		return Array.from(form.querySelectorAll("[data-upload-multiple]"))
+	}
+
+	/** onFormSending stops every widget inside a form from taking files while the form's Save is in flight */
+	function onFormSending(event) {
+
+		zonesSavedBy(event).forEach(function(zone) {
+			stateOf(zone).saving = true
+			applyLimits(zone)
+		})
+	}
+
+	/** onFormSettled lets the form's widgets take files again once its Save settles, and starts any upload that waited */
+	function onFormSettled(event) {
+
+		zonesSavedBy(event).forEach(function(zone) {
+
+			const status = zone.querySelector(".upload-multiple-status")
+
+			stateOf(zone).saving = false
+
+			if (status !== null && status.textContent === SAVING_MESSAGE) {
+				announce(zone, "")
+			}
+
+			applyLimits(zone)
+			uploadNext(zone)
+		})
 	}
 
 	/** zoneBusy reports whether the zone has a request in flight or one fired and not yet started */
@@ -769,12 +816,8 @@
 		afterReorder(zone, tile)
 	}
 
-	/** tileName returns the file's name from its tile: the file being sent, the preview's alt, or the filename span */
+	/** tileName returns the file's name from its tile: the preview's alt, or the filename span */
 	function tileName(tile) {
-
-		if (tile.uploadMultipleFile) {
-			return tile.uploadMultipleFile.name
-		}
 
 		const preview = tile.querySelector(".upload-multiple-preview")
 
@@ -908,12 +951,17 @@
 			}
 			event.preventDefault()
 			state.depth++
-			zone.classList.add("highlight")
+			zone.classList.toggle("highlight", !state.saving)
 		})
 
+		// RULE: While the form's Save is in flight, the drop is refused before it lands
 		zone.addEventListener("dragover", function(event) {
-			if (hasFiles(event)) {
-				event.preventDefault()
+			if (!hasFiles(event)) {
+				return
+			}
+			event.preventDefault()
+			if (state.saving) {
+				event.dataTransfer.dropEffect = "none"
 			}
 		})
 
@@ -958,7 +1006,7 @@
 		applyLimits(zone)
 	}
 
-	/** initRow readies a tile row after it is drawn or swapped in: Sortable, the limits, deferred drops, and the tile that had focus */
+	/** initRow readies a tile row after it is drawn or swapped in: Sortable, the limits, and the tile that had focus */
 	function initRow(row) {
 
 		const zone = zoneOf(row)
@@ -1008,12 +1056,6 @@
 				tile.focus()
 			}
 		}
-
-		if (rowLoaded(zone) && state.deferred.length > 0) {
-			const files = state.deferred
-			state.deferred = []
-			intake(zone, files)
-		}
 	}
 
 	/** withSortable runs the callback once Sortable is on the page, loading it the first time a widget needs it */
@@ -1041,7 +1083,7 @@
 		document.head.appendChild(script)
 	}
 
-	/** guardDrop keeps a file dropped outside every widget and editor from replacing the page */
+	/** guardDrop keeps a file dropped outside every widget from replacing the page */
 	function guardDrop(event) {
 
 		if (!hasFiles(event) || document.querySelector("[data-upload-multiple]") === null) {
@@ -1050,7 +1092,7 @@
 
 		const target = event.target instanceof Element ? event.target : null
 
-		if (target !== null && target.closest("[data-upload-multiple], [data-accepts-file-drop]") !== null) {
+		if (target !== null && target.closest("[data-upload-multiple]") !== null) {
 			return
 		}
 
@@ -1064,6 +1106,8 @@
 	window.addEventListener("dragover", guardDrop)
 	window.addEventListener("drop", guardDrop)
 	document.addEventListener("submit", guardSubmit, true)
+	document.addEventListener("htmx:beforeSend", onFormSending)
+	document.addEventListener("htmx:afterRequest", onFormSettled)
 
 	// Every swap can bring a zone, or a row drawn by the step into a zone already on the page
 	htmx.onLoad(function(content) {
@@ -1087,6 +1131,6 @@
 		rows.forEach(initRow)
 	})
 
-	window.uploadMultiple = {states: states}
+	window.uploadMultiple = true
 
 })();
