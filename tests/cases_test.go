@@ -273,10 +273,38 @@ func editModelObjectCase(name string, current step.EditModelObject, context buil
 		Schema:    context.Schema,
 		NewObject: context.NewObject,
 		Apply: func(object any, values url.Values) error {
-			stepForm := form.New(context.Schema, element)
+			stepForm := form.New(context.Schema, element, editModelObjectOptions(current, object)...)
 			return stepForm.SetURLValues(object, values, nil)
 		},
 	}
+}
+
+// editModelObjectOptions reproduces build.StepEditModelObject.getOptions. An option that renders
+// against the builder renders as "" here, as it does when executeTemplate fails (see AGENTS.md)
+func editModelObjectOptions(current step.EditModelObject, object any) []string {
+
+	result := make([]string, 0, len(current.Options))
+
+	// build.StepEditModelObject.getOptions asks builder.object(), which every model answers
+	isNew := false
+
+	if journaled, ok := object.(interface{ IsNew() bool }); ok {
+		isNew = journaled.IsNew()
+	}
+
+	for _, option := range current.Options {
+
+		optionString := renderLiteral(postField{}, option)
+
+		// Remove "delete" options from new objects.
+		if isNew && strings.HasPrefix(optionString, "delete:") {
+			continue
+		}
+
+		result = append(result, optionString)
+	}
+
+	return result
 }
 
 // addModelObjectCase reproduces build.StepAddModelObject.Post, which sets every request key

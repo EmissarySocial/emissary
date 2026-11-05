@@ -22,19 +22,7 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 	const location = "build.StepEditModelObject.Get"
 
 	// Evaluate options to pass into the form.
-	optionStrings := make([]string, 0, len(step.Options))
-	for _, option := range step.Options {
-
-		optionString := executeTemplate(option, builder)
-
-		// Remove "delete" options from new objects.
-		if builder.object().IsNew() && strings.HasPrefix(optionString, "delete:") {
-			continue
-		}
-
-		// Otherwise, generate the text string for the option.
-		optionStrings = append(optionStrings, optionString)
-	}
+	optionStrings := step.getOptions(builder)
 
 	// Try to build the Form HTML
 	schema := builder.schema()
@@ -69,8 +57,11 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 		return Halt().WithError(derp.Wrap(err, location, "Parsing form values"))
 	}
 
-	// Appy request body to the object (limited and validated by the form schema)
-	stepForm := form.New(builder.schema(), step.getForm(builder))
+	// RULE: Save through the options that Get drew with, because a field the options hide
+	// must never be written, and a missing option reads as FALSE (BUG-334)
+	stepForm := form.New(builder.schema(), step.getForm(builder), step.getOptions(builder)...)
+
+	// Apply request body to the object (limited and validated by the form schema)
 	object := builder.object()
 
 	if err := stepForm.SetURLValues(object, values, builder.lookupProvider()); err != nil {
@@ -79,6 +70,27 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 
 	// Success!
 	return nil
+}
+
+// getOptions renders the step's option templates for this request, leaving out "delete" options on a new object.
+func (step StepEditModelObject) getOptions(builder Builder) []string {
+
+	result := make([]string, 0, len(step.Options))
+
+	for _, option := range step.Options {
+
+		optionString := executeTemplate(option, builder)
+
+		// Remove "delete" options from new objects.
+		if builder.object().IsNew() && strings.HasPrefix(optionString, "delete:") {
+			continue
+		}
+
+		// Otherwise, generate the text string for the option.
+		result = append(result, optionString)
+	}
+
+	return result
 }
 
 // getForm returns the form this step edits with, falling back to the Builder's own PropertyForm.
