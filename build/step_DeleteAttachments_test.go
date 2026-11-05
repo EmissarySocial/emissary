@@ -24,7 +24,7 @@ func (builder stubDeleteBuilder) QueryParam(name string) string {
 
 // postDelete runs the step against a POST whose query string carries the given attachmentId, when one is given.
 // The Attachment service has no media server here, so these tests cover only the paths that delete nothing.
-func (fixture sortAttachmentsFixture) postDelete(step StepDeleteAttachments, attachmentID string) PipelineResult {
+func (fixture attachmentFixture) postDelete(step StepDeleteAttachments, attachmentID string) PipelineResult {
 
 	target := "/000000000000000000000000/delete-photo"
 
@@ -45,7 +45,7 @@ func (fixture sortAttachmentsFixture) postDelete(step StepDeleteAttachments, att
 }
 
 // photoCount returns how many "photo" Attachments the fixture's Stream holds
-func (fixture sortAttachmentsFixture) photoCount(t *testing.T) int {
+func (fixture attachmentFixture) photoCount(t *testing.T) int {
 	t.Helper()
 
 	count, err := fixture.service.CountByCategory(fixture.session, "Stream", fixture.objectID, "photo")
@@ -57,7 +57,7 @@ func (fixture sortAttachmentsFixture) photoCount(t *testing.T) int {
 // TestStepDeleteAttachments_InvalidAttachmentIDHalts refuses a bad ID instead of deleting the whole category
 func TestStepDeleteAttachments_InvalidAttachmentIDHalts(t *testing.T) {
 
-	fixture := newSortAttachmentsFixture(t, 1, 2)
+	fixture := newAttachmentFixture(t, 1, 2)
 
 	for _, attachmentID := range []string{"garbage", "new:0", "0123456789abcdef0123456", "%20"} {
 		result := fixture.postDelete(StepDeleteAttachments{Category: "photo"}, attachmentID)
@@ -72,7 +72,7 @@ func TestStepDeleteAttachments_InvalidAttachmentIDHalts(t *testing.T) {
 // TestStepDeleteAttachments_MinimumRefusesTheLastFile halts when deleting one file would leave too few
 func TestStepDeleteAttachments_MinimumRefusesTheLastFile(t *testing.T) {
 
-	fixture := newSortAttachmentsFixture(t, 1)
+	fixture := newAttachmentFixture(t, 1)
 	result := fixture.postDelete(StepDeleteAttachments{Category: "photo", Minimum: 1}, fixture.hex(1))
 
 	require.NotNil(t, result.Error)
@@ -85,7 +85,7 @@ func TestStepDeleteAttachments_MinimumRefusesTheLastFile(t *testing.T) {
 // TestStepDeleteAttachments_MinimumRefusesTheWholeCategory halts when no ID narrows a delete that would empty the category
 func TestStepDeleteAttachments_MinimumRefusesTheWholeCategory(t *testing.T) {
 
-	fixture := newSortAttachmentsFixture(t, 1, 2, 3)
+	fixture := newAttachmentFixture(t, 1, 2, 3)
 	result := fixture.postDelete(StepDeleteAttachments{Category: "photo", Minimum: 2}, "")
 
 	require.NotNil(t, result.Error)
@@ -97,7 +97,7 @@ func TestStepDeleteAttachments_MinimumRefusesTheWholeCategory(t *testing.T) {
 // TestStepDeleteAttachments_MinimumCountsOnlyWhatWouldGo proceeds when the delete matches nothing the category holds
 func TestStepDeleteAttachments_MinimumCountsOnlyWhatWouldGo(t *testing.T) {
 
-	fixture := newSortAttachmentsFixture(t, 1)
+	fixture := newAttachmentFixture(t, 1)
 	cover := fixture.store(t, "cover", 1, "")
 
 	// A cover's ID in the photo category matches nothing, so the photo stays and the step continues
@@ -112,7 +112,7 @@ func TestStepDeleteAttachments_MinimumCountsOnlyWhatWouldGo(t *testing.T) {
 // TestStepDeleteAttachments_NoCriteriaDoesNothing continues without an event when nothing selects an attachment
 func TestStepDeleteAttachments_NoCriteriaDoesNothing(t *testing.T) {
 
-	fixture := newSortAttachmentsFixture(t, 1)
+	fixture := newAttachmentFixture(t, 1)
 	result := fixture.postDelete(StepDeleteAttachments{}, "")
 
 	require.Nil(t, result.Error)
@@ -129,7 +129,7 @@ func TestStepDeleteAttachments_Get(t *testing.T) {
 // TestRemainingAfterDelete counts what the category would keep
 func TestRemainingAfterDelete(t *testing.T) {
 
-	fixture := newSortAttachmentsFixture(t, 1, 2, 3)
+	fixture := newAttachmentFixture(t, 1, 2, 3)
 	cover := fixture.store(t, "cover", 1, "")
 
 	builder := stubDeleteBuilder{stubAttachmentBuilder{

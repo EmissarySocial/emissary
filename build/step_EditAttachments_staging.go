@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
@@ -150,26 +149,7 @@ func stagingURL(builder Builder) string {
 // reachedThroughInclude reports whether another action reached the step through include, as a
 // form's Save does, rather than the request naming the step's own action, as the widget's requests do
 func reachedThroughInclude(builder Builder, fieldname string) bool {
-	return !pipelineHolds(builder.action().Steps, fieldname)
-}
-
-// pipelineHolds reports whether a pipeline, or one nested in its steps, holds an edit-attachments step for the field
-func pipelineHolds(steps []step.Step, fieldname string) bool {
-
-	for _, current := range steps {
-
-		if own, ok := current.(step.EditAttachments); ok && own.Fieldname == fieldname {
-			return true
-		}
-
-		for _, nested := range nestedPipelines(current) {
-			if pipelineHolds(nested, fieldname) {
-				return true
-			}
-		}
-	}
-
-	return false
+	return !Pipeline(builder.action().Steps).EditsAttachments(fieldname)
 }
 
 // deleteStaged removes the staged file named by the token, or refuses with a 400: an invalid

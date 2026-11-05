@@ -19,17 +19,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// stubUploadFactory satisfies the Factory interface by embedding it (nil) and overriding the two
-// services the upload step uses
+// stubUploadFactory satisfies the Factory interface by embedding it (nil) and overriding the
+// services the attachment steps use
 type stubUploadFactory struct {
 	Factory
 	attachment *service.Attachment
 	media      mediaserver.MediaServer
+	template   *service.Template
 }
 
 // Attachment returns the Attachment service under test. Implements the Factory interface.
 func (factory stubUploadFactory) Attachment() *service.Attachment {
 	return factory.attachment
+}
+
+// Template returns the Template service holding the test's templates, which only the staging
+// step's GET reads. Implements the Factory interface.
+func (factory stubUploadFactory) Template() *service.Template {
+	return factory.template
 }
 
 // MediaServer returns the in-memory media server. Implements the Factory interface.
@@ -50,7 +57,7 @@ func (builder stubUploadBuilder) object() data.Object {
 
 // uploadFixture is the attachment fixture plus a media server over an in-memory filesystem
 type uploadFixture struct {
-	sortAttachmentsFixture
+	attachmentFixture
 	originals afero.Fs
 	media     mediaserver.MediaServer
 }
@@ -62,9 +69,9 @@ func newUploadFixture(t *testing.T, ranks ...int) uploadFixture {
 	originals := afero.NewMemMapFs()
 
 	return uploadFixture{
-		sortAttachmentsFixture: newSortAttachmentsFixture(t, ranks...),
-		originals:              originals,
-		media:                  mediaserver.New(originals, afero.NewMemMapFs(), mediaserver.NewWorkingDirectory(t.TempDir(), time.Minute, 10)),
+		attachmentFixture: newAttachmentFixture(t, ranks...),
+		originals:         originals,
+		media:             mediaserver.New(originals, afero.NewMemMapFs(), mediaserver.NewWorkingDirectory(t.TempDir(), time.Minute, 10)),
 	}
 }
 
