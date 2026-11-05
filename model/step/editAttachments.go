@@ -6,7 +6,7 @@ import (
 )
 
 // EditAttachments is a Step that draws the files in one category as tiles, and uploads,
-// deletes, and sorts them in place for the upload-multiple widget
+// deletes, and sorts them in place, behind an html-remote form element
 type EditAttachments struct {
 	Category   string   // Category of the files this step manages
 	Fieldname  string   // Form field that posts the files, and whose ".order" field posts their order (Default: the category)

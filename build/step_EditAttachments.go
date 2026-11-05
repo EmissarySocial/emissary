@@ -5,11 +5,11 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
-	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
@@ -17,7 +17,7 @@ import (
 )
 
 // StepEditAttachments is a Step that draws the files in one category as tiles, and uploads,
-// deletes, and sorts them in place for the upload-multiple widget
+// deletes, and sorts them in place, behind an html-remote form element
 type StepEditAttachments struct {
 	Category   string   // Category of the files this step manages
 	Fieldname  string   // Form field that posts the files, and whose ".order" field posts their order (Default: the category)
@@ -29,15 +29,49 @@ type StepEditAttachments struct {
 	RuleTypes  []string // Allowed extensions.  The first value is used as the default.
 }
 
-// Get draws the category's tile row, which the upload-multiple widget swaps in for its own. Implements the Step interface.
+// Get draws the zone an html-remote element loads: the row of files, the plus, the file input, and
+// the status line, or the files alone with ?readonly=true. Implements the Step interface.
 func (step StepEditAttachments) Get(builder Builder, buffer io.Writer) PipelineBehavior {
-	return step.respond(builder, buffer)
+
+	const location = "build.StepEditAttachments.Get"
+
+	// A new object's form reaches this step through include, and there is nothing to draw in it;
+	// the widget's own request on a new object draws the zone that stages files until the Save
+	if builder.object().IsNew() {
+
+		if reachedThroughInclude(builder, step.Fieldname) {
+			return Continue()
+		}
+
+		if err := step.drawStagingZone(builder, buffer); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Drawing staging zone"))
+		}
+
+		// The zone is the whole answer, and the steps after this one belong to the saved object
+		return Halt()
+	}
+
+	readOnly := builder.QueryParam("readonly") == "true"
+
+	if err := step.drawZone(builder, buffer, readOnly); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Drawing attachments"))
+	}
+
+	return Continue()
 }
 
 // Post applies one change to the category, a delete, an upload, or a sort, then draws the tile row again. Implements the Step interface.
 func (step StepEditAttachments) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepEditAttachments.Post"
+
+	// RULE: On a new object the widget's own request stages one file under the User, or deletes
+	// one; the form's Save, which reaches the step through include, adopts them below
+	if builder.object().IsNew() {
+		if !reachedThroughInclude(builder, step.Fieldname) {
+			return step.stage(builder, buffer)
+		}
+	}
 
 	objectType := attachmentObjectType(builder)
 	objectID := builder.objectID()
@@ -59,7 +93,7 @@ func (step StepEditAttachments) Post(builder Builder, buffer io.Writer) Pipeline
 		return Halt().WithError(derp.Wrap(err, location, "Reading form", derp.WithBadRequest()))
 	}
 
-	order := values[step.Fieldname+form.UploadOrderSuffix]
+	order := values[step.Fieldname+uploadOrderSuffix]
 
 	// Store the posted files and adopt the staged ones the order names, then apply the order
 	if err := step.addFiles(builder, objectType, objectID, postedFiles(builder.request(), step.Fieldname), order); err != nil {
@@ -73,8 +107,8 @@ func (step StepEditAttachments) Post(builder Builder, buffer io.Writer) Pipeline
 	return step.respond(builder, buffer)
 }
 
-// respond draws the tile row for a saved object, and nothing for a new one, which has no files to
-// list and no route of its own yet. Either way the pipeline continues.
+// respond draws the tile row for a saved object after a change, and nothing for a new one, which
+// has no files to list and no route of its own yet. Either way the pipeline continues.
 func (step StepEditAttachments) respond(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepEditAttachments.respond"
@@ -356,48 +390,38 @@ func (step StepEditAttachments) applyOrder(builder Builder, objectType string, o
 	return nil
 }
 
-// drawRow writes the category's files as the tile row the upload-multiple widget expects, with
-// the limits as attributes and the sort wired to this action
-func (step StepEditAttachments) drawRow(builder Builder, buffer io.Writer) error {
+// attachmentIDs returns the values that parse as ObjectIDs, in the order given, and skips the rest
+func attachmentIDs(values []string) []primitive.ObjectID {
 
-	const location = "build.StepEditAttachments.drawRow"
+	result := make([]primitive.ObjectID, 0, len(values))
 
-	objectType := attachmentObjectType(builder)
-	attachments, err := builder.factory().Attachment().QueryByCategory(builder.session(), objectType, builder.objectID(), step.Category)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Loading attachments", objectType, builder.objectID(), step.Category)
+	for _, value := range values {
+		if attachmentID, err := primitive.ObjectIDFromHex(value); err == nil {
+			result = append(result, attachmentID)
+		}
 	}
 
-	// The action's own path, without the request's query string, which could carry a stale attachmentId
-	row := tileRow{
-		BasePath:     builder.BasePath(),
-		ActionURL:    builder.BasePath() + "/" + builder.actionID(),
-		OrderName:    step.Fieldname + form.UploadOrderSuffix,
-		DeleteTarget: "closest .upload-multiple-tiles",
-		Confirm:      "Delete this file?",
+	return result
+}
+
+// drawZone writes everything inside the widget's zone: the row of files, then the plus, the file
+// input, and the status line, or the files alone when the view is read-only
+func (step StepEditAttachments) drawZone(builder Builder, buffer io.Writer, readOnly bool) error {
+
+	const location = "build.StepEditAttachments.drawZone"
+
+	attachments, err := step.loadAttachments(builder)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading attachments")
 	}
 
 	b := html.New()
+	writeZone(b)
+	step.writeRow(b, builder, attachments, readOnly)
 
-	b.Div().
-		Class("upload-multiple-tiles").
-		Data("url", row.ActionURL).
-		Data("name", step.Fieldname).
-		Data("accept", step.AcceptType).
-		Data("minimum", strconv.Itoa(step.Minimum)).
-		Data("maximum", strconv.Itoa(step.Maximum)).
-		Data("count", strconv.Itoa(len(attachments))).
-		Attr("hx-post", row.ActionURL).
-		Attr("hx-trigger", "upload-multiple-added, upload-multiple-sorted").
-		Attr("hx-params", step.Fieldname+","+row.OrderName).
-		Attr("hx-target", "this").
-		Attr("hx-swap", "outerHTML").
-		Attr("hx-push-url", "false").
-		Attr("hx-sync", "closest .upload-multiple:queue all")
-
-	for _, attachment := range attachments {
-		drawTile(b, row, attachment)
+	if !readOnly {
+		writeControls(b, step.Fieldname, step.AcceptType)
 	}
 
 	b.CloseAll()
@@ -407,6 +431,87 @@ func (step StepEditAttachments) drawRow(builder Builder, buffer io.Writer) error
 	}
 
 	return nil
+}
+
+// drawRow writes the category's files as the row alone, which answers every change the widget posts
+func (step StepEditAttachments) drawRow(builder Builder, buffer io.Writer) error {
+
+	const location = "build.StepEditAttachments.drawRow"
+
+	attachments, err := step.loadAttachments(builder)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading attachments")
+	}
+
+	b := html.New()
+	step.writeRow(b, builder, attachments, false)
+	b.CloseAll()
+
+	if _, err := io.WriteString(buffer, b.String()); err != nil {
+		return derp.Wrap(err, location, "Writing attachments to buffer")
+	}
+
+	return nil
+}
+
+// loadAttachments returns the category's files on the object, in rank order
+func (step StepEditAttachments) loadAttachments(builder Builder) ([]model.Attachment, error) {
+
+	const location = "build.StepEditAttachments.loadAttachments"
+
+	objectType := attachmentObjectType(builder)
+	attachments, err := builder.factory().Attachment().QueryByCategory(builder.session(), objectType, builder.objectID(), step.Category)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Loading attachments", objectType, builder.objectID(), step.Category)
+	}
+
+	return attachments, nil
+}
+
+// writeRow writes the tile row the theme's behavior expects, with the limits as attributes,
+// the sort wired to this action, and the multipart encoding its uploads need, which the form
+// around it no longer carries; or, read-only, the tiles alone with nothing wired
+func (step StepEditAttachments) writeRow(b *html.Builder, builder Builder, attachments []model.Attachment, readOnly bool) {
+
+	// The action's own path, without the request's query string, which could carry a stale attachmentId
+	row := tileRow{
+		BasePath:     builder.BasePath(),
+		ActionURL:    builder.BasePath() + "/" + builder.actionID(),
+		OrderName:    step.Fieldname + uploadOrderSuffix,
+		DeleteTarget: "closest .upload-multiple-tiles",
+		Confirm:      "Delete this file?",
+		ReadOnly:     readOnly,
+	}
+
+	// RULE: A read-only row is marked so that the behavior never makes it sortable
+	if readOnly {
+		b.Div().Class("upload-multiple-tiles").Data("readonly", "true")
+	} else {
+		b.Div().
+			Class("upload-multiple-tiles").
+			Data("url", row.ActionURL).
+			Data("name", step.Fieldname).
+			Data("accept", step.AcceptType).
+			Data("minimum", strconv.Itoa(step.Minimum)).
+			Data("maximum", strconv.Itoa(step.Maximum)).
+			Data("count", strconv.Itoa(len(attachments))).
+			Attr("hx-post", row.ActionURL).
+			Attr("hx-trigger", "upload-multiple-added, upload-multiple-sorted").
+			Attr("hx-params", step.Fieldname+","+row.OrderName).
+			Attr("hx-target", "this").
+			Attr("hx-swap", "outerHTML").
+			Attr("hx-push-url", "false").
+			Attr("hx-sync", "closest .upload-multiple:queue all").
+			Attr("hx-encoding", "multipart/form-data")
+	}
+
+	for _, attachment := range attachments {
+		drawTile(b, row, attachment)
+	}
+
+	b.Close()
 }
 
 // maximumMessage returns the message shown inline when an upload would leave the category
@@ -420,14 +525,20 @@ func maximumMessage(maximum int) string {
 	return "At most " + strconv.Itoa(maximum) + " files are allowed"
 }
 
+// uploadOrderSuffix is appended to a widget's field name to name the hidden input each tile carries,
+// which posts the tile's place in the order: one file ID per tile. The behavior and the
+// qwertylicious test server copy the literal.
+const uploadOrderSuffix = ".order"
+
 // tileRow is what every tile in a row shares: where its preview and its delete are served from,
-// the name of its order field, and what its X does
+// the name of its order field, what its X does, and whether it has any controls at all
 type tileRow struct {
 	BasePath     string // The owner's own path, which the previews hang from
 	ActionURL    string // The action the X posts its delete to
 	OrderName    string // The hidden input that posts the tile's place in the order
 	DeleteTarget string // What the X's response replaces: the whole row for a saved file, the tile alone for a staged one
 	Confirm      string // What the X asks before deleting, or nothing for a file that is not saved yet
+	ReadOnly     bool   // Whether the tile is the preview alone, with no handle, no X, and no order input
 }
 
 // drawTile writes one file as a tile: its preview, which is also its handle, its X, and its place in the order
@@ -437,8 +548,13 @@ func drawTile(b *html.Builder, row tileRow, attachment model.Attachment) {
 	filename := first.String(attachment.Original, attachment.Label, attachmentID)
 	group := list.Slash(attachment.ContentType).First()
 
-	// The tile is its own handle: it takes focus for the arrow keys, and its X comes with the mouse (.hover-trigger)
-	b.Div().Class("upload-multiple-tile", "hover-trigger").Data("value", attachmentID).Data("group", group).Attr("tabindex", "0").Aria("label", "Move "+filename)
+	// The tile is its own handle: it takes focus for the arrow keys, and its X comes with the mouse
+	// (.hover-trigger). A read-only tile is the preview alone.
+	if row.ReadOnly {
+		b.Div().Class("upload-multiple-tile").Data("value", attachmentID).Data("group", group)
+	} else {
+		b.Div().Class("upload-multiple-tile", "hover-trigger").Data("value", attachmentID).Data("group", group).Attr("tabindex", "0").Aria("label", "Move "+filename)
+	}
 
 	// InnerText and Attr escape: a filename is whatever the visitor named the file.
 	// The preview is not draggable on its own, so a press on it drags the tile.
@@ -449,12 +565,17 @@ func drawTile(b *html.Builder, row tileRow, attachment model.Attachment) {
 		b.Span().Class("upload-multiple-filename").InnerText(filename).Close()
 	}
 
+	if row.ReadOnly {
+		b.Close()
+		return
+	}
+
 	// RULE: The X is type="button" because a bare button inside a form submits it.
 	// It deletes at once through htmx, and the response replaces the row's target.
 	b.Button().
 		Type("button").
 		Class("upload-multiple-remove", "hover-show").
-		Attr("hx-post", row.ActionURL+"?attachmentId="+attachmentID).
+		Attr("hx-post", withQueryParam(row.ActionURL, "attachmentId="+attachmentID)).
 		Attr("hx-params", "none").
 		Attr("hx-confirm", row.Confirm).
 		Attr("hx-target", row.DeleteTarget).
@@ -467,4 +588,51 @@ func drawTile(b *html.Builder, row tileRow, attachment model.Attachment) {
 
 	b.Input("hidden", row.OrderName).Value(attachmentID).Close()
 	b.Close()
+}
+
+// withQueryParam appends a parameter to a URL, after the query it already has when it has one
+func withQueryParam(url string, param string) string {
+
+	if strings.Contains(url, "?") {
+		return url + "&" + param
+	}
+
+	return url + "?" + param
+}
+
+// writeZone opens the zone that an html-remote element loads: the grid the row and the controls
+// sit in, marked for the behavior and the styles, which find it by this attribute and this class
+func writeZone(b *html.Builder) {
+	b.Div().Class("upload-multiple").Data("upload-multiple", "true")
+}
+
+// writeControls writes what follows the row inside the widget's zone: the plus that adds one file,
+// the hidden single-file input the files post under, and the status line
+func writeControls(b *html.Builder, fieldname string, acceptType string) {
+
+	elementID := zoneID(fieldname)
+
+	// RULE: Only the plus opens the picker, and it is a button because a button opens the picker
+	// from the keyboard with no script. It follows the row so that it sits after the last tile,
+	// and the behavior hides it once the field is full.
+	b.Button().ID(elementID+"-add").Type("button").Class("upload-multiple-add").Attr("title", "Add a file").Aria("label", "Add a file")
+	b.I("bi", "bi-plus-lg").Close()
+	b.Close()
+
+	// RULE: Never `required`, and never `multiple`. The input is hidden, and a hidden invalid
+	// control blocks a native submit with no visible cause; the step enforces the minimum.
+	// The picker takes one file at a time, which is how the files are added.
+	b.Input("file", fieldname).
+		ID(elementID+"-input").
+		Attr("accept", acceptType).
+		Attr("hidden", "hidden").
+		Aria("label", "Add a file").
+		Close()
+
+	b.Div().ID(elementID + "-status").Class("upload-multiple-status").Role("status").Close()
+}
+
+// zoneID returns the prefix of the IDs inside a field's zone, with the field's dots turned to dashes
+func zoneID(fieldname string) string {
+	return "upload-multiple-" + strings.ReplaceAll(fieldname, ".", "-")
 }

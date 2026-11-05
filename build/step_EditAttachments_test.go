@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -20,11 +21,17 @@ import (
 )
 
 // stubEditBuilder adds what the edit-attachments step reads beyond the upload fixture's builder:
-// the query string, the object's saved state, the action's own path, and the signed-in user
+// the query string, the object's saved state, the action's own path and steps, and the signed-in user
 type stubEditBuilder struct {
 	stubAttachmentBuilder
 	_object data.Object
 	_userID primitive.ObjectID
+	_action model.Action
+}
+
+// action returns the action being run, whose steps say whether the step was reached through include. Implements the Builder interface.
+func (builder stubEditBuilder) action() model.Action {
+	return builder._action
 }
 
 // QueryParam returns a parameter of the request's URL. Implements the Builder interface.
@@ -78,18 +85,20 @@ func (stubDraftBuilder) service() service.ModelService {
 }
 
 // editFixture is the upload fixture plus the object the step asks about, which counts as saved
-// unless a test clears its CreateDate, and the user who is signed in
+// unless a test clears its CreateDate, the user who is signed in, and the action being run, which
+// reaches the step through include unless a test says the widget addressed the step's own action
 type editFixture struct {
 	uploadFixture
 	object *model.Stream
 	userID primitive.ObjectID
+	action model.Action
 }
 
 // newEditFixture stores one "photo" Attachment for each rank given, on a Stream that counts as saved
 func newEditFixture(t *testing.T, ranks ...int) editFixture {
 	t.Helper()
 
-	fixture := editFixture{uploadFixture: newUploadFixture(t, ranks...), userID: primitive.NewObjectID()}
+	fixture := editFixture{uploadFixture: newUploadFixture(t, ranks...), userID: primitive.NewObjectID(), action: includingAction()}
 
 	stream := model.NewStream()
 	stream.StreamID = fixture.objectID
@@ -98,6 +107,68 @@ func newEditFixture(t *testing.T, ranks ...int) editFixture {
 
 	return fixture
 }
+
+// newStagingFixture is the fixture as the widget's own request on a new object sees it: the
+// Stream is not saved, and the action being run is the photos action that holds the step
+func newStagingFixture(t *testing.T, ranks ...int) editFixture {
+	t.Helper()
+
+	fixture := newEditFixture(t, ranks...)
+	fixture.object.CreateDate = 0
+	fixture.action = widgetAction()
+
+	return fixture
+}
+
+// includingAction is the create action as a form's Save reaches the step: through include, so
+// the step is not among the action's own steps
+func includingAction() model.Action {
+	return model.Action{Steps: sliceof.Object[step.Step]{step.Include{Action: "photos"}}}
+}
+
+// widgetAction is the photos action as the widget's own requests reach the step: holding it,
+// here inside a modal, as a create form's action would, with the save that finishes a saved object's change after it
+func widgetAction() model.Action {
+	return model.Action{Steps: sliceof.Object[step.Step]{step.AsModal{SubSteps: []step.Step{step.EditAttachments{Category: "photo", Fieldname: "photos"}}}, step.Save{}}}
+}
+
+// sentinelStep is a step with no build-side twin, so the pipeline halts with an error on
+// reaching it: placed after edit-attachments, it marks a request that ran on when it should have stopped
+type sentinelStep struct{}
+
+// Name returns the step's name. Implements the step.Step interface.
+func (sentinelStep) Name() string {
+	return "sentinel"
+}
+
+// RequiredModel returns no model requirement. Implements the step.Step interface.
+func (sentinelStep) RequiredModel() string {
+	return ""
+}
+
+// RequiredStates returns no state requirement. Implements the step.Step interface.
+func (sentinelStep) RequiredStates() []string {
+	return nil
+}
+
+// RequiredRoles returns no role requirement. Implements the step.Step interface.
+func (sentinelStep) RequiredRoles() []string {
+	return nil
+}
+
+// stagingQuery is the query a create form's widget reaches the step with: the parent's add,
+// naming the template and the step's own action
+const stagingQuery = "?templateId=photo&action=photos"
+
+// stagingRoute is the route the staging row and its tiles post back to, as the step re-encodes
+// the request's own path and query and the builder escapes it
+const stagingRoute = "/parent/add?action=photos&amp;templateId=photo"
+
+// zoneOpen opens the zone the step draws on GET, which the behavior and the styles find
+const zoneOpen = `<div class="upload-multiple" data-upload-multiple="true">`
+
+// zoneControls is what follows the row inside a zone, as writeControls draws it for the photos field
+const zoneControls = `<button id="upload-multiple-photos-add" type="button" class="upload-multiple-add" title="Add a file" aria-label="Add a file"><i class="bi bi-plus-lg"></i></button><input type="file" name="photos" id="upload-multiple-photos-input" accept="image/*" hidden="hidden" aria-label="Add a file"><div id="upload-multiple-photos-status" class="upload-multiple-status" role="status"></div>`
 
 // stage writes one file under the user in the staging category, sniffed as the given type, with
 // its bytes in the media server, and returns its ID
@@ -149,6 +220,7 @@ func (fixture editFixture) builder(request *http.Request) stubEditBuilder {
 		},
 		_object: fixture.object,
 		_userID: fixture.userID,
+		_action: fixture.action,
 	}
 }
 
@@ -159,8 +231,18 @@ func (fixture editFixture) path() string {
 
 // get runs the step's GET and returns the result with what it wrote
 func (fixture editFixture) get(step StepEditAttachments) (PipelineResult, string) {
+	return fixture.getWithQuery(step, "")
+}
 
-	request := httptest.NewRequest(http.MethodGet, fixture.path(), nil)
+// getWithQuery runs the step's GET with a query string and returns the result with what it wrote
+func (fixture editFixture) getWithQuery(step StepEditAttachments, query string) (PipelineResult, string) {
+	return fixture.getAt(step, fixture.path()+query)
+}
+
+// getAt runs the step's GET against the given URL and returns the result with what it wrote
+func (fixture editFixture) getAt(step StepEditAttachments, target string) (PipelineResult, string) {
+
+	request := httptest.NewRequest(http.MethodGet, target, nil)
 
 	var buffer bytes.Buffer
 	result := applyBehavior(step.Get(fixture.builder(request), &buffer))
@@ -203,10 +285,39 @@ func (fixture editFixture) multipartRequest(t *testing.T, query string, order []
 	return request
 }
 
-// formRequest builds a URL-encoded POST
-func (fixture editFixture) formRequest(query string, values url.Values) *http.Request {
+// stagingRequest builds a multipart POST to the parent's add, with the query given, carrying each
+// file under the given field beside a form field the step must ignore
+func (fixture editFixture) stagingRequest(t *testing.T, query string, field string, files ...postedFile) *http.Request {
+	t.Helper()
 
-	request := httptest.NewRequest(http.MethodPost, fixture.path()+query, strings.NewReader(values.Encode()))
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	for _, file := range files {
+		part, err := writer.CreateFormFile(field, file.name)
+		require.NoError(t, err)
+		_, err = part.Write([]byte(file.content))
+		require.NoError(t, err)
+	}
+
+	require.NoError(t, writer.WriteField("label", "ignored"))
+	require.NoError(t, writer.Close())
+
+	request := httptest.NewRequest(http.MethodPost, "/parent/add"+query, &body)
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+
+	return request
+}
+
+// formRequest builds a URL-encoded POST to the action's own URL
+func (fixture editFixture) formRequest(query string, values url.Values) *http.Request {
+	return formRequestTo(fixture.path()+query, values)
+}
+
+// formRequestTo builds a URL-encoded POST to the given URL
+func formRequestTo(target string, values url.Values) *http.Request {
+
+	request := httptest.NewRequest(http.MethodPost, target, strings.NewReader(values.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return request
@@ -228,8 +339,9 @@ func photoEdit(minimum int, maximum int) StepEditAttachments {
 	return StepEditAttachments{Category: "photo", Fieldname: "photos", AcceptType: "image/*", Minimum: minimum, Maximum: maximum}
 }
 
-// TestStepEditAttachments_GetDrawsTheRow writes the tile row the widget expects, in rank order, with the limits on it
-func TestStepEditAttachments_GetDrawsTheRow(t *testing.T) {
+// TestStepEditAttachments_GetDrawsTheZone writes the zone's contents: the tile row the widget
+// expects, in rank order, with the limits on it, then the plus, the input, and the status line
+func TestStepEditAttachments_GetDrawsTheZone(t *testing.T) {
 
 	fixture := newEditFixture(t, 2)
 	image := fixture.storeImage(t, 1)
@@ -242,8 +354,8 @@ func TestStepEditAttachments_GetDrawsTheRow(t *testing.T) {
 
 	base := "/" + fixture.objectID.Hex()
 
-	require.True(t, strings.HasPrefix(html, `<div class="upload-multiple-tiles" data-url="`+base+`/photos" data-name="photos" data-accept="image/*" data-minimum="1" data-maximum="64" data-count="2" hx-post="`+base+`/photos" hx-trigger="upload-multiple-added, upload-multiple-sorted" hx-params="photos,photos.order" hx-target="this" hx-swap="outerHTML" hx-push-url="false" hx-sync="closest .upload-multiple:queue all">`), html)
-	require.True(t, strings.HasSuffix(html, "</div></div>"), html)
+	require.True(t, strings.HasPrefix(html, zoneOpen+`<div class="upload-multiple-tiles" data-url="`+base+`/photos" data-name="photos" data-accept="image/*" data-minimum="1" data-maximum="64" data-count="2" hx-post="`+base+`/photos" hx-trigger="upload-multiple-added, upload-multiple-sorted" hx-params="photos,photos.order" hx-target="this" hx-swap="outerHTML" hx-push-url="false" hx-sync="closest .upload-multiple:queue all" hx-encoding="multipart/form-data">`), html)
+	require.True(t, strings.HasSuffix(html, "</div></div>"+zoneControls+"</div>"), html)
 
 	// Every tile is its own handle and takes focus, with an X that shows on hover; an image tile
 	// previews the file, and any other tile shows an icon and the filename
@@ -251,6 +363,41 @@ func TestStepEditAttachments_GetDrawsTheRow(t *testing.T) {
 	require.Contains(t, html, `<div class="upload-multiple-tile hover-trigger" data-value="`+plain.Hex()+`" tabindex="0" aria-label="Move file.jpg"><i class="bi bi-file-earmark upload-multiple-icon"></i><span class="upload-multiple-filename">file.jpg</span>`)
 	require.Less(t, strings.Index(html, image.Hex()), strings.Index(html, plain.Hex()))
 	require.Equal(t, 2, strings.Count(html, `class="upload-multiple-tile hover-trigger"`))
+}
+
+// TestStepEditAttachments_GetReadOnlyDrawsTheFilesAlone writes the tiles with no handle, X, order
+// input, or controls, on a row marked for the behavior to leave alone
+func TestStepEditAttachments_GetReadOnlyDrawsTheFilesAlone(t *testing.T) {
+
+	fixture := newEditFixture(t, 2)
+	image := fixture.storeImage(t, 1)
+	plain := fixture.byRank[2]
+
+	result, html := fixture.getWithQuery(photoEdit(1, 64), "?readonly=true")
+
+	require.Nil(t, result.Error)
+	require.False(t, result.Halt)
+
+	base := "/" + fixture.objectID.Hex()
+
+	require.Equal(t, zoneOpen+`<div class="upload-multiple-tiles" data-readonly="true"><div class="upload-multiple-tile" data-value="`+image.Hex()+`" data-group="image"><img src="`+base+`/attachments/`+image.Hex()+`?width=300" class="upload-multiple-preview" alt="beach.jpg" draggable="false"></div><div class="upload-multiple-tile" data-value="`+plain.Hex()+`"><i class="bi bi-file-earmark upload-multiple-icon"></i><span class="upload-multiple-filename">file.jpg</span></div></div></div>`, html)
+}
+
+// TestStepEditAttachments_PostAnswersWithTheRowAlone writes the row and nothing after it, so the
+// plus and the input the GET drew stay in place while the row swaps
+func TestStepEditAttachments_PostAnswersWithTheRowAlone(t *testing.T) {
+
+	fixture := newEditFixture(t, 1, 2)
+
+	result, html := fixture.post(photoEdit(1, 64), fixture.formRequest("", url.Values{"photos.order": {fixture.hex(2), fixture.hex(1)}}))
+
+	require.Nil(t, result.Error)
+	require.False(t, result.Halt)
+	require.True(t, strings.HasPrefix(html, `<div class="upload-multiple-tiles" data-url=`), html)
+	require.True(t, strings.HasSuffix(html, "</div></div>"), html)
+	require.NotContains(t, html, `class="upload-multiple-add"`)
+	require.NotContains(t, html, `type="file"`)
+	require.Equal(t, 1, fixture.rankOf(t, 2))
 }
 
 // TestStepEditAttachments_GetEscapesTheFilename draws a hostile filename as text
@@ -282,6 +429,216 @@ func TestStepEditAttachments_GetOnANewObjectWritesNothing(t *testing.T) {
 	require.Nil(t, result.Error)
 	require.False(t, result.Halt)
 	require.Empty(t, html)
+}
+
+// TestStepEditAttachments_GetOnANewObjectDrawsTheStagingZone draws, for the widget's own request
+// on a new object, an empty row wired to stage each file back through the same route, then the
+// controls, and never carries a stale attachmentId into the row
+func TestStepEditAttachments_GetOnANewObjectDrawsTheStagingZone(t *testing.T) {
+
+	fixture := newStagingFixture(t)
+	row := `<div class="upload-multiple-tiles" data-staging-url="` + stagingRoute + `" data-name="photos" data-accept="image/*" data-minimum="1" data-maximum="16" data-count="0" hx-post="` + stagingRoute + `" hx-trigger="upload-multiple-added" hx-params="photos" hx-target="this" hx-swap="beforeend" hx-push-url="false" hx-sync="closest .upload-multiple:queue all" hx-encoding="multipart/form-data"></div>`
+
+	result, html := fixture.getAt(photoEdit(1, 16), "/parent/add"+stagingQuery)
+
+	require.Nil(t, result.Error)
+	require.True(t, result.Halt)
+	require.Equal(t, zoneOpen+row+zoneControls+"</div>", html)
+
+	result, html = fixture.getAt(photoEdit(1, 16), "/parent/add"+stagingQuery+"&attachmentId=stale")
+
+	require.Nil(t, result.Error)
+	require.True(t, result.Halt)
+	require.Equal(t, zoneOpen+row+zoneControls+"</div>", html)
+}
+
+// TestStepEditAttachments_StagesTheFileUnderTheUserAndDrawsItsTile files the one file the
+// widget posts on a new object under the signed-in user, in the staging category, and answers
+// with its tile alone: previewed from the user, with an X that posts back here and replaces the
+// tile, and an order input the form's Save will post
+func TestStepEditAttachments_StagesTheFileUnderTheUserAndDrawsItsTile(t *testing.T) {
+
+	fixture := newStagingFixture(t)
+
+	result, html := fixture.post(photoEdit(1, 16), fixture.stagingRequest(t, stagingQuery, "photos", png("a.png")))
+
+	require.Nil(t, result.Error)
+	require.True(t, result.Halt)
+
+	staged := fixture.staged(t, fixture.userID)
+	require.Len(t, staged, 1)
+	require.Equal(t, "User", staged[0].ObjectType)
+	require.Equal(t, fixture.userID, staged[0].ObjectID)
+	require.Equal(t, "upload-staging", staged[0].Category)
+	require.Equal(t, "a.png", staged[0].Original)
+	require.Equal(t, "image/png", staged[0].ContentType)
+	require.Empty(t, fixture.photos(t))
+	fixture.requireStored(t, staged...)
+
+	id := staged[0].AttachmentID.Hex()
+	require.True(t, strings.HasPrefix(html, `<div class="upload-multiple-tile hover-trigger" data-value="`+id+`" data-group="image" tabindex="0" aria-label="Move a.png"><img src="/@`+fixture.userID.Hex()+`/attachments/`+id+`?width=300" class="upload-multiple-preview" alt="a.png" draggable="false"><button type="button" class="upload-multiple-remove hover-show" hx-post="`+stagingRoute+`&amp;attachmentId=`+id+`" hx-params="none"`), html)
+	require.Contains(t, html, `hx-target="closest .upload-multiple-tile" hx-swap="outerHTML"`)
+	require.NotContains(t, html, "Delete this file?")
+	require.True(t, strings.HasSuffix(html, `<input type="hidden" name="photos.order" value="`+id+`"></div>`), html)
+	require.Equal(t, 1, strings.Count(html, "upload-multiple-tile hover-trigger"))
+	require.NotContains(t, html, "upload-multiple-tiles")
+}
+
+// TestStepEditAttachments_StagingStopsTheAction runs the step through the pipeline with a step
+// after it that fails when reached. The widget's requests on a new object stop at the step,
+// because what follows belongs to the saved object and a save there would write the empty object
+// once per file; the form's Save through include runs on to the steps that finish it
+func TestStepEditAttachments_StagingStopsTheAction(t *testing.T) {
+
+	pipeline := Pipeline{step.EditAttachments(photoEdit(1, 16)), sentinelStep{}}
+	fixture := newStagingFixture(t)
+	var buffer bytes.Buffer
+
+	// The widget's GET answers with the zone and stops
+	request := httptest.NewRequest(http.MethodGet, "/parent/add"+stagingQuery, nil)
+	result := pipeline.Get(fixture.builder(request).factory(), fixture.builder(request), &buffer)
+
+	require.Nil(t, result.Error)
+	require.True(t, result.Halt)
+	require.Contains(t, buffer.String(), `data-staging-url="`+stagingRoute+`"`)
+
+	// The widget's upload answers with the tile and stops
+	buffer.Reset()
+	request = fixture.stagingRequest(t, stagingQuery, "photos", png("a.png"))
+	result = pipeline.Post(fixture.builder(request).factory(), fixture.builder(request), &buffer)
+
+	require.Nil(t, result.Error)
+	require.True(t, result.Halt)
+	require.Contains(t, buffer.String(), `class="upload-multiple-tile hover-trigger"`)
+	require.Len(t, fixture.staged(t, fixture.userID), 1)
+
+	// The form's Save on the new object adopts what it names and runs on
+	saving := newEditFixture(t)
+	saving.object.CreateDate = 0
+	a := saving.stage(t, saving.userID, "a.png", "image/png")
+
+	buffer.Reset()
+	request = saving.multipartRequest(t, "", []string{a.Hex()})
+	result = pipeline.Post(saving.builder(request).factory(), saving.builder(request), &buffer)
+
+	require.ErrorContains(t, result.Error, "Unrecognized Pipeline Step")
+	require.Empty(t, buffer.String())
+	require.Len(t, saving.photos(t), 1)
+}
+
+// TestStepEditAttachments_StagingRefusesAWrongType refuses a file the step does not accept at
+// once, so the form hears it now and not at its Save, and stores nothing
+func TestStepEditAttachments_StagingRefusesAWrongType(t *testing.T) {
+
+	fixture := newStagingFixture(t)
+
+	result, html := fixture.post(photoEdit(1, 16), fixture.stagingRequest(t, stagingQuery, "photos", text("notes.txt")))
+
+	require.Error(t, result.Error)
+	require.Equal(t, http.StatusBadRequest, derp.ErrorCode(result.Error))
+	require.Empty(t, html)
+	require.Empty(t, fixture.staged(t, fixture.userID))
+	require.Zero(t, fixture.storedFiles(t))
+}
+
+// TestStepEditAttachments_StagingRefusesNoFileOrMoreThanOne answers 400 and stores nothing for a
+// body with no file under the step's field, or with more than one
+func TestStepEditAttachments_StagingRefusesNoFileOrMoreThanOne(t *testing.T) {
+
+	fixture := newStagingFixture(t)
+
+	check := func(name string, request *http.Request) {
+		t.Helper()
+
+		result, html := fixture.post(photoEdit(1, 16), request)
+
+		require.Error(t, result.Error, name)
+		require.Equal(t, http.StatusBadRequest, derp.ErrorCode(result.Error), name)
+		require.Empty(t, html, name)
+		require.Empty(t, fixture.staged(t, fixture.userID), name)
+		require.Zero(t, fixture.storedFiles(t), name)
+	}
+
+	check("no file", fixture.stagingRequest(t, stagingQuery, "photos"))
+	check("two files", fixture.stagingRequest(t, stagingQuery, "photos", png("a.png"), png("b.png")))
+	check("a file under another field", fixture.stagingRequest(t, stagingQuery, "other", png("a.png")))
+}
+
+// TestStepEditAttachments_StagingRefusesASignedOutRequest answers 401 and stores nothing when no user is signed in
+func TestStepEditAttachments_StagingRefusesASignedOutRequest(t *testing.T) {
+
+	fixture := newStagingFixture(t)
+	fixture.userID = primitive.NilObjectID
+
+	result, html := fixture.post(photoEdit(1, 16), fixture.stagingRequest(t, stagingQuery, "photos", png("a.png")))
+
+	require.Error(t, result.Error)
+	require.Equal(t, http.StatusUnauthorized, derp.ErrorCode(result.Error))
+	require.Empty(t, html)
+	require.Zero(t, fixture.storedFiles(t))
+}
+
+// TestStepEditAttachments_StagedDeleteRefusals answers 400 and deletes nothing for an ID that is
+// not one of the user's own staged files: an invalid token, another user's staged file, or a
+// file that is already on an object. The delete that goes through needs the media server the
+// fixture's Attachment service has no way to carry, so it is driven in the browser instead.
+func TestStepEditAttachments_StagedDeleteRefusals(t *testing.T) {
+
+	fixture := newStagingFixture(t, 1)
+	other := primitive.NewObjectID()
+	theirs := fixture.stage(t, other, "b.png", "image/png")
+	mine := fixture.stage(t, fixture.userID, "a.png", "image/png")
+	photo := fixture.byRank[1]
+
+	check := func(name string, token string) {
+		t.Helper()
+
+		result, html := fixture.post(photoEdit(1, 16), formRequestTo("/parent/add"+stagingQuery+"&attachmentId="+token, url.Values{}))
+
+		require.Error(t, result.Error, name)
+		require.Equal(t, http.StatusBadRequest, derp.ErrorCode(result.Error), name)
+		require.Empty(t, html, name)
+		require.Equal(t, []primitive.ObjectID{mine}, idsOf(fixture.staged(t, fixture.userID)), name)
+		require.Equal(t, []primitive.ObjectID{theirs}, idsOf(fixture.staged(t, other)), name)
+		require.Len(t, fixture.photos(t), 1, name)
+	}
+
+	check("an invalid token", "not-an-id")
+	check("another user's staged file", theirs.Hex())
+	check("a file on the object", photo.Hex())
+}
+
+// idsOf returns the IDs of the given attachments, in order
+func idsOf(attachments []model.Attachment) []primitive.ObjectID {
+
+	result := make([]primitive.ObjectID, 0, len(attachments))
+
+	for _, attachment := range attachments {
+		result = append(result, attachment.AttachmentID)
+	}
+
+	return result
+}
+
+// TestReachedThroughInclude tells a request that names the step's own action, at any depth,
+// from one that reached the step through another action's include
+func TestReachedThroughInclude(t *testing.T) {
+
+	own := step.EditAttachments{Category: "photo", Fieldname: "photos"}
+
+	check := func(name string, steps []step.Step, want bool) {
+		t.Helper()
+		builder := stubEditBuilder{_action: model.Action{Steps: steps}}
+		require.Equal(t, want, reachedThroughInclude(builder, "photos"), name)
+	}
+
+	check("the step itself", []step.Step{own}, false)
+	check("inside a modal", []step.Step{step.AsModal{SubSteps: []step.Step{own}}}, false)
+	check("inside a condition's other branch", []step.Step{step.IfCondition{Otherwise: []step.Step{own}}}, false)
+	check("inside a switch case", []step.Step{step.Switch{Cases: map[string][]step.Step{"gallery": {own}}}}, false)
+	check("through include", []step.Step{step.Include{Action: "photos"}}, true)
+	check("another field's step", []step.Step{step.EditAttachments{Category: "cover", Fieldname: "covers"}}, true)
+	check("no steps", nil, true)
 }
 
 // TestStepEditAttachments_UploadAppendsAfterTheHighestRank stores the posted files after the category's highest rank and draws the row again
@@ -804,4 +1161,24 @@ func TestStepEditAttachments_AdoptionRefusesAStagedFileOfTheWrongType(t *testing
 	require.Equal(t, http.StatusBadRequest, derp.ErrorCode(result.Error))
 	require.Empty(t, fixture.photos(t))
 	require.Len(t, fixture.staged(t, fixture.userID), 2)
+}
+
+// TestAttachmentIDs keeps the values that are ObjectIDs, in order, and drops the rest
+func TestAttachmentIDs(t *testing.T) {
+
+	first := primitive.NewObjectID()
+	second := primitive.NewObjectID()
+
+	check := func(name string, values []string, expected []primitive.ObjectID) {
+		t.Helper()
+		require.Equal(t, expected, attachmentIDs(values), name)
+	}
+
+	check("nil", nil, []primitive.ObjectID{})
+	check("empty", []string{}, []primitive.ObjectID{})
+	check("ids in order", []string{second.Hex(), first.Hex()}, []primitive.ObjectID{second, first})
+	check("values that are not IDs dropped", []string{"new:0", first.Hex(), "photo"}, []primitive.ObjectID{first})
+	check("garbage dropped", []string{"", "garbage", "0123456789abcdef0123456", first.Hex()}, []primitive.ObjectID{first})
+	check("uppercase hex", []string{strings.ToUpper(first.Hex())}, []primitive.ObjectID{first})
+	check("repeats kept", []string{first.Hex(), first.Hex()}, []primitive.ObjectID{first, first})
 }
