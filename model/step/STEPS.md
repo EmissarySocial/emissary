@@ -295,7 +295,7 @@ Removes a cached Stream archive on `POST`. Requires the `Stream` model.
 
 ## delete-attachments
 
-Removes attachments from the current object. The `attachmentId` query parameter, when present, narrows the selection further. With none of the three attributes set, the step does nothing.
+Removes attachments from the current object. The `attachmentId` query parameter, when present, narrows the selection to that one attachment, and a value that is not an AttachmentID halts with a 400 rather than widening the delete. With none of the three selecting attributes set, the step does nothing.
 
 **Attributes**
 
@@ -304,6 +304,7 @@ Removes attachments from the current object. The `attachmentId` query parameter,
 | all | Delete every attachment on this object |
 | field | Delete only the attachment named by this property, which holds its AttachmentID or its URL (as `set-thumbnail` writes into `iconUrl`), and clear the property |
 | category | Delete every attachment in this category |
+| minimum | Fewest attachments the category may be left holding. A delete that would leave fewer halts with a 400 and deletes nothing. Ignored with `field`. Defaults to `0` |
 
 <br>
 
@@ -370,6 +371,49 @@ Modal form for an **existing** object: renders on `GET`, saves on `POST`. Unlike
 				label: "Summary"
 			}
 		]
+	}
+}
+```
+
+---
+
+## edit-attachments
+
+Draws the multi-file zone that an `html-remote` form element loads, and uploads, deletes, and sorts the files in one category in place. The element is a plain loader: it draws an empty shell that fills itself from the action this step runs on, which its `url` names (`/{{.ID}}/photos` on an edit form), so the step holds the category's whole configuration, including the field name the files post under. A `create` action runs the same action inline with `include`, so the files a new object's form posts are stored under its ID.
+
+On GET it writes the zone for a saved object, the grid the theme's behavior and styles find: the tile row with the limits as `data-` attributes and the multipart encoding its uploads need, then the plus that adds one file, the hidden single-file input named by `fieldname`, and the status line. With `?readonly=true`, which the widget's read-only view sends, it writes the tiles alone with no controls and the row marked `data-readonly`, so the browser behavior leaves it be. On POST it applies one change and writes the row alone again, so the plus and the input stay in place while the row swaps. `?attachmentId=` deletes that one file, and is refused with a 400 when the ID is not one of the category's files on this object, or with an inline error when the category would fall below `minimum`. Otherwise the files posted under `fieldname` are sniffed against `accept-type`, and any `{fieldname}.order` value naming a file the signed-in User staged through this step is adopted into the category, with the stored type checked against `accept-type`. The posted and staged files are stored and adopted after the category's highest rank, and then the order values re-rank the category's files in the order posted. This is how a create form's files reach the new object: the widget stages each one as it is dropped, and the Save posts their IDs. The step never deletes more than one file, and reads the files and the order from the body alone.
+
+The limits apply differently to the two kinds of POST. On a new object, the POST is the create form's Save: the files past `maximum` are dropped, the posted ones kept before the staged ones and each in the order posted, and a dropped staged file stays staged until the purge removes it; the Save is then refused inline when the category would hold fewer than `minimum`. On a saved object, the POST is one change from the widget: an upload is refused as a batch when it would pass `maximum`, while a sort, or an upload that leaves the category short of `minimum`, goes through, so a category outside its limits can still be sorted and filled.
+
+**Before the object exists.** A new object has no route of its own, so its create form's element reaches this step through the parent's `add`, with the action named in the query: `url: "/{{.ParentID.Hex}}/add?action=photos"`, plus `&templateId={{.TemplateID}}` when the add's step names no template. `add-stream` mints the child as it does for the form, runs the named action on it, and answers with that action's result alone. The action must be one the child's `create` action runs through `include`, at any depth, or `add-stream` refuses the request with a 400, because the Save finishes that action's work and any other action could save a child that `create` never shaped; the action's own roles apply, with the signed-in User as the child's author. The step tells that request from the form's Save by where it sits: when the current action holds the step, the request is the widget's own, and when another action reached it through `include`, the request is the Save. On a new object the widget's GET draws an empty row wired to post each file back through the same route, then the plus, the file input, and the status line, and the Save's GET draws nothing. The widget's POST stores the one file posted under `fieldname` in the `upload-staging` category of the signed-in User, sniffed against `accept-type` so the form hears a wrong type at once, and answers with its tile alone, which the widget appends to its row; the tile's `{fieldname}.order` input carries the staged file's ID, so the Save posts IDs and no file. `?attachmentId=` deletes that one staged file and writes nothing, so the tile removes itself; an ID that is not one of the User's own staged files is refused with a 400, a body with no file or more than one with a 400, and a request with no signed-in User with a 401. Each of the widget's answers on a new object halts the action, so a `save` or any other step after this one in the widget's action runs only for a saved object; the Save through `include` continues as usual. A staged file that no Save adopts within a day is deleted by the `PurgeStagedUploads` task.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| category | **Required.** Category of the files this step manages |
+| fieldname | Form field holding the files, and the prefix of the `.order` field holding their order. Defaults to the category |
+| accept&#8209;type | MIME type filter, e.g. `image/*`, enforced by sniffing each file |
+| minimum | Fewest files the category may hold. A delete that would leave fewer, or a create form's Save that would, is refused. Defaults to `0`, and cannot exceed `maximum` |
+| maximum | Most files the category may hold. An upload to a saved object that would pass it is refused whole; a create form's Save keeps the files that fit. Defaults to `1`, and can never be lower |
+| rules.height | Fixed height for all downloads |
+| rules.width | Fixed width for all downloads |
+| rules.types | Allowed extensions. The first value is the default |
+
+<br>
+
+**Example**
+
+```hjson
+{
+	do: "edit-attachments"
+	category: "photo"
+	fieldname: "photos"
+	accept-type: "image/*"
+	minimum: 1
+	maximum: 64
+	rules: {
+		types: ["webp"]
 	}
 }
 ```
@@ -1477,13 +1521,14 @@ Moves the object into a new state.
 
 ## set-thumbnail
 
-Scans the object's attachments and writes the first image into `path` — as a bare AttachmentID for `User` objects, and as a permalink URL for everything else. When no image is found, `path` is cleared.
+Scans the object's attachments in rank order and writes the first image into `path` — as a bare AttachmentID for `User` objects, and as a permalink URL for everything else. When no image is found, `path` is cleared.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | path | **Required.** Schema path that receives the thumbnail. An invalid path halts the pipeline |
+| category | Consider only attachments in this category. Defaults to every category |
 
 <br>
 
@@ -1585,28 +1630,6 @@ With `direction: "asc"`, the posted records are numbered 1, 2, 3, and so on. Wit
 	model: "Folder"
 	message: "Reordered folders"
 }
-```
-
----
-
-## sort-attachments
-
-The same operation as [`sort`](#sort), scoped to the current object's attachments.
-
-**Attributes**
-
-| Attribute | Description |
-| --- | --- |
-| keys | Property matched against each posted key. Defaults to `_id` |
-| values | Property that receives the new rank. Defaults to `rank` |
-| message | Audit comment recorded with each save |
-
-<br>
-
-**Example**
-
-```hjson
-{do: "sort-attachments"}
 ```
 
 ---
@@ -1768,6 +1791,8 @@ Retracts a published Stream and returns it to `state`. The inverse of [`save-and
 
 Accepts file uploads and attaches them to the current object. The optional `*-path` attributes write the resulting AttachmentID, download URL, and original filename back into the object's schema, which is how a single-file upload becomes an `iconId` or a `coverImage`.
 
+Every posted file is checked against `accept-type` before any is stored, so a refused file leaves nothing behind. New files take ranks after the ones the category already holds, in the order posted, and `replace` starts them again at 1.
+
 **Attributes**
 
 | Attribute | Description |
@@ -1780,6 +1805,7 @@ Accepts file uploads and attaches them to the current object. The optional `*-pa
 | accept&#8209;type | MIME type filter, e.g. `image/*` |
 | category | Category applied to each Attachment |
 | maximum | Maximum number of uploads. Defaults to `1`, and can never be lower |
+| minimum | Fewest attachments the category may hold once the upload is done. A post that would leave fewer, including one with no file at all, halts with an inline error. Defaults to `0`, and cannot exceed `maximum` |
 | json&#8209;result | Return a JSON structure instead of HTML. Forces `maximum: 1` |
 | label | Literal value for `attachment.label` |
 | label&#8209;fieldname | Form field that supplies the label |

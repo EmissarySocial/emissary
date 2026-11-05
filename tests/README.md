@@ -52,6 +52,7 @@ Each case posts four **scenarios**: `typical` values, `empty` strings, `hostile`
 | `formposts_test.go` | `TestFormPosts` and the golden files |
 | `setdata_test.go` | `TestSetData`, which pins every `set-data` step |
 | `emulation_test.go` | `TestEmulatedSources`, which detects changes to the reproduced code |
+| `uploadmultiple_test.go` | `TestUploadMultiple_WidgetAndStepAgree`, which, in every template holding an `edit-attachments` step, links each `html-remote` element's `url` to an action on that template holding the step, and checks that a create form's URL is the parent's add naming an action its `create` includes, which is what lets the element reach the step before the Save and what adopts the staged files at the Save |
 | `fuzz_test.go` | `FuzzFormPosts` and `FuzzSetData` |
 | `testdata/*.golden.json` | Form POSTs, one file per group, plus the source fingerprints |
 | `testdata/*.setdata.golden.json` | `set-data` steps, one file per group |

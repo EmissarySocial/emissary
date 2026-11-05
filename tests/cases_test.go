@@ -222,6 +222,7 @@ func TestNestedSteps_Switch(t *testing.T) {
 var unpinnedPostReaders = map[string]string{
 	"add-stream":         "not pinned: sets with-data values rendered from templates, not POSTed fields",
 	"delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+	"edit-attachments":   "not pinned: stores, deletes, and sorts attachments through the Attachment service",
 	"edit-connection":    "not pinned: provider forms are defined in Go, not in templates",
 	"edit-content":       "not pinned: content is converted by service.Content, not set through form or schema",
 	"require-password":   "not pinned: checks a password against the database",
@@ -232,7 +233,6 @@ var unpinnedPostReaders = map[string]string{
 	"set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
 	"set-thumbnail":      "not pinned: writes the ID or URL of a stored attachment",
 	"sort":               "not pinned: POST keys are database record IDs",
-	"sort-attachments":   "not pinned: POST keys are database record IDs",
 	"sort-widgets":       "not pinned: POST keys are widget IDs on a stored Stream",
 	"upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 }
