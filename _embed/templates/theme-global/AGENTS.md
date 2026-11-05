@@ -28,6 +28,32 @@ Nothing catches a violation. CSS has no notion of a palette, the ramp is not cov
 
 The `javascript` bundle joins its files with nothing between them, and the minifier then reads the result as one program. A file ending in `})()` followed by one starting with `(function` becomes `…})()(function…`, a call on the first file's return value: it throws, and every script after it in the bundle (turboclick, for one) silently never runs. `prism.js` was first written this way during EMISSARY-DEV-WEBSITE §1.7, and only running the minified bundle caught it. [service/theme_javascript_bundle_test.go](../../../service/theme_javascript_bundle_test.go) checks every bundled javascript file under `_embed/templates`.
 
+## A `js` block in a `._hs` file ends at the first bare `end`, and only `//` comments are safe inside it
+
+Hyperscript 0.9.93 does not parse the JavaScript in a `js` block. It runs its own tokenizer over it and stops at the first identifier token `end`, then hands everything before it to `new Function`. Its tokenizer knows `--` and `//` comments, and reads `/* */` as code, so an apostrophe inside a slash-star comment opens a string that swallows the rest of the block, and the word `end` inside one closes it early. Either way the whole hyperscript bundle fails, and every behavior on the page stops installing.
+
+- **Use `//` comments only** inside a `js` block, and plain quoted strings. The tokenizer reads `'…'` and `"…"` as strings, as JavaScript does; template and regex literals have not been checked, and `list._hs` uses neither.
+- **Never name anything `end`,** a variable or a property (`x.end`). `selectionEnd` is safe, because it is one identifier.
+- **Every function declared in a top-level `js` block becomes global,** for every behavior in the bundle. `showIf._hs` declares `parse` and `split`, so a new block prefixes its functions with its behavior's name, as `list._hs` does with `listWidget`. A `const` in the block stays private to it.
+
+## The `list` widget's rules are shared with the form library
+
+[hyperscript/list._hs](hyperscript/list._hs) drives the `list` widget that `benpate/form` draws, with the styles in [stylesheet/03-widgets-list.css](stylesheet/03-widgets-list.css).
+
+- **The repeat mark mirrors the server's cleanup.** The form library's `cleanList` trims each value, drops blanks, and drops a repeat by `strings.ToLower`, keeping the first, and the behavior marks a repeat by `toLowerCase()` and counts kept values the same way. Change both together (form's AGENTS.md has the same rule). The two folds differ for a few characters, such as the Turkish dotted İ, where the server decides.
+- **The minimum is checked in the browser, because the server would drop the field.** rosetta refuses an Array short of its `minLength` or `required`, and `SetURLValues` logs that at debug level and saves nothing for the field. So the behavior sets a custom validity on the first row whenever the kept values fall short, and clears it on every change.
+- **A list inside a hidden tab must not use `required`, `minLength`, or an item `pattern`.** The browser cannot focus an invalid control in a `hidden` tab panel, and `TabContainer` does not reveal one, so the Save does nothing and shows no message. Qwertylicious' featured hashtags sit in a tab and set none of the three.
+- **Its rows are found from the widget, never by a document-wide query.** Each handler starts from `me`, and `listWidgetRowOf` refuses a row whose table is not the widget's own, so a list inside a table cell never reaches the table around it.
+- **The focus ring is the row's, not the input's.** `tr.grid-row:has(input:focus)` draws `.input`'s ring around the whole row, grip and X included, and red while the row is invalid, and the grid's own ring on the focused cell is turned off. An outline on a `<tr>` draws in Chromium and WebKit; `.input` itself cannot go on the row, because a table row takes no padding or radius.
+- **The X is a round button in the host theme's colors, named with `!important`.** `.grid button` strips the theme's look from every button in a grid, so the X sets its own from `--button-background`, `--button-background-hover`, and `--button-color`, which qwerty-theme defines, falling back to theme-global's grays. The `!important` is for the reason in "The `upload-multiple` X names its colors with `!important`" below.
+
+## A chosen tab takes the focus into its panel, and the tab chosen on load never does
+
+`TabContainer` ([hyperscript/tabs._hs](hyperscript/tabs._hs)) sends `selectTab(moveFocus:true)` for a click, or for Enter or Space on a focused tab, which the browser turns into a click, and `selectTab` then focuses the first control in the panel it shows: the first enabled input, select, textarea, button, link, or element with a `tabindex` that has a box (`tabContainerFocusFirst`). `init` sends `selectTab` with no `moveFocus`, so a page or a modal keeps its own focus when its tabs install; `Modal` focuses the modal's first input, and a tab that took the focus on load would fight it.
+
+- **A tap never moves the focus** (`touchstart`), because a focused text field opens the on-screen keyboard over the panel the person just asked to see.
+- **The flag is `moveFocus`, never `focus`,** which is a hyperscript command.
+
 ## A `def` that waits makes its caller wait, and an `on` handler queues behind it
 
 Hyperscript's `call` awaits an async `def`, and a `def` becomes async as soon as it contains `wait`. An `on click` handler that calls one stays busy until the wait ends, and hyperscript queues every later click on that element behind it, so a second click looks ignored for seconds. 0.9.93 has no `async` command to detach the wait. [hyperscript/highlight._hs](hyperscript/highlight._hs) avoids waiting at all: its animation runs once and ends on the normal background, so `.flash-highlight` can stay on the element, and removing and re-adding it (with a layout read between) replays the flash.
@@ -82,6 +108,8 @@ The zone is `display: grid`, and the row inside it, `.upload-multiple-tiles`, is
 ## Sortable loads once per page, through `sortContainer`
 
 **A template installs `sortContainer` instead of loading Sortable with its own `<script src>`.** htmx runs every `<script src>` in swapped content again, so a list that carries one reloads Sortable.js whenever it is swapped back in: a tab opened a second time, or a form that answers each reorder with itself. Each run adds another copy of the library and another set of its page-wide listeners. `loadSortable()` in [hyperscript/sortcontainer._hs](hyperscript/sortcontainer._hs) adds the library to `<head>` once and fires `sortableReady` when it arrives. The `#sortable-library` id stops a second list from starting a second download while the first is still on its way.
+
+**The `list` widget uses the same loader.** `ListWidget` calls `loadSortable()` when `window.Sortable` is missing, and attaches when `sortableReady` arrives.
 
 **The loader lives in the hyperscript bundle, because both bundles load after `</body>`.** On a full page load, an inline `<script>` in the content runs before either bundle, so it cannot call a helper from them. Hyperscript initializes only once the page has parsed, so `sortContainer`'s `init` can always reach `loadSortable()`.
 

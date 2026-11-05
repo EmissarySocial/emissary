@@ -1,0 +1,99 @@
+/******************************************
+ * LIST
+ *
+ * The list form widget: the editable grid's
+ * rows, one text input each, with a grip that
+ * drags the row, an X that removes it, and an
+ * add button below them.
+ * Its behavior is hyperscript/list._hs
+ ******************************************/
+
+.list-widget table.grid.list {
+	margin-bottom: var(--rhythm);
+}
+
+/* Every row is an input, so the grid's pointer over a row would promise a click that does nothing */
+.list-widget tr.grid-row:hover {
+	cursor: default;
+}
+
+/* The row is the text box, as a .input wrapper is: its input's focus rings the whole row, grip and X included */
+.list-widget tr.grid-row:has(input:focus) {
+	outline: solid 2px var(--focus-color);
+	outline-offset: -2px;
+}
+
+.list-widget tr.grid-row:has(input:invalid:focus) {
+	outline-color: var(--input-border-invalid);
+}
+
+/* RULE: The grid rings the focused cell itself (03-widgets-tables.css), and the row's ring replaces it */
+.list-widget td.grid-cell:has(input:focus) {
+	outline: none;
+}
+
+.list-widget td.grid-cell {
+	vertical-align: middle;
+}
+
+/* The grip and the X take only the room they need, and the input takes the rest */
+.list-widget td.list-handle,
+.list-widget td.grid-controls {
+	width: 1px;
+	white-space: nowrap;
+	color: var(--gray50);
+}
+
+.list-widget td.list-handle {
+	cursor: grab;
+	padding-right: 0;
+}
+
+/* The X fits inside a row's height, so a row with its button is no taller than the text it holds */
+.list-widget td.grid-controls {
+	padding-top: calc(var(--rhythm) * 0.5);
+	padding-bottom: calc(var(--rhythm) * 0.5);
+}
+
+/* The X is a round icon button in the host theme's button colors, which .grid button strips from every grid button */
+.list-widget .list-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: calc(var(--rhythm) * 3.5);
+	height: calc(var(--rhythm) * 3.5);
+	padding: 0;
+	border-radius: 50%;
+	font-size: calc(var(--rhythm) * 1.5);
+	line-height: 1;
+	cursor: pointer;
+
+	/* RULE: No theme's button rules may repaint the X, and qwerty-theme's hover outranks any class selector (see AGENTS.md) */
+	background-color: var(--button-background, var(--gray10)) !important;
+	color: var(--button-color, var(--gray90)) !important;
+}
+
+.list-widget .list-remove:hover:not([disabled]),
+.list-widget .list-remove:focus-visible {
+	background-color: var(--button-background-hover, var(--gray20)) !important;
+	color: var(--button-color, var(--gray100)) !important;
+}
+
+.list-widget .list-remove[disabled] {
+	cursor: not-allowed;
+	opacity: 0.3;
+}
+
+/* A row that repeats an earlier one is dropped at Save, so it reads as struck out */
+.list-widget tr.list-repeat td {
+	background-color: var(--red10);
+}
+
+.list-widget tr.list-repeat input {
+	color: var(--red70);
+	text-decoration: line-through;
+}
+
+.list-widget .list-add[hidden] {
+	display: none;
+}
