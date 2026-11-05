@@ -11,18 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// bsonName returns the stored name of a struct field, without its bson options
-func bsonName(t *testing.T, structType reflect.Type, fieldName string) string {
-	t.Helper()
-
-	field, ok := structType.FieldByName(fieldName)
-	require.True(t, ok, "%s has no field %s", structType.Name(), fieldName)
-
-	name, _, _ := strings.Cut(field.Tag.Get("bson"), ",")
-	require.NotEmpty(t, name, "%s.%s has no bson name", structType.Name(), fieldName)
-	return name
-}
-
 // TestQueryBuilder_Tags_NoTags verifies that Tags with no names still filters, matching nothing
 func TestQueryBuilder_Tags_NoTags(t *testing.T) {
 
