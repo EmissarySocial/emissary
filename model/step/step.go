@@ -235,9 +235,6 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "sort":
 		return NewSort(stepInfo)
 
-	case "sort-attachments":
-		return NewSortAttachments(stepInfo)
-
 	case "sort-widgets":
 		return NewSortWidgets(stepInfo)
 

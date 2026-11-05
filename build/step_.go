@@ -195,9 +195,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.Sort:
 		return StepSort(s)
 
-	case step.SortAttachments:
-		return StepSortAttachments(s)
-
 	case step.SortWidgets:
 		return StepSortWidgets(s)
 
