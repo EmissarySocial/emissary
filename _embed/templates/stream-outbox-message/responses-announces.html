@@ -18,7 +18,7 @@
 				{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
 			</span>
 			<span role="tab" hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" aria-selected="true">
-				{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
+				{{- .ShareCount }} {{pluralize .ShareCount "Boost" "Boosts" -}}
 			</span>
 		</div>
 	</div>
@@ -62,7 +62,7 @@
 				<a href="{{$announce.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="clickable tooltip-container text-nocolor">
 
 					<div class="tooltip align-left">
-						<div class="bold margin-vertical-xs">Shared by {{$announce.Actor.Name}}</div>
+						<div class="bold margin-vertical-xs">Boosted by {{$announce.Actor.Name}}</div>
 						<div class="text-gray margin-vertical-xs">on {{$announce.Published | shortDate}}</div>
 					</div>
 

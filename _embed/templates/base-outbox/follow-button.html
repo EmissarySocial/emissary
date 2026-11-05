@@ -7,7 +7,7 @@
 	<!-- RULE: Hidden until CamperJS finds a default account that can follow -->
 	<div class="camper-show-if-ready flex-align-center" hidden>
 		<button type="button" class="primary" data-camper-action="intent">⁂ Follow {{.DisplayName}}</button>
-		<button hx-get="/@{{.UserID}}/intent" hx-push-url="false">{{icon "more-horizontal"}}</button>
+		<button type="button" hx-get="/@{{.UserID}}/intent" hx-push-url="false" aria-label="Manage Accounts">⁂</button>
 	</div>
 </div>
 

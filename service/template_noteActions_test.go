@@ -60,7 +60,7 @@ func renderNoteActions(t *testing.T, builder noteActionsBuilder) string {
 	return buffer.String()
 }
 
-// TestNoteActions_OneClickTwins confirms that Like and Share each have a modal button and a hidden one-click twin
+// TestNoteActions_OneClickTwins confirms that Like and Boost each have a modal button and a hidden one-click twin
 func TestNoteActions_OneClickTwins(t *testing.T) {
 
 	html := renderNoteActions(t, noteActionsBuilder{})
@@ -71,19 +71,19 @@ func TestNoteActions_OneClickTwins(t *testing.T) {
 
 	// Both look the same, and only the modal's shows without CamperJS
 	require.Equal(t, 2, strings.Count(html, "</span> Like</button>"))
-	require.Equal(t, 2, strings.Count(html, "</span> Share</button>"))
+	require.Equal(t, 2, strings.Count(html, "</span> Boost</button>"))
 	require.Equal(t, 2, strings.Count(html, `class="camper-hide-if-ready" hx-get="/0123456789abcdef01234567/intent?intent=`))
 	require.Equal(t, 2, strings.Count(html, `class="camper-show-if-ready" data-camper-action="intent" hidden>`))
 
 	// RULE: The "..." button opens the account manager, and stays hidden until an account is saved
-	require.Contains(t, html, `class="camper-show-if-has-accounts" hx-get="/0123456789abcdef01234567/intent" aria-label="Manage Accounts" hidden>`)
+	require.Contains(t, html, `class="camper-show-if-has-accounts" hx-get="/0123456789abcdef01234567/intent" aria-label="Manage Accounts" hidden>⁂</button>`)
 
 	// The bar loads CamperJS itself
 	require.Contains(t, html, `src="/.themes/global/resources/camperjs-0.2.0/camper.js"`)
 }
 
-// TestNoteActions_ShareIsAnnounce confirms that Share announces the Note itself, and never writes a new post about it
-func TestNoteActions_ShareIsAnnounce(t *testing.T) {
+// TestNoteActions_BoostIsAnnounce confirms that Boost announces the Note itself, and never writes a new post about it
+func TestNoteActions_BoostIsAnnounce(t *testing.T) {
 
 	html := renderNoteActions(t, noteActionsBuilder{})
 

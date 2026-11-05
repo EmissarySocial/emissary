@@ -185,10 +185,10 @@ func (w Model) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
-// View executes a separate view for this Stream
+// View executes a separate action against this same model object
 func (w Model) View(actionID string) (template.HTML, error) {
 
-	const location = "build.Stream.View"
+	const location = "build.Model.View"
 
 	// Create a new builder (this will also validate the user's permissions)
 	subStream, err := NewModel(w._factory, w._session, w._request, w._response, w._template, w._object, actionID)

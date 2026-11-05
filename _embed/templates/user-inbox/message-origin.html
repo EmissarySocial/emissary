@@ -24,7 +24,7 @@
 {{- else if eq "ANNOUNCE" $message.Origin.Type -}}
 	
 	<span class="clickable text-gray text-xs turboclick" hx-get="/@me/newsfeed/browse-actor?url={{$message.Origin.URL}}">
-		{{- icon "share"}} Shared by
+		{{- icon "announce"}} Boosted by
 		{{$message.Origin.Label -}}
 	</span>
 

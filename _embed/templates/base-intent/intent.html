@@ -24,7 +24,7 @@
 		⁂ Your Fediverse Account
 	{{- else if eq "announce" $intent -}}
 		{{icon "announce"}}
-		Share on the Fediverse
+		Boost on the Fediverse
 	{{- else if and (eq "create" $intent) (ne "" (.QueryParam "inReplyTo")) -}}
 		{{icon "reply"}}
 		Reply on the Fediverse
@@ -116,7 +116,7 @@
 
 		<div class="margin-vertical text-sm">
 			{{- if eq "announce" $intent -}}
-				Use your existing Fediverse profile to <b>share this post</b>.
+				Use your existing Fediverse profile to <b>boost this post</b>.
 			{{- else if eq "reply" $intent -}}
 				Use your existing Fediverse profile to <b>reply to this post</b>.
 			{{- else if eq "create" $intent -}}

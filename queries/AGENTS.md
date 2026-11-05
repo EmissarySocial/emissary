@@ -28,6 +28,10 @@ A slot runs the first time any server boots with it, and a dev server started fr
 
 `indexer.Sync` builds indexes at boot; a unique index over legacy data E11000s on every start and never builds, with no path to recovery except code. Either clean the data in a new upgrade slot before the index first ships (v027/v028), or dedupe inside the sync function itself immediately before `indexer.Sync` (`deduplicateResponses`, `deduplicateFollowing` in [sync](sync/)) with the dedupe failure reported, not fatal, so the query indexes still build.
 
+A failed build also costs the index it replaced. `indexer.Sync` drops a changed or renamed index before it creates the new one, and only reports a failed create, so until the dedupe succeeds the collection has no index on those keys at all, and every lookup on them scans the collection without an error.
+
+`idx_Stream_Token` is the deliberate exception: it became unique with no reconcile (Ben, 2026-11-03). A Domain where two live Streams share a token, or more than one has none, builds no token index at all until those Streams are fixed by hand.
+
 ## `parentId` never means "owner", and on Follower it is shared across types
 
 Follower's `parentId` holds a User, Stream, OR Search ID depending on `type`, so a filter on `parentId` alone is correct only by the accident that ObjectIDs don't collide — always AND a `type` clause ([followers.go](followers.go)). CollectionItem's `parentId` holds the parent object's ID (the Stream for Likes/Replies), not the owning User's: a count or delete filter fed a UserID matches zero rows, and the failure is silent — counters refresh to 0, deletes orphan rows. Before writing any hand-built bson/exp filter that touches `userId` or `parentId`, check which identity the field actually stores on that model.

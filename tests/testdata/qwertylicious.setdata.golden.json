@@ -1,19 +1,42 @@
 {
 	"uses": {
-		"template:admin-domain/themes@theme=default/0:as-modal.SubSteps/1:set-data": {
+		"template:admin-domain/theme-switch@theme=default/0:if.Then/0:set-data": {
 			"fields": [
-				"themeId (from-form, schema.String)"
+				"themeId (from-url, schema.String)"
 			],
 			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
+				"GET/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/hostile": {
 					"changes": {
-						"themeId": "string "
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/empty": {
 					"types": {
 						"themeId": "string"
 					}
@@ -27,17 +50,11 @@
 					}
 				},
 				"POST/literal": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
 				},
 				"POST/prefilled": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
@@ -52,20 +69,43 @@
 				}
 			}
 		},
-		"template:admin-domain/themes@theme=minimal/0:as-modal.SubSteps/1:set-data": {
+		"template:admin-domain/theme-switch@theme=minimal/0:if.Then/0:set-data": {
 			"fields": [
-				"themeId (from-form, schema.String)"
+				"themeId (from-url, schema.String)"
 			],
 			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
+				"GET/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/hostile": {
 					"changes": {
-						"themeId": "string "
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/empty": {
 					"types": {
 						"themeId": "string"
 					}
@@ -79,17 +119,11 @@
 					}
 				},
 				"POST/literal": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
 				},
 				"POST/prefilled": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
@@ -104,20 +138,43 @@
 				}
 			}
 		},
-		"template:admin-domain/themes@theme=qwerty-theme/0:as-modal.SubSteps/1:set-data": {
+		"template:admin-domain/theme-switch@theme=qwerty-theme/0:if.Then/0:set-data": {
 			"fields": [
-				"themeId (from-form, schema.String)"
+				"themeId (from-url, schema.String)"
 			],
 			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
+				"GET/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/hostile": {
 					"changes": {
-						"themeId": "string "
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/empty": {
 					"types": {
 						"themeId": "string"
 					}
@@ -131,17 +188,11 @@
 					}
 				},
 				"POST/literal": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
 				},
 				"POST/prefilled": {
-					"changes": {
-						"themeId": "string "
-					},
 					"types": {
 						"themeId": "string"
 					}
@@ -1872,6 +1923,54 @@
 				}
 			}
 		},
+		"template:base-outbox/follower-confirm/0:with-follower.SubSteps@with-follower/0:set-data": {
+			"fields": [
+				"stateId (values, schema.String)"
+			],
+			"values": {
+				"stateId": "ACTIVE (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"GET/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"GET/prefilled": {},
+				"GET/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"POST/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/prefilled": {},
+				"POST/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				}
+			}
+		},
 		"template:base-social/btn-social-outline/1:set-data": {
 			"fields": [],
 			"results": {
@@ -2281,11 +2380,8 @@
 			"results": {
 				"GET/empty": {},
 				"GET/hostile": {
-					"changes": {
-						"content.format": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
-					}
+					"error": ": content.format: Must be one of the specified values",
+					"orderDependent": true
 				},
 				"GET/literal": {
 					"changes": {
@@ -2303,18 +2399,15 @@
 				},
 				"GET/typical": {
 					"changes": {
-						"content.format": "string Sample content.format",
+						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
 						"label": "string Sample name"
 					}
 				},
 				"POST/empty": {},
 				"POST/hostile": {
-					"changes": {
-						"content.format": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
-					}
+					"error": ": content.format: Must be one of the specified values",
+					"orderDependent": true
 				},
 				"POST/literal": {
 					"changes": {
@@ -2332,7 +2425,7 @@
 				},
 				"POST/typical": {
 					"changes": {
-						"content.format": "string Sample content.format",
+						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
 						"label": "string Sample name"
 					}
@@ -2456,16 +2549,124 @@
 				"POST/typical": {}
 			}
 		},
+		"template:qwerty-article/properties/0:as-modal.SubSteps/2:if.Then/0:if.Otherwise/0:set-data": {
+			"fields": [
+				"content.html (values, schema.String)",
+				"content.raw (values, schema.String)"
+			],
+			"values": {
+				"content.html": " (literal)",
+				"content.raw": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"content.html": "string \"\u003cimg src=\\\"x\\\"\u003e\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxx\"... (1048543 bytes, sha256 0bb3ade30228)",
+						"content.raw": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (1048578 bytes, sha256 0ac4d76d7883)"
+					}
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"content.html": "string ",
+						"content.raw": "string "
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"content.html": "string Sample content.html",
+						"content.raw": "string Sample content.raw"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"content.html": "string \"\u003cimg src=\\\"x\\\"\u003e\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxx\"... (1048543 bytes, sha256 0bb3ade30228)",
+						"content.raw": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (1048578 bytes, sha256 0ac4d76d7883)"
+					}
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"content.html": "string ",
+						"content.raw": "string "
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"content.html": "string Sample content.html",
+						"content.raw": "string Sample content.raw"
+					}
+				}
+			}
+		},
+		"template:qwerty-article/properties/0:as-modal.SubSteps/2:if.Then/0:if.Then/0:set-data": {
+			"fields": [
+				"content.raw (values, schema.String)"
+			],
+			"values": {
+				"content.raw": "{{.ContentHTML}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"content.raw": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (1048578 bytes, sha256 0ac4d76d7883)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"content.raw": "string \u003cno value\u003e"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"content.raw": "string \u003cno value\u003e"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"content.raw": "string Sample content.raw"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"content.raw": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (1048578 bytes, sha256 0ac4d76d7883)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"content.raw": "string \u003cno value\u003e"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"content.raw": "string \u003cno value\u003e"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"content.raw": "string Sample content.raw"
+					}
+				}
+			}
+		},
 		"template:qwerty-collection/create/0:set-data": {
 			"fields": [
 				"data.calendarView (values, schema.String)",
 				"data.layout (values, schema.String)",
+				"data.sortDirection (values, schema.String)",
+				"data.sortType (values, schema.String)",
 				"data.zoom (values, schema.Integer)",
 				"replyPolicy (values, schema.String)"
 			],
 			"values": {
 				"data.calendarView": "list (literal)",
 				"data.layout": "column-3 (literal)",
+				"data.sortDirection": "desc (literal)",
+				"data.sortType": "publishDate (literal)",
 				"data.zoom": "11 (literal)",
 				"replyPolicy": "everyone (literal)"
 			},
@@ -2481,6 +2682,8 @@
 					"changes": {
 						"data.calendarView": "string list",
 						"data.layout": "string column-3",
+						"data.sortDirection": "string desc",
+						"data.sortType": "string publishDate",
 						"data.zoom": "int32 11",
 						"replyPolicy": "string everyone"
 					}
@@ -2496,6 +2699,8 @@
 				"GET/typical": {
 					"changes": {
 						"data.layout": "string column-1",
+						"data.sortDirection": "string desc",
+						"data.sortType": "string publishDate",
 						"data.zoom": "int32 7"
 					}
 				},
@@ -2510,6 +2715,8 @@
 					"changes": {
 						"data.calendarView": "string list",
 						"data.layout": "string column-3",
+						"data.sortDirection": "string desc",
+						"data.sortType": "string publishDate",
 						"data.zoom": "int32 11",
 						"replyPolicy": "string everyone"
 					}
@@ -2525,12 +2732,130 @@
 				"POST/typical": {
 					"changes": {
 						"data.layout": "string column-1",
+						"data.sortDirection": "string desc",
+						"data.sortType": "string publishDate",
 						"data.zoom": "int32 7"
 					}
 				}
 			}
 		},
-		"template:qwerty-collection/create/1:as-modal.SubSteps/1:set-data": {
+		"template:qwerty-collection/create/1:as-modal.SubSteps/2:if.Then/0:set-data": {
+			"fields": [
+				"location.formatted (values, schema.String)"
+			],
+			"values": {
+				"location.formatted": "Los Angeles, CA (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"location.formatted": "string Los Angeles, CA"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"location.formatted": "string Los Angeles, CA"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"location.formatted": "string Sample location.formatted"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"location.formatted": "string Los Angeles, CA"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"location.formatted": "string Los Angeles, CA"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"location.formatted": "string Sample location.formatted"
+					}
+				}
+			}
+		},
+		"template:qwerty-collection/create/1:as-modal.SubSteps/2:if.Then/1:set-data": {
+			"fields": [
+				"location.latitude (values, schema.Number)",
+				"location.longitude (values, schema.Number)"
+			],
+			"values": {
+				"location.latitude": "34.0522 (literal)",
+				"location.longitude": "-118.2437 (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"changes": {
+						"location.latitude": "float64 34.0522",
+						"location.longitude": "float64 -118.2437"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"location.latitude": "float64 34.0522",
+						"location.longitude": "float64 -118.2437"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"location.latitude": "float64 3.5",
+						"location.longitude": "float64 3.5"
+					}
+				},
+				"POST/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"changes": {
+						"location.latitude": "float64 34.0522",
+						"location.longitude": "float64 -118.2437"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"location.latitude": "float64 34.0522",
+						"location.longitude": "float64 -118.2437"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"location.latitude": "float64 3.5",
+						"location.longitude": "float64 3.5"
+					}
+				}
+			}
+		},
+		"template:qwerty-collection/create/1:as-modal.SubSteps/3:set-data": {
 			"fields": [
 				"label (values, schema.String)"
 			],
@@ -2576,78 +2901,6 @@
 						"label": "string Sample label"
 					}
 				}
-			}
-		},
-		"template:qwerty-entry/btn-social-outline/1:set-data": {
-			"fields": [],
-			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {},
-				"POST/hostile": {},
-				"POST/literal": {},
-				"POST/prefilled": {},
-				"POST/typical": {}
-			}
-		},
-		"template:qwerty-entry/delete-icon/1:set-data": {
-			"fields": [
-				"iconUrl (values, schema.String)"
-			],
-			"values": {
-				"iconUrl": " (literal)"
-			},
-			"results": {
-				"GET/empty": {},
-				"GET/hostile": {
-					"error": "schema.Schema.Set: Value is not valid for this schema",
-					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
-				},
-				"GET/literal": {},
-				"GET/prefilled": {
-					"changes": {
-						"iconUrl": "removed"
-					}
-				},
-				"GET/typical": {
-					"changes": {
-						"iconUrl": "string https://example.com/iconUrl"
-					}
-				},
-				"POST/empty": {},
-				"POST/hostile": {
-					"error": "schema.Schema.Set: Value is not valid for this schema",
-					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
-				},
-				"POST/literal": {},
-				"POST/prefilled": {
-					"changes": {
-						"iconUrl": "removed"
-					}
-				},
-				"POST/typical": {
-					"changes": {
-						"iconUrl": "string https://example.com/iconUrl"
-					}
-				}
-			}
-		},
-		"template:qwerty-entry/like-button/1:set-data": {
-			"fields": [],
-			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {},
-				"POST/hostile": {},
-				"POST/literal": {},
-				"POST/prefilled": {},
-				"POST/typical": {}
 			}
 		},
 		"template:qwerty-episode/btn-social-outline/1:set-data": {
@@ -2834,6 +3087,78 @@
 				"POST/typical": {}
 			}
 		},
+		"template:qwerty-event/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-event/delete-icon/1:set-data": {
+			"fields": [
+				"iconUrl (values, schema.String)"
+			],
+			"values": {
+				"iconUrl": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				}
+			}
+		},
+		"template:qwerty-event/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
 		"template:qwerty-outbox/btn-social-outline/1:set-data": {
 			"fields": [],
 			"results": {
@@ -2914,6 +3239,54 @@
 				}
 			}
 		},
+		"template:qwerty-outbox/follower-confirm/0:with-follower.SubSteps@with-follower/0:set-data": {
+			"fields": [
+				"stateId (values, schema.String)"
+			],
+			"values": {
+				"stateId": "ACTIVE (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"GET/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"GET/prefilled": {},
+				"GET/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"POST/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/prefilled": {},
+				"POST/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				}
+			}
+		},
 		"template:qwerty-outbox/like-button/1:set-data": {
 			"fields": [],
 			"results": {
@@ -2927,6 +3300,52 @@
 				"POST/literal": {},
 				"POST/prefilled": {},
 				"POST/typical": {}
+			}
+		},
+		"template:qwerty-outbox/settings-about/0:set-data": {
+			"fields": [
+				"data.show-about (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.show-about": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.show-about: Must be one of the specified values",
+					"types": {
+						"data.show-about": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.show-about": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data": "document {}",
+						"data.show-about": "removed"
+					},
+					"types": {
+						"data.show-about": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.show-about": "string true"
+					},
+					"types": {
+						"data.show-about": "string"
+					}
+				}
 			}
 		},
 		"template:qwerty-photo/btn-social-outline/1:set-data": {
@@ -3047,6 +3466,78 @@
 				"POST/typical": {}
 			}
 		},
+		"template:qwerty-placemark/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-placemark/delete-icon/1:set-data": {
+			"fields": [
+				"iconUrl (values, schema.String)"
+			],
+			"values": {
+				"iconUrl": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				}
+			}
+		},
+		"template:qwerty-placemark/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
 		"template:qwerty-replies/btn-social-outline/1:set-data": {
 			"fields": [],
 			"results": {
@@ -3063,6 +3554,78 @@
 			}
 		},
 		"template:qwerty-replies/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-timeline-entry/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-timeline-entry/delete-icon/1:set-data": {
+			"fields": [
+				"iconUrl (values, schema.String)"
+			],
+			"values": {
+				"iconUrl": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				}
+			}
+		},
+		"template:qwerty-timeline-entry/like-button/1:set-data": {
 			"fields": [],
 			"results": {
 				"GET/empty": {},
@@ -3125,315 +3688,6 @@
 				"POST/typical": {
 					"changes": {
 						"label": "string Sample label"
-					}
-				}
-			}
-		},
-		"template:user-inbox/actor-button-block-update/0:with-rule.SubSteps@with-rule/0:set-data": {
-			"fields": [
-				"summary (from-form, schema.String)"
-			],
-			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
-					"types": {
-						"summary": "string"
-					}
-				},
-				"POST/hostile": {
-					"changes": {
-						"summary": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
-					},
-					"types": {
-						"summary": "string"
-					}
-				},
-				"POST/literal": {
-					"types": {
-						"summary": "string"
-					}
-				},
-				"POST/prefilled": {
-					"changes": {
-						"summary": "string "
-					},
-					"types": {
-						"summary": "string"
-					}
-				},
-				"POST/typical": {
-					"changes": {
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:user-inbox/actor-button-block/0:with-rule.SubSteps@with-rule/0:set-data": {
-			"fields": [
-				"action (values, schema.String)",
-				"trigger (values, schema.String)",
-				"type (values, schema.String)"
-			],
-			"values": {
-				"action": "BLOCK (literal)",
-				"trigger": "{{.QueryParam `url`}} (renders against the builder; mocked)",
-				"type": "ACTOR (literal)"
-			},
-			"results": {
-				"GET/empty": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"GET/hostile": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"GET/literal": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"GET/prefilled": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"GET/typical": {
-					"changes": {
-						"action": "string BLOCK",
-						"trigger": "string Sample trigger",
-						"type": "string DOMAIN"
-					}
-				},
-				"POST/empty": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"POST/hostile": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"POST/literal": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"POST/prefilled": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"POST/typical": {
-					"changes": {
-						"action": "string BLOCK",
-						"trigger": "string Sample trigger",
-						"type": "string DOMAIN"
-					}
-				}
-			}
-		},
-		"template:user-inbox/actor-button-follow-update/0:with-following.SubSteps@with-following/0:set-data": {
-			"fields": [
-				"behavior (from-form, schema.String)",
-				"isPublic (from-form, schema.Boolean)"
-			],
-			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				},
-				"POST/hostile": {
-					"error": ": behavior: Must be one of the specified values",
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				},
-				"POST/literal": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				},
-				"POST/prefilled": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				},
-				"POST/typical": {
-					"changes": {
-						"behavior": "string POSTS",
-						"isPublic": "bool true"
-					},
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				}
-			}
-		},
-		"template:user-inbox/actor-button-follow/0:with-following.SubSteps@with-following/0:set-data": {
-			"fields": [
-				"behavior (values, schema.String)",
-				"folderId (from-url, schema.String)",
-				"url (from-url, schema.String)"
-			],
-			"values": {
-				"behavior": "POSTS+REPLIES (literal)"
-			},
-			"results": {
-				"GET/empty": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"GET/hostile": {
-					"error": "schema.Schema.Set: Value is not valid for this schema",
-					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"GET/literal": {
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"GET/prefilled": {
-					"changes": {
-						"behavior": "string POSTS+REPLIES"
-					},
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"GET/typical": {
-					"changes": {
-						"behavior": "string POSTS",
-						"folderId": "objectId 0123456789abcdef01234567",
-						"url": "string https://example.com/url"
-					},
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/empty": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/hostile": {
-					"error": "schema.Schema.Set: Value is not valid for this schema",
-					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/literal": {
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/prefilled": {
-					"changes": {
-						"behavior": "string POSTS+REPLIES"
-					},
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/typical": {
-					"changes": {
-						"behavior": "string POSTS",
-						"folderId": "objectId 0123456789abcdef01234567",
-						"url": "string https://example.com/url"
-					},
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				}
-			}
-		},
-		"template:user-inbox/actor-button-mute/0:with-rule.SubSteps@with-rule/0:set-data": {
-			"fields": [
-				"action (values, schema.String)",
-				"trigger (values, schema.String)",
-				"type (values, schema.String)"
-			],
-			"values": {
-				"action": "MUTE (literal)",
-				"trigger": "{{.QueryParam `url`}} (renders against the builder; mocked)",
-				"type": "ACTOR (literal)"
-			},
-			"results": {
-				"GET/empty": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"GET/hostile": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"GET/literal": {
-					"error": ": trigger: Value is required"
-				},
-				"GET/prefilled": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"GET/typical": {
-					"changes": {
-						"action": "string BLOCK",
-						"trigger": "string Sample trigger",
-						"type": "string DOMAIN"
-					}
-				},
-				"POST/empty": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"POST/hostile": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"POST/literal": {
-					"error": ": trigger: Value is required"
-				},
-				"POST/prefilled": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"POST/typical": {
-					"changes": {
-						"action": "string BLOCK",
-						"trigger": "string Sample trigger",
-						"type": "string DOMAIN"
 					}
 				}
 			}

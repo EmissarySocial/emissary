@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -217,7 +218,7 @@ func TestAdminDomainThemes_ConfirmMatchesSwitch(t *testing.T) {
 			next := builder.Theme(test.requested)
 			require.Contains(t, html, `hx-post="/admin/domain/theme-switch?themeId=`+test.requested+`"`, "stored %q, requested %q", test.stored, test.requested)
 			require.Contains(t, html, `hx-target="#modal-window"`)
-			require.Contains(t, html, `<h1 id="modal-title">`+next.Label+`</h1>`)
+			require.Regexp(t, `<h1 id="modal-title">[^<]*`+regexp.QuoteMeta(next.Label)+`</h1>`, html, "the heading names the theme, after its icon")
 			require.Contains(t, html, `src="/.themes/`+test.requested+`/resources/startup/splash.png"`)
 			require.Contains(t, html, next.Description)
 			require.NotContains(t, html, builder.Theme(test.stored).Label, "the current theme is not shown")

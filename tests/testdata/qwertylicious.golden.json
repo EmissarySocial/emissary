@@ -584,7 +584,9 @@
 				"description (textarea, schema.String)",
 				"iconUrl (upload, schema.String)",
 				"imageUrl (upload, schema.String)",
-				"label (text, schema.String)"
+				"label (text, schema.String)",
+				"themeData.colorway (select, schema.String)",
+				"themeData.navigation (select, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
@@ -592,7 +594,9 @@
 						"description": "string",
 						"iconUrl": "string",
 						"imageUrl": "string",
-						"label": "string"
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
 					}
 				},
 				"empty": {
@@ -600,7 +604,9 @@
 						"description": "string",
 						"iconUrl": "string",
 						"imageUrl": "string",
-						"label": "string"
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
 					}
 				},
 				"hostile": {
@@ -612,19 +618,26 @@
 						"description": "string",
 						"iconUrl": "string",
 						"imageUrl": "string",
-						"label": "string"
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
 					}
 				},
 				"typical": {
 					"changes": {
 						"description": "string Sample description",
-						"label": "string Sample label"
+						"label": "string Sample label",
+						"themeData": "removed",
+						"themeData.colorway": "string stone",
+						"themeData.navigation": "string always"
 					},
 					"types": {
 						"description": "string",
 						"iconUrl": "string",
 						"imageUrl": "string",
-						"label": "string"
+						"label": "string",
+						"themeData.colorway": "string",
+						"themeData.navigation": "string"
 					}
 				}
 			}
@@ -4573,8 +4586,9 @@
 				}
 			}
 		},
-		"template:qwerty-article/properties/0:as-modal.SubSteps/0:edit": {
+		"template:qwerty-article/properties/0:as-modal.SubSteps/1:if.Otherwise/0:edit": {
 			"fields": [
+				"content.format (select, schema.String)",
 				"data.bannerDescription (textarea, schema.Any)",
 				"data.bannerUrl (upload, schema.Any)",
 				"data.iconDescription (textarea, schema.Any)",
@@ -4594,6 +4608,7 @@
 						"data.tags": "null"
 					},
 					"types": {
+						"content.format": "string",
 						"data.bannerDescription": "[]string",
 						"data.bannerUrl": "[]string",
 						"data.iconDescription": "[]string",
@@ -4613,6 +4628,7 @@
 						"data.tags[0]": "string "
 					},
 					"types": {
+						"content.format": "string",
 						"data.bannerDescription": "[]string",
 						"data.bannerUrl": "[]string",
 						"data.iconDescription": "[]string",
@@ -4635,6 +4651,7 @@
 						"token": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
 					},
 					"types": {
+						"content.format": "string",
 						"data.bannerDescription": "[]string",
 						"data.bannerUrl": "[]string",
 						"data.iconDescription": "[]string",
@@ -4648,6 +4665,7 @@
 				},
 				"typical": {
 					"changes": {
+						"content.format": "string HTML",
 						"data.bannerDescription[0]": "string Sample data.bannerDescription",
 						"data.bannerUrl[0]": "string Sample data.bannerUrl",
 						"data.iconDescription[0]": "string Sample data.iconDescription",
@@ -4659,12 +4677,112 @@
 						"token": "string Sample token"
 					},
 					"types": {
+						"content.format": "string",
 						"data.bannerDescription": "[]string",
 						"data.bannerUrl": "[]string",
 						"data.iconDescription": "[]string",
 						"data.tags": "[]string",
 						"iconUrl": "string",
 						"isFeatured": "bool",
+						"name": "string",
+						"summary": "string",
+						"token": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-article/properties/0:as-modal.SubSteps/1:if.Then/0:edit": {
+			"fields": [
+				"content.format (select, schema.String)",
+				"data.bannerDescription (textarea, schema.Any)",
+				"data.bannerUrl (upload, schema.Any)",
+				"data.iconDescription (textarea, schema.Any)",
+				"data.tags (text, schema.Any)",
+				"iconUrl (upload, schema.String)",
+				"name (text, schema.String)",
+				"summary (textarea, schema.String)",
+				"token (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"data.bannerDescription": "null",
+						"data.bannerUrl": "null",
+						"data.iconDescription": "null",
+						"data.tags": "null"
+					},
+					"types": {
+						"content.format": "string",
+						"data.bannerDescription": "[]string",
+						"data.bannerUrl": "[]string",
+						"data.iconDescription": "[]string",
+						"data.tags": "[]string",
+						"iconUrl": "string",
+						"name": "string",
+						"summary": "string",
+						"token": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"data.bannerDescription[0]": "string ",
+						"data.bannerUrl[0]": "string ",
+						"data.iconDescription[0]": "string ",
+						"data.tags[0]": "string "
+					},
+					"types": {
+						"content.format": "string",
+						"data.bannerDescription": "[]string",
+						"data.bannerUrl": "[]string",
+						"data.iconDescription": "[]string",
+						"data.tags": "[]string",
+						"iconUrl": "string",
+						"name": "string",
+						"summary": "string",
+						"token": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.bannerDescription[0]": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
+						"data.bannerUrl[0]": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
+						"data.iconDescription[0]": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
+						"data.tags[0]": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
+						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
+						"token": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					},
+					"types": {
+						"content.format": "string",
+						"data.bannerDescription": "[]string",
+						"data.bannerUrl": "[]string",
+						"data.iconDescription": "[]string",
+						"data.tags": "[]string",
+						"iconUrl": "string",
+						"name": "string",
+						"summary": "string",
+						"token": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"data.bannerDescription[0]": "string Sample data.bannerDescription",
+						"data.bannerUrl[0]": "string Sample data.bannerUrl",
+						"data.iconDescription[0]": "string Sample data.iconDescription",
+						"data.tags[0]": "string Sample data.tags",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample name",
+						"summary": "string Sample summary",
+						"token": "string Sample token"
+					},
+					"types": {
+						"content.format": "string",
+						"data.bannerDescription": "[]string",
+						"data.bannerUrl": "[]string",
+						"data.iconDescription": "[]string",
+						"data.tags": "[]string",
+						"iconUrl": "string",
 						"name": "string",
 						"summary": "string",
 						"token": "string"
@@ -4732,56 +4850,11 @@
 				}
 			}
 		},
-		"template:qwerty-collection/settings/0:if.Then/0:as-modal.SubSteps/0:edit": {
-			"fields": [
-				"allowReplies (toggle, schema.Boolean)",
-				"label (text, schema.String)",
-				"summary (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"allowReplies": "bool",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"allowReplies": "bool",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"allowReplies": "bool",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"label": "string Sample label",
-						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"allowReplies": "bool",
-						"label": "string",
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:edit": {
+		"template:qwerty-collection/settings-articles/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
 				"data.layout (radio-button-group, schema.String)",
+				"data.sortType (select, schema.String)",
 				"label (text, schema.String)",
 				"summary (textarea, schema.String)"
 			],
@@ -4790,6 +4863,7 @@
 					"types": {
 						"allowReplies": "bool",
 						"data.layout": "unreadable",
+						"data.sortType": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
@@ -4798,18 +4872,19 @@
 					"types": {
 						"allowReplies": "bool",
 						"data.layout": "unreadable",
+						"data.sortType": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"allowReplies": "bool",
 						"data.layout": "unreadable",
+						"data.sortType": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
@@ -4817,71 +4892,22 @@
 				"typical": {
 					"changes": {
 						"data.layout": "string column-1",
+						"data.sortType": "string publishDate",
 						"label": "string Sample label",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
 						"data.layout": "string",
+						"data.sortType": "string",
 						"label": "string",
 						"summary": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:edit": {
-			"fields": [
-				"allowReplies (toggle, schema.Boolean)",
-				"data.timelineOrder (radio-button-group, schema.String)",
-				"label (text, schema.String)",
-				"summary (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"allowReplies": "bool",
-						"data.timelineOrder": "unreadable",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"allowReplies": "bool",
-						"data.timelineOrder": "unreadable",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"allowReplies": "bool",
-						"data.timelineOrder": "unreadable",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"label": "string Sample label",
-						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"allowReplies": "bool",
-						"data.timelineOrder": "unreadable",
-						"label": "string",
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-calendar/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
 				"data.calendarView (radio-button-group, schema.String)",
@@ -4907,8 +4933,7 @@
 				},
 				"hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"allowReplies": "bool",
@@ -4921,7 +4946,7 @@
 					"changes": {
 						"label": "string Sample label",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
@@ -4932,7 +4957,7 @@
 				}
 			}
 		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-map/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
 				"data.zoom (select, schema.Integer)",
@@ -4971,8 +4996,7 @@
 				"hostile": {
 					"changes": {
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
 					},
 					"types": {
 						"allowReplies": "bool",
@@ -4993,7 +5017,7 @@
 						"location.latitude": "float64 45.5231",
 						"location.longitude": "float64 -122.6765",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
@@ -5008,7 +5032,7 @@
 				}
 			}
 		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-notes/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
 				"label (text, schema.String)",
@@ -5031,8 +5055,7 @@
 				},
 				"hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"allowReplies": "bool",
@@ -5044,7 +5067,7 @@
 					"changes": {
 						"label": "string Sample label",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
@@ -5054,10 +5077,10 @@
 				}
 			}
 		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-photos/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
-				"data.episodeOrder (radio-button-group, schema.String)",
+				"data.sortType (select, schema.String)",
 				"label (text, schema.String)",
 				"summary (textarea, schema.String)"
 			],
@@ -5065,7 +5088,7 @@
 				"absent": {
 					"types": {
 						"allowReplies": "bool",
-						"data.episodeOrder": "unreadable",
+						"data.sortType": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
@@ -5073,19 +5096,116 @@
 				"empty": {
 					"types": {
 						"allowReplies": "bool",
-						"data.episodeOrder": "unreadable",
+						"data.sortType": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"allowReplies": "bool",
-						"data.episodeOrder": "unreadable",
+						"data.sortType": "unreadable",
+						"label": "string",
+						"summary": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"data.sortType": "string publishDate",
+						"label": "string Sample label",
+						"replyPolicy": "string everyone",
+						"summary": "string # Sample\n\n*summary*"
+					},
+					"types": {
+						"allowReplies": "bool",
+						"data.sortType": "string",
+						"label": "string",
+						"summary": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-collection/settings-podcast/1:edit": {
+			"fields": [
+				"allowReplies (toggle, schema.Boolean)",
+				"data.sortDirection (select, schema.String)",
+				"label (text, schema.String)",
+				"summary (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"allowReplies": "bool",
+						"data.sortDirection": "unreadable",
+						"label": "string",
+						"summary": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"allowReplies": "bool",
+						"data.sortDirection": "unreadable",
+						"label": "string",
+						"summary": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"allowReplies": "bool",
+						"data.sortDirection": "unreadable",
+						"label": "string",
+						"summary": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"data.sortDirection": "string desc",
+						"label": "string Sample label",
+						"replyPolicy": "string everyone",
+						"summary": "string # Sample\n\n*summary*"
+					},
+					"types": {
+						"allowReplies": "bool",
+						"data.sortDirection": "string",
+						"label": "string",
+						"summary": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-collection/settings-timeline/1:edit": {
+			"fields": [
+				"allowReplies (toggle, schema.Boolean)",
+				"label (text, schema.String)",
+				"summary (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"allowReplies": "bool",
+						"label": "string",
+						"summary": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"allowReplies": "bool",
+						"label": "string",
+						"summary": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"allowReplies": "bool",
 						"label": "string",
 						"summary": "string"
 					}
@@ -5094,11 +5214,10 @@
 					"changes": {
 						"label": "string Sample label",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
-						"data.episodeOrder": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
@@ -5161,7 +5280,8 @@
 				"content.raw (textarea, schema.String)",
 				"data.audioUrl (upload, schema.String)",
 				"iconUrl (upload, schema.String)",
-				"label (text, schema.String)"
+				"label (text, schema.String)",
+				"publishDateTime (datetime, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
@@ -5169,7 +5289,8 @@
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
 						"iconUrl": "string",
-						"label": "string"
+						"label": "string",
+						"publishDateTime": "string"
 					}
 				},
 				"empty": {
@@ -5177,7 +5298,8 @@
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
 						"iconUrl": "string",
-						"label": "string"
+						"label": "string",
+						"publishDateTime": "string"
 					}
 				},
 				"hostile": {
@@ -5188,7 +5310,8 @@
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
 						"iconUrl": "string",
-						"label": "string"
+						"label": "string",
+						"publishDateTime": "string"
 					}
 				},
 				"typical": {
@@ -5202,7 +5325,8 @@
 						"content.raw": "string",
 						"data.audioUrl": "string",
 						"iconUrl": "string",
-						"label": "string"
+						"label": "string",
+						"publishDateTime": "string"
 					}
 				}
 			}
@@ -6312,6 +6436,52 @@
 		"template:qwerty-photo/create/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"content.raw (textarea, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"label (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"iconUrl": "string",
+						"label": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"iconUrl": "string",
+						"label": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"content.raw": "string",
+						"iconUrl": "string",
+						"label": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample label"
+					},
+					"types": {
+						"content.raw": "string",
+						"iconUrl": "string",
+						"label": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-photo/edit/0:as-modal.SubSteps/1:if.Otherwise/0:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"iconUrl (upload, schema.String)",
 				"isFeatured (toggle, schema.Boolean)",
 				"label (text, schema.String)"
 			],
@@ -6319,6 +6489,7 @@
 				"absent": {
 					"types": {
 						"content.raw": "string",
+						"iconUrl": "string",
 						"isFeatured": "bool",
 						"label": "string"
 					}
@@ -6326,6 +6497,7 @@
 				"empty": {
 					"types": {
 						"content.raw": "string",
+						"iconUrl": "string",
 						"isFeatured": "bool",
 						"label": "string"
 					}
@@ -6336,6 +6508,7 @@
 					},
 					"types": {
 						"content.raw": "string",
+						"iconUrl": "string",
 						"isFeatured": "bool",
 						"label": "string"
 					}
@@ -6343,35 +6516,37 @@
 				"typical": {
 					"changes": {
 						"content.raw": "string # Sample\n\n*content.raw*",
+						"iconUrl": "string https://example.com/iconUrl",
 						"isFeatured": "bool true",
 						"label": "string Sample label"
 					},
 					"types": {
 						"content.raw": "string",
+						"iconUrl": "string",
 						"isFeatured": "bool",
 						"label": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-photo/edit/0:as-modal.SubSteps/1:edit": {
+		"template:qwerty-photo/edit/0:as-modal.SubSteps/1:if.Then/0:edit": {
 			"fields": [
 				"content.raw (textarea, schema.String)",
-				"isFeatured (toggle, schema.Boolean)",
+				"iconUrl (upload, schema.String)",
 				"label (text, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
 					"types": {
 						"content.raw": "string",
-						"isFeatured": "bool",
+						"iconUrl": "string",
 						"label": "string"
 					}
 				},
 				"empty": {
 					"types": {
 						"content.raw": "string",
-						"isFeatured": "bool",
+						"iconUrl": "string",
 						"label": "string"
 					}
 				},
@@ -6381,19 +6556,19 @@
 					},
 					"types": {
 						"content.raw": "string",
-						"isFeatured": "bool",
+						"iconUrl": "string",
 						"label": "string"
 					}
 				},
 				"typical": {
 					"changes": {
 						"content.raw": "string # Sample\n\n*content.raw*",
-						"isFeatured": "bool true",
+						"iconUrl": "string https://example.com/iconUrl",
 						"label": "string Sample label"
 					},
 					"types": {
 						"content.raw": "string",
-						"isFeatured": "bool",
+						"iconUrl": "string",
 						"label": "string"
 					}
 				}
@@ -9676,10 +9851,12 @@
 		"template:qwerty-article/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-article/delete-banner/1:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-article/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
-		"template:qwerty-article/edit-content/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:qwerty-article/edit-content/0:switch.Cases[HTML]/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:qwerty-article/edit-content/0:switch.Cases[MARKDOWN]/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:qwerty-article/edit-content/0:switch.Default/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
 		"template:qwerty-article/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-article/properties/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-article/properties/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-article/properties/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-article/properties/0:as-modal.SubSteps/4:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-article/upload-banner/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-article/upload-image/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-collection/add/1:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
@@ -9693,7 +9870,8 @@
 		"template:qwerty-collection/sharing/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
 		"template:qwerty-collection/sharing/1:as-modal.SubSteps/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
 		"template:qwerty-collection/sharing/1:as-modal.SubSteps/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
-		"template:qwerty-collection/sort/0:sort": "not pinned: POST keys are database record IDs",
+		"template:qwerty-collection/sort/0:if.Otherwise/0:sort": "not pinned: POST keys are database record IDs",
+		"template:qwerty-collection/sort/0:if.Then/0:sort": "not pinned: POST keys are database record IDs",
 		"template:qwerty-episode/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-episode/create/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-episode/create/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
@@ -9725,9 +9903,11 @@
 		"template:qwerty-outbox/wizard-1/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-outbox/wizard-1/3:set-password": "not pinned: hashes and stores a password through the User service",
 		"template:qwerty-photo/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-photo/create/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-photo/create/0:as-modal.SubSteps/2:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
+		"template:qwerty-photo/edit/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-photo/edit/0:as-modal.SubSteps/3:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:qwerty-photo/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-photo/photos/0:edit-attachments": "not pinned: stores, deletes, and sorts attachments through the Attachment service",
-		"template:qwerty-photo/photos/1:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:qwerty-placemark/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-placemark/create/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-placemark/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
@@ -9744,7 +9924,6 @@
 		"template:user-inbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-inbox/folder-sort/0:with-folder.SubSteps@with-folder/0:sort": "not pinned: POST keys are database record IDs",
 		"template:user-inbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:user-inbox/message-set-response/0:with-message.SubSteps@with-message/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-inbox/reply/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:user-notifications/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-notifications/like-button/0:set-response": "not pinned: writes a Response record through service.Response",

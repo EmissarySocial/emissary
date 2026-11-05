@@ -880,8 +880,8 @@
 				"hostile": {
 					"changes": {
 						"data": "removed",
-						"data.sso_active": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"data.sso_secret": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+						"data.sso_active": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)",
+						"data.sso_secret": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)"
 					},
 					"types": {
 						"data.sso_active": "string",
@@ -922,8 +922,8 @@
 				"hostile": {
 					"changes": {
 						"data": "removed",
-						"data.sso_active": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"data.sso_secret": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+						"data.sso_active": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)",
+						"data.sso_secret": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)"
 					},
 					"types": {
 						"data.sso_active": "string",
@@ -964,8 +964,8 @@
 				"hostile": {
 					"changes": {
 						"data": "removed",
-						"data.sso_active": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"data.sso_secret": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+						"data.sso_active": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)",
+						"data.sso_secret": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)"
 					},
 					"types": {
 						"data.sso_active": "string",
@@ -9345,7 +9345,6 @@
 		"template:user-inbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-inbox/folder-sort/0:with-folder.SubSteps@with-folder/0:sort": "not pinned: POST keys are database record IDs",
 		"template:user-inbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:user-inbox/message-set-response/0:with-message.SubSteps@with-message/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-inbox/reply/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:user-notifications/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-notifications/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
