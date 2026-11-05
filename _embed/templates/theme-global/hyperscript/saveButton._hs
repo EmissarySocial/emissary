@@ -26,17 +26,22 @@ behavior SaveButton
 	end
 
 	-- .htmx-request lands on the form, so a button outside it (form="...") marks itself to show "Saving..."
+	-- RULE: a request made inside the form (an upload-multiple tile) bubbles here too, so only the form's own counts
 	on htmx:xhr:loadstart from me.form
+		if event.target is not me.form then exit end
 		add @disabled to me
 		add .htmx-request to me
 	end
 
 	on htmx:xhr:loadend from me.form
+		if event.target is not me.form then exit end
 		remove @disabled from me
 		remove .htmx-request from me
 	end
 
 	on htmx:xhr:progress from me.form
+
+		if event.target is not me.form then exit end
 
 		if event.detail.lengthComputable is not true then
 			exit
