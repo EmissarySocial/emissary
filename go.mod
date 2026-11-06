@@ -60,7 +60,7 @@ require (
 	github.com/realclientip/realclientip-go v1.0.0
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/afero v1.15.0
-	github.com/spf13/pflag v1.0.10
+	github.com/spf13/pflag v1.1.0
 	github.com/stretchr/testify v1.12.1
 	github.com/stripe/stripe-go/v78 v78.12.0
 	github.com/tdewolff/minify/v2 v2.24.24
