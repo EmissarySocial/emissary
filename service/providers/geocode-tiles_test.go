@@ -30,25 +30,20 @@ func TestGeocodeTiles_CustomURLIsInTheSchema(t *testing.T) {
 	require.NoError(t, config.Validate())
 }
 
-// TestGeocodeTiles_CustomURLIsSaved confirms a ZXY template survives a form post, brace
-// placeholders included. A "url" format on that property would reject them.
+// TestGeocodeTiles_CustomURLIsSaved confirms a ZXY template survives a form post and BeforeSave,
+// brace placeholders included. A "url" format on that property would reject them.
 func TestGeocodeTiles_CustomURLIsSaved(t *testing.T) {
 
-	config := NewGeocodeTiles().ManualConfig()
-	value := newTestFormValue()
-
-	require.NoError(t, config.SetURLValues(&value, url.Values{
+	connection := saveGeocodeTilesForm(t, url.Values{
 		"data.provider": []string{"Custom"},
 		"data.style":    []string{"CUSTOM"},
 		"data.href":     []string{"https://tile.example.com/{z}/{x}/{y}.png"},
 		"active":        []string{"true"},
-	}, testLookupProvider{}))
+	})
 
-	data := value.GetMap("data")
-
-	require.Equal(t, "Custom", data.GetString("provider"))
-	require.Equal(t, "CUSTOM", data.GetString("style"))
-	require.Equal(t, "https://tile.example.com/{z}/{x}/{y}.png", data.GetString("href"))
+	require.Equal(t, "Custom", connection.Data.GetString("provider"))
+	require.Equal(t, "CUSTOM", connection.Data.GetString("style"))
+	require.Equal(t, "https://tile.example.com/{z}/{x}/{y}.png", connection.Data.GetString("href"))
 }
 
 // TestGeocodeTiles_CustomURLShapesAreSaved walks the template shapes a tile server can need,
@@ -95,19 +90,14 @@ func TestGeocodeTiles_CustomStyleResolvesTheSavedHref(t *testing.T) {
 
 	require.True(t, customStyle, "the CUSTOM tile style is still offered")
 
-	config := NewGeocodeTiles().ManualConfig()
-	value := newTestFormValue()
-
-	require.NoError(t, config.SetURLValues(&value, url.Values{
+	connection := saveGeocodeTilesForm(t, url.Values{
 		"data.provider": []string{"Custom"},
 		"data.style":    []string{"CUSTOM"},
 		"data.href":     []string{"https://tile.example.com/{z}/{x}/{y}.png"},
-	}, testLookupProvider{}))
+	})
 
-	data := value.GetMap("data")
-
-	require.Equal(t, "CUSTOM", data.GetString("style"), "the style the reader looks up")
-	require.NotEmpty(t, data.GetString("href"), "the value the reader substitutes")
+	require.Equal(t, "CUSTOM", connection.Data.GetString("style"), "the style the reader looks up")
+	require.NotEmpty(t, connection.Data.GetString("href"), "the value the reader substitutes")
 }
 
 // TestGeocodeTiles_ProviderHoldsAGroupName pins that the select-group writes a tile GROUP
@@ -153,7 +143,7 @@ func TestGeocodeTiles_APIKeyIsHiddenForOpenStreetMap(t *testing.T) {
 	}
 }
 
-// TestGeocodeTiles_LifecycleIsANoOp confirms this provider only supplies a form
+// TestGeocodeTiles_LifecycleIsANoOp confirms the lifecycle changes nothing on a connection that is not Custom
 func TestGeocodeTiles_LifecycleIsANoOp(t *testing.T) {
 
 	connection := newTestConnection()
@@ -180,4 +170,76 @@ func TestGeocodeTiles_TypeIsWrittenForTheConnectionLoader(t *testing.T) {
 	}, testLookupProvider{}))
 
 	require.Equal(t, model.ConnectionTypeGeocodeTiles, value.GetString("type"))
+}
+
+// TestGeocodeTiles_BeforeSave_CustomUsesTheCustomStyle sets the CUSTOM style for the Custom
+// provider, whatever style the form left behind, because the form hides that select for Custom
+func TestGeocodeTiles_BeforeSave_CustomUsesTheCustomStyle(t *testing.T) {
+
+	for _, stored := range []string{"", "OPEN-STREET-MAPS-STANDARD", "MAPTILER-STREETS", "CUSTOM"} {
+
+		connection := model.NewConnection()
+		connection.Data.SetString("provider", "Custom")
+		connection.Data.SetString("style", stored)
+
+		require.NoError(t, NewGeocodeTiles().BeforeSave(&connection, mapof.NewString()))
+		require.Equal(t, "CUSTOM", connection.Data.GetString("style"), "stored style %q", stored)
+	}
+
+	// A connection with no style at all gets one too
+	connection := model.NewConnection()
+	connection.Data.SetString("provider", "Custom")
+
+	require.NoError(t, NewGeocodeTiles().BeforeSave(&connection, mapof.NewString()))
+	require.Equal(t, "CUSTOM", connection.Data.GetString("style"))
+}
+
+// TestGeocodeTiles_BeforeSave_NamedProviderKeepsItsStyle leaves the style of every other provider
+// as the form wrote it, including a Connection whose data was stored as null
+func TestGeocodeTiles_BeforeSave_NamedProviderKeepsItsStyle(t *testing.T) {
+
+	connection := model.NewConnection()
+	connection.Data.SetString("provider", "Maptiler")
+	connection.Data.SetString("style", "MAPTILER-STREETS")
+
+	require.NoError(t, NewGeocodeTiles().BeforeSave(&connection, mapof.NewString()))
+	require.Equal(t, "MAPTILER-STREETS", connection.Data.GetString("style"))
+
+	// RULE: a nil Data map must not panic, because it holds no provider to act on
+	empty := model.NewConnection()
+	empty.Data = nil
+
+	require.NoError(t, NewGeocodeTiles().BeforeSave(&empty, mapof.NewString()))
+	require.Nil(t, empty.Data)
+}
+
+// TestGeocodeTiles_CustomGroupHoldsOneStyle pins the dataset that BeforeSave relies on: the
+// Custom group offers exactly one style, CUSTOM, and that style reads the saved ZXY URL
+func TestGeocodeTiles_CustomGroupHoldsOneStyle(t *testing.T) {
+
+	var customStyles []string
+
+	for _, lookupCode := range dataset.GeocodeTiles() {
+		if lookupCode.Group == geocodeTilesCustomProvider {
+			customStyles = append(customStyles, lookupCode.Value)
+			require.Equal(t, "{href}", lookupCode.Href)
+		}
+	}
+
+	require.Equal(t, []string{geocodeTilesCustomStyle}, customStyles)
+}
+
+// saveGeocodeTilesForm applies a settings-form post to a new Connection and runs BeforeSave,
+// as build.StepEditConnection and service.Connection.Save do
+func saveGeocodeTilesForm(t *testing.T, values url.Values) model.Connection {
+
+	t.Helper()
+
+	config := NewGeocodeTiles().ManualConfig()
+	connection := model.NewConnection()
+
+	require.NoError(t, config.SetURLValues(&connection, values, testLookupProvider{}))
+	require.NoError(t, NewGeocodeTiles().BeforeSave(&connection, mapof.NewString()))
+
+	return connection
 }
