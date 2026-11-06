@@ -5,7 +5,7 @@ go 1.27.3
 require (
 	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/aws/aws-sdk-go-v2 v1.47.5
-	github.com/aws/aws-sdk-go-v2/credentials v1.20.12
+	github.com/aws/aws-sdk-go-v2/credentials v1.20.13
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.6
 	github.com/benpate/color v0.2.0
 	github.com/benpate/data v0.34.0
