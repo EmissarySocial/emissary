@@ -13,10 +13,11 @@ import (
 )
 
 // TestUploadMultiple_WidgetAndStepAgree verifies that, in every template that manages files
-// with an edit-attachments step, every html-remote element's url names an action on that
-// template holding such a step, and that a create form's create action includes the action its
-// url names, which is what lets the element reach the step before the Save and what adopts the
-// staged files at the Save
+// with an edit-attachments step, every html-remote element's url names an action the template
+// defines, and that a create form's create action includes the action its url names, which is
+// what lets the element reach the action before the Save and, for a file field, what adopts the
+// staged files at the Save. A loader whose action holds no edit-attachments step is another
+// kind of field, and only the file fields are counted.
 func TestUploadMultiple_WidgetAndStepAgree(t *testing.T) {
 
 	// html-remote is a plain loader, and nothing but this test connects the URL it names to the
@@ -44,8 +45,9 @@ func TestUploadMultiple_WidgetAndStepAgree(t *testing.T) {
 
 				for _, actionID := range sortedKeys(template.Actions) {
 					for _, element := range elementsOfType(template.Actions[actionID].Steps, "html-remote") {
-						checkRemoteLoader(t, &template, actionID, element)
-						checked++
+						if checkRemoteLoader(t, &template, actionID, element) {
+							checked++
+						}
 					}
 				}
 			}
@@ -57,9 +59,10 @@ func TestUploadMultiple_WidgetAndStepAgree(t *testing.T) {
 	}
 }
 
-// checkRemoteLoader verifies that one element's url names an action on its own template that
-// holds an edit-attachments step, and that a create form's create action includes that action
-func checkRemoteLoader(t *testing.T, template *model.Template, actionID string, element form.Element) {
+// checkRemoteLoader verifies that one element's url names an action on its own template, and
+// that a create form's create action includes that action. It returns TRUE when the action
+// holds an edit-attachments step, which makes the element a file field.
+func checkRemoteLoader(t *testing.T, template *model.Template, actionID string, element form.Element) bool {
 
 	t.Helper()
 
@@ -75,15 +78,16 @@ func checkRemoteLoader(t *testing.T, template *model.Template, actionID string, 
 	target, exists := template.Action(targetID)
 	require.True(t, exists, "%s: url %q names action %q, which %s does not define", where, remoteURL, targetID, template.TemplateID)
 
-	_, found := findEditAttachments(template, target.Steps, map[string]bool{})
-	require.True(t, found, "%s: action %q holds no edit-attachments step", where, targetID)
+	_, isFileField := findEditAttachments(template, target.Steps, map[string]bool{})
 
-	// RULE: A create form reaches the step before the Save only through an action its create
-	// action includes, and the include is what adopts the staged files at the Save
+	// RULE: A create form reaches any action before the Save only through one its create action
+	// includes, and for a file field the include is also what adopts the staged files at the Save
 	if actionID == "create" {
 		require.True(t, strings.HasSuffix(pathOf(remoteURL), "/add"), "%s: a create form's url must be the parent's add with ?action=, because the object has no route of its own yet; got %q", where, remoteURL)
-		require.True(t, includesAction(template.Actions[actionID].Steps, targetID), "%s: the create action must include action %q, directly or inside a nested pipeline, or the element's requests are refused before the Save and the staged files are dropped at it", where, targetID)
+		require.True(t, includesAction(template.Actions[actionID].Steps, targetID), "%s: the create action must include action %q, directly or inside a nested pipeline, or the element's requests are refused before the Save and any staged files are dropped at it", where, targetID)
 	}
+
+	return isFileField
 }
 
 // actionOf returns the action a loader's url names: the ?action= of a parent's add, or the url's last path segment
