@@ -70,10 +70,9 @@ func TestGeocodeNetwork_StaticModeSwapsTheCredentialForCoordinates(t *testing.T)
 	}
 }
 
-// TestGeocodeNetwork_ActiveIsWrittenFromInsideAHiddenContainer pins a trap in the form layout.
-// The Enable toggle sits inside a container gated on a provider being chosen, but a container's
-// show-if does not gate its children's writes, so active saves with no provider at all.
-func TestGeocodeNetwork_ActiveIsWrittenFromInsideAHiddenContainer(t *testing.T) {
+// TestGeocodeNetwork_ActiveIsNotWrittenFromInsideAHiddenContainer confirms the Enable toggle is
+// skipped while no provider is chosen, because the container holding it is hidden until one is
+func TestGeocodeNetwork_ActiveIsNotWrittenFromInsideAHiddenContainer(t *testing.T) {
 
 	config := NewGeocodeNetwork().ManualConfig()
 	value := newTestFormValue()
@@ -82,7 +81,7 @@ func TestGeocodeNetwork_ActiveIsWrittenFromInsideAHiddenContainer(t *testing.T) 
 		"active": []string{"true"},
 	}, testLookupProvider{}))
 
-	require.True(t, value.GetBool("active"), "the toggle is written even while its container is hidden")
+	require.False(t, value.GetBool("active"), "the toggle is skipped while its container is hidden")
 	require.Empty(t, value.GetMap("data").GetString("provider"), "no provider was selected")
 }
 
