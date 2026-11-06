@@ -390,6 +390,22 @@ func TestEditModelObject_VisibilityForm_AllowedUser(t *testing.T) {
 	require.True(t, user.IsBridgeBluesky.Bool())
 }
 
+// TestEditModelObject_VisibilityForm_ExcludedUser leaves the Bluesky toggle off for a User whom the
+// domain excludes from bridging, whatever the POST carries, while saving the fields they may edit
+func TestEditModelObject_VisibilityForm_ExcludedUser(t *testing.T) {
+
+	widget.UseAll()
+	editStep := newVisibilityFormStep(t)
+
+	user := model.NewUser()
+	posted := url.Values{"isPublic": {"true"}, "isIndexable": {"true"}, "isBridgeBluesky": {"true"}}
+
+	require.Nil(t, editStep.Post(newVisibilityFormBuilder(&user, false, posted), nil))
+	require.True(t, user.IsPublic)
+	require.True(t, user.IsIndexable)
+	require.False(t, user.IsBridgeBluesky.Bool())
+}
+
 // newVisibilityFormStep parses an edit step shaped like user-settings' visibility-form, with any
 // extra options appended after the template's own
 func newVisibilityFormStep(t *testing.T, extraOptions ...string) StepEditModelObject {

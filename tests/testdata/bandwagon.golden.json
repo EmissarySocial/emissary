@@ -11358,7 +11358,6 @@
 				},
 				"typical": {
 					"changes": {
-						"isBridgeBluesky": "bool true",
 						"isIndexable": "bool true",
 						"isPublic": "bool true"
 					},

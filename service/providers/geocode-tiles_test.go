@@ -115,14 +115,14 @@ func TestGeocodeTiles_ProviderHoldsAGroupName(t *testing.T) {
 	assert.True(t, groups["Open Street Map"], "show-if tests data.provider != Open Street Map")
 }
 
-// TestGeocodeTiles_APIKeyIsHiddenForOpenStreetMap confirms the show-if keeps a posted key out
-// of the Data map when the free provider is selected, which needs no credential.
-func TestGeocodeTiles_APIKeyIsHiddenForOpenStreetMap(t *testing.T) {
+// TestGeocodeTiles_APIKeyIsSavedOnlyWhereItIsShown confirms a posted key is saved for Maptiler and
+// dropped for Open Street Map, which needs no credential, and for Custom, whose form hides the field
+func TestGeocodeTiles_APIKeyIsSavedOnlyWhereItIsShown(t *testing.T) {
 
 	testCases := map[string]string{
 		"Open Street Map": "",
 		"Maptiler":        "SECRET-KEY",
-		"Custom":          "SECRET-KEY",
+		"Custom":          "",
 	}
 
 	for provider, expectedKey := range testCases {
