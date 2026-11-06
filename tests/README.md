@@ -53,6 +53,7 @@ Each case posts four **scenarios**: `typical` values, `empty` strings, `hostile`
 | `setdata_test.go` | `TestSetData`, which pins every `set-data` step |
 | `emulation_test.go` | `TestEmulatedSources`, which detects changes to the reproduced code |
 | `uploadmultiple_test.go` | `TestUploadMultiple_WidgetAndStepAgree`, which, in every template holding an `edit-attachments` step, links each `html-remote` element's `url` to an action on that template holding the step, and checks that a create form's URL is the parent's add naming an action its `create` includes, which is what lets the element reach the step before the Save and what adopts the staged files at the Save |
+| `tagpaths_test.go` | `TestTagPaths_AreStrings`, which holds every `tagPaths` entry of every template to a string element of the schema its builder edits with, because a form value posted to a path the template does not declare is stored as a one-element array that reads back empty, and an entry that names no element is dead |
 | `fuzz_test.go` | `FuzzFormPosts` and `FuzzSetData` |
 | `testdata/*.golden.json` | Form POSTs, one file per group, plus the source fingerprints |
 | `testdata/*.setdata.golden.json` | `set-data` steps, one file per group |
