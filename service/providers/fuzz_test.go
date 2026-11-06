@@ -121,7 +121,7 @@ func FuzzManualConfigEditor(f *testing.F) {
 	})
 }
 
-// FuzzBlueskyBeforeSave drives the one lifecycle hook in this package that makes a decision.
+// FuzzBlueskyBeforeSave drives the lifecycle hook that decides whether the Bluesky bridge is on.
 // Properties: it never panics or errors, only the literal "NONE" disables the bridge, and a
 // second call agrees with the first.
 func FuzzBlueskyBeforeSave(f *testing.F) {
@@ -148,6 +148,40 @@ func FuzzBlueskyBeforeSave(f *testing.F) {
 
 		require.NoError(t, NewBluesky().BeforeSave(&connection, mapof.NewString()))
 		require.Equal(t, first, connection.Active, "BeforeSave is idempotent")
+	})
+}
+
+// FuzzGeocodeTilesBeforeSave drives the lifecycle hook that picks the style for the Custom tile
+// provider. Properties: it never panics or errors, it writes CUSTOM exactly when the provider is
+// Custom and leaves every other style alone, and a second call agrees with the first.
+func FuzzGeocodeTilesBeforeSave(f *testing.F) {
+
+	f.Add("Custom", "")
+	f.Add("Custom", "MAPTILER-STREETS")
+	f.Add("custom", "CUSTOM")
+	f.Add(" Custom ", "OPEN-STREET-MAPS-STANDARD")
+	f.Add("Maptiler", "CUSTOM")
+	f.Add("", "")
+	f.Add("Custom\x00", "\xff\xfe")
+
+	f.Fuzz(func(t *testing.T, provider string, style string) {
+
+		connection := model.NewConnection()
+		connection.Data.SetString("provider", provider)
+		connection.Data.SetString("style", style)
+
+		require.NoError(t, NewGeocodeTiles().BeforeSave(&connection, mapof.NewString()))
+
+		if provider == "Custom" {
+			require.Equal(t, "CUSTOM", connection.Data.GetString("style"))
+		} else {
+			require.Equal(t, style, connection.Data.GetString("style"))
+		}
+
+		first := connection.Data.GetString("style")
+
+		require.NoError(t, NewGeocodeTiles().BeforeSave(&connection, mapof.NewString()))
+		require.Equal(t, first, connection.Data.GetString("style"), "BeforeSave is idempotent")
 	})
 }
 

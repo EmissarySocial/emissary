@@ -7,6 +7,12 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// geocodeTilesCustomProvider is the tile group a Domain picks to serve tiles from its own ZXY URL
+const geocodeTilesCustomProvider = "Custom"
+
+// geocodeTilesCustomStyle is the one style in the Custom group, which reads the saved ZXY URL
+const geocodeTilesCustomStyle = "CUSTOM"
+
 // GeocodeTiles connects a Domain to the map-tile provider used to draw maps
 type GeocodeTiles struct{}
 
@@ -111,6 +117,14 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
 
 // BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter GeocodeTiles) BeforeSave(connection *model.Connection, vault mapof.String) error {
+
+	// RULE: The Custom provider always uses the CUSTOM style. The form hides the style select
+	// for Custom, so the server sets the style rather than reading it from a hidden field.
+	if connection.Data.GetString("provider") == geocodeTilesCustomProvider {
+		connection.Data.SetString("style", geocodeTilesCustomStyle)
+	}
+
+	// Map it out
 	return nil
 }
 
