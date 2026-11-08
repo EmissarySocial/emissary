@@ -186,7 +186,7 @@
 						"endpoint:/{{.StreamID}}/edit-form"
 					]
 				}
-				{do:"save-and-publish", state:"published", outbox:"false", comment:"Contact form updated by {{.Author}}"}
+				{do:"save-and-publish", state:"published", outbox:"false"}
 				{do:"refresh-page"}
 				{do:"inline-save-button", form:"edit-form"}
 			]
@@ -200,7 +200,7 @@
 				// cached form values; formdata.Parse caches on the Request and re-reads nothing.
 				{do:"set-data", from-form:["data.width"]}
 				{do:"sort-widgets"}
-				{do:"save", message:"Widgets updated by {{.Author}}"}
+				{do:"save", comment:"Widgets updated"}
 				{do:"view-html", method:"both"}
 			]
 		}
@@ -209,7 +209,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"edit-widget"}
-				{do:"save", comment:"Widget updated by {{.Author}}"}
+				{do:"save", comment:"Widget updated"}
 			]
 		}
 
