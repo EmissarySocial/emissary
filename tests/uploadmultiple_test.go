@@ -13,7 +13,7 @@ import (
 )
 
 // TestUploadMultiple_WidgetAndStepAgree verifies that, in every template that manages files
-// with an edit-attachments step, every html-remote element's url names an action on that
+// with an edit-attachments step, every html-remote file field's url names an action on that
 // template holding such a step, and that a create form's create action includes the action its
 // url names, which is what lets the element reach the step before the Save and what adopts the
 // staged files at the Save
@@ -44,6 +44,13 @@ func TestUploadMultiple_WidgetAndStepAgree(t *testing.T) {
 
 				for _, actionID := range sortedKeys(template.Actions) {
 					for _, element := range elementsOfType(template.Actions[actionID].Steps, "html-remote") {
+
+						// RULE: A file field has no path, because its step owns the field name; an element
+						// with a path loads an editor for that value, such as the hashtag picker
+						if element.Path != "" {
+							continue
+						}
+
 						checkRemoteLoader(t, &template, actionID, element)
 						checked++
 					}
