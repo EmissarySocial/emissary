@@ -41,6 +41,8 @@ func (step StepViewCSS) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	}
 	*/
 
+	// Render the named template. The loader names an action's own file on every view that names
+	// none, so this fallback serves only steps parsed outside an action
 	var filename string
 
 	if step.File != "" {

@@ -6,30 +6,36 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepInclude is a Step that executes another action within this context.
+// StepInclude is a Step that runs another action's steps on the current builder
 type StepInclude struct {
 	Action string
+	Method string
 }
 
-// Get renders this step during a GET request. Implements the Step interface.
+// Get runs the included action during a GET request, unless its method is "post". Implements the Step interface.
 func (step StepInclude) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	const location = "build.StepInclude.Get"
-
-	action, ok := builder.actions()[step.Action]
-
-	if !ok {
-		return Halt().WithError(derp.BadRequest(location, "Action not found", step.Action))
+	if step.Method != "post" {
+		return step.execute(builder, buffer, ActionMethodGet)
 	}
 
-	result := Pipeline(action.Steps).Get(builder.factory(), builder, buffer)
-	return UseResult(result)
+	return nil
 }
 
-// Post updates the stream with approved data from the request body.
+// Post runs the included action during a POST request, unless its method is "get". Implements the Step interface.
 func (step StepInclude) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	const location = "build.StepInclude.Post"
+	if step.Method != "get" {
+		return step.execute(builder, buffer, ActionMethodPost)
+	}
+
+	return nil
+}
+
+// execute runs the included action's steps on this builder, using the request's own method
+func (step StepInclude) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
+
+	const location = "build.StepInclude.execute"
 
 	action, ok := builder.actions()[step.Action]
 
@@ -37,6 +43,6 @@ func (step StepInclude) Post(builder Builder, buffer io.Writer) PipelineBehavior
 		return Halt().WithError(derp.BadRequest(location, "Action not found", step.Action))
 	}
 
-	result := Pipeline(action.Steps).Post(builder.factory(), builder, buffer)
+	result := Pipeline(action.Steps).Execute(builder.factory(), builder, buffer, actionMethod)
 	return UseResult(result)
 }

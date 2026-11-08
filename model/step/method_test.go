@@ -10,7 +10,7 @@ import (
 /******************************************
  * Method Parsing
  *
- * Eight Steps take a "method" property, and they guard on it
+ * Nine Steps take a "method" property, and they guard on it
  * with two different hand-written shapes. An allow-list
  * ("method == post") runs an unknown value for NOTHING; a
  * deny-list ("method != post") runs it for EVERYTHING. Neither
@@ -64,5 +64,8 @@ func TestParseMethod_RejectedByConstructors(t *testing.T) {
 	require.Error(t, err)
 
 	_, err = NewSetHeader(mapof.Any{"name": "X-Test", "value": "1", "method": "boht"}, nil)
+	require.Error(t, err)
+
+	_, err = NewInclude(mapof.Any{"action": "view", "method": "boht"})
 	require.Error(t, err)
 }

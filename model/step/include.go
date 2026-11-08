@@ -1,18 +1,29 @@
 package step
 
 import (
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
-// Include is a Step that calls anoter action to continue processing
+// Include is a Step that runs another action's steps on the current object
 type Include struct {
 	Action string
+	Method string
 }
 
 // NewInclude returns a fully initialized Include object
 func NewInclude(stepInfo mapof.Any) (Include, error) {
+
+	// An include draws on a GET as often as it saves on a POST, so it runs on both by default
+	method, err := parseMethod(stepInfo, "both")
+
+	if err != nil {
+		return Include{}, derp.Wrap(err, "model.step.NewInclude", "Invalid 'method'", stepInfo.GetString("action"))
+	}
+
 	return Include{
 		Action: stepInfo.GetString("action"),
+		Method: method,
 	}, nil
 }
 
