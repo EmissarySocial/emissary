@@ -518,7 +518,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// RULE: Every Stream must be associated with a Template
 	if stream.TemplateID == "" {
-		return derp.BadRequest(location, "Stream cannot be saved without a TemplateID", stream)
+		return derp.BadRequest(location, "Stream cannot be saved without a TemplateID", "StreamID: "+stream.StreamID.Hex())
 	}
 
 	// Load the template used by this Stream
@@ -568,7 +568,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	rewrites, err := template.Schema.Normalize(stream)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
+		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", "StreamID: "+stream.StreamID.Hex())
 	}
 
 	if len(rewrites) > 0 {
@@ -588,7 +588,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// Try to save the Stream to the database
 	if err := service.collection(session).Save(stream, note); err != nil {
-		return derp.Wrap(err, location, "Saving Stream", stream, note)
+		return derp.Wrap(err, location, "Saving Stream", "StreamID: "+stream.StreamID.Hex())
 	}
 
 	// Stamp the new sharing on every child, after the parent is saved so that each child reads it
