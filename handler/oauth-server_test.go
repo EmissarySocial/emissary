@@ -144,6 +144,66 @@ func TestPostOAuthToken_OmitsCredentialsFromErrors(t *testing.T) {
 	})
 }
 
+// TestPostOAuthAuthorization_ReturnsTheIssuer confirms both authorization redirects name this server as their
+// issuer (RFC 9207, IndieAuth §5.2.1), and that a state cannot add parameters to the token fragment
+func TestPostOAuthAuthorization_ReturnsTheIssuer(t *testing.T) {
+
+	const issuer = "https://example.com"
+
+	grant := model.NewOAuthUserToken()
+	grant.Token = "header.payload.signature"
+
+	transaction := model.OAuthAuthorizationRequest{
+		RedirectURI: "https://client.example/callback?keep=1",
+		State:       "a&iss=https://evil.example b",
+	}
+
+	t.Run("code", func(t *testing.T) {
+		ctx, recorder := oauthAuthorizationResponse()
+		require.NoError(t, postOAuthAuthorization_code(ctx, issuer, grant, transaction))
+		require.Equal(t, http.StatusFound, recorder.Code)
+
+		location, err := url.Parse(recorder.Header().Get("Location"))
+		require.NoError(t, err)
+
+		query := location.Query()
+		require.Equal(t, grant.Code(), query.Get("code"))
+		require.Equal(t, transaction.State, query.Get("state"))
+		require.Equal(t, []string{issuer}, query["iss"])
+		require.Equal(t, "1", query.Get("keep"))
+	})
+
+	t.Run("token", func(t *testing.T) {
+		ctx, recorder := oauthAuthorizationResponse()
+		require.NoError(t, postOAuthAuthorization_token(ctx, issuer, grant, transaction))
+		require.Equal(t, http.StatusFound, recorder.Code)
+
+		target, rawFragment, found := strings.Cut(recorder.Header().Get("Location"), "#")
+		require.True(t, found)
+		require.Equal(t, transaction.RedirectURI, target)
+
+		fragment, err := url.ParseQuery(rawFragment)
+		require.NoError(t, err)
+		require.Equal(t, url.Values{
+			"access_token": {grant.Token},
+			"state":        {transaction.State},
+			"token_type":   {"Bearer"},
+			"iss":          {issuer},
+		}, fragment)
+	})
+
+	t.Run("out of band", func(t *testing.T) {
+		outOfBand := transaction
+		outOfBand.RedirectURI = "urn:ietf:wg:oauth:2.0:oob"
+
+		ctx, recorder := oauthAuthorizationResponse()
+		require.NoError(t, postOAuthAuthorization_code(ctx, issuer, grant, outOfBand))
+		require.Equal(t, http.StatusOK, recorder.Code)
+		require.Contains(t, recorder.Body.String(), grant.Code())
+		require.NotContains(t, recorder.Body.String(), issuer)
+	})
+}
+
 // oauthTokenRequest builds a urlencoded POST to the token endpoint
 func oauthTokenRequest(form url.Values) *steranko.Context {
 
@@ -183,4 +243,11 @@ func newOAuthGrant(client *model.OAuthClient) *model.OAuthUserToken {
 	grant := model.NewOAuthUserToken()
 	grant.ClientID = client.ClientID
 	return &grant
+}
+
+// oauthAuthorizationResponse returns a context for the consent form's POST, and the recorder that holds its response
+func oauthAuthorizationResponse() (echo.Context, *httptest.ResponseRecorder) {
+	request := httptest.NewRequest(http.MethodPost, "/oauth/authorize", nil)
+	recorder := httptest.NewRecorder()
+	return echo.New().NewContext(request, recorder), recorder
 }

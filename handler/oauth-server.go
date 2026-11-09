@@ -106,21 +106,22 @@ func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, ses
 		return derp.Wrap(err, location, "Creating OAuthUserToken")
 	}
 
-	// Complete the transaction based on the grant type
+	// Complete the transaction based on the grant type.  The issuer is the one the metadata
+	// publishes, because clients compare the two as strings (RFC 9207)
 	switch transaction.ResponseType {
 
 	case "code":
-		return postOAuthAuthorization_code(ctx, userToken, transaction)
+		return postOAuthAuthorization_code(ctx, factory.Host(), userToken, transaction)
 
 	case "token":
-		return postOAuthAuthorization_token(ctx, userToken, transaction)
+		return postOAuthAuthorization_token(ctx, factory.Host(), userToken, transaction)
 	}
 
 	return derp.BadRequest(location, "Invalid response type", transaction.ResponseType)
 }
 
 // postOAuthAuthorization_code handles `code` grant types used by server authentication flow
-func postOAuthAuthorization_code(ctx echo.Context, userToken model.OAuthUserToken, transaction model.OAuthAuthorizationRequest) error {
+func postOAuthAuthorization_code(ctx echo.Context, issuer string, userToken model.OAuthUserToken, transaction model.OAuthAuthorizationRequest) error {
 
 	// If this magic value is passed as the redirect URI, then we return the
 	// authorization code in the <title> tag of the HTML for the user to copy into
@@ -142,17 +143,18 @@ func postOAuthAuthorization_code(ctx echo.Context, userToken model.OAuthUserToke
 		return derp.Wrap(err, "handler.postOAuthAuthorization_code", "Invalid redirect_uri", transaction.RedirectURI)
 	}
 
-	// Add the code to the URI
+	// Add the code and the issuer to the URI (RFC 9207, IndieAuth §5.2.1)
 	queryString := redirectURI.Query()
 	queryString.Set("code", userToken.Code())
 	queryString.Set("state", transaction.State)
+	queryString.Set("iss", issuer)
 	redirectURI.RawQuery = queryString.Encode()
 
 	return ctx.Redirect(http.StatusFound, redirectURI.String())
 }
 
-// postOAuthAuthorization_code handles `token` grant types used by the client-side authentication flow
-func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserToken, transaction model.OAuthAuthorizationRequest) error {
+// postOAuthAuthorization_token handles `token` grant types used by the client-side authentication flow
+func postOAuthAuthorization_token(ctx echo.Context, issuer string, userToken model.OAuthUserToken, transaction model.OAuthAuthorizationRequest) error {
 
 	const location = "handler.postOAuthAuthorization_token"
 
@@ -174,12 +176,18 @@ func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserTok
 		return derp.Wrap(err, location, "Parsing redirect_uri")
 	}
 
-	redirectURI.Fragment = "access_token=" + userToken.Token +
-		"&state=" + transaction.State +
-		"&token_type=Bearer"
+	// RULE: The fragment is form-encoded (RFC 6749 §4.2.2), so a state cannot add parameters of its own
+	fragment := url.Values{}
+	fragment.Set("access_token", userToken.Token)
+	fragment.Set("state", transaction.State)
+	fragment.Set("token_type", "Bearer")
+	fragment.Set("iss", issuer)
 
-	// Otherwise, we redirect to the redirect_uri
-	return ctx.Redirect(http.StatusFound, redirectURI.String())
+	// The encoded fragment is appended, because url.URL would escape its "%" a second time
+	redirectURI.Fragment = ""
+	redirectURI.RawFragment = ""
+
+	return ctx.Redirect(http.StatusFound, redirectURI.String()+"#"+fragment.Encode())
 }
 
 // PostOAuthToken handles the OAuth token endpoint (RFC 6749 §3.2), exchanging an authorization

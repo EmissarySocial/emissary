@@ -1,10 +1,12 @@
 package model
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // TestOAuthUserToken_IsCodeExpired verifies the expiration window of an authorization code
@@ -95,4 +97,55 @@ func TestOAuthUserToken_MastodonAppLifetime(t *testing.T) {
 	toot := mastodon.Toot()
 	require.Zero(t, toot.ExpiresIn)
 	require.Equal(t, "grantid.1.secret", toot.RefreshToken)
+}
+
+// TestOAuthUserToken_RedirectURI verifies that a grant records the redirect_uri its code was issued to,
+// and keeps it through storage
+func TestOAuthUserToken_RedirectURI(t *testing.T) {
+
+	const redirectURI = "https://client.example/callback?keep=1"
+
+	t.Run("records the redirect_uri", func(t *testing.T) {
+		grant := NewOAuthUserToken()
+		grant.SetRedirectURI(redirectURI)
+		require.Equal(t, redirectURI, grant.RedirectURI())
+	})
+
+	t.Run("a blank value records nothing", func(t *testing.T) {
+		grant := NewOAuthUserToken()
+		grant.SetRedirectURI("")
+		require.Empty(t, grant.RedirectURI())
+		require.NotContains(t, grant.Data, oauthUserTokenDataRedirectURI)
+	})
+
+	t.Run("a grant with no data map", func(t *testing.T) {
+		grant := OAuthUserToken{}
+		require.Empty(t, grant.RedirectURI())
+
+		grant.SetRedirectURI(redirectURI)
+		require.Equal(t, redirectURI, grant.RedirectURI())
+	})
+
+	t.Run("survives storage beside the PKCE challenge", func(t *testing.T) {
+		grant := NewOAuthUserToken()
+		grant.SetPKCEChallenge(strings.Repeat("v", 43), PKCEMethodPlain)
+		grant.SetRedirectURI(redirectURI)
+
+		stored, err := bson.Marshal(grant)
+		require.NoError(t, err)
+
+		loaded := NewOAuthUserToken()
+		require.NoError(t, bson.Unmarshal(stored, &loaded))
+		require.Equal(t, redirectURI, loaded.RedirectURI())
+		require.True(t, loaded.HasPKCEChallenge())
+	})
+
+	t.Run("a grant stored before it was recorded", func(t *testing.T) {
+		stored, err := bson.Marshal(NewOAuthUserToken())
+		require.NoError(t, err)
+
+		loaded := NewOAuthUserToken()
+		require.NoError(t, bson.Unmarshal(stored, &loaded))
+		require.Empty(t, loaded.RedirectURI())
+	})
 }

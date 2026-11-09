@@ -83,16 +83,17 @@ func (service *OAuthUserToken) Load(session data.Session, criteria exp.Expressio
 // Save adds/updates an OAuthUserToken in the database
 func (service *OAuthUserToken) Save(session data.Session, application *model.OAuthUserToken, note string) error {
 
-	const location = "service.OAuthUserToken"
+	const location = "service.OAuthUserToken.Save"
 
-	// Validate the value (using the global application schema) before saving
+	// Validate the value (using the global application schema) before saving.  Errors name the
+	// grant's ID, never the grant, whose Data holds its PKCE challenge.
 	if _, err := service.Schema().Validate(application); err != nil {
-		return derp.Wrap(err, location, "Validating OAuthUserToken using OAuthUserTokenSchema", application)
+		return derp.Wrap(err, location, "Validating OAuthUserToken using OAuthUserTokenSchema", application.OAuthUserTokenID)
 	}
 
 	// Try to save the OAuthUserToken to the database
 	if err := service.collection(session).Save(application, note); err != nil {
-		return derp.Wrap(err, location, "Saving OAuthUserToken", application, note)
+		return derp.Wrap(err, location, "Saving OAuthUserToken", application.OAuthUserTokenID, note)
 	}
 
 	return nil
@@ -103,7 +104,7 @@ func (service *OAuthUserToken) Delete(session data.Session, application *model.O
 
 	// Delete this OAuthUserToken
 	if err := service.collection(session).Delete(application, note); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Deleting OAuthUserToken", application, note)
+		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Deleting OAuthUserToken", application.OAuthUserTokenID, note)
 	}
 
 	// Bueno!!
@@ -125,7 +126,7 @@ func (service *OAuthUserToken) DeleteMany(session data.Session, criteria exp.Exp
 	// Loop over each OAuthUserToken and delete it
 	for userToken := model.NewOAuthUserToken(); it.Next(&userToken); userToken = model.NewOAuthUserToken() {
 		if err := service.Delete(session, &userToken, note); err != nil {
-			return derp.Wrap(err, location, "Deleting stream", userToken)
+			return derp.Wrap(err, location, "Deleting OAuthUserToken", userToken.OAuthUserTokenID)
 		}
 	}
 
@@ -317,6 +318,9 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	// matching verifier. No-op when the client did not use PKCE.
 	result.SetPKCEChallenge(transaction.CodeChallenge, transaction.CodeChallengeMethod)
 
+	// Record the redirect_uri the code is issued to, so the token endpoint can require the same one
+	result.SetRedirectURI(transaction.RedirectURI)
+
 	// RULE: The implicit ("token") grant returns its access token directly from the
 	// authorization endpoint, so it is minted now. The code grant defers minting to
 	// ExchangeCode.
@@ -332,7 +336,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 
 	// Save the grant to the database
 	if err := service.Save(session, &result, "Create"); err != nil {
-		return model.OAuthUserToken{}, derp.Wrap(err, location, "Saving OAuthUserToken", result)
+		return model.OAuthUserToken{}, derp.Wrap(err, location, "Saving OAuthUserToken", result.OAuthUserTokenID)
 	}
 
 	return result, nil

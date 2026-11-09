@@ -7,6 +7,9 @@ import "time"
 // https://swicg.github.io/activitypub-data-portability/lola#Authorization
 const OAuthUserTokenScopeActivityPubPortability = "activitypub_account_portability" // #nosec G101 -- this is the NAME of an OAuth scope, not a credential
 
+// oauthUserTokenDataRedirectURI is the OAuthUserToken.Data key that records the redirect_uri a code was issued to
+const oauthUserTokenDataRedirectURI = "redirect_uri"
+
 // OAuth token lifecycle durations (see emissary-specs/OAUTH-REFRESH-TOKENS.md).
 const (
 	// OAuthAccessTokenLifetime is how long an issued access-token JWT is valid.

@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/data"
 	mockdb "github.com/benpate/data-mock"
+	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -244,6 +246,103 @@ func TestCreate_SavesThePKCEChallenge(t *testing.T) {
 	request.CodeChallengeMethod = ""
 	_, err = service.Create(session, client, authorization, request)
 	require.NotNil(t, err)
+}
+
+// TestCreate_SavesTheRedirectURI confirms a grant records the redirect_uri its code was issued to, including
+// the default a registered client's request left out
+func TestCreate_SavesTheRedirectURI(t *testing.T) {
+
+	service, session := newTestOAuthUserTokenService(t)
+
+	client := model.NewOAuthClient()
+	client.ClientSecret = "secret"
+	client.RedirectURIs = append(client.RedirectURIs, "https://client.example/first", "https://client.example/second")
+
+	authorization := model.Authorization{UserID: primitive.NewObjectID()}
+
+	// create issues a code for the redirect_uri, and reads the saved grant back by _id
+	create := func(redirectURI string) model.OAuthUserToken {
+		t.Helper()
+
+		request := model.OAuthAuthorizationRequest{ResponseType: "code", ClientID: client.ClientID.Hex(), RedirectURI: redirectURI}
+		grant, err := service.Create(session, client, authorization, request)
+		require.Nil(t, err)
+
+		saved := model.NewOAuthUserToken()
+		require.Nil(t, service.collection(session).Load(exp.Equal("_id", grant.OAuthUserTokenID), &saved))
+		return saved
+	}
+
+	require.Equal(t, "https://client.example/second", create("https://client.example/second").RedirectURI())
+	require.Equal(t, "https://client.example/first", create("").RedirectURI(), "a request with none records the default its code went to")
+}
+
+// TestOAuthUserToken_ErrorsCarryNoGrant confirms a failed write names the grant by its ID, and never carries
+// the grant, whose PKCE challenge is the verifier itself under the "plain" method
+func TestOAuthUserToken_ErrorsCarryNoGrant(t *testing.T) {
+
+	challenge := strings.Repeat("v", 43)
+
+	// newGrant returns an unsaved grant bound to the challenge
+	newGrant := func() model.OAuthUserToken {
+		grant := newTestGrant()
+		grant.SetPKCEChallenge(challenge, model.PKCEMethodPlain)
+		grant.SetRedirectURI("https://client.example/callback")
+		return grant
+	}
+
+	t.Run("Save refused by the database", func(t *testing.T) {
+		service, session := newTestOAuthUserTokenService(t)
+		grant := newGrant()
+
+		err := service.Save(session, &grant, "ERROR: synthetic")
+		require.NotNil(t, err)
+		require.Equal(t, "service.OAuthUserToken.Save", derp.Location(err))
+		secretcheck.RequireAbsent(t, err, challenge)
+	})
+
+	t.Run("Save refused by the schema", func(t *testing.T) {
+		service, session := newTestOAuthUserTokenService(t)
+		grant := newGrant()
+		grant.Scopes = append(grant.Scopes, strings.Repeat("s", 200))
+
+		err := service.Save(session, &grant, "create")
+		require.NotNil(t, err)
+		require.Equal(t, "service.OAuthUserToken.Save", derp.Location(err))
+		secretcheck.RequireAbsent(t, err, challenge)
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		service, session := newTestOAuthUserTokenService(t)
+		grant := newGrant()
+		require.Nil(t, service.Save(session, &grant, "create"))
+
+		err := service.Delete(session, &grant, "ERROR: synthetic")
+		require.NotNil(t, err)
+		require.Equal(t, "service.OAuthUserToken.Delete", derp.Location(err))
+		secretcheck.RequireAbsent(t, err, challenge)
+	})
+
+	t.Run("Create", func(t *testing.T) {
+		service, session := newTestOAuthUserTokenService(t)
+
+		client := model.NewOAuthClient()
+		client.RedirectURIs = append(client.RedirectURIs, "https://client.example/callback")
+
+		// A scope longer than the schema allows fails the save after the grant is built
+		request := model.OAuthAuthorizationRequest{
+			ResponseType:        "code",
+			ClientID:            client.ClientID.Hex(),
+			Scope:               strings.Repeat("s", 200),
+			CodeChallenge:       challenge,
+			CodeChallengeMethod: model.PKCEMethodPlain,
+		}
+
+		_, err := service.Create(session, client, model.Authorization{UserID: primitive.NewObjectID()}, request)
+		require.NotNil(t, err)
+		require.Equal(t, "service.OAuthUserToken.Create", derp.Location(err))
+		secretcheck.RequireAbsent(t, err, challenge)
+	})
 }
 
 // TestExchangeCode_MastodonAppTokenHasNoExpiry confirms a Mastodon app's access token carries no

@@ -100,6 +100,28 @@ func (token OAuthUserToken) Code() string {
 	return token.OAuthUserTokenID.Hex()
 }
 
+// SetRedirectURI records the redirect_uri that this grant's authorization code was issued to.
+// A blank value records nothing.
+func (token *OAuthUserToken) SetRedirectURI(redirectURI string) {
+
+	if redirectURI == "" {
+		return
+	}
+
+	// A grant loaded from a record with no data has a nil map
+	if token.Data == nil {
+		token.Data = mapof.NewAny()
+	}
+
+	token.Data[oauthUserTokenDataRedirectURI] = redirectURI
+}
+
+// RedirectURI returns the redirect_uri that this grant's authorization code was issued to, or an
+// empty string for a grant issued before it was recorded
+func (token OAuthUserToken) RedirectURI() string {
+	return token.Data.GetString(oauthUserTokenDataRedirectURI)
+}
+
 // JSONResponse returns the token as an RFC 6749 §5.1 response: the access token, its lifetime
 // (expires_in, when it has one), and the rotating refresh token
 func (token OAuthUserToken) JSONResponse() map[string]any {

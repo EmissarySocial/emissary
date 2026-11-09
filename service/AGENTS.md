@@ -66,6 +66,12 @@ The flag is kept on the User, not as an ID on the Domain, so a rename keeps it a
 
 Two rules ride on the record. `clientUrl` is always the canonical form from `cimd.ParseClientID`, and `LoadByToken` canonicalizes before it queries, so every spelling of a `client_id` finds one record. And `model.OAuthClient.AllowsRedirectURI` lets a URL client that lists no redirect URIs send a User to its own origin (IndieAuth §4.2.2), while one that publishes a list is held to it. `newURLClient` drops a metadata value the schema would refuse rather than refusing the client: until then `Website` held a bare hostname, which the `url` format refuses, so a CIMD client with a `client_uri` could never be saved.
 
+## An OAuth grant never rides an error, because its challenge can be the verifier
+
+`OAuthUserToken.Data` holds the PKCE challenge a code is bound to, and under the `plain` method the challenge is the verifier itself, so an error carrying the grant carries what redeems its code. Errors name a grant by its `OAuthUserTokenID`. That ID is the authorization code until it is redeemed, and data-mongo already names it on any failed write, but a code redeems nothing without the verifier or the client's secret. Until 2026-11-09 `Create`, `Save`, `Delete`, and `DeleteMany` attached the whole grant. `TestOAuthUserToken_ErrorsCarryNoGrant` checks the first three with secretcheck; the mock cannot iterate past `notDeleted`, so `DeleteMany` has no test.
+
+`Data` also records the `redirect_uri` the code was issued to (`SetRedirectURI`), after `Validate` has filled in a registered client's default. So the stored value is where the User was actually sent, and the token endpoint cannot tell whether the client named it or left it to the default (emissary-specs INDIEAUTH §1.5).
+
 ## TAG rules only exist in the full-document key set
 
 `model.ActorMatchKeys` deliberately excludes content (TAG) keys — it answers "is this actor filtered?", nothing more. Any enforcement surface that should honor TAG rules (newsfeed ingest, notifications, render labels) must evaluate `model.DocumentMatchKeys` / `Rule.Disposition` on the (unwrapped) payload, or TAG rules silently never fire there. A surface built on `ActorDisposition` alone looks complete and passes every identity-rule test while ignoring hashtag rules entirely.
