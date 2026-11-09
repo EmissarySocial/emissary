@@ -77,7 +77,8 @@
 									type: layout-vertical
 									label: Owner
 									children: [
-										{type: "toggle", path: "isOwner", options: {true-text: "Grant this user full control over this domain.", false-text: "Grant this user full control over this domain."}}
+										{type: "toggle", path: "isOwner", options: {true-text: "Domain Owner (full control)", false-text: "Domain Owner (full control)"}}
+										{type: "toggle", path: "isPrimary",  options: {show-if: "isOwner is true", true-text: "Primary User (for IndieAuth)", false-text: "Primary User (for IndieAuth)"}}
 									]
 								}
 							]
@@ -143,7 +144,8 @@
 										type: layout-vertical
 										label: Owner
 										children: [
-											{type: "toggle", path: "isOwner", options: {true-text: "Grant this user full control over this domain.", false-text: "Grant this user full control over this domain."}}
+											{type: "toggle", path: "isOwner", options: {true-text: "Domain Owner (full control)", false-text: "Domain Owner (full control)"}}
+											{type: "toggle", path: "isPrimary",  options: {show-if: "isOwner is true", true-text: "Primary User (for IndieAuth)", false-text: "Primary User (for IndieAuth)"}}
 										]
 									}
 								]

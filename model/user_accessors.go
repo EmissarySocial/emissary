@@ -40,6 +40,7 @@ func UserSchema() schema.Element {
 			"isPublic":             schema.Boolean{},
 			"isBridgeBluesky":      schema.Boolean{},
 			"isOwner":              schema.Boolean{},
+			"isPrimary":            schema.Boolean{},
 			"isIndexable":          schema.Boolean{},
 		},
 	}
@@ -110,6 +111,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "isOwner":
 		return &user.IsOwner, true
+
+	case "isPrimary":
+		return &user.IsPrimary, true
 
 	case "isPublic":
 		return &user.IsPublic, true

@@ -17,6 +17,8 @@ type UserSummary struct {
 	Hashtags      sliceof.String     `json:"hashtags"      bson:"hashtags"`
 	Shuffle       int64              `json:"shuffle"       bson:"shuffle"`
 	MovedTo       string             `json:"movedTo"       bson:"movedTo"`
+	IsOwner       bool               `json:"isOwner"       bson:"isOwner"`
+	IsPrimary     bool               `json:"isPrimary"     bson:"isPrimary"`
 }
 
 // NewUserSummary returns a fully initialized, empty UserSummary
@@ -35,7 +37,7 @@ func NewUserSummary() UserSummary {
 
 // UserSummaryFields returns the database fields required to populate a UserSummary
 func UserSummaryFields() []string {
-	return []string{"_id", "displayName", "emailAddress", "username", "iconId", "profileUrl", "statusMessage", "hashtags", "shuffle", "movedTo"}
+	return []string{"_id", "displayName", "emailAddress", "username", "iconId", "profileUrl", "statusMessage", "hashtags", "shuffle", "movedTo", "isOwner", "isPrimary"}
 }
 
 // Fields returns the database fields required to populate a UserSummary

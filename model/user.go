@@ -55,6 +55,7 @@ type User struct {
 	FollowingCount       int                        `json:"followingCount"       bson:"followingCount"`       // Number of actors that this user is following
 	RuleCount            int                        `json:"ruleCount"            bson:"ruleCount"`            // Number of rules (blocks) that this user has implemented
 	IsOwner              bool                       `json:"isOwner"              bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
+	IsPrimary            bool                       `json:"isPrimary"            bson:"isPrimary"`            // If TRUE, then this owner is the one person the domain vouches for (IndieAuth).
 	IsPublic             bool                       `json:"isPublic"             bson:"isPublic"`             // If TRUE, then this user's profile is publicly visible
 	IsBridgeBluesky      delta.Bool                 `json:"isBridgeBluesky"      bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
 	IsIndexable          bool                       `json:"isIndexable"          bson:"isIndexable"`          // If TRUE, then this user's profile can be indexed by search engines.
@@ -124,7 +125,25 @@ func (user User) Summary() UserSummary {
 		EmailAddress: user.EmailAddress,
 		IconID:       user.IconID,
 		ProfileURL:   user.ProfileURL,
+		IsPrimary:    user.IsPrimary,
 	}
+}
+
+// RepresentsDomain returns TRUE if this User is the domain's primary user: an owner,
+// flagged primary, whose record is not deleted
+func (user User) RepresentsDomain() bool {
+
+	// RULE: Only an owner can be the primary user
+	if !user.IsOwner {
+		return false
+	}
+
+	// RULE: A deleted User represents nobody
+	if user.IsDeleted() {
+		return false
+	}
+
+	return user.IsPrimary
 }
 
 /******************************************

@@ -8,8 +8,8 @@
         {{- range $index, $user := $users -}}
 
 			{{- if eq "" $user.MovedTo -}}
-				<tr class="clickable">
-					<td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100%">
+				<tr role="link" class="clickable">
+					<td hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row nowrap">
 						{{- $iconURL := $user.IconURL -}}
 						{{- if ne "" $iconURL -}}
 							<img src="{{$iconURL}}" class="circle width-32">
@@ -18,8 +18,17 @@
 						{{- end }} 
 						<span class="ellipsis">{{highlight $user.DisplayName $search}}</span>
 					</td>
-					<td nowrap class="text-xs width-128 text-align-right">
+					<td hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="width-100% padding-left">
 						<div class="hide md:show">
+							{{- if $user.IsPrimary }}
+								<span class="text-xs">Primary User</span>
+							{{- else if $user.IsOwner -}}
+								<span class="text-xs">Admin</span>
+							{{- end -}}
+						</div>
+					</td>
+					<td nowrap class="text-xs width-128 text-align-right">
+						<div class="hide sm:show">
 
 							{{- if eq "" $user.MovedTo -}}
 								<form action="/.masquerade?userId={{.UserID.Hex}}" method="post" class="inline-block">
