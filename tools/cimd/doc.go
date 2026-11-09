@@ -4,7 +4,10 @@
 // pre-registration: the client id IS a URL, and fetching it returns the metadata a server
 // needs to describe and authorize that client.  The specification lives at https://client.dev
 //
-// GetMetadata fetches and parses one.  The client id is attacker-supplied by nature, so
-// callers must treat a returned Metadata as a claim the client makes about itself, never as
-// something the server has verified.
+// ParseClientID checks a URL client id against the IndieAuth rules and returns its canonical
+// form.  GetMetadata fetches the document, and reports separately when a client answers but
+// publishes none (an IndieAuth client serving an HTML page), so the caller can describe that
+// client from its URL alone.  The client id is attacker-supplied by nature, so callers must
+// treat a returned Metadata as a claim the client makes about itself, never as something the
+// server has verified.
 package cimd

@@ -1,39 +1,82 @@
 package cimd
 
 import (
+	"encoding/json"
+	"net/http"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/uri"
 )
 
-// GetMetadata retrieves the CIMD metadata from the provided URL
-func GetMetadata(host string, url string, options ...remote.Option) (Metadata, error) {
+// maxDocumentSize is the most of a client_id's answer that is read; a CIMD document is a few hundred bytes
+const maxDocumentSize = 64 * 1024
+
+// GetMetadata fetches the Client ID Metadata Document published at a client_id.  It returns FALSE with no
+// error when the client answers but publishes no document, so the caller can describe it from its URL
+func GetMetadata(host string, clientID string, allowPrivateIPs bool) (Metadata, bool, error) {
 
 	const location = "cimd.GetMetadata"
 
+	// RULE: The client_id must be a valid URL client identifier, and is fetched in canonical form
+	clientID, err := ParseClientID(clientID)
+
+	if err != nil {
+		return Metadata{}, false, derp.Wrap(err, location, "Invalid client_id")
+	}
+
 	// RULE: If we're running on a production host, then do not allow local clients
-	if !uri.IsLocalHostname(host) && uri.IsLocalHostname(url) {
-		return Metadata{}, derp.BadRequest(location, "Invalid Client ID. Local clients can only be accessed on development instances", host, url)
+	if !uri.IsLocalHostname(host) && uri.IsLocalHostname(clientID) {
+		return Metadata{}, false, derp.BadRequest(location, "Invalid Client ID. Local clients can only be accessed on development instances", host, clientID)
 	}
 
-	// Stage the HTTP request
-	result := Metadata{}
+	// Request the document, asking for JSON.  The body is read as bytes, so an HTML page is not a decoding error
+	body := make([]byte, 0)
+
 	txn := remote.
-		Get(url).
+		Get(clientID).
 		UserAgent("Emissary-CIMD-Lookup/1.0").
-		With(options...).
-		Result(&result)
+		Accept("application/json").
+		AllowPrivateIPs(allowPrivateIPs).
+		MaxResponseSize(maxDocumentSize).
+		Result(&body)
 
-	// Send the HTTP request
-	if err := txn.Send(); err != nil {
-		return Metadata{}, derp.Wrap(err, location, "Retrieving CIMD metadata", url)
+	sendError := txn.Send()
+	statusCode := txn.ResponseStatusCode()
+
+	// RULE: A client that cannot be reached cannot receive the redirect either.  The cause carries no response body
+	if statusCode == 0 {
+		return Metadata{}, false, derp.Wrap(sendError, location, "Unable to reach client_id", clientID, derp.WithCode(http.StatusBadGateway))
 	}
 
-	// RULE: Prevent impersonation attacks by validating the returned Client ID against the requested URL
-	if result.ClientID != url {
-		return Metadata{}, derp.BadRequest(location, "Client ID must match the provided URL", url, result.ClientID)
+	// RULE: A server error is refused rather than recorded, so the next attempt fetches again.  The error
+	// names the client_id and status, never the response, which would carry part of the body
+	if statusCode >= http.StatusInternalServerError {
+		return Metadata{}, false, derp.BadGateway(location, "client_id answered with a server error", clientID, statusCode)
+	}
+
+	// Any other answer that is not a readable document publishes no metadata: a redirect, a 4xx, or a body that is too large
+	if sendError != nil {
+		return Metadata{}, false, nil
+	}
+
+	// So does anything that is not JSON, such as an HTML page
+	result := Metadata{}
+
+	if err := json.Unmarshal(body, &result); err != nil {
+		return Metadata{}, false, nil
+	}
+
+	// So does JSON that names no client, such as an ActivityPub actor
+	if result.ClientID == "" {
+		return Metadata{}, false, nil
+	}
+
+	// RULE: Prevent impersonation: a document that names a different client is refused
+	if documentClientID, err := ParseClientID(result.ClientID); (err != nil) || (documentClientID != clientID) {
+		return Metadata{}, false, derp.BadRequest(location, "Client ID Metadata Document names a different client_id", clientID)
 	}
 
 	// Woot.
-	return result, nil
+	return result, true, nil
 }
