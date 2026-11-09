@@ -64,6 +64,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/stripe/stripe-go/v78 v78.12.0
 	github.com/tdewolff/minify/v2 v2.24.25
+	github.com/tdewolff/parse/v2 v2.8.20
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/xhit/go-simple-mail/v2 v2.17.0
 	github.com/yeqown/go-qrcode/v2 v2.3.0
@@ -120,7 +121,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.3 // indirect
-	github.com/tdewolff/parse/v2 v2.8.20 // indirect
 	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
