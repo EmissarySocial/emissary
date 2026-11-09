@@ -2,6 +2,7 @@ package build
 
 import (
 	"io"
+	"net/url"
 	"strings"
 	"text/template"
 
@@ -72,12 +73,8 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		}
 
 		// Put approved form data into the stream
-		for _, p := range step.FromForm {
-			value := strings.Join(transaction[p], ",")
-			if err := schema.Set(object, p, value); err != nil {
-				result := derp.Wrap(err, location, "Seting value from user input", transaction, p, derp.WithBadRequest())
-				return Halt().WithError(result)
-			}
+		if err := step.setFormValues(schema, object, transaction); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Setting values from the form"))
 		}
 	}
 
@@ -96,6 +93,31 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	}
 
 	// Silence is AU-some
+	return nil
+}
+
+// setFormValues writes each `from-form` path from the posted values onto the object, through its schema
+func (step StepSetData) setFormValues(objectSchema schema.Schema, object any, transaction url.Values) error {
+
+	const location = "build.StepSetData.setFormValues"
+
+	for _, path := range step.FromForm {
+
+		value := strings.Join(transaction[path], ",")
+
+		if err := objectSchema.Set(object, path, value); err != nil {
+
+			// RULE: A value the schema refuses is the visitor's to fix, so it keeps its validation
+			// code and reaches the form inline. Never attach the posted form: it can hold credentials.
+			if derp.IsValidationError(err) {
+				return derp.Wrap(err, location, "Setting value from user input", path)
+			}
+
+			return derp.Wrap(err, location, "Setting value from user input", path, derp.WithBadRequest())
+		}
+	}
+
+	// Form-ally done
 	return nil
 }
 

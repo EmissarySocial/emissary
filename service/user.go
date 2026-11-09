@@ -218,11 +218,16 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 	}
 
+	// RULE: Normalize against the outbox Template's `data` rules, so a format it declares
+	// holds here too, instead of UserSchema's no-html default (see AGENTS.md)
+	userSchema := service.Schema()
+
 	// RULE: Denormalize the tag URL from the outbox Template and extract #hashtags from profile
 	// fields.  Linkification itself happens at render time (User.SummaryHTML), not here, because
 	// statusMessage stores raw Markdown that is rendered to HTML at display time.
 	if template, err := service.templateService.Load(user.OutboxTemplate); err == nil {
 		user.TagURL = template.TagURL
+		userSchema = schema.New(model.UserSchemaForTemplate(template.Schema))
 
 		if len(template.TagPaths) > 0 {
 			service.CalculateTags(session, user)
@@ -232,7 +237,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// RULE: normalize BEFORE ValidateUsername, so uniqueness is checked against the
 	// username as it will be STORED. Otherwise an over-length name could pass against
 	// its full form, then truncate into a collision with an existing account.
-	rewrites, err := service.Schema().Normalize(user)
+	rewrites, err := userSchema.Normalize(user)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid User Data", user)
@@ -269,6 +274,11 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// are equal by construction, and profile updates would silently stop federating.
 	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew //nolint:scopeguard // must be read before the assignment below
 	user.ProfileFingerprint = newFingerprint
+
+	// RULE: Only an owner can be the primary user, and there is only one
+	if err := service.applyPrimaryUser(session, user); err != nil {
+		return derp.Wrap(err, location, "Applying primary user rules", user.UserID)
+	}
 
 	// Try to save the User record to the database
 	if err := service.collection(session).Save(user, note); err != nil {

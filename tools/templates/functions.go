@@ -15,6 +15,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/EmissarySocial/emissary/tools/customcss"
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/groupie"
 	"github.com/EmissarySocial/emissary/tools/markdown"
@@ -71,6 +72,9 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		return template.HTML(wrapped) // #nosec G203 -- both halves are escaped above; only the <b> wrapper is markup
 	}
+
+	// customCSS returns a stylesheet that a person wrote, ready for a <style> element, or nothing
+	result["customCSS"] = customCSS
 
 	result["collection"] = func(max int, collection streams.Document) (sliceof.Object[streams.Document], error) {
 
@@ -130,6 +134,20 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 	}
 
 	return result
+}
+
+// customCSS returns a stylesheet that customcss.Validate accepts, marked as trusted CSS, or
+// an empty value when the stylesheet breaks any of its rules
+func customCSS(value string) template.CSS {
+
+	// RULE: This returns template.CSS, which html/template does not escape, so refuse any
+	// stylesheet that could close its <style> element, reach past the block that wraps it,
+	// or load another website's files. A refused stylesheet is left off the page entirely.
+	if err := customcss.Validate(value); err != nil {
+		return ""
+	}
+
+	return template.CSS(value) // #nosec G203 -- customcss.Validate refuses "</", unbalanced blocks, and other websites' files
 }
 
 // toTime reads a time from a datetime.DateTime (which convert.Time does not recognize) or from
