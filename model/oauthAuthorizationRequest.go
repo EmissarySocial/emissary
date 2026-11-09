@@ -46,17 +46,13 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 
 	const location = "model.OAuthAuthorizationRequest.Validate"
 
-	if len(client.RedirectURIs) == 0 {
-		return derp.Internal(location, "Application must have at least one redirect_uri")
+	// RULE: A missing redirect_uri defaults only for a registered client that lists one
+	if err := req.defaultRedirectURI(client); err != nil {
+		return err
 	}
 
-	// RULE: If missing, use default value for RedirectURI
-	if req.RedirectURI == "" {
-		req.RedirectURI = client.RedirectURIs[0]
-	}
-
-	// RULE: Verify that redirect URI is valid
-	if !slice.Contains(client.RedirectURIs, req.RedirectURI) {
+	// RULE: The redirect_uri must be one the client lists, or on a URL client's own origin
+	if !client.AllowsRedirectURI(req.RedirectURI) {
 		return derp.BadRequest(location, "Invalid redirect_uri", "provided: "+req.RedirectURI, "allowed: "+strings.Join(client.RedirectURIs, ","))
 	}
 
@@ -96,6 +92,30 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 	}
 
 	// Success
+	return nil
+}
+
+// defaultRedirectURI fills in a missing redirect_uri with the first one a registered client lists,
+// and refuses a missing one from a URL client, or from a client that lists none
+func (req *OAuthAuthorizationRequest) defaultRedirectURI(client OAuthClient) error {
+
+	const location = "model.OAuthAuthorizationRequest.defaultRedirectURI"
+
+	if req.RedirectURI != "" {
+		return nil
+	}
+
+	// RULE: A URL client must name its redirect_uri, because nothing is registered for it (IndieAuth §5.2)
+	if client.ClientURL != "" {
+		return derp.BadRequest(location, "redirect_uri is required")
+	}
+
+	// RULE: A client that lists no redirect_uri has nothing to default to
+	if len(client.RedirectURIs) == 0 {
+		return derp.BadRequest(location, "redirect_uri is required, because this client lists none")
+	}
+
+	req.RedirectURI = client.RedirectURIs[0]
 	return nil
 }
 

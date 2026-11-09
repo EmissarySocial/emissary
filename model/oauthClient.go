@@ -2,6 +2,8 @@ package model
 
 import (
 	"crypto/subtle"
+	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/benpate/data/journal"
@@ -70,6 +72,88 @@ func (app OAuthClient) ValidateSecret(clientSecret string) error {
 	}
 
 	return nil
+}
+
+// AllowsRedirectURI returns TRUE if this client may send a User to the provided redirect_uri: one it lists,
+// or, for a URL client that lists none, any URL on the client's own origin (IndieAuth §4.2.2)
+func (app OAuthClient) AllowsRedirectURI(redirectURI string) bool {
+
+	// RULE: There is no redirect to an empty address
+	if redirectURI == "" {
+		return false
+	}
+
+	// A listed redirect_uri always matches exactly
+	if slices.Contains(app.RedirectURIs, redirectURI) {
+		return true
+	}
+
+	// RULE: Only a URL client may use its own origin...
+	if app.ClientURL == "" {
+		return false
+	}
+
+	// RULE: ...and only when it lists nothing, because a published list is the client's own, stricter rule
+	if len(app.RedirectURIs) > 0 {
+		return false
+	}
+
+	return isSameOrigin(app.ClientURL, redirectURI)
+}
+
+// isSameOrigin returns TRUE if a redirect_uri is an http(s) URL on the same scheme, host, and port as a client_id
+func isSameOrigin(clientID string, redirectURI string) bool {
+
+	// RULE: A redirect_uri carries no fragment and no credentials (RFC 6749 §3.1.2)
+	if strings.Contains(redirectURI, "#") {
+		return false
+	}
+
+	client, err := url.Parse(clientID)
+
+	if err != nil {
+		return false
+	}
+
+	redirect, err := url.Parse(redirectURI)
+
+	if err != nil {
+		return false
+	}
+
+	if redirect.User != nil {
+		return false
+	}
+
+	// Compare scheme, host, and port, filling in the port each scheme implies
+	if !strings.EqualFold(client.Scheme, redirect.Scheme) {
+		return false
+	}
+
+	if (client.Hostname() == "") || !strings.EqualFold(client.Hostname(), redirect.Hostname()) {
+		return false
+	}
+
+	return effectivePort(client) == effectivePort(redirect)
+}
+
+// effectivePort returns a URL's port, or the default port for its scheme when it names none
+func effectivePort(value *url.URL) string {
+
+	if port := value.Port(); port != "" {
+		return port
+	}
+
+	switch strings.ToLower(value.Scheme) {
+
+	case "http":
+		return "80"
+
+	case "https":
+		return "443"
+	}
+
+	return ""
 }
 
 // Toot converts this object into a Mastodon-compatible Application object
