@@ -49,6 +49,8 @@
 					<input type="hidden" name="scope" value="{{.Scope}}">
 					<input type="hidden" name="state" value="{{.State}}">
 					<input type="hidden" name="response_type" value="{{.ResponseType}}">
+					<input type="hidden" name="code_challenge" value="{{.CodeChallenge}}">
+					<input type="hidden" name="code_challenge_method" value="{{.CodeChallengeMethod}}">
 
 					<div class="flex-row flex-align-center margin-top margin-bottom-lg">
 						{{- if ne "" .IconURL -}}

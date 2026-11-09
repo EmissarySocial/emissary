@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -204,6 +205,45 @@ func TestCreate_CopiesMastodonApp(t *testing.T) {
 		require.Nil(t, service.collection(session).Load(exp.Equal("_id", grant.OAuthUserTokenID), &saved))
 		require.Equal(t, mastodonApp, saved.MastodonApp)
 	}
+}
+
+// TestCreate_SavesThePKCEChallenge confirms a code grant is saved bound to the challenge its request
+// carried, so only the client's verifier redeems it
+func TestCreate_SavesThePKCEChallenge(t *testing.T) {
+
+	// BUG-361 pins the consent form's half of this; RFC 7636 Appendix B's verifier and S256 challenge
+	const verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+	const challenge = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+
+	service, session := newTestOAuthUserTokenService(t)
+
+	// A public client: no secret, so the challenge is the only thing protecting its code
+	client := model.NewOAuthClient()
+	client.RedirectURIs = append(client.RedirectURIs, "https://client.example/callback")
+
+	authorization := model.Authorization{UserID: primitive.NewObjectID()}
+	request := model.OAuthAuthorizationRequest{
+		ResponseType:        "code",
+		ClientID:            client.ClientID.Hex(),
+		CodeChallenge:       challenge,
+		CodeChallengeMethod: model.PKCEMethodS256,
+	}
+
+	grant, err := service.Create(session, client, authorization, request)
+	require.Nil(t, err)
+
+	// Read the saved record by _id, as TestCreate_CopiesMastodonApp does
+	saved := model.NewOAuthUserToken()
+	require.Nil(t, service.collection(session).Load(exp.Equal("_id", grant.OAuthUserTokenID), &saved))
+	require.True(t, saved.HasPKCEChallenge())
+	require.Nil(t, saved.VerifyPKCE(verifier))
+	require.NotNil(t, saved.VerifyPKCE(strings.Repeat("x", 43)))
+
+	// A public client's request without a challenge is refused before anything is saved
+	request.CodeChallenge = ""
+	request.CodeChallengeMethod = ""
+	_, err = service.Create(session, client, authorization, request)
+	require.NotNil(t, err)
 }
 
 // TestExchangeCode_MastodonAppTokenHasNoExpiry confirms a Mastodon app's access token carries no

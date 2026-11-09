@@ -123,3 +123,13 @@ func (builder OAuthAuthorization) Scopes() []string {
 func (builder OAuthAuthorization) State() string {
 	return builder._transaction.State
 }
+
+// CodeChallenge returns the PKCE challenge (RFC 7636) that the client sent, if any
+func (builder OAuthAuthorization) CodeChallenge() string {
+	return builder._transaction.CodeChallenge
+}
+
+// CodeChallengeMethod returns the PKCE challenge method ("plain" or "S256") that the client sent, if any
+func (builder OAuthAuthorization) CodeChallengeMethod() string {
+	return builder._transaction.CodeChallengeMethod
+}
