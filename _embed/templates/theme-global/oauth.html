@@ -41,6 +41,12 @@
 
 			<div class="card padding">
 
+				<div class="alert-gray text-sm margin-bottom">
+					The following service is requesting access to your account on 
+					<b>{{.Hostname}}</b>.  You can revoke this permission any time
+					by going Edit Profile &rarr; Security &rarr; OAuth Clients.
+				</div>
+
 				<form action="/oauth/authorize" method="post"
 					script="on submit add .htmx-request">
 
@@ -61,8 +67,6 @@
 							<div class="text-sm margin-none"><a href="{{.Website}}" target="_blank" rel="noopener noreferrer">{{.Website }} {{icon "link-outbound"}}</a></div>
 						</div>
 					</div>
-
-					<div class="italics margin-vertical">Is Requesting Permission to...</div>
 
 					<ul>
 						{{- range .Scopes -}}
