@@ -36,6 +36,12 @@ The packages under `tools/` are small, self-contained leaf libraries — see [RE
 - **[convert/sanitize.go](convert/sanitize.go) is not a rival converter.** `SanitizeHTML`/`SanitizeText` sanitize inbound RSS/microformat content with a deliberately plainer policy (no iframes). Don't merge the two policies without deciding which trust level you are changing.
 - **An inline `style` may color, emphasize, and align text, and nothing else.** `newPolicy` allows `color`, `background-color`, `font-style`, `font-weight`, `text-align`, `text-decoration`, and `text-decoration-line`, so the Visual Editor's color picker publishes. This policy also cleans federated articles (the `html-emissary` schema format), so a new property must meet two conditions. Its value must never hold a URL, because `url()` makes every reader's browser call a tracker. And it must never move or size content, because `position`, `z-index`, or a negative `margin` can lay a fake page over the real one. `Globally()` validates each value with bluemonday's built-in handler for that property, and a property with no handler refuses every value. `FuzzSanitize_Styles` checks the result.
 
+## customcss
+
+- **Every rule exists to keep a lexer and a browser in agreement, and each one closes a gap that the fuzzer found or a browser exploits.** The rules are listed in [customcss/README.md](customcss/README.md). Three of them look removable and are not. An escaped `url(` (`u\72l(`) is refused because tdewolff reads it as an ordinary function while a browser reads a url() whose unquoted address may hold braces. A stylesheet ending in a lone backslash, and a `url()` whose closing `)` is escaped, are refused because each passes on its own and then swallows the character a template writes next, such as the `}` that closes its `@scope` (`FuzzValidate` found both). And a NUL byte is refused because tdewolff reads NUL as the end of its input, so everything after it would go unchecked.
+- **The format never rewrites, so a stored stylesheet is the one that was checked.** `schemaFormat` returns the value unchanged or an error, which is why `customCSS` in [templates/functions.go](templates/functions.go) can validate the same text again at render without disagreeing with what was saved.
+- **A refusal is a validation error, and only `set-data` shows it.** `edit` logs a field its schema refuses and keeps the old value (BUG-261, see [../build/AGENTS.md](../build/AGENTS.md)), so a Template that edits a `custom-css` field follows its `edit` step with `{do:"set-data", from-form:[…]}` to report why.
+
 ## editorjs-blocks
 
 - **List items and quotes are the editor's inline HTML, and are written unescaped.** That is safe only because `service.Content.Format` sanitizes the whole document after the renderers run, so never call a renderer anywhere else. `Code` is the exception: its content is text, so it is escaped. Escaping list items made every bold or linked item publish as literal `&lt;b&gt;` text (BUG-326).
@@ -69,6 +75,13 @@ The packages under `tools/` are small, self-contained leaf libraries — see [RE
   | microdotblog | `/post?text=[{name}]({inReplyTo})%0A%0A{content}` | |
 
   Two sources are Go-only, because a browser cannot use them: the `twitter.com` known service, which CamperJS never reaches since it adds no account without WebFinger, and the `/share` probe, which needs a CORS header that `/share` pages do not send.
+
+## cimd
+
+- **A `client_id` fetch has three outcomes, and a 5xx is a refusal, never a fallback.** `GetMetadata` returns a document, or `published` FALSE with no error, or an error. A client record is written once and never fetched again, so a fallback stored during a client's outage, or before it began publishing CIMD, would be permanent; refusing lets the next attempt retry (emissary-specs INDIEAUTH §1.3, Ben 2026-11-08). A client with no answer at all is refused too, because it could not receive the redirect either.
+- **Only a different, non-empty `client_id` is impersonation.** JSON that names no client, such as an ActivityPub actor, gets the fallback. Compare canonical forms: `ParseClientID` lower-cases the scheme and host and gives an empty path "/", and the OAuthClient service stores and looks up clients only in that form.
+- **The body is read as bytes, capped at 64 KB, and no error carries it.** remote's `HTTPError` holds a 4 KB excerpt of the response, so the 5xx refusal is a new `BadGateway` naming the `client_id` and status, not a wrap of the remote error. `TestGetMetadata` checks both refusals with secretcheck.
+- **The canonical form is length-checked as well as the input.** Escaping can triple a path, and `FuzzParseClientID` found a `client_id` whose canonical form was refused when parsed again.
 
 ## stripeapi
 

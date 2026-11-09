@@ -100,6 +100,8 @@ Note that the repair and its cleanup run against two different connections — t
 
 `markdown`, `highlight`, `icon`, and their siblings in [tools/templates/functions.go](tools/templates/functions.go) return `template.HTML`, which tells `html/template` the value is already safe. `markdown` earns that by sanitizing; `highlight` does **not** — it returns its input verbatim. Any new helper with an `HTML`/`CSS`/`HTMLAttr` return type is a trust boundary, so sanitize inside the helper and check every call site before pointing one at federated or user-supplied content.
 
+A stylesheet that a User writes is user-supplied content, because every visitor to their page renders it. Place one with `customCSS`, which returns nothing unless [tools/customcss](tools/customcss/README.md) accepts it, and never with rosetta's `css`, which is a raw cast: inside a `<style>` element, `css` passes `</style><script>` straight through.
+
 ## The funcMap shadows `and` and `or` with strict-bool versions
 
 Emissary's template funcMap is built on `rosetta/funcmap.All()` ([tools/templates/functions.go](tools/templates/functions.go)), which defines `and` and `or` as `func(values ...bool) bool` — **replacing the `text/template` builtins**, which accept any type and short-circuit on truthiness. Every Emissary template is affected: page templates, widgets, and email bodies alike.
