@@ -11,16 +11,16 @@
 
 <body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
 
-	<main>
+	<main style="container-type:inline-size;">
 
-		<div class="margin-horizontal-auto" style="width:clamp(540px, 50%, 720px);">
+		<div class="margin-horizontal-auto padding width-100% max-width-720">
 
-			<div class="margin-vertical-lg">
-				<img src="{{$domain.ImageURL}}" alt="{{$domain.Name}}" style="max-width:50%; max-height:64px;">
+			<div>
+				<img src="{{$domain.ImageURL}}" alt="{{$domain.Name}}" style="max-width:80%; max-height:64px;">
 			</div>
 
 			{{- $userIconURL := $user.IconURL -}}
-			<div class="flex-row flex-align-center margin-bottom">
+			<div class="flex-row flex-align-center margin-top margin-bottom-xl">
 				<div class="width-32">
 					{{- if ne "" $userIconURL -}}
 						<img src="{{$userIconURL}}" alt="" class="circle width-100%">
@@ -39,7 +39,7 @@
 				</div>
 			</div>
 
-			<div class="card" style="padding:16px 32px; line-height:150%;">
+			<div class="card padding">
 
 				<form action="/oauth/authorize" method="post"
 					script="on submit add .htmx-request">
@@ -52,45 +52,47 @@
 					<input type="hidden" name="code_challenge" value="{{.CodeChallenge}}">
 					<input type="hidden" name="code_challenge_method" value="{{.CodeChallengeMethod}}">
 
-					<div class="flex-row flex-align-center margin-top margin-bottom-lg">
+					<div class="flex-row flex-align-center">
 						{{- if ne "" .IconURL -}}
 							<img src="{{.IconURL}}" alt="" class="circle width-64">
 						{{- end -}}
 						<div class="flex-grow">
-							<div class="margin-none"><span class="text-lg bold">{{$name}}</span> is requesting permission to:</div>
+							<div class="margin-none"><span class="text-lg bold">{{$name}}</span></div>
 							<div class="text-sm margin-none"><a href="{{.Website}}" target="_blank" rel="noopener noreferrer">{{.Website }} {{icon "link-outbound"}}</a></div>
 						</div>
 					</div>
 
-					{{- range .Scopes -}}
-						{{- if eq . "activitypub_account_portability" -}}
-							<div class="margin-top">
-								<div class="text-red text-lg">{{icon "alert"}} <b>Export All of Your Data</b></div>
-								<div class="margin-bottom text-red">
-									Do not approve this request unless you are <b>migrating your profile.</b>
+					<div class="italics margin-vertical">Is Requesting Permission to...</div>
+
+					<ul>
+						{{- range .Scopes -}}
+							{{- if eq . "activitypub_account_portability" -}}
+								<div class="margin-top">
+									<div class="text-red text-lg">{{icon "alert"}} <b>Export All of Your Data</b></div>
+									<div class="margin-bottom text-red">
+										Do not approve this request unless you are <b>migrating your profile.</b>
+									</div>
 								</div>
-							</div>
-						{{- else -}}
-							<div class="margin-top">{{.}}</div>
+							{{- else -}}
+								<li class="margin-top">{{.}}</li>
+							{{- end -}}
 						{{- end -}}
-					{{- end -}}
+					</ul>
 
 					<div class="margin-top-lg">
-						<span class="htmx-request-show">
-							<button disabled class="primary">
-								{{icon "loading"}} Working On It...
-							</button>
-						</span>
-						<span class="htmx-request-hide">
-							<button type="submit" class="primary">
-								Yes. Allow Access
-							</button>
-						</span>
+						<button disabled class="htmx-request-show primary width-100% sm:width-auto margin-bottom">
+							{{icon "loading"}} Working On It...
+						</button>
 
-						<button script="on click halt the event then window.history.back()">No. Cancel this Request</button>
-						<span id="message" class="text-red" hidden></span>
+						<button type="submit" class="htmx-request-hide primary width-100% sm:width-auto margin-bottom">
+							Yes. Allow Access
+						</button>
+
+						<button class="width-100% sm:width-auto margin-bottom" script="on click halt the event then window.history.back()">No. Cancel this Request</button>
 
 					</div>
+
+					<span id="message" class="text-red width-100% sm:width-auto" hidden></span>
 
 				</form>
 

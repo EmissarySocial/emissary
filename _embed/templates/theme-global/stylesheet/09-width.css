@@ -192,6 +192,9 @@
 .width-640 {
 	width: 640px;
 }
+.width-720 {
+	width:720px;
+}
 .width-800 {
 	width: 800px;
 }
@@ -247,6 +250,9 @@
 .max-width-640 {
 	max-width: 640px;
 }
+.max-width-720 {
+	max-width: 720px;
+}
 .max-width-800 {
 	max-width: 800px;
 }
@@ -298,6 +304,9 @@
 	.sm\:width-640 {
 		width: 640px;
 	}
+	.sm\:width-720 {
+		width: 720px;
+	}
 	.sm\:width-800 {
 		width: 800px;
 	}
@@ -346,6 +355,12 @@
 	}
 	.sm\:max-width-640 {
 		max-width: 640px;
+	}
+	.sm\:max-width-720 {
+		max-width: 720px;
+	}
+	.sm\:max-width-800 {
+		max-width: 800px;
 	}
 
 	.sm\:width-1-12 {
@@ -542,6 +557,9 @@
 	.md\:width-640 {
 		width: 640px;
 	}
+	.md\:width-720 {
+		width: 720px;
+	}
 	.md\:width-800 {
 		width: 800px;
 	}
@@ -588,6 +606,9 @@
 	}
 	.md\:max-width-512 {
 		max-width: 512px;
+	}
+	.md\:max-width-720 {
+		max-width: 720px;
 	}
 	.md\:max-width-640 {
 		max-width: 640px;
@@ -779,6 +800,9 @@
 	.lg\:width-640 {
 		width: 640px;
 	}
+	.lg\:width-720 {
+		width: 720px;
+	}
 	.lg\:width-800 {
 		width: 800px;
 	}
@@ -828,6 +852,9 @@
 	}
 	.lg\:max-width-640 {
 		max-width: 640px;
+	}
+	.lg\:max-width-720 {
+		max-width: 720px;
 	}
 	.lg\:max-width-800 {
 		max-width: 800px;
