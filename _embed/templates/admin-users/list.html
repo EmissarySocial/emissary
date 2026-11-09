@@ -12,7 +12,7 @@
 					<td hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row nowrap">
 						{{- $iconURL := $user.IconURL -}}
 						{{- if ne "" $iconURL -}}
-							<img src="{{$iconURL}}" class="circle width-32">
+							<img src="{{$iconURL}}" class="circle width-32" alt="" aria-hidden="true">
 						{{- else -}}
 							<span class="circle width-32"></span>
 						{{- end }} 
@@ -27,7 +27,7 @@
 							{{- end -}}
 						</div>
 					</td>
-					<td nowrap class="text-xs width-128 text-align-right">
+					<td class="text-xs width-128 text-align-right nowrap">
 						<div class="hide sm:show">
 
 							{{- if eq "" $user.MovedTo -}}
@@ -48,7 +48,7 @@
 						<span class="circle width-32"></span>
 						<span class="ellipsis"><span class="line-through">{{highlight $user.DisplayName $search}}</span> (MOVED)</span>
 					</td>
-					<td nowrap class="text-xs width-128 text-align-right">
+					<td class="text-xs width-128 text-align-right nowrap">
 						<div class="hide md:show">
 							<a href="{{$user.MovedTo}}" target="_blank" rel="noopener noreferrer" class="button">New Profile &rarr;</a>
 						</div>
