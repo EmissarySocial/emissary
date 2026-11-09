@@ -2,6 +2,8 @@ package service
 
 import (
 	"crypto/subtle"
+	"net/url"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/cimd"
@@ -153,8 +155,8 @@ func (service *OAuthClient) LoadByClientID(session data.Session, clientID primit
 	return service.Load(session, criteria, client)
 }
 
-// LoadByToken loads a single OAuth client.  If the token is an ObjectID, then it searches on the ClientID
-// field.  Otherwise, it searches on the ActorID field
+// LoadByToken loads a single OAuth client.  An ObjectID token loads a registered client by its ClientID,
+// and any other token is a URL client_id, which loads by its canonical form
 func (service *OAuthClient) LoadByToken(session data.Session, token string, client *model.OAuthClient) error {
 
 	const location = "service.OAuthClient.LoadByToken"
@@ -169,49 +171,116 @@ func (service *OAuthClient) LoadByToken(session data.Session, token string, clie
 		return service.LoadByClientID(session, clientID, client)
 	}
 
-	// Load the client using the ActorID instead
-	criteria := exp.Equal("clientUrl", token)
-	return service.Load(session, criteria, client)
+	// RULE: Any other token must be a valid URL client_id, and is stored in canonical form
+	clientURL, err := cimd.ParseClientID(token)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid client_id", token)
+	}
+
+	return service.Load(session, exp.Equal("clientUrl", clientURL), client)
 }
 
-// LoadOrCreateByClientToken loads a single OAuth client.  If the token is an ObjectID, then it searches for
+// LoadOrCreateByClientToken loads a single OAuth client by its token.  A URL client_id seen for the first
+// time is created from its Client ID Metadata Document, or from its URL alone when it publishes none
 func (service *OAuthClient) LoadOrCreateByClientToken(session data.Session, token string, client *model.OAuthClient) error {
 
 	const location = "service.OAuthClient.LoadOrCreateByClientToken"
 
 	// First, try to load the client using the token
-	if err := service.LoadByToken(session, token, client); err != nil {
+	err := service.LoadByToken(session, token, client)
 
-		// Anything other than NotFound is a real failure; a NotFound falls through to create one
-		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Loading OAuthClient", token)
-		}
-	} else {
+	if err == nil {
 		return nil
 	}
 
-	// Otherwise, create a new Client by looking up the "Client ID Metadata Document"
-	metadata, err := cimd.GetMetadata(service.host, token)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Loading Client ID Metadata Document", token)
+	// Anything other than NotFound is a real failure
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Loading OAuthClient", token)
 	}
 
-	// Populate the new Client from the Actor's data
-	client.ClientURL = token
-	client.Name = metadata.ClientName
-	client.RedirectURIs = metadata.RedirectURIs
-	client.IconURL = metadata.LogoURI
-	client.RedirectURIs = metadata.RedirectURIs
-	client.Website = uri.Hostname(metadata.ClientURI)
+	// RULE: Only a URL client is created on sight; a registered client that does not exist stays not found
+	if _, idError := primitive.ObjectIDFromHex(token); idError == nil {
+		return derp.Wrap(err, location, "Unknown client_id", token)
+	}
 
-	// Save the new Client
-	if err := service.Save(session, client, "Created via Client ID Metadata Document"); err != nil {
-		return derp.Wrap(err, location, "Saving client")
+	// Otherwise, describe the new client from its Client ID Metadata Document, if it publishes one
+	clientURL, err := cimd.ParseClientID(token)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid client_id", token)
+	}
+
+	metadata, published, err := cimd.GetMetadata(service.host, clientURL, service.activityService.AllowPrivateIPs())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading Client ID Metadata Document", clientURL)
+	}
+
+	*client = newURLClient(clientURL, metadata, published)
+
+	// Save the new client.  When another server saved the same client first, the unique index refuses
+	// this one, and the client that won is the one to use
+	if err := service.Save(session, client, "Created from its client_id"); err != nil {
+
+		if !derp.IsConflict(err) {
+			return derp.Wrap(err, location, "Saving client", clientURL)
+		}
+
+		*client = model.NewOAuthClient()
+
+		if err := service.LoadByToken(session, clientURL, client); err != nil {
+			return derp.Wrap(err, location, "Loading the client another server created", clientURL)
+		}
 	}
 
 	// Success.
 	return nil
+}
+
+// newURLClient returns a new client for a URL client_id, keeping only the metadata values its schema accepts,
+// so a malformed optional value is dropped rather than refusing the client
+func newURLClient(clientURL string, metadata cimd.Metadata, published bool) model.OAuthClient {
+
+	result := model.NewOAuthClient()
+	result.ClientURL = clientURL
+	result.Name = uri.Hostname(clientURL)
+
+	// A client that publishes no metadata is named by its hostname, and may redirect only to its own origin
+	if !published {
+		return result
+	}
+
+	if name := truncateRunes(strings.TrimSpace(metadata.ClientName), model.OAuthClientNameMaxLength); name != "" {
+		result.Name = name
+	}
+
+	if isWebURL(metadata.LogoURI) {
+		result.IconURL = metadata.LogoURI
+	}
+
+	if isWebURL(metadata.ClientURI) {
+		result.Website = metadata.ClientURI
+	}
+
+	result.RedirectURIs = append(result.RedirectURIs, metadata.RedirectURIs...)
+	return result
+}
+
+// isWebURL returns TRUE if a value is an absolute http or https URL with a host
+func isWebURL(value string) bool {
+
+	parsed, err := url.Parse(value)
+
+	if err != nil {
+		return false
+	}
+
+	if (parsed.Scheme != "http") && (parsed.Scheme != "https") {
+		return false
+	}
+
+	return parsed.Host != ""
 }
 
 /******************************************

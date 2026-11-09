@@ -1,9 +1,11 @@
 package service
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/cimd"
 	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -84,4 +86,73 @@ func TestOAuthClient_LoadByToken_RejectsEmpty(t *testing.T) {
 	err := service.LoadByToken(brokenSession{}, "", &client)
 	require.Error(t, err)
 	require.Equal(t, "service.OAuthClient.LoadByToken", derp.Location(err))
+}
+
+// TestOAuthClient_LoadByToken_RejectsInvalidURL requires a client_id that is neither an ObjectID nor a valid
+// URL client_id to be refused as a bad request before any lookup
+func TestOAuthClient_LoadByToken_RejectsInvalidURL(t *testing.T) {
+
+	service := OAuthClient{}
+
+	for _, token := range []string{"not-a-url", "https://127.0.0.1/", "https://app.example.com/#x"} {
+		client := model.NewOAuthClient()
+		err := service.LoadByToken(brokenSession{}, token, &client)
+		require.True(t, derp.IsBadRequest(err), "%q answers %d", token, derp.ErrorCode(err))
+	}
+}
+
+// TestNewURLClient verifies the client built for a URL client_id: named by its hostname when it publishes
+// nothing, and from its metadata otherwise, keeping only values the schema accepts
+func TestNewURLClient(t *testing.T) {
+
+	schema := (&OAuthClient{}).Schema()
+
+	valid := func(client model.OAuthClient) {
+		t.Helper()
+		_, err := schema.Validate(&client)
+		require.NoError(t, err)
+	}
+
+	t.Run("no metadata", func(t *testing.T) {
+		client := newURLClient("https://fed.brid.gy/", cimd.Metadata{ClientName: "Ignored"}, false)
+		require.Equal(t, "https://fed.brid.gy/", client.ClientURL)
+		require.Equal(t, "fed.brid.gy", client.Name)
+		require.Empty(t, client.RedirectURIs)
+		require.Empty(t, client.IconURL)
+		require.Empty(t, client.Website)
+		require.False(t, client.IsConfidential())
+		valid(client)
+	})
+
+	t.Run("metadata", func(t *testing.T) {
+		client := newURLClient("https://app.example.com/client.json", cimd.Metadata{
+			ClientID:     "https://app.example.com/client.json",
+			ClientName:   "  Example App  ",
+			LogoURI:      "https://app.example.com/logo.png",
+			ClientURI:    "https://app.example.com/",
+			RedirectURIs: []string{"https://app.example.com/callback"},
+		}, true)
+
+		require.Equal(t, "Example App", client.Name)
+		require.Equal(t, "https://app.example.com/logo.png", client.IconURL)
+		require.Equal(t, "https://app.example.com/", client.Website, "a full client_uri, which the schema's url format accepts")
+		require.Equal(t, []string{"https://app.example.com/callback"}, []string(client.RedirectURIs))
+		valid(client)
+	})
+
+	t.Run("malformed metadata is dropped, not refused", func(t *testing.T) {
+		client := newURLClient("https://app.example.com/client.json", cimd.Metadata{
+			ClientName: strings.Repeat("é", 200),
+			LogoURI:    "javascript:alert(1)",
+			ClientURI:  "app.example.com",
+		}, true)
+
+		require.Equal(t, strings.Repeat("é", model.OAuthClientNameMaxLength), client.Name)
+		require.Empty(t, client.IconURL)
+		require.Empty(t, client.Website)
+		valid(client)
+
+		blank := newURLClient("https://app.example.com/client.json", cimd.Metadata{ClientName: "   "}, true)
+		require.Equal(t, "app.example.com", blank.Name)
+	})
 }
