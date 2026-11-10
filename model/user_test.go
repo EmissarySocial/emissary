@@ -219,6 +219,34 @@ func TestUser_RepresentsDomain(t *testing.T) {
 	require.False(t, deleted.RepresentsDomain())
 }
 
+// TestUser_IndieAuthMe verifies that only the public primary user gets a `me`
+func TestUser_IndieAuthMe(t *testing.T) {
+
+	const profileURL = "https://example.com/@000000000000000000000001"
+
+	newUser := func(isPrimary bool, isPublic bool) User {
+		user := NewUser()
+		user.IsOwner = true
+		user.IsPrimary = isPrimary
+		user.IsPublic = isPublic
+		user.ProfileURL = profileURL
+		return user
+	}
+
+	require.Equal(t, profileURL, newUser(true, true).IndieAuthMe())
+	require.Empty(t, newUser(true, false).IndieAuthMe(), "a non-public profile answers 404, so no client could confirm it")
+	require.Empty(t, newUser(false, true).IndieAuthMe(), "an owner who is not primary")
+	require.Empty(t, User{}.IndieAuthMe())
+
+	demoted := newUser(true, true)
+	demoted.IsOwner = false
+	require.Empty(t, demoted.IndieAuthMe(), "a primary flag on a User who is not an owner")
+
+	deleted := newUser(true, true)
+	deleted.SetDeleted("test")
+	require.Empty(t, deleted.IndieAuthMe())
+}
+
 // TestUser_SummaryCarriesPrimary verifies that the summary the admin user list reads names the primary user
 func TestUser_SummaryCarriesPrimary(t *testing.T) {
 

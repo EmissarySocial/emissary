@@ -200,7 +200,7 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 	transaction := model.NewOAuthUserTokenRequest()
 
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Invalid form parameters")
+		return oauthTokenError(ctx, "invalid_request", derp.Wrap(err, location, "Invalid form parameters", derp.WithBadRequest()))
 	}
 
 	// Load the OAuth Client (from ID or from ActorID)
@@ -210,7 +210,7 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 	// Errors name the client_id, never the transaction, which carries the client_secret, the
 	// code, the refresh_token, and the code_verifier.  Reported errors are stored verbatim.
 	if err := oauthClientService.LoadByToken(session, transaction.ClientID, &oauthClient); err != nil {
-		return derp.Wrap(err, location, "Invalid client_id", transaction.ClientID)
+		return oauthTokenError(ctx, "invalid_client", derp.Wrap(err, location, "Invalid client_id", transaction.ClientID))
 	}
 
 	// RULE: Dispatch on grant_type. An empty grant_type is treated as
@@ -224,7 +224,7 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 		return postOAuthToken_refresh(ctx, factory, session, oauthClient, transaction)
 	}
 
-	return derp.BadRequest(location, "Unsupported grant_type", transaction.GrantType)
+	return oauthTokenError(ctx, "unsupported_grant_type", derp.BadRequest(location, "Unsupported grant_type", transaction.GrantType))
 }
 
 // postOAuthToken_authorizationCode exchanges a single-use authorization code for an access and
@@ -237,7 +237,7 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	userTokenID, err := primitive.ObjectIDFromHex(transaction.Code)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid code", transaction.ClientID)
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Invalid code", transaction.ClientID, derp.WithBadRequest()))
 	}
 
 	// Load the grant bound to this code. This performs NO authentication -- the
@@ -246,7 +246,7 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	userToken := model.NewOAuthUserToken()
 
 	if err := userTokenService.LoadByClientAndID(session, userTokenID, oauthClient.ClientID, &userToken); err != nil {
-		return derp.Wrap(err, location, "Loading OAuthUserToken", transaction.ClientID)
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Loading OAuthUserToken", transaction.ClientID))
 	}
 
 	// RULE: Authenticate the code redemption (RFC 8252 / OAuth 2.1).  A
@@ -255,25 +255,42 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	// to a PKCE challenge, so an intercepted code is useless without the verifier.
 	if oauthClient.IsConfidential() {
 		if err := oauthClient.ValidateSecret(transaction.ClientSecret); err != nil {
-			return derp.Wrap(err, location, "Invalid client_secret", transaction.ClientID)
+			return oauthTokenError(ctx, "invalid_client", derp.Wrap(err, location, "Invalid client_secret", transaction.ClientID))
 		}
 	} else if !userToken.HasPKCEChallenge() {
-		return derp.BadRequest(location, "This client must use PKCE (a code_verifier is required)", transaction.ClientID)
+		return oauthTokenError(ctx, "invalid_grant", derp.BadRequest(location, "This client must use PKCE (a code_verifier is required)", transaction.ClientID))
 	}
 
 	// RULE: PKCE (RFC 7636). If the code was issued with a code_challenge, a
 	// matching code_verifier is required to redeem it.
 	if err := userToken.VerifyPKCE(transaction.CodeVerifier); err != nil {
-		return derp.Wrap(err, location, "Invalid PKCE code_verifier")
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Invalid PKCE code_verifier"))
 	}
 
-	// Exchange the single-use code for an access+refresh pair.
+	// RULE: The redirect_uri is the one the code was issued to (RFC 6749 §4.1.3, IndieAuth §5.3.1)
+	if err := userToken.VerifyRedirectURI(oauthClient, transaction.RedirectURI); err != nil {
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Invalid redirect_uri", transaction.ClientID))
+	}
+
+	// Load the User the code was issued for
+	user := model.NewUser()
+
+	if err := factory.User().LoadByID(session, userToken.UserID, &user); err != nil {
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Loading User", transaction.ClientID))
+	}
+
+	// RULE: A code with no scope gets no token, so it is refused unspent when there is no identity to return either
+	if !userToken.IsRedeemableFor(user) {
+		return oauthTokenError(ctx, "invalid_grant", derp.BadRequest(location, "This code carries no scope, and this server vouches for no identity to return", transaction.ClientID))
+	}
+
+	// Redeem the single-use code, minting an access+refresh pair when the grant carries a scope
 	if err := userTokenService.ExchangeCode(session, &userToken); err != nil {
-		return derp.Wrap(err, location, "Exchanging authorization code")
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Exchanging authorization code"))
 	}
 
-	// Return the token pair as JSON
-	return ctx.JSON(http.StatusOK, userToken.JSONResponse())
+	// Return the tokens, and the User's identity when the domain vouches for them
+	return ctx.JSON(http.StatusOK, userToken.TokenResponse(user))
 }
 
 // postOAuthToken_refresh rotates a refresh token into a new access and refresh pair (RFC 6749
@@ -286,7 +303,7 @@ func postOAuthToken_refresh(ctx *steranko.Context, factory *service.Factory, ses
 	grantID, generation, secret, err := model.ParseRefreshToken(transaction.RefreshToken)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid refresh_token")
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Invalid refresh_token"))
 	}
 
 	// RULE: Authenticate the client. A confidential client must present its
@@ -294,7 +311,7 @@ func postOAuthToken_refresh(ctx *steranko.Context, factory *service.Factory, ses
 	// token itself as the possession proof (rotation + reuse detection protect it).
 	if oauthClient.IsConfidential() {
 		if err := oauthClient.ValidateSecret(transaction.ClientSecret); err != nil {
-			return derp.Wrap(err, location, "Invalid client_secret", transaction.ClientID)
+			return oauthTokenError(ctx, "invalid_client", derp.Wrap(err, location, "Invalid client_secret", transaction.ClientID))
 		}
 	}
 
@@ -303,16 +320,32 @@ func postOAuthToken_refresh(ctx *steranko.Context, factory *service.Factory, ses
 	userToken := model.NewOAuthUserToken()
 
 	if err := userTokenService.LoadByClientAndID(session, grantID, oauthClient.ClientID, &userToken); err != nil {
-		return derp.Wrap(err, location, "Invalid refresh_token")
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Invalid refresh_token"))
 	}
 
-	// Rotate the grant (or revoke on reuse).
+	// Rotate the grant, or revoke it on reuse.  A refusal commits, so a revocation sticks.
 	if err := userTokenService.RefreshGrant(session, &userToken, generation, secret, transaction.Scope); err != nil {
-		return derp.Wrap(err, location, "Refreshing token")
+		return oauthTokenError(ctx, "invalid_grant", derp.Wrap(err, location, "Refreshing token"))
 	}
 
 	// Return the new token pair as JSON
 	return ctx.JSON(http.StatusOK, userToken.JSONResponse())
+}
+
+// oauthTokenError answers a token request the client got wrong as RFC 6749 §5.2 JSON, and
+// returns any other failure for errorHandler to report
+func oauthTokenError(ctx echo.Context, errorCode string, err error) error {
+
+	// RULE: A server fault is returned, so it is reported and its transaction rolls back
+	if !derp.IsClientError(err) {
+		return err
+	}
+
+	// A client's mistake is answered here, so it is never reported, and the transaction commits
+	return ctx.JSON(http.StatusBadRequest, map[string]any{
+		"error":             errorCode,
+		"error_description": derp.Message(err),
+	})
 }
 
 // PostOAuthRevoke handles the token-revocation endpoint (RFC 7009) by deleting the whole

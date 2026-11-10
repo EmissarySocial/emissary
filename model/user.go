@@ -129,6 +129,23 @@ func (user User) Summary() UserSummary {
 	}
 }
 
+// IndieAuthMe returns the profile URL that IndieAuth vouches for on this User's behalf, or an
+// empty string when the domain vouches for nobody
+func (user User) IndieAuthMe() string {
+
+	// RULE: Only the domain's primary user gets a `me`
+	if !user.RepresentsDomain() {
+		return ""
+	}
+
+	// RULE: A client must fetch `me` to confirm it, and a non-public profile answers 404 (IndieAuth §5.4)
+	if !user.IsPublic {
+		return ""
+	}
+
+	return user.ProfileURL
+}
+
 // RepresentsDomain returns TRUE if this User is the domain's primary user: an owner,
 // flagged primary, whose record is not deleted
 func (user User) RepresentsDomain() bool {

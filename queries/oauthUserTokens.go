@@ -8,6 +8,42 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// RedeemOAuthCode marks a grant's authorization code as used, and returns FALSE when the code was
+// already used or the grant is gone, so the database decides which of two redemptions wins
+func RedeemOAuthCode(session data.Session, grantID primitive.ObjectID) (bool, error) {
+
+	const location = "queries.RedeemOAuthCode"
+
+	// Get the MongoDB Collection
+	collection := mongoCollection(session.Collection("OAuthUserToken"))
+
+	if collection == nil {
+		return false, derp.Internal(location, "Unable to connect to OAuthUserToken collection")
+	}
+
+	// Match only a live grant whose code is unused.  "$ne" also matches a record that predates the field.
+	filter := bson.M{
+		"_id":          grantID,
+		"codeRedeemed": bson.M{"$ne": true},
+		"deleteDate":   0,
+	}
+
+	update := bson.M{"$set": bson.M{"codeRedeemed": true}}
+
+	result, err := collection.UpdateOne(session.Context(), filter, update)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Redeeming authorization code", grantID)
+	}
+
+	// A missing result redeems nothing, so the code is refused rather than spent twice
+	if result == nil {
+		return false, nil
+	}
+
+	return result.MatchedCount == 1, nil
+}
+
 // OAuthUserTokens returns every active OAuth token belonging to the provided User, oldest first
 func OAuthUserTokens(session data.Session, userID primitive.ObjectID) (sliceof.MapOfAny, error) {
 

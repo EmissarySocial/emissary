@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -342,11 +343,8 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	return result, nil
 }
 
-// ExchangeCode completes an authorization-code grant (RFC 6749 §4.1.3): it
-// verifies the code is still redeemable (single-use and short-lived), then mints
-// the access token and the INITIAL refresh token, marks the code consumed, and
-// saves. The caller (the token handler) has already authenticated the client and
-// verified PKCE.
+// ExchangeCode redeems an authorization code exactly once (RFC 6749 §4.1.3), and mints the grant's first
+// access and refresh tokens when it issues them.  The caller has already authenticated the client.
 func (service *OAuthUserToken) ExchangeCode(session data.Session, grant *model.OAuthUserToken) error {
 
 	const location = "service.OAuthUserToken.ExchangeCode"
@@ -363,17 +361,33 @@ func (service *OAuthUserToken) ExchangeCode(session data.Session, grant *model.O
 		return derp.BadRequest(location, "Authorization code has expired")
 	}
 
-	// Mint the access token + initial refresh token for this grant.
-	if err := service.mintInitialTokens(grant, now); err != nil {
-		return derp.Wrap(err, location, "Minting tokens")
+	// RULE: The database decides which request redeems the code, so two servers cannot both redeem it
+	redeemed, err := queries.RedeemOAuthCode(session, grant.OAuthUserTokenID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Redeeming authorization code", grant.OAuthUserTokenID)
+	}
+
+	if !redeemed {
+		return derp.BadRequest(location, "Authorization code has already been used")
 	}
 
 	grant.CodeRedeemed = true
 
-	// RULE: Persist the consumed code + refresh hash so the code cannot be replayed
-	// and the refresh token can be validated later.
+	// RULE: A grant with no scope only confirms who the User is, so it mints nothing (IndieAuth §5.3.3)
+	if !grant.IssuesAccessToken() {
+		return nil
+	}
+
+	// Mint the access token + initial refresh token for this grant.  A failure from here on is
+	// the server's, so it is reported and the redemption rolls back with it.
+	if err := service.mintInitialTokens(grant, now); err != nil {
+		return derp.Wrap(err, location, "Minting tokens", derp.WithInternalError())
+	}
+
+	// RULE: Persist the refresh hash so the refresh token can be validated later.
 	if err := service.Save(session, grant, "Exchange authorization code"); err != nil {
-		return derp.Wrap(err, location, "Saving grant")
+		return derp.Wrap(err, location, "Saving grant", derp.WithInternalError())
 	}
 
 	return nil

@@ -1,10 +1,13 @@
 package model
 
 import (
+	"maps"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
@@ -116,10 +119,124 @@ func (token *OAuthUserToken) SetRedirectURI(redirectURI string) {
 	token.Data[oauthUserTokenDataRedirectURI] = redirectURI
 }
 
+// VerifyRedirectURI confirms that a token request names the redirect_uri this grant's code was
+// issued to (RFC 6749 §4.1.3, IndieAuth §5.3.1)
+func (token OAuthUserToken) VerifyRedirectURI(client OAuthClient, redirectURI string) error {
+
+	const location = "model.OAuthUserToken.VerifyRedirectURI"
+
+	issuedTo := token.RedirectURI()
+
+	// A grant issued before the redirect_uri was recorded has nothing to compare
+	if issuedTo == "" {
+		return nil
+	}
+
+	// A request that names a redirect_uri must name the one the code was issued to
+	if redirectURI != "" {
+
+		if redirectURI != issuedTo {
+			return derp.BadRequest(location, "redirect_uri does not match the authorization request")
+		}
+
+		return nil
+	}
+
+	// RULE: A URL client must name its redirect_uri, because IndieAuth requires it (§5.3.1)
+	if client.ClientURL != "" {
+		return derp.BadRequest(location, "redirect_uri is required")
+	}
+
+	// A registered client may leave out a redirect_uri that it left out of the authorization request
+	return nil
+}
+
 // RedirectURI returns the redirect_uri that this grant's authorization code was issued to, or an
 // empty string for a grant issued before it was recorded
 func (token OAuthUserToken) RedirectURI() string {
 	return token.Data.GetString(oauthUserTokenDataRedirectURI)
+}
+
+// IsRedeemableFor returns TRUE if redeeming this grant answers with something: its tokens, or the
+// identity of a User the domain vouches for
+func (token OAuthUserToken) IsRedeemableFor(user User) bool {
+
+	if token.IssuesAccessToken() {
+		return true
+	}
+
+	return user.IndieAuthMe() != ""
+}
+
+// TokenResponse returns the token endpoint's answer to a redeemed code: the tokens when the grant
+// issues them, and the User's identity when the domain vouches for them (IndieAuth §5.3)
+func (token OAuthUserToken) TokenResponse(user User) map[string]any {
+
+	result := token.IdentityResponse(user)
+
+	if token.IssuesAccessToken() {
+		maps.Copy(result, token.JSONResponse())
+	}
+
+	return result
+}
+
+// IdentityResponse returns `me`, and the profile this grant's scopes release (IndieAuth §5.3.4),
+// or an empty map when the domain does not vouch for the User
+func (token OAuthUserToken) IdentityResponse(user User) map[string]any {
+
+	result := map[string]any{}
+	me := user.IndieAuthMe()
+
+	// RULE: Nothing is said about a User the domain does not vouch for
+	if me == "" {
+		return result
+	}
+
+	result["me"] = me
+
+	// RULE: The profile is released only by the profile scope
+	if !token.HasScope(OAuthUserTokenScopeProfile) {
+		return result
+	}
+
+	profile := map[string]any{"url": me}
+
+	if user.DisplayName != "" {
+		profile["name"] = user.DisplayName
+	}
+
+	if photo := user.ActivityPubIconURL(); photo != "" {
+		profile["photo"] = photo
+	}
+
+	// RULE: The email address is released only by the email scope, inside the profile
+	if token.HasScope(OAuthUserTokenScopeEmail) {
+		if user.EmailAddress != "" {
+			profile["email"] = user.EmailAddress
+		}
+	}
+
+	result["profile"] = profile
+	return result
+}
+
+// IssuesAccessToken returns TRUE if this grant carries a scope.  A grant with none only confirms
+// who the User is, so it gets no access token (IndieAuth §5.3.3).
+func (token OAuthUserToken) IssuesAccessToken() bool {
+
+	for _, scope := range token.Scopes {
+		if scope != "" {
+			return true
+		}
+	}
+
+	return false
+}
+
+// HasScope returns TRUE if the named scope was granted
+func (token OAuthUserToken) HasScope(scope string) bool {
+	return slices.Contains(token.Scopes, scope)
 }
 
 // JSONResponse returns the token as an RFC 6749 §5.1 response: the access token, its lifetime

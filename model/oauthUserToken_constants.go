@@ -7,6 +7,12 @@ import "time"
 // https://swicg.github.io/activitypub-data-portability/lola#Authorization
 const OAuthUserTokenScopeActivityPubPortability = "activitypub_account_portability" // #nosec G101 -- this is the NAME of an OAuth scope, not a credential
 
+// OAuthUserTokenScopeProfile is the IndieAuth scope that releases the User's name, profile URL, and photo
+const OAuthUserTokenScopeProfile = "profile"
+
+// OAuthUserTokenScopeEmail is the IndieAuth scope that releases the User's email address, alongside the profile
+const OAuthUserTokenScopeEmail = "email"
+
 // oauthUserTokenDataRedirectURI is the OAuthUserToken.Data key that records the redirect_uri a code was issued to
 const oauthUserTokenDataRedirectURI = "redirect_uri"
 
