@@ -47,13 +47,13 @@
 				</div>
 			{{- end -}}
 
-			<div class="card padding">
+			<div class="margin-bottom">
+				The following service is requesting access to your account on 
+				<b>{{.Hostname}}</b>.  You can revoke this permission any time
+				by going Edit Profile &rarr; Security &rarr; OAuth Clients.
+			</div>
 
-				<div class="alert-gray text-sm margin-bottom">
-					The following service is requesting access to your account on 
-					<b>{{.Hostname}}</b>.  You can revoke this permission any time
-					by going Edit Profile &rarr; Security &rarr; OAuth Clients.
-				</div>
+			<div class="card padding">
 
 				<form action="/oauth/authorize" method="post"
 					script="on submit add .htmx-request">
@@ -71,10 +71,31 @@
 							<img src="{{.IconURL}}" alt="" class="circle width-64">
 						{{- end -}}
 						<div class="flex-grow">
-							<div class="margin-none"><span class="text-lg bold">{{$name}}</span></div>
-							<div class="text-sm margin-none"><a href="{{.Website}}" target="_blank" rel="noopener noreferrer">{{.Website }} {{icon "link-outbound"}}</a></div>
+							<div class="margin-none"><span class="text-xl bold">{{$name}}</span></div>
+							<div class="text-sm margin-none"><a href="{{.Website}}" target="_blank" rel="noopener noreferrer">{{.Website }}</a></div>
 						</div>
 					</div>
+
+					{{- $scopes := .Scopes -}}
+					{{- if not $scopes -}}
+						<div class="margin-top-lg">
+							<div class="bold">Confirm Who You Are</div>
+							<div class="text-sm text-gray">{{$name}} learns your profile address, and nothing else in your account.</div>
+						</div>
+					{{- else -}}
+						<div class="table margin-top-lg">
+							{{- range $scopes -}}
+								{{- $style := iif (eq .Value "activitypub_account_portability") "text-red" "" -}}
+								<div class="flex-row margin-top-sm {{$style}}">
+									<div class="text-xl margin-none margin-right-xs">{{icon .Icon}}</div>
+									<div class="flex-grow">
+										<div class="bold">{{.Label}}</div>
+										<div class="text-sm text-gray">{{.Description}}</div>
+									</div>
+								</div>
+							{{- end -}}
+						</div>
+					{{- end -}}
 
 					<!-- IndieAuth §10.1: show where the client is, and where approval sends the User -->
 					<div class="text-sm margin-top">
@@ -86,36 +107,7 @@
 						{{- end -}}
 					</div>
 
-					{{- $scopes := .Scopes -}}
-					{{- if not $scopes -}}
-						<div class="margin-top-lg">
-							<div class="bold">Confirm Who You Are</div>
-							<div class="text-sm text-gray">{{$name}} learns your profile address, and nothing else in your account.</div>
-						</div>
-					{{- else -}}
-						{{- $group := groupie -}}
-						{{- range $scopes -}}
-							{{- if $group.Header .Group -}}
-								<div class="text-xs text-gray bold margin-top-lg">{{.Group}}</div>
-							{{- end -}}
-							{{- if eq .Value "activitypub_account_portability" -}}
-								<div class="margin-top text-red">
-									<div class="text-lg">{{icon "alert"}} <b>{{.Label}}</b></div>
-									<div class="margin-bottom">{{.Description}}</div>
-								</div>
-							{{- else -}}
-								<div class="flex-row margin-top-sm">
-									<div class="width-32">{{icon .Icon}}</div>
-									<div class="flex-grow">
-										<div class="bold">{{.Label}}</div>
-										<div class="text-sm text-gray">{{.Description}}</div>
-									</div>
-								</div>
-							{{- end -}}
-						{{- end -}}
-					{{- end -}}
-
-					<div class="margin-top-lg">
+					<div class="margin-top-xl">
 						<button disabled class="htmx-request-show primary width-100% sm:width-auto margin-bottom">
 							{{icon "loading"}} Working On It...
 						</button>
