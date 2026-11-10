@@ -152,6 +152,11 @@ func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, ses
 		return derp.Wrap(err, location, "Invalid transaction")
 	}
 
+	// RULE: A User who refuses is sent back to the client with the refusal, and no grant is written
+	if transaction.IsDenied() {
+		return postOAuthAuthorization_deny(ctx, factory.Host(), transaction)
+	}
+
 	// Create a UserToken
 	userTokenService := factory.OAuthUserToken()
 	userToken, err := userTokenService.Create(session, application, authorization, transaction)
@@ -242,6 +247,51 @@ func postOAuthAuthorization_token(ctx echo.Context, issuer string, userToken mod
 	redirectURI.RawFragment = ""
 
 	return ctx.Redirect(http.StatusFound, redirectURI.String()+"#"+fragment.Encode())
+}
+
+// postOAuthAuthorization_deny sends the User back to the client with `error=access_denied` (RFC 6749 §4.1.2.1)
+func postOAuthAuthorization_deny(ctx echo.Context, issuer string, transaction model.OAuthAuthorizationRequest) error {
+
+	// RULE: An out-of-band request has no address to answer, so the User goes home
+	if transaction.RedirectURI == model.OAuthRedirectURIOutOfBand {
+		return ctx.Redirect(http.StatusFound, "/")
+	}
+
+	return ctx.Redirect(http.StatusFound, oauthDenialURL(transaction, issuer))
+}
+
+// oauthDenialURL returns a validated request's redirect_uri carrying the refusal, in the query for a
+// code request and in the fragment for a token request
+func oauthDenialURL(transaction model.OAuthAuthorizationRequest, issuer string) string {
+
+	answer := url.Values{}
+	answer.Set("error", "access_denied")
+	answer.Set("state", transaction.State)
+	answer.Set("iss", issuer)
+
+	// A redirect_uri that will not parse was refused by Validate, so this only guards the call below
+	redirectURI, err := url.Parse(transaction.RedirectURI)
+
+	if err != nil {
+		return "/"
+	}
+
+	// RULE: An implicit request is answered in the fragment, encoded on its own so a state adds no parameters
+	if transaction.ResponseType == "token" {
+		redirectURI.Fragment = ""
+		redirectURI.RawFragment = ""
+		return redirectURI.String() + "#" + answer.Encode()
+	}
+
+	// Every other request is answered in the query, keeping whatever the redirect_uri already carries
+	queryString := redirectURI.Query()
+
+	for name := range answer {
+		queryString.Set(name, answer.Get(name))
+	}
+
+	redirectURI.RawQuery = queryString.Encode()
+	return redirectURI.String()
 }
 
 // PostOAuthAuthorizationRedemption redeems an authorization code at the authorization endpoint, for a client that

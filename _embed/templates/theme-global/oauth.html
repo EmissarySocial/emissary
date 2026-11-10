@@ -116,7 +116,12 @@
 							Yes. Allow Access
 						</button>
 
-						<button class="width-100% sm:width-auto margin-bottom" script="on click halt the event then window.history.back()">No. Cancel this Request</button>
+						<!-- RULE: a refusal goes back to the app as access_denied; an out-of-band request has no app address -->
+						{{- if .IsOutOfBand -}}
+							<button class="width-100% sm:width-auto margin-bottom" script="on click halt the event then window.history.back()">No. Cancel this Request</button>
+						{{- else -}}
+							<button type="submit" name="decision" value="deny" class="width-100% sm:width-auto margin-bottom">No. Cancel this Request</button>
+						{{- end -}}
 
 					</div>
 

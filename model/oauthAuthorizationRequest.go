@@ -19,16 +19,17 @@ import (
 // GET /oauth/authorize
 // Returns: Authorization code
 type OAuthAuthorizationRequest struct {
-	ResponseType        string `json:"responseType"        query:"response_type"         form:"response_type"`
-	ClientID            string `json:"clientId"            query:"client_id"             form:"client_id"`
-	RedirectURI         string `json:"redirectUri"         query:"redirect_uri"          form:"redirect_uri"`
-	Scope               string `json:"scope"               query:"scope"                 form:"scope"`
-	State               string `json:"state"               query:"state"                 form:"state"`
-	CodeChallenge       string `json:"codeChallenge"       query:"code_challenge"        form:"code_challenge"`
-	CodeChallengeMethod string `json:"codeChallengeMethod" query:"code_challenge_method" form:"code_challenge_method"`
-	ForceLogin          bool   `json:"forceLogin"          query:"force_login"           form:"force_login"`
-	Language            string `json:"language"            query:"language"              form:"language"`
-	Me                  string `json:"me"                  query:"me"` // IndieAuth §5.2 hint, shown on the consent page and never posted back
+	ResponseType        string `json:"responseType"        query:"response_type"         form:"response_type"`         // Grant requested: "code" or "token"; anything else is read as "code"
+	ClientID            string `json:"clientId"            query:"client_id"             form:"client_id"`             // The client: a registered ObjectID, or a URL for IndieAuth and CIMD clients
+	RedirectURI         string `json:"redirectUri"         query:"redirect_uri"          form:"redirect_uri"`          // Where the User is sent with the answer
+	Scope               string `json:"scope"               query:"scope"                 form:"scope"`                 // Requested scopes, read with ParseOAuthScopes
+	State               string `json:"state"               query:"state"                 form:"state"`                 // Opaque client value, returned unchanged with the answer
+	CodeChallenge       string `json:"codeChallenge"       query:"code_challenge"        form:"code_challenge"`        // PKCE challenge (RFC 7636)
+	CodeChallengeMethod string `json:"codeChallengeMethod" query:"code_challenge_method" form:"code_challenge_method"` // PKCE method: "S256" or "plain"
+	ForceLogin          bool   `json:"forceLogin"          query:"force_login"           form:"force_login"`           // Mastodon parameter, accepted and not used
+	Language            string `json:"language"            query:"language"              form:"language"`              // Mastodon parameter, accepted and not used
+	Me                  string `json:"me"                  query:"me"                    form:"-"`                     // IndieAuth §5.2 hint, shown on the consent page and never posted back
+	Decision            string `json:"-"                   query:"-"                     form:"decision"`              // The User's answer on the consent form
 }
 
 // NewOAuthAuthorizationRequest returns a fully initialized, empty OAuthAuthorizationRequest
@@ -39,6 +40,11 @@ func NewOAuthAuthorizationRequest() OAuthAuthorizationRequest {
 // Scopes returns the requested OAuth scopes, split into individual values
 func (req OAuthAuthorizationRequest) Scopes() []string {
 	return ParseOAuthScopes(req.Scope)
+}
+
+// IsDenied returns TRUE if the User refused this request on the consent form
+func (req OAuthAuthorizationRequest) IsDenied() bool {
+	return req.Decision == OAuthAuthorizationDecisionDeny
 }
 
 // hasScope returns TRUE if the request names at least one scope

@@ -190,3 +190,13 @@ func TestOAuthAuthorizationRequest_Scope(t *testing.T) {
 		require.NoError(t, request.Validate(registered))
 	})
 }
+
+// TestOAuthAuthorizationRequest_IsDenied pins the one value that refuses a request
+func TestOAuthAuthorizationRequest_IsDenied(t *testing.T) {
+
+	require.True(t, OAuthAuthorizationRequest{Decision: "deny"}.IsDenied())
+
+	for _, decision := range []string{"", "allow", "DENY", " deny", "deny ", "true"} {
+		require.False(t, OAuthAuthorizationRequest{Decision: decision}.IsDenied(), "decision %q", decision)
+	}
+}

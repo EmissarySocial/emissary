@@ -17,6 +17,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/cimd"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -143,6 +144,14 @@ func (flow indieAuthFlow) storeUser(t *testing.T, primary bool) model.User {
 func (flow indieAuthFlow) approve(t *testing.T, user model.User, scope string) url.Values {
 
 	t.Helper()
+	return flow.submit(t, user, scope, nil)
+}
+
+// submit posts the consent form as the signed-in User, with any extra values the pressed button adds,
+// and returns the query of the redirect back to the client
+func (flow indieAuthFlow) submit(t *testing.T, user model.User, scope string, extra url.Values) url.Values {
+
+	t.Helper()
 
 	// Sign the User in, as WithAuthenticatedUser requires
 	authorization := model.NewAuthorization()
@@ -160,6 +169,10 @@ func (flow indieAuthFlow) approve(t *testing.T, user model.User, scope string) u
 		"scope":                 {scope},
 		"code_challenge":        {pkceS256(oauthValidVerifier)},
 		"code_challenge_method": {model.PKCEMethodS256},
+	}
+
+	for name, values := range extra {
+		form[name] = values
 	}
 
 	request := httptest.NewRequest(http.MethodPost, "/oauth/authorize", strings.NewReader(form.Encode()))
@@ -377,4 +390,68 @@ func TestIndieAuthFlow_TwoServersRedeemOneCode(t *testing.T) {
 		// RULE: Exactly one server redeems the code
 		require.ElementsMatch(t, []int{http.StatusOK, http.StatusBadRequest}, results, "round %d", round)
 	}
+}
+
+// TestIndieAuthFlow_Cancel verifies that a User who refuses is sent back with access_denied, and that nothing is granted
+func TestIndieAuthFlow_Cancel(t *testing.T) {
+
+	flow := newIndieAuthFlow(t)
+	user := flow.storeUser(t, true)
+
+	query := flow.submit(t, user, "profile", url.Values{"decision": {"deny"}})
+
+	require.Equal(t, "access_denied", query.Get("error"))
+	require.Equal(t, indieAuthState, query.Get("state"))
+	require.Equal(t, []string{flow.factory.Host()}, query["iss"])
+	require.Empty(t, query.Get("code"))
+
+	// RULE: A refusal writes no grant
+	count, err := flow.session.Collection("OAuthUserToken").Count(exp.All())
+	require.NoError(t, err)
+	require.Zero(t, count)
+}
+
+// TestOAuthDenialURL verifies where a refusal is written for each kind of request
+func TestOAuthDenialURL(t *testing.T) {
+
+	const issuer = "https://example.com"
+
+	t.Run("a code request is answered in the query, keeping the redirect_uri's own", func(t *testing.T) {
+		request := model.OAuthAuthorizationRequest{ResponseType: "code", RedirectURI: "https://app.example.com/callback?tenant=7", State: "abc"}
+		result, err := url.Parse(oauthDenialURL(request, issuer))
+		require.NoError(t, err)
+		require.Equal(t, "app.example.com", result.Host)
+		require.Equal(t, url.Values{"tenant": {"7"}, "error": {"access_denied"}, "state": {"abc"}, "iss": {issuer}}, result.Query())
+		require.Empty(t, result.Fragment)
+	})
+
+	t.Run("a token request is answered in the fragment", func(t *testing.T) {
+		request := model.OAuthAuthorizationRequest{ResponseType: "token", RedirectURI: "https://app.example.com/callback", State: "abc"}
+		target, fragment, found := strings.Cut(oauthDenialURL(request, issuer), "#")
+		require.True(t, found)
+		require.Equal(t, "https://app.example.com/callback", target)
+
+		values, err := url.ParseQuery(fragment)
+		require.NoError(t, err)
+		require.Equal(t, url.Values{"error": {"access_denied"}, "state": {"abc"}, "iss": {issuer}}, values)
+	})
+
+	t.Run("a state cannot add parameters of its own", func(t *testing.T) {
+		for _, responseType := range []string{"code", "token"} {
+			request := model.OAuthAuthorizationRequest{ResponseType: responseType, RedirectURI: "https://app.example.com/callback", State: "x&error=none&iss=https://evil.example.com#y"}
+			result := oauthDenialURL(request, issuer)
+			_, answer, _ := strings.Cut(result, map[string]string{"code": "?", "token": "#"}[responseType])
+
+			values, err := url.ParseQuery(answer)
+			require.NoError(t, err, result)
+			require.Equal(t, []string{"access_denied"}, values["error"])
+			require.Equal(t, []string{issuer}, values["iss"])
+			require.Equal(t, request.State, values.Get("state"))
+		}
+	})
+
+	t.Run("a registered app's own scheme is answered too", func(t *testing.T) {
+		request := model.OAuthAuthorizationRequest{ResponseType: "code", RedirectURI: "icecubesapp://oauth", State: "abc"}
+		require.Equal(t, "icecubesapp://oauth?error=access_denied&iss=https%3A%2F%2Fexample.com&state=abc", oauthDenialURL(request, issuer))
+	})
 }
