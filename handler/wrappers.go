@@ -293,6 +293,9 @@ func WithAPIFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFun
 
 			defer session.Close()
 
+			// Publish IndieAuth discovery on every page, so the address a User types finds the endpoints
+			advertiseIndieAuth(ctx.Response().Header(), factory.Host(), factory.Domain().Cached().HasPrimaryUser())
+
 			// Create a context that wraps this echo.Context and data.Session
 			sterankoContext := factory.Steranko(session).Context(ctx)
 

@@ -12,6 +12,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -844,4 +845,54 @@ func newOAuthTestServer(t *testing.T) (data.Server, data.Session) {
 	require.NoError(t, err)
 
 	return server, session
+}
+
+// TestOAuthMetadata verifies the metadata document's endpoints, scopes, and client authentication methods
+func TestOAuthMetadata(t *testing.T) {
+
+	const host = "https://example.com"
+	metadata := oauthMetadata(host)
+
+	// Every endpoint lives under the issuer, which is the host itself
+	require.Equal(t, host, metadata["issuer"])
+
+	for _, name := range []string{"authorization_endpoint", "token_endpoint", "revocation_endpoint"} {
+		require.True(t, strings.HasPrefix(metadata[name].(string), host+"/"), name)
+	}
+
+	// RULE: Advertise only the client authentication both endpoints actually read
+	for _, name := range []string{"token_endpoint_auth_methods_supported", "revocation_endpoint_auth_methods_supported"} {
+		require.Equal(t, []string{"client_secret_post", "none"}, metadata[name], name)
+	}
+
+	// Authorization redirects carry `iss` (RFC 9207)
+	require.Equal(t, true, metadata["authorization_response_iss_parameter_supported"])
+
+	// RULE: Nothing is advertised that does not exist yet (INDIEAUTH §3)
+	require.NotContains(t, metadata, "introspection_endpoint")
+	require.NotContains(t, metadata, "userinfo_endpoint")
+}
+
+// TestOAuthScopesSupported verifies that IndieAuth's scopes are advertised, and that the consent page describes each one
+func TestOAuthScopesSupported(t *testing.T) {
+
+	advertised := oauthScopesSupported()
+
+	require.Contains(t, advertised, model.OAuthUserTokenScopeProfile)
+	require.Contains(t, advertised, model.OAuthUserTokenScopeEmail)
+
+	// Every advertised scope must have words on the consent page, rather than landing under "Other"
+	described := map[string]bool{}
+
+	for _, lookupCode := range dataset.OAuthScopes() {
+		described[lookupCode.Value] = true
+	}
+
+	for _, value := range advertised {
+		require.True(t, described[value], "the consent page does not describe %q", value)
+	}
+
+	// Each call returns its own list
+	advertised[0] = "changed"
+	require.Equal(t, model.OAuthUserTokenScopeProfile, oauthScopesSupported()[0])
 }

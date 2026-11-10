@@ -11,33 +11,54 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
+	"github.com/benpate/toot/scope"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetOAuthWellKnown serves the OAuth authorization-server metadata document (RFC 8414)
 func GetOAuthWellKnown(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+	return ctx.JSON(http.StatusOK, oauthMetadata(factory.Host()))
+}
 
-	// Get the server's host (scheme + host)
-	host := factory.Host()
+// oauthMetadata returns the authorization-server metadata document (RFC 8414) for a host, which is
+// scheme, hostname, and port with no trailing slash
+func oauthMetadata(host string) map[string]any {
 
-	// Build the response
-	response := map[string]any{
-		"issuer":                                host,
-		"authorization_endpoint":                host + "/oauth/authorize",
-		"token_endpoint":                        host + "/oauth/token",
-		"revocation_endpoint":                   host + "/oauth/revoke",
-		"response_types_supported":              []string{"code", "token"},
-		"response_modes_supported":              []string{"query", "fragment"},
-		"grant_types_supported":                 []string{"authorization_code", "refresh_token"},
-		"code_challenge_methods_supported":      []string{"plain", "S256"}, // PKCE (RFC 7636)
-		"token_endpoint_auth_methods_supported": []string{"client_secret_basic"},
-		"client_id_metadata_document_supported": true, // https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/
-		"activitypub_object_id_as_client_id":    true, // https://w3id.org/fep/d8c2
-		// "scopes_supported":       []string{"read", "write"},
+	// Both endpoints read client_secret from the form body only, and a public client sends none
+	clientAuthMethods := []string{"client_secret_post", "none"}
+
+	return map[string]any{
+		"issuer":                                         host,
+		"authorization_endpoint":                         host + "/oauth/authorize",
+		"token_endpoint":                                 host + "/oauth/token",
+		"revocation_endpoint":                            host + "/oauth/revoke",
+		"response_types_supported":                       []string{"code", "token"},
+		"response_modes_supported":                       []string{"query", "fragment"},
+		"grant_types_supported":                          []string{"authorization_code", "refresh_token"},
+		"scopes_supported":                               oauthScopesSupported(),
+		"code_challenge_methods_supported":               []string{"plain", "S256"}, // PKCE (RFC 7636)
+		"token_endpoint_auth_methods_supported":          clientAuthMethods,
+		"revocation_endpoint_auth_methods_supported":     clientAuthMethods,
+		"authorization_response_iss_parameter_supported": true, // RFC 9207
+		"client_id_metadata_document_supported":          true, // https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/
+		"activitypub_object_id_as_client_id":             true, // https://w3id.org/fep/d8c2
 	}
+}
 
-	return ctx.JSON(http.StatusOK, response)
+// oauthScopesSupported returns the scopes the metadata document advertises: the families that grant
+// something here, and none of the narrower scopes inside them
+func oauthScopesSupported() []string {
+
+	// RFC 8414 lets a server leave supported scopes out.  Moderation and `follow` grant nothing here
+	return []string{
+		model.OAuthUserTokenScopeProfile,
+		model.OAuthUserTokenScopeEmail,
+		scope.Read,
+		scope.Write,
+		scope.Push,
+		model.OAuthUserTokenScopeActivityPubPortability,
+	}
 }
 
 // GetOAuthAuthorization renders the "authorize this application" consent page
@@ -160,7 +181,7 @@ func postOAuthAuthorization_code(ctx echo.Context, issuer string, userToken mode
 	// authorization code in the <title> tag of the HTML for the user to copy into
 	// their client, which then exchanges it at /oauth/token.
 	// https://docs.joinmastodon.org/methods/apps/#form-data-parameters
-	if transaction.RedirectURI == "urn:ietf:wg:oauth:2.0:oob" {
+	if transaction.RedirectURI == model.OAuthRedirectURIOutOfBand {
 		b := html.New()
 		b.HTML()
 		b.Head()
@@ -193,7 +214,7 @@ func postOAuthAuthorization_token(ctx echo.Context, issuer string, userToken mod
 
 	// If this magic value is passed as the redirect URI, then we just return the token in the <title> tag of the HTML
 	// https://docs.joinmastodon.org/methods/apps/#form-data-parameters
-	if transaction.RedirectURI == "urn:ietf:wg:oauth:2.0:oob" {
+	if transaction.RedirectURI == model.OAuthRedirectURIOutOfBand {
 		b := html.New()
 		b.HTML()
 		b.Head()

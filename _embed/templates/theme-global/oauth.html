@@ -39,6 +39,14 @@
 				</div>
 			</div>
 
+			<!-- RULE: me is an unverified hint, so it only warns; the grant goes to the signed-in User -->
+			{{- if .SignedInAsSomeoneElse -}}
+				<div class="alert-blue text-sm">
+					{{$name}} asked to sign in <b>{{.Me}}</b>, but you are signed in as <b>@{{$user.Username}}@{{$domain.Host}}</b>.
+					<a hx-post="{{.SwitchAccountURL}}">Switch Account</a>
+				</div>
+			{{- end -}}
+
 			<div class="card padding">
 
 				<div class="alert-gray text-sm margin-bottom">
@@ -68,20 +76,44 @@
 						</div>
 					</div>
 
-					<ul>
-						{{- range .Scopes -}}
-							{{- if eq . "activitypub_account_portability" -}}
-								<div class="margin-top">
-									<div class="text-red text-lg">{{icon "alert"}} <b>Export All of Your Data</b></div>
-									<div class="margin-bottom text-red">
-										Do not approve this request unless you are <b>migrating your profile.</b>
-									</div>
+					<!-- IndieAuth §10.1: show where the client is, and where approval sends the User -->
+					<div class="text-sm margin-top">
+						{{- if ne "" .ClientURL -}}
+							<div><span class="text-gray">App address:</span> {{.ClientURL}}</div>
+						{{- end -}}
+						{{- if not .IsOutOfBand -}}
+							<div><span class="text-gray">Sends you back to:</span> {{.RedirectURI}}</div>
+						{{- end -}}
+					</div>
+
+					{{- $scopes := .Scopes -}}
+					{{- if not $scopes -}}
+						<div class="margin-top-lg">
+							<div class="bold">Confirm Who You Are</div>
+							<div class="text-sm text-gray">{{$name}} learns your profile address, and nothing else in your account.</div>
+						</div>
+					{{- else -}}
+						{{- $group := groupie -}}
+						{{- range $scopes -}}
+							{{- if $group.Header .Group -}}
+								<div class="text-xs text-gray bold margin-top-lg">{{.Group}}</div>
+							{{- end -}}
+							{{- if eq .Value "activitypub_account_portability" -}}
+								<div class="margin-top text-red">
+									<div class="text-lg">{{icon "alert"}} <b>{{.Label}}</b></div>
+									<div class="margin-bottom">{{.Description}}</div>
 								</div>
 							{{- else -}}
-								<li class="margin-top">{{.}}</li>
+								<div class="flex-row margin-top-sm">
+									<div class="width-32">{{icon .Icon}}</div>
+									<div class="flex-grow">
+										<div class="bold">{{.Label}}</div>
+										<div class="text-sm text-gray">{{.Description}}</div>
+									</div>
+								</div>
 							{{- end -}}
 						{{- end -}}
-					</ul>
+					{{- end -}}
 
 					<div class="margin-top-lg">
 						<button disabled class="htmx-request-show primary width-100% sm:width-auto margin-bottom">
