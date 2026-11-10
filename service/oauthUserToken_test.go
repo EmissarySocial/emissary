@@ -253,6 +253,47 @@ func TestExchangeCode_Expired(t *testing.T) {
 	require.False(t, grant.CodeRedeemed, "an expired code is never consumed")
 }
 
+// TestRedeemCode verifies that redeeming a code spends it once and mints nothing, whatever scope the grant carries
+func TestRedeemCode(t *testing.T) {
+
+	service, _, session := newReplicaSetOAuthUserTokenService(t)
+	grant := persistTestGrant(t, service, session)
+
+	// A copy loaded before the redemption, as a second server would hold it
+	stale := model.NewOAuthUserToken()
+	require.Nil(t, service.LoadByID(session, grant.UserID, grant.OAuthUserTokenID, &stale))
+
+	require.Nil(t, service.RedeemCode(session, &grant))
+	require.True(t, grant.CodeRedeemed)
+	require.Empty(t, grant.Token, "a scoped grant still mints no access token here")
+	require.Empty(t, grant.RefreshToken)
+
+	// The stored code is spent, and the grant keeps nothing to refresh
+	stored := model.NewOAuthUserToken()
+	require.Nil(t, service.LoadByID(session, grant.UserID, grant.OAuthUserTokenID, &stored))
+	require.True(t, stored.CodeRedeemed)
+	require.Empty(t, stored.RefreshHash)
+
+	// RULE: A spent code cannot then be exchanged for tokens, even by a copy that reads it as unused
+	err := service.ExchangeCode(session, &stale)
+	require.NotNil(t, err)
+	require.True(t, derp.IsBadRequest(err), "a spent code is the client's mistake, not a server fault")
+	require.Empty(t, stale.Token)
+}
+
+// TestRedeemCode_Expired verifies that an expired code is refused before the database, and never spent
+func TestRedeemCode_Expired(t *testing.T) {
+
+	service, session := newTestOAuthUserTokenService(t)
+	grant := newTestGrant()
+	grant.CreateDate = time.Now().Add(-model.OAuthCodeLifetime - time.Minute).UnixMilli()
+
+	err := service.RedeemCode(session, &grant)
+	require.NotNil(t, err)
+	require.True(t, derp.IsBadRequest(err))
+	require.False(t, grant.CodeRedeemed)
+}
+
 // TestRefreshGrant_Rotate verifies that refreshing a grant advances its generation and rotates its secret
 func TestRefreshGrant_Rotate(t *testing.T) {
 

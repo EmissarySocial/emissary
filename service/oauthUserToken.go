@@ -349,30 +349,10 @@ func (service *OAuthUserToken) ExchangeCode(session data.Session, grant *model.O
 
 	const location = "service.OAuthUserToken.ExchangeCode"
 
-	now := time.Now()
-
-	// RULE: An authorization code is single-use (RFC 6749 §4.1.2).
-	if grant.CodeRedeemed {
-		return derp.BadRequest(location, "Authorization code has already been used")
+	// Spend the code, so that no other request can redeem it
+	if err := service.RedeemCode(session, grant); err != nil {
+		return derp.Wrap(err, location, "Redeeming authorization code")
 	}
-
-	// RULE: An authorization code is short-lived.
-	if grant.IsCodeExpired(now) {
-		return derp.BadRequest(location, "Authorization code has expired")
-	}
-
-	// RULE: The database decides which request redeems the code, so two servers cannot both redeem it
-	redeemed, err := queries.RedeemOAuthCode(session, grant.OAuthUserTokenID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Redeeming authorization code", grant.OAuthUserTokenID)
-	}
-
-	if !redeemed {
-		return derp.BadRequest(location, "Authorization code has already been used")
-	}
-
-	grant.CodeRedeemed = true
 
 	// RULE: A grant with no scope only confirms who the User is, so it mints nothing (IndieAuth §5.3.3)
 	if !grant.IssuesAccessToken() {
@@ -381,7 +361,7 @@ func (service *OAuthUserToken) ExchangeCode(session data.Session, grant *model.O
 
 	// Mint the access token + initial refresh token for this grant.  A failure from here on is
 	// the server's, so it is reported and the redemption rolls back with it.
-	if err := service.mintInitialTokens(grant, now); err != nil {
+	if err := service.mintInitialTokens(grant, time.Now()); err != nil {
 		return derp.Wrap(err, location, "Minting tokens", derp.WithInternalError())
 	}
 
@@ -390,6 +370,39 @@ func (service *OAuthUserToken) ExchangeCode(session data.Session, grant *model.O
 		return derp.Wrap(err, location, "Saving grant", derp.WithInternalError())
 	}
 
+	return nil
+}
+
+// RedeemCode spends an authorization code exactly once, and mints nothing (IndieAuth §5.3.2).  The
+// caller has already authenticated the client.
+func (service *OAuthUserToken) RedeemCode(session data.Session, grant *model.OAuthUserToken) error {
+
+	const location = "service.OAuthUserToken.RedeemCode"
+
+	// RULE: An authorization code is single-use (RFC 6749 §4.1.2).
+	if grant.CodeRedeemed {
+		return derp.BadRequest(location, "Authorization code has already been used")
+	}
+
+	// RULE: An authorization code is short-lived.
+	if grant.IsCodeExpired(time.Now()) {
+		return derp.BadRequest(location, "Authorization code has expired")
+	}
+
+	// RULE: The database decides which request redeems the code, so two servers cannot both redeem it
+	redeemed, err := queries.RedeemOAuthCode(session, grant.OAuthUserTokenID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Marking authorization code redeemed", grant.OAuthUserTokenID)
+	}
+
+	if !redeemed {
+		return derp.BadRequest(location, "Authorization code has already been used")
+	}
+
+	grant.CodeRedeemed = true
+
+	// Mischief managed
 	return nil
 }
 

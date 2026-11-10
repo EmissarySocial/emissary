@@ -387,6 +387,292 @@ func TestPostOAuthAuthorization_ReturnsTheIssuer(t *testing.T) {
 	})
 }
 
+// TestRouteOAuthAuthorization confirms that a code redemption and the consent form's submit each reach their own
+// handler, and that the chosen handler can still read the body the router parsed
+func TestRouteOAuthAuthorization(t *testing.T) {
+
+	// route posts the body to the router, and returns the branch it took and the client_id that branch bound
+	route := func(target string, body url.Values) (string, string) {
+
+		request := httptest.NewRequest(http.MethodPost, target, strings.NewReader(body.Encode()))
+		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		ctx := echo.New().NewContext(request, httptest.NewRecorder())
+
+		branch := ""
+		transaction := model.NewOAuthUserTokenRequest()
+
+		handlerFor := func(name string) echo.HandlerFunc {
+			return func(ctx echo.Context) error {
+				branch = name
+				return ctx.Bind(&transaction)
+			}
+		}
+
+		require.NoError(t, RouteOAuthAuthorization(handlerFor("redemption"), handlerFor("consent"))(ctx))
+		return branch, transaction.ClientID
+	}
+
+	// Every field the consent form posts (theme-global/oauth.html)
+	consentForm := url.Values{
+		"client_id":             {"consent-client"},
+		"redirect_uri":          {"https://client.example/callback"},
+		"scope":                 {"profile"},
+		"state":                 {"state-value"},
+		"response_type":         {"code"},
+		"code_challenge":        {oauthValidVerifier},
+		"code_challenge_method": {model.PKCEMethodPlain},
+	}
+
+	t.Run("ConsentForm", func(t *testing.T) {
+		branch, clientID := route("/oauth/authorize", consentForm)
+		require.Equal(t, "consent", branch)
+		require.Equal(t, "consent-client", clientID, "the consent handler still reads the body")
+	})
+
+	t.Run("IndieAuthRedemption", func(t *testing.T) {
+		branch, clientID := route("/oauth/authorize", url.Values{
+			"grant_type":    {"authorization_code"},
+			"code":          {primitive.NewObjectID().Hex()},
+			"client_id":     {"redeeming-client"},
+			"redirect_uri":  {"https://client.example/callback"},
+			"code_verifier": {oauthValidVerifier},
+		})
+		require.Equal(t, "redemption", branch)
+		require.Equal(t, "redeeming-client", clientID, "the redemption handler still reads the body")
+	})
+
+	t.Run("CodeWithoutGrantType", func(t *testing.T) {
+		branch, _ := route("/oauth/authorize", url.Values{"code": {primitive.NewObjectID().Hex()}, "client_id": {"redeeming-client"}})
+		require.Equal(t, "redemption", branch)
+	})
+
+	t.Run("GrantTypeWithoutCode", func(t *testing.T) {
+		branch, _ := route("/oauth/authorize", url.Values{"grant_type": {"authorization_code"}, "client_id": {"redeeming-client"}})
+		require.Equal(t, "redemption", branch, "a malformed redemption is refused as JSON, not sent to sign in")
+	})
+
+	t.Run("CodeInTheQueryString", func(t *testing.T) {
+		branch, _ := route("/oauth/authorize?grant_type=authorization_code&code=abc", consentForm)
+		require.Equal(t, "consent", branch, "only the body selects the branch")
+	})
+
+	t.Run("EmptyBody", func(t *testing.T) {
+		branch, clientID := route("/oauth/authorize", url.Values{})
+		require.Equal(t, "consent", branch)
+		require.Empty(t, clientID)
+	})
+
+	t.Run("MalformedBody", func(t *testing.T) {
+
+		request := httptest.NewRequest(http.MethodPost, "/oauth/authorize", strings.NewReader("client_id=consent-client&code=%zz"))
+		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		// The parse fails, so it is no redemption, and the consent handler binds the fields that survived
+		require.False(t, isCodeRedemption(request))
+		require.Equal(t, "consent-client", request.PostForm.Get("client_id"))
+	})
+}
+
+// FuzzIsCodeRedemption requires that any body which fails to parse is consent's, and that any other body is a
+// redemption exactly when it carries a grant_type or a code
+func FuzzIsCodeRedemption(f *testing.F) {
+
+	f.Add("client_id=consent-client&redirect_uri=https%3A%2F%2Fclient.example%2F&response_type=code")
+	f.Add("grant_type=authorization_code&code=abc&client_id=x&code_verifier=y")
+	f.Add("code=abc")
+	f.Add("grant_type=")
+	f.Add("code=%zz&grant_type=authorization_code")
+	f.Add("code;grant_type=x")
+	f.Add("")
+
+	f.Fuzz(func(t *testing.T, body string) {
+
+		request := httptest.NewRequest(http.MethodPost, "/oauth/authorize?code=from-the-query", strings.NewReader(body))
+		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		// The expected answer comes from parsing the body alone, which is what ParseForm does with it
+		values, err := url.ParseQuery(body)
+		expected := (err == nil) && ((values.Get("grant_type") != "") || (values.Get("code") != ""))
+
+		require.Equal(t, expected, isCodeRedemption(request), "body %q", body)
+	})
+}
+
+// TestPostOAuthAuthorizationRedemption_AnswersClientMistakesAsJSON drives the refusals of a redemption at the
+// authorization endpoint, which answers in the token endpoint's RFC 6749 §5.2 form (IndieAuth §5.3.2)
+func TestPostOAuthAuthorizationRedemption_AnswersClientMistakesAsJSON(t *testing.T) {
+
+	// A redemption as an IndieAuth client posts it
+	form := func(client *model.OAuthClient, grant *model.OAuthUserToken) url.Values {
+		return url.Values{
+			"grant_type":    {"authorization_code"},
+			"client_id":     {client.ClientID.Hex()},
+			"code":          {grant.Code()},
+			"redirect_uri":  {"https://client.example/callback"},
+			"code_verifier": {oauthValidVerifier},
+		}
+	}
+
+	// A URL client's grant, bound to PKCE and a redirect_uri, which passes every check the two endpoints share
+	issued := func() (*model.OAuthClient, *model.OAuthUserToken) {
+		client := newOAuthClient("")
+		client.ClientURL = "https://client.example/"
+		grant := newOAuthGrant(client)
+		grant.SetRedirectURI("https://client.example/callback")
+		grant.SetPKCEChallenge(oauthValidVerifier, model.PKCEMethodPlain)
+		return client, grant
+	}
+
+	t.Run("MalformedBody", func(t *testing.T) {
+
+		request := httptest.NewRequest(http.MethodPost, "/oauth/authorize", strings.NewReader("grant_type=authorization_code&code=%zz"))
+		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		recorder := httptest.NewRecorder()
+		ctx := &steranko.Context{Context: echo.New().NewContext(request, recorder)}
+
+		require.NoError(t, PostOAuthAuthorizationRedemption(ctx, &service.Factory{}, oauthSession{}))
+		require.Equal(t, http.StatusBadRequest, recorder.Code)
+		require.JSONEq(t, `{"error":"invalid_request","error_description":"Invalid form parameters"}`, recorder.Body.String())
+	})
+
+	t.Run("UnknownClient", func(t *testing.T) {
+		client, grant := issued()
+		requireOAuthRefusalFrom(t, PostOAuthAuthorizationRedemption, oauthSession{}, form(client, grant), "invalid_client", "Invalid client_id")
+	})
+
+	t.Run("UnsupportedGrantType", func(t *testing.T) {
+		client, grant := issued()
+		values := form(client, grant)
+		values.Set("grant_type", "refresh_token")
+		requireOAuthRefusalFrom(t, PostOAuthAuthorizationRedemption, oauthSession{client: client}, values, "unsupported_grant_type", "Unsupported grant_type")
+	})
+
+	// The shared checks are driven one by one through the token endpoint; these confirm this endpoint runs them
+	t.Run("WrongVerifier", func(t *testing.T) {
+		client, grant := issued()
+		values := form(client, grant)
+		values.Set("code_verifier", oauthCodeVerifier)
+		requireOAuthRefusalFrom(t, PostOAuthAuthorizationRedemption, oauthSession{client: client, grant: grant}, values, "invalid_grant", "Invalid PKCE code_verifier")
+	})
+
+	t.Run("WrongRedirectURI", func(t *testing.T) {
+		client, grant := issued()
+		values := form(client, grant)
+		values.Set("redirect_uri", "https://evil.example/callback")
+		requireOAuthRefusalFrom(t, PostOAuthAuthorizationRedemption, oauthSession{client: client, grant: grant}, values, "invalid_grant", "Invalid redirect_uri")
+	})
+
+	t.Run("UnknownUser", func(t *testing.T) {
+		client, grant := issued()
+		requireOAuthRefusalFrom(t, PostOAuthAuthorizationRedemption, oauthSession{client: client, grant: grant}, form(client, grant), "invalid_grant", "Loading User")
+	})
+
+	t.Run("NoIdentity", func(t *testing.T) {
+		client, grant := issued()
+		user := model.NewUser()
+		user.IsOwner = true
+		user.IsPublic = true // public, but not the domain's primary user, so it has no `me`
+		session := oauthSession{client: client, grant: grant, user: &user}
+
+		// Refused before the code is spent: redeeming it would reach the database, which this session lacks
+		requireOAuthRefusalFrom(t, PostOAuthAuthorizationRedemption, session, form(client, grant), "invalid_grant", "This server vouches for no identity to return")
+	})
+}
+
+// TestPostOAuthAuthorizationRedemption_ReturnsServerFaults confirms that a failure of the server's own is
+// returned for errorHandler to report, and carries no credential
+func TestPostOAuthAuthorizationRedemption_ReturnsServerFaults(t *testing.T) {
+
+	session := oauthSession{failure: derp.Internal("handler.test", "Database is down")}
+	values := url.Values{
+		"grant_type":    {"authorization_code"},
+		"client_id":     {primitive.NewObjectID().Hex()},
+		"client_secret": {oauthPresentedSecret},
+		"code_verifier": {oauthCodeVerifier},
+	}
+
+	ctx, recorder := oauthTokenRequest(values)
+	err := PostOAuthAuthorizationRedemption(ctx, &service.Factory{}, session)
+
+	requireNoOAuthSecrets(t, err, "handler.PostOAuthAuthorizationRedemption", "Invalid client_id")
+	require.True(t, derp.IsServerError(err))
+	require.Empty(t, recorder.Body.String(), "nothing is written, so errorHandler can answer")
+}
+
+// TestPostOAuthAuthorizationRedemption redeems codes at the authorization endpoint inside a transaction, as every
+// POST is, and requires `me` with the released profile, no token, and a spent code (IndieAuth §5.3.2)
+func TestPostOAuthAuthorizationRedemption(t *testing.T) {
+
+	server, session := newOAuthTestServer(t)
+
+	client := newOAuthClient("")
+	client.ClientURL = "https://client.example/"
+	require.NoError(t, session.Collection("OAuthClient").Save(client, "test"))
+
+	user := model.NewUser()
+	user.IsOwner = true
+	user.IsPrimary = true
+	user.IsPublic = true
+	user.DisplayName = "Primary User"
+	user.EmailAddress = "primary@example.com"
+	user.ProfileURL = "https://example.com/@" + user.UserID.Hex()
+	require.NoError(t, session.Collection("User").Save(&user, "test"))
+
+	// issue saves a PKCE-bound grant for the User with the given scopes, and returns the form that redeems it
+	issue := func(scopes ...string) (*model.OAuthUserToken, url.Values) {
+
+		grant := newOAuthGrant(client)
+		grant.UserID = user.UserID
+		grant.Scopes = scopes
+		grant.SetRedirectURI("https://client.example/callback")
+		grant.SetPKCEChallenge(oauthValidVerifier, model.PKCEMethodPlain)
+		require.NoError(t, session.Collection("OAuthUserToken").Save(grant, "test"))
+
+		return grant, url.Values{
+			"grant_type":    {"authorization_code"},
+			"client_id":     {client.ClientID.Hex()},
+			"code":          {grant.Code()},
+			"redirect_uri":  {"https://client.example/callback"},
+			"code_verifier": {oauthValidVerifier},
+		}
+	}
+
+	t.Run("ScopedCode", func(t *testing.T) {
+
+		grant, values := issue("create", "profile", "email")
+
+		// RULE: The answer is the identity and the profile its scopes release, and never a token
+		recorder := postOAuthInTransaction(t, server, PostOAuthAuthorizationRedemption, values)
+		require.Equal(t, http.StatusOK, recorder.Code)
+		require.JSONEq(t, `{"me":"`+user.ProfileURL+`","profile":{"url":"`+user.ProfileURL+`","name":"Primary User","email":"primary@example.com"}}`, recorder.Body.String())
+
+		// The stored code is spent, and the grant keeps nothing to refresh
+		stored := model.NewOAuthUserToken()
+		require.NoError(t, session.Collection("OAuthUserToken").Load(exp.Equal("_id", grant.OAuthUserTokenID), &stored))
+		require.True(t, stored.CodeRedeemed)
+		require.Empty(t, stored.RefreshHash)
+
+		// RULE: The code is single-use, here and at the token endpoint
+		recorder = postOAuthInTransaction(t, server, PostOAuthAuthorizationRedemption, values)
+		require.Equal(t, http.StatusBadRequest, recorder.Code)
+		require.JSONEq(t, `{"error":"invalid_grant","error_description":"Redeeming authorization code"}`, recorder.Body.String())
+
+		recorder = postOAuthTokenInTransaction(t, server, values)
+		require.Equal(t, http.StatusBadRequest, recorder.Code)
+		require.JSONEq(t, `{"error":"invalid_grant","error_description":"Exchanging authorization code"}`, recorder.Body.String())
+	})
+
+	t.Run("NoGrantType", func(t *testing.T) {
+
+		_, values := issue("")
+		values.Del("grant_type")
+
+		recorder := postOAuthInTransaction(t, server, PostOAuthAuthorizationRedemption, values)
+		require.Equal(t, http.StatusOK, recorder.Code)
+		require.JSONEq(t, `{"me":"`+user.ProfileURL+`"}`, recorder.Body.String())
+	})
+}
+
 // oauthTokenRequest builds a urlencoded POST to the token endpoint, and the recorder that holds its response
 func oauthTokenRequest(form url.Values) (*steranko.Context, *httptest.ResponseRecorder) {
 
@@ -397,16 +683,23 @@ func oauthTokenRequest(form url.Values) (*steranko.Context, *httptest.ResponseRe
 	return &steranko.Context{Context: echo.New().NewContext(request, recorder)}, recorder
 }
 
-// requireOAuthRefusal posts the form and requires an RFC 6749 §5.2 answer with the given error and
-// description, carrying no credential that the request presented
+// requireOAuthRefusal posts the form to the token endpoint and requires an RFC 6749 §5.2 answer with the given
+// error and description, carrying no credential that the request presented
 func requireOAuthRefusal(t *testing.T, session data.Session, form url.Values, errorCode string, description string) {
+	t.Helper()
+	requireOAuthRefusalFrom(t, PostOAuthToken, session, form, errorCode, description)
+}
+
+// requireOAuthRefusalFrom posts the form to the handler and requires an RFC 6749 §5.2 answer with the given
+// error and description, carrying no credential that the request presented
+func requireOAuthRefusalFrom(t *testing.T, handler WithFunc0, session data.Session, form url.Values, errorCode string, description string) {
 
 	t.Helper()
 
 	ctx, recorder := oauthTokenRequest(form)
 
 	// A client's mistake is answered, never returned, so errorHandler does not report it
-	require.NoError(t, PostOAuthToken(ctx, &service.Factory{}, session))
+	require.NoError(t, handler(ctx, &service.Factory{}, session))
 	require.Equal(t, http.StatusBadRequest, recorder.Code)
 	require.Contains(t, recorder.Header().Get("Content-Type"), "application/json")
 
@@ -460,13 +753,20 @@ func oauthAuthorizationResponse() (echo.Context, *httptest.ResponseRecorder) {
 // postOAuthTokenInTransaction posts the form to the token endpoint inside a transaction, as
 // WithFactory runs every POST, and returns the recorded response
 func postOAuthTokenInTransaction(t *testing.T, server data.Server, form url.Values) *httptest.ResponseRecorder {
+	t.Helper()
+	return postOAuthInTransaction(t, server, PostOAuthToken, form)
+}
+
+// postOAuthInTransaction posts the form to the handler inside a transaction, as WithFactory runs every
+// POST, and returns the recorded response
+func postOAuthInTransaction(t *testing.T, server data.Server, handler WithFunc0, form url.Values) *httptest.ResponseRecorder {
 
 	t.Helper()
 
 	ctx, recorder := oauthTokenRequest(form)
 
 	_, err := server.WithTransaction(context.Background(), func(session data.Session) (any, error) {
-		return nil, PostOAuthToken(ctx, &service.Factory{}, session)
+		return nil, handler(ctx, &service.Factory{}, session)
 	})
 
 	require.NoError(t, err)

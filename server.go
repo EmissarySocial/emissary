@@ -802,7 +802,10 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// OAuth Server
 	e.GET("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
 	e.HEAD("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
-	e.POST("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.PostOAuthAuthorization))
+	e.POST("/oauth/authorize", handler.RouteOAuthAuthorization(
+		handler.WithFactory(factory, handler.PostOAuthAuthorizationRedemption),
+		handler.WithAuthenticatedUser(factory, handler.PostOAuthAuthorization),
+	))
 	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
