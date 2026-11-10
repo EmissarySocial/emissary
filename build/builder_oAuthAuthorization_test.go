@@ -461,13 +461,14 @@ func TestConsentPage_DescribesTheRequest(t *testing.T) {
 		return page.String()
 	}
 
-	t.Run("scopes in plain words, one header per group", func(t *testing.T) {
+	t.Run("scopes in plain words, in the dataset's order", func(t *testing.T) {
 
 		page := render(t, client, model.OAuthAuthorizationRequest{Scope: "read:statuses made-up profile write:statuses read:lists"})
 
-		for _, group := range []string{"Identity", "Read Access", "Write Access", "Other"} {
-			require.Equal(t, 1, strings.Count(page, ">"+group+"<"), "group %q", group)
-		}
+		// The page lists one row per scope, with no group headers and no warning color
+		require.Equal(t, 5, strings.Count(page, `<div class="flex-row margin-top-sm `))
+		require.NotContains(t, page, "text-red\">")
+		require.NotContains(t, page, ">Read Access<")
 
 		require.Contains(t, page, ">Read Posts<")
 		require.Contains(t, page, "See posts and timelines")
@@ -486,7 +487,7 @@ func TestConsentPage_DescribesTheRequest(t *testing.T) {
 
 	t.Run("data portability keeps its warning", func(t *testing.T) {
 		page := render(t, client, model.OAuthAuthorizationRequest{Scope: model.OAuthUserTokenScopeActivityPubPortability})
-		require.Contains(t, page, `<div class="margin-top text-red">`)
+		require.Contains(t, page, `<div class="flex-row margin-top-sm text-red">`)
 		require.Contains(t, page, "Export All of Your Data")
 		require.Contains(t, page, "only if you are moving your account")
 	})
