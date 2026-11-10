@@ -102,6 +102,17 @@ Note that the repair and its cleanup run against two different connections — t
 
 A stylesheet that a User writes is user-supplied content, because every visitor to their page renders it. Place one with `customCSS`, which returns nothing unless [tools/customcss](tools/customcss/README.md) accepts it, and never with rosetta's `css`, which is a raw cast: inside a `<style>` element, `css` passes `</style><script>` straight through.
 
+## Guard every route that redirects to another website
+
+Several checks in this codebase treat a local address as a safe one: [tools/customcss](tools/customcss/README.md) lets a User's stylesheet load any file on this website, `calcNextURL` keeps a `next` parameter on this origin, and an OAuth client with no metadata may send a User anywhere on its own origin. A route that answers a GET with a redirect to a place the caller chose turns every one of those into "anywhere". A stylesheet's `url(/.intents/Create?account=a@evil.example)` made each visitor's browser call a server of the author's choosing, and nothing was logged (found 2026-11-10).
+
+Three routes redirect to another website today, and each is deliberate. `GET /.intents/:intent` forwards to a URL that the visitor's home server publishes. A moved User's or Stream's address forwards to wherever it moved (`MovedTo`). And `GetHome` forwards a personalized hostname to its parent. Treat that list as closed:
+
+- **Do not add a fourth without Ben's say-so**, and add it to this list when you do.
+- **Put it under a dot-prefixed path.** customcss refuses every dot-prefixed route that is not in its `fileRoutes`, so a new redirect at `/.something` is refused there with no further work, and one at `/something` is not.
+- **Never take the destination from the request.** A query parameter, a form value, or a header that names where to go is an open redirect, whatever validates it afterwards. `PostSearchLookup` lost its `forward` parameter for this reason (BUG-169).
+- **A new route that serves files under a dot-prefix needs a line in `fileRoutes`**, or stylesheets cannot use it.
+
 ## The funcMap shadows `and` and `or` with strict-bool versions
 
 Emissary's template funcMap is built on `rosetta/funcmap.All()` ([tools/templates/functions.go](tools/templates/functions.go)), which defines `and` and `or` as `func(values ...bool) bool` — **replacing the `text/template` builtins**, which accept any type and short-circuit on truthiness. Every Emissary template is affected: page templates, widgets, and email bodies alike.
