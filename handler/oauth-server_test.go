@@ -142,6 +142,18 @@ func TestPostOAuthToken_AnswersClientMistakesAsJSON(t *testing.T) {
 		requireOAuthRefusal(t, session, form(primitive.NewObjectID().Hex(), "authorization_code", ""), "invalid_client", "Invalid client_id")
 	})
 
+	t.Run("MissingGrantType", func(t *testing.T) {
+		client := newOAuthClient(oauthStoredSecret)
+		session := oauthSession{client: client}
+
+		// An empty grant_type and an absent one are the same omission
+		values := form(client.ClientID.Hex(), "", "")
+		requireOAuthRefusal(t, session, values, "invalid_request", "Missing grant_type")
+
+		values.Del("grant_type")
+		requireOAuthRefusal(t, session, values, "invalid_request", "Missing grant_type")
+	})
+
 	t.Run("UnsupportedGrantType", func(t *testing.T) {
 		client := newOAuthClient(oauthStoredSecret)
 		session := oauthSession{client: client}
@@ -540,6 +552,13 @@ func TestPostOAuthAuthorizationRedemption_AnswersClientMistakesAsJSON(t *testing
 		requireOAuthRefusalFrom(t, PostOAuthAuthorizationRedemption, oauthSession{}, form(client, grant), "invalid_client", "Invalid client_id")
 	})
 
+	t.Run("MissingGrantType", func(t *testing.T) {
+		client, grant := issued()
+		values := form(client, grant)
+		values.Del("grant_type")
+		requireOAuthRefusalFrom(t, PostOAuthAuthorizationRedemption, oauthSession{client: client, grant: grant}, values, "invalid_request", "Missing grant_type")
+	})
+
 	t.Run("UnsupportedGrantType", func(t *testing.T) {
 		client, grant := issued()
 		values := form(client, grant)
@@ -662,12 +681,24 @@ func TestPostOAuthAuthorizationRedemption(t *testing.T) {
 		require.JSONEq(t, `{"error":"invalid_grant","error_description":"Exchanging authorization code"}`, recorder.Body.String())
 	})
 
-	t.Run("NoGrantType", func(t *testing.T) {
+	t.Run("MissingGrantType", func(t *testing.T) {
 
-		_, values := issue("")
+		grant, values := issue("")
+		grantType := values.Get("grant_type")
 		values.Del("grant_type")
 
+		// RULE: grant_type is required, and a request without it leaves the code unspent
 		recorder := postOAuthInTransaction(t, server, PostOAuthAuthorizationRedemption, values)
+		require.Equal(t, http.StatusBadRequest, recorder.Code)
+		require.JSONEq(t, `{"error":"invalid_request","error_description":"Missing grant_type"}`, recorder.Body.String())
+
+		stored := model.NewOAuthUserToken()
+		require.NoError(t, session.Collection("OAuthUserToken").Load(exp.Equal("_id", grant.OAuthUserTokenID), &stored))
+		require.False(t, stored.CodeRedeemed)
+
+		// The same code redeems once the request names its grant
+		values.Set("grant_type", grantType)
+		recorder = postOAuthInTransaction(t, server, PostOAuthAuthorizationRedemption, values)
 		require.Equal(t, http.StatusOK, recorder.Code)
 		require.JSONEq(t, `{"me":"`+user.ProfileURL+`"}`, recorder.Body.String())
 	})

@@ -243,9 +243,9 @@ func PostOAuthAuthorizationRedemption(ctx *steranko.Context, factory *service.Fa
 		return oauthTokenError(ctx, "invalid_client", derp.Wrap(err, location, "Invalid client_id", transaction.ClientID))
 	}
 
-	// A request that names no grant_type redeems a code, as at the token endpoint
+	// RULE: grant_type is required (IndieAuth §5.3.1), so a request that names none redeems nothing
 	if transaction.GrantType == "" {
-		transaction.GrantType = "authorization_code"
+		return oauthTokenError(ctx, "invalid_request", derp.BadRequest(location, "Missing grant_type"))
 	}
 
 	// RULE: Only an authorization code is redeemed here
@@ -299,11 +299,15 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 		return oauthTokenError(ctx, "invalid_client", derp.Wrap(err, location, "Invalid client_id", transaction.ClientID))
 	}
 
-	// RULE: Dispatch on grant_type. An empty grant_type is treated as
-	// authorization_code for backward compatibility with existing clients.
+	// RULE: grant_type is required (RFC 6749 §4.1.3 and §6)
+	if transaction.GrantType == "" {
+		return oauthTokenError(ctx, "invalid_request", derp.BadRequest(location, "Missing grant_type"))
+	}
+
+	// Dispatch on grant_type
 	switch transaction.GrantType {
 
-	case "", "authorization_code":
+	case "authorization_code":
 		return postOAuthToken_authorizationCode(ctx, factory, session, oauthClient, transaction)
 
 	case "refresh_token":
