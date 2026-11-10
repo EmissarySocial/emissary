@@ -52,15 +52,19 @@ func TestExport_FollowingCarriesSecret(t *testing.T) {
 	require.Contains(t, string(document), "Example Feed")
 }
 
-// TestExport_MerchantAccountCarriesPlaintext pins the same allowance for a MerchantAccount.
+// TestExport_MerchantAccountCarriesPlaintext pins the same allowance for a MerchantAccount's
+// Plaintext, and the opposite rule for its Vault.
 //
-// RULE: service.MerchantAccount.ExportDocument goes further still -- it DECRYPTS the vault and
-// writes it into an explicit map, so a User's merchant credentials move with them on purpose.
-// This test guards the struct half: Plaintext must not quietly acquire a `json:"-"`.
+// RULE: Plaintext (a publishable key, a connected account id) moves with the User on purpose.
+// The Vault does not: a Stripe Connect vault holds the domain's platform key, which the merchant
+// never owned (BUG-303 Defect D). service.MerchantAccount.ExportDocument builds an explicit map
+// that leaves the vault out, and merchantAccount_export_test.go pins that. This test guards the
+// struct half: Plaintext must not quietly acquire a `json:"-"`, and Vault must keep its.
 func TestExport_MerchantAccountCarriesPlaintext(t *testing.T) {
 
 	merchantAccount := model.NewMerchantAccount()
 	merchantAccount.Plaintext.SetString("publishableKey", "CANARY-PUBLISHABLE-KEY")
+	merchantAccount.Vault.Encrypted["restrictedKey"] = "CANARY-SEALED-KEY"
 	merchantAccount.Name = "Example Merchant"
 
 	document, err := json.Marshal(merchantAccount)
@@ -68,6 +72,8 @@ func TestExport_MerchantAccountCarriesPlaintext(t *testing.T) {
 
 	require.Contains(t, string(document), "CANARY-PUBLISHABLE-KEY", "merchant settings move with the User")
 	require.Contains(t, string(document), "Example Merchant")
+	require.NotContains(t, string(document), "CANARY-SEALED-KEY", "the vault never leaves the server")
+	require.NotContains(t, string(document), `"vault"`)
 }
 
 // TestExport_UserImportIgnoresCredentials proves the round trip is not silently broken:

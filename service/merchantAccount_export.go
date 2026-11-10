@@ -21,7 +21,7 @@ func (service *MerchantAccount) ExportCollection(session data.Session, userID pr
 // ExportDocument returns a single MerchantAccount as a JSON string, for a User's data export
 func (service *MerchantAccount) ExportDocument(session data.Session, userID primitive.ObjectID, merchantAccountID primitive.ObjectID) (string, error) {
 
-	const location = "service.User.ExportDocument"
+	const location = "service.MerchantAccount.ExportDocument"
 
 	// Load the User
 	merchantAccount := model.NewMerchantAccount()
@@ -35,13 +35,8 @@ func (service *MerchantAccount) ExportDocument(session data.Session, userID prim
 		return "", derp.Wrap(err, location, "Loading connection", merchantAccount.ConnectionID)
 	}
 
-	// Decrypt Vault values
-	decryptedVault, err := service.DecryptVault(&merchantAccount)
-
-	if err != nil {
-		return "", derp.Wrap(err, location, "Decrypting vault")
-	}
-
+	// RULE: The vault stays home. A Stripe Connect vault holds the domain's platform key,
+	// which belongs to the operator, not to the merchant whose export this is (BUG-303).
 	export := mapof.Any{
 		"MerchantAcccountID":   merchantAccount.MerchantAccountID.Hex(),
 		"ConnectionID":         connection.Type,
@@ -49,7 +44,6 @@ func (service *MerchantAccount) ExportDocument(session data.Session, userID prim
 		"Type":                 merchantAccount.Type,
 		"Name":                 merchantAccount.Name,
 		"Description":          merchantAccount.Description,
-		"Vault":                decryptedVault,
 		"Plaintext":            merchantAccount.Plaintext,
 		"APIKeyExpirationDate": merchantAccount.APIKeyExpirationDate,
 		"LiveMode":             merchantAccount.LiveMode,
