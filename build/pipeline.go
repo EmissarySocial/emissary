@@ -2,7 +2,6 @@ package build
 
 import (
 	"io"
-	"reflect"
 
 	"github.com/EmissarySocial/emissary/model/step"
 )
@@ -105,53 +104,16 @@ func (pipeline Pipeline) EditsAttachments(fieldname string) bool {
 	return false
 }
 
-// nestedPipelines returns every Pipeline a step holds in its exported fields, which is how a
-// step's own branches and sub-steps are reached without naming each step type: every []step.Step
-// field, and every entry of a map[string][]step.Step field, such as a switch's cases
+// nestedPipelines returns every Pipeline a step holds, which is how a step's own branches and
+// sub-steps are reached without naming each step type
 func nestedPipelines(current step.Step) []Pipeline {
 
-	result := make([]Pipeline, 0)
-	value := reflect.Indirect(reflect.ValueOf(current))
+	nested := step.Nested(current)
+	result := make([]Pipeline, len(nested))
 
-	if value.Kind() != reflect.Struct {
-		return result
-	}
-
-	for index := range value.NumField() {
-
-		// Interface() panics on an unexported field, and a step keeps its pipelines in exported ones
-		if !value.Type().Field(index).IsExported() {
-			continue
-		}
-
-		result = append(result, pipelinesIn(value.Field(index).Interface())...)
+	for index, steps := range nested {
+		result[index] = steps
 	}
 
 	return result
-}
-
-// pipelinesIn returns the Pipelines one field holds: the field itself when it is a []step.Step,
-// each entry when it is a map[string][]step.Step, and none for any other field or an empty pipeline
-func pipelinesIn(field any) []Pipeline {
-
-	switch typed := field.(type) {
-
-	case []step.Step:
-		if len(typed) > 0 {
-			return []Pipeline{typed}
-		}
-
-	case map[string][]step.Step:
-		result := make([]Pipeline, 0, len(typed))
-
-		for _, nested := range typed {
-			if len(nested) > 0 {
-				result = append(result, nested)
-			}
-		}
-
-		return result
-	}
-
-	return nil
 }

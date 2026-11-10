@@ -430,6 +430,9 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 		// RULE: Every default child must be one that can be created, or every new User or Stream of this Template fails to save
 		errors.Append(service.invalidDefaultChildren(&template)...)
 
+		// RULE: No action may include itself, directly or through others, or its first request overflows the stack
+		errors.Append(includeCycles(&template)...)
+
 		// Scan all Actions in the Template
 		for actionID, action := range template.Actions {
 
@@ -621,6 +624,65 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	// Phew.  Hopefully everything is valid.
 	return errors
+}
+
+// includeCycles returns one error for each action in a Template that reaches itself through include steps
+func includeCycles(template *model.Template) []derp.Error {
+
+	result := make([]derp.Error, 0)
+
+	// Check the actions in name order, so the same Template always reports the same errors
+	actionIDs := make([]string, 0, len(template.Actions))
+
+	for actionID := range template.Actions {
+		actionIDs = append(actionIDs, actionID)
+	}
+
+	slices.Sort(actionIDs)
+
+	for _, actionID := range actionIDs {
+		if path := includePath(template, actionID, actionID, map[string]bool{}); len(path) > 0 {
+			result = append(result, derp.Validation(
+				"Template action includes itself, which would never finish",
+				"template: "+template.TemplateID,
+				"action: "+actionID,
+				"path: "+actionID+" > "+strings.Join(path, " > "),
+			))
+		}
+	}
+
+	return result
+}
+
+// includePath returns the chain of includes that leads from one action back to the target, or nil when none does
+func includePath(template *model.Template, actionID string, targetID string, visited map[string]bool) []string {
+
+	// Each action is walked once, so a cycle that does not pass through the target cannot loop here
+	if visited[actionID] {
+		return nil
+	}
+
+	visited[actionID] = true
+
+	// An include that names an unknown action runs nothing, so it leads nowhere
+	action, exists := template.Actions[actionID]
+
+	if !exists {
+		return nil
+	}
+
+	for _, includedID := range modelStep.IncludedActions(action.Steps) {
+
+		if includedID == targetID {
+			return []string{includedID}
+		}
+
+		if path := includePath(template, includedID, targetID, visited); len(path) > 0 {
+			return append([]string{includedID}, path...)
+		}
+	}
+
+	return nil
 }
 
 // invalidDefaultChildren returns one error for each "defaultChildren" entry in a Template that the
