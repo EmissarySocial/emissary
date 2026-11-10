@@ -13,8 +13,8 @@ import (
 )
 
 // stubDomainFactory satisfies the (62-method) Factory interface by embedding it (nil) and
-// overriding only Domain() and Theme(), which is all that ThemeData() reads.  Any other
-// Factory call would panic, which is fine: these tests never make one.
+// overriding only Domain(), Theme(), and Hostname(), which is all that ThemeData() and the
+// consent page read.  Any other Factory call would panic, which is fine: these tests never make one.
 type stubDomainFactory struct {
 	Factory
 	domainService *service.Domain
@@ -26,6 +26,9 @@ func (f stubDomainFactory) Domain() *service.Domain { return f.domainService }
 
 // Theme returns the Theme service. Implements the Factory interface.
 func (f stubDomainFactory) Theme() *service.Theme { return f.themeService }
+
+// Hostname returns the bare domain name of this server. Implements the Factory interface.
+func (f stubDomainFactory) Hostname() string { return "example.com" }
 
 // newTestDomainFactory returns a Factory whose cached Domain record carries the provided
 // theme data and (secret) operational data, and whose Theme declares a "showNavigation"
