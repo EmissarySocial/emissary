@@ -1,8 +1,71 @@
 package customcss
 
 import (
+	"net/url"
 	"strings"
 )
+
+// fileRoutes are the only paths beginning with a dot that serve files
+var fileRoutes = []string{".themes", ".templates", ".widgets", ".domain", ".searchTag"}
+
+// isServerRoute reports whether a local address reaches one of the server's own dot-prefixed routes,
+// such as /.intents, by any spelling.  Only the routes that serve files are left alone.
+func isServerRoute(value string) bool {
+
+	// Read the address the way isLocalURL does, then keep only its path
+	value = strings.Map(dropTabsAndNewlines, value)
+	value = strings.TrimFunc(value, isControlOrSpace)
+	value = strings.ReplaceAll(value, `\`, "/")
+
+	// RULE: A data: URI is not a path, and loads nothing
+	if _, hasScheme := urlScheme(value); hasScheme {
+		return false
+	}
+
+	path, _, _ := strings.Cut(value, "#")
+	path, _, _ = strings.Cut(path, "?")
+	isAbsolute := strings.HasPrefix(path, "/")
+
+	for index, segment := range strings.Split(strings.TrimPrefix(path, "/"), "/") {
+
+		// RULE: A segment that cannot be decoded is refused, because the router may read it differently
+		decoded, err := url.PathUnescape(segment)
+
+		if err != nil {
+			return true
+		}
+
+		if !strings.HasPrefix(decoded, ".") {
+			continue
+		}
+
+		// "." and ".." only move between folders
+		if (decoded == ".") || (decoded == "..") {
+			continue
+		}
+
+		// RULE: A file route counts only as the first segment of an absolute path
+		if isAbsolute && (index == 0) && isFileRoute(decoded) {
+			continue
+		}
+
+		return true
+	}
+
+	return false
+}
+
+// isFileRoute reports whether a dot-prefixed first segment names a route that serves files
+func isFileRoute(segment string) bool {
+
+	for _, fileRoute := range fileRoutes {
+		if segment == fileRoute {
+			return true
+		}
+	}
+
+	return false
+}
 
 // isLocalURL reports whether a browser would resolve an address to the page's own website, or to a data: URI
 func isLocalURL(value string) bool {

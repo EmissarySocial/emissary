@@ -72,6 +72,11 @@ func (w *walker) check(tokenType css.TokenType, data []byte) error {
 			return w.failure("spells url( with escape codes")
 		}
 
+		// RULE: A substituted value inside image-set() and its relatives is an address nobody checked
+		if w.substitutesAddress(name) {
+			return w.failure("cannot use " + name + "() inside a function that loads a file")
+		}
+
 		w.open('(', ')', name)
 
 	case css.RightBraceToken, css.RightBracketToken, css.RightParenthesisToken:
@@ -171,24 +176,45 @@ func (w *walker) checkURL(value string) error {
 		return nil
 	}
 
-	if isLocalURL(value) {
-		return nil
+	if !isLocalURL(value) {
+		return w.failure("cannot load files from other websites")
 	}
 
-	return w.failure("cannot load files from other websites")
+	// RULE: A local address must be a file, because some of this website's own pages redirect elsewhere
+	if isServerRoute(value) {
+		return w.failure("cannot load this website's own pages, only its files")
+	}
+
+	return nil
 }
 
-// inURLFunction reports whether the innermost open block is a function whose strings are addresses
+// inURLFunction reports whether any open block is a function whose strings are addresses
 func (w *walker) inURLFunction() bool {
 
-	if len(w.blocks) == 0 {
+	// Every open block counts, because a string nested in another function still reaches the outer one
+	for _, open := range w.blocks {
+
+		switch open.function {
+
+		case "image", "image-set", "-webkit-image-set", "src", "cross-fade", "-webkit-cross-fade":
+			return true
+		}
+	}
+
+	return false
+}
+
+// substitutesAddress reports whether a function would fill in an address that this walk cannot read
+func (w *walker) substitutesAddress(name string) bool {
+
+	if w.remoteAllowed {
 		return false
 	}
 
-	switch w.blocks[len(w.blocks)-1].function {
+	switch name {
 
-	case "image", "image-set", "-webkit-image-set", "src", "cross-fade", "-webkit-cross-fade":
-		return true
+	case "var", "env", "attr":
+		return w.inURLFunction()
 	}
 
 	return false
