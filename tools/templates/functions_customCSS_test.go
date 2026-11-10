@@ -25,7 +25,7 @@ func renderCustomCSS(t *testing.T, value string) string {
 
 // TestCustomCSS_Registered confirms that the helper is in the FuncMap with the signature templates call
 func TestCustomCSS_Registered(t *testing.T) {
-	_, ok := FuncMap(nil)["customCSS"].(func(string) template.CSS)
+	_, ok := FuncMap(nil)["customCSS"].(func(any) template.CSS)
 	require.True(t, ok, "customCSS helper must be registered with this signature")
 }
 
@@ -72,4 +72,20 @@ func TestCustomCSS_RefusesOtherWebsites(t *testing.T) {
 // TestCustomCSS_Empty confirms that an empty stylesheet renders as nothing
 func TestCustomCSS_Empty(t *testing.T) {
 	require.Empty(t, customCSS(""))
+}
+
+// TestCustomCSS_MissingStylesheet verifies that a record with no stylesheet renders nothing and never fails
+func TestCustomCSS_MissingStylesheet(t *testing.T) {
+
+	require.Empty(t, customCSS(nil))
+	require.Empty(t, customCSS(""))
+
+	// A map with no "stylesheet" key hands the function a nil, as `.Data "stylesheet"` does
+	page := template.Must(template.New("page").Funcs(template.FuncMap{"customCSS": customCSS}).Parse(
+		`{{with customCSS (index . "stylesheet")}}<style>{{.}}</style>{{end}}ok`,
+	))
+
+	var result strings.Builder
+	require.NoError(t, page.Execute(&result, map[string]any{}))
+	require.Equal(t, "ok", result.String())
 }

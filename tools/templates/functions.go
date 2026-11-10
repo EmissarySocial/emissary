@@ -137,17 +137,24 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 }
 
 // customCSS returns a stylesheet that customcss.Validate accepts, marked as trusted CSS, or
-// an empty value when the stylesheet breaks any of its rules
-func customCSS(value string) template.CSS {
+// an empty value when the stylesheet is missing, is not text, or breaks any of its rules
+func customCSS(value any) template.CSS {
+
+	// A template passes whatever the record holds, which is nil until a stylesheet is saved
+	stylesheet := convert.String(value)
+
+	if stylesheet == "" {
+		return ""
+	}
 
 	// RULE: This returns template.CSS, which html/template does not escape, so refuse any
 	// stylesheet that could close its <style> element, reach past the block that wraps it,
 	// or load another website's files. A refused stylesheet is left off the page entirely.
-	if err := customcss.Validate(value); err != nil {
+	if err := customcss.Validate(stylesheet); err != nil {
 		return ""
 	}
 
-	return template.CSS(value) // #nosec G203 -- customcss.Validate refuses "</", unbalanced blocks, and other websites' files
+	return template.CSS(stylesheet) // #nosec G203 -- customcss.Validate refuses "</", unbalanced blocks, and other websites' files
 }
 
 // toTime reads a time from a datetime.DateTime (which convert.Time does not recognize) or from
