@@ -37,6 +37,7 @@ type Domain struct {
 	DefaultOwner         string                          `json:"defaultOwner"         bson:"defaultOwner"`         // Default page for owners (defaults to "/admin")
 	Data                 mapof.String                    `json:"-"                    bson:"data"`                 // Operational settings for this domain (VAPID keys, feature flags). SECRET: never render into a page.
 	DatabaseVersion      uint                            `json:"databaseVersion"      bson:"databaseVersion"`      // Version of the database schema
+	PrimaryUserID        primitive.ObjectID              `json:"primaryUserId"        bson:"primaryUserId"`        // The User who represents this domain, or zero. Kept by service.User, and never set by a form.
 	Syndication          sliceof.Object[form.LookupCode] `json:"syndication"          bson:"syndication"`          // List of external services that this domain can syndicate to
 	Connections          mapof.Matchable[Connection]     `json:"connections"          bson:"connections"`          // Map of external connections for this domain
 	PrivateKey           string                          `json:"-"                    bson:"privateKey"`           // Private key for this domain
@@ -144,6 +145,11 @@ func (domain Domain) IsIndexable() bool {
 // HasRegistrationForm returns TRUE if this domain includes a valid signup form.
 func (domain Domain) HasRegistrationForm() bool {
 	return domain.RegistrationID != ""
+}
+
+// HasPrimaryUser returns TRUE if a User represents this domain
+func (domain Domain) HasPrimaryUser() bool {
+	return !domain.PrimaryUserID.IsZero()
 }
 
 // Host returns a usable URL for this domain, including the HTTP(S) protocol and hostname
