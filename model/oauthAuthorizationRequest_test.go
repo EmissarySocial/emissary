@@ -61,3 +61,64 @@ func TestOAuthAuthorizationRequest_RedirectURI(t *testing.T) {
 	_, err = validate(urlClient, "https://evil.example/finish")
 	refused(err, "a URL client's redirect_uri on another origin")
 }
+
+// FuzzOAuthAuthorizationRequest_Validate requires every request that Validate accepts to be one the server can honor
+func FuzzOAuthAuthorizationRequest_Validate(f *testing.F) {
+
+	f.Add("https://client.example.com/", "", "https://client.example.com/callback", "", "code", "challenge", "S256", "", "")
+	f.Add("https://client.example.com/", "", "https://evil.example.com/callback", "profile", "code", "challenge", "", "", "")
+	f.Add("", "https://registered.example.com/callback", "", "read write", "token", "", "", "secret", "read")
+	f.Add("", "https://registered.example.com/callback", "https://evil.example.com/", "admin:write", "code", "x", "S512", "", "read")
+	f.Add("https://client.example.com/", "", "https://client.example.com/callback", "profile", "", "", "", "", "")
+	f.Add("", "https://registered.example.com/callback", "", "", "code", "", "", "", "")
+
+	f.Fuzz(func(t *testing.T, clientURL, listed, redirectURI, scope, responseType, challenge, method, secret, clientScope string) {
+
+		client := NewOAuthClient()
+		client.ClientURL = clientURL
+		client.ClientSecret = secret
+
+		if listed != "" {
+			client.RedirectURIs = append(client.RedirectURIs, listed)
+		}
+
+		if clientScope != "" {
+			client.Scopes = append(client.Scopes, clientScope)
+		}
+
+		request := OAuthAuthorizationRequest{
+			ResponseType:        responseType,
+			RedirectURI:         redirectURI,
+			Scope:               scope,
+			CodeChallenge:       challenge,
+			CodeChallengeMethod: method,
+		}
+
+		if err := request.Validate(client); err != nil {
+			return
+		}
+
+		// RULE: An accepted request sends the User only where the client may send them
+		require.True(t, client.AllowsRedirectURI(request.RedirectURI), "accepted redirect_uri %q", request.RedirectURI)
+
+		// RULE: The response type is one the server answers
+		require.Contains(t, []string{"code", "token"}, request.ResponseType)
+
+		// RULE: A challenge always names a method the server can check
+		if request.CodeChallenge != "" {
+			require.True(t, IsValidPKCEMethod(request.CodeChallengeMethod), "accepted method %q", request.CodeChallengeMethod)
+		}
+
+		// RULE: A public client's code is always bound to PKCE
+		if (request.ResponseType == "code") && (secret == "") {
+			require.NotEmpty(t, request.CodeChallenge)
+		}
+
+		// RULE: A client that registered scopes is granted none beyond them
+		if client.Scopes.NotEmpty() {
+			for _, requested := range request.Scopes() {
+				require.Contains(t, client.Scopes, requested)
+			}
+		}
+	})
+}

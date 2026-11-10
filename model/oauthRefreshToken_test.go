@@ -183,3 +183,46 @@ func TestRefreshLifecycle(t *testing.T) {
 	// Presenting s1 past the grace window is a reuse alarm.
 	require.Equal(t, RefreshMatchReuse, grant.ClassifyRefresh(1, "s1", rotateTime.Add(grace+time.Minute), grace))
 }
+
+// FuzzParseRefreshToken requires a presented token to be refused, or to parse into parts that rebuild into
+// the same parts, and every token this server builds to parse back into its own parts
+func FuzzParseRefreshToken(f *testing.F) {
+
+	grantID := primitive.NewObjectID()
+
+	f.Add(BuildRefreshToken(grantID, 1, "secret"), grantID[:], 1, "secret")
+	f.Add("", []byte{}, 0, "")
+	f.Add("..", []byte("short"), -1, "a.b.c")
+	f.Add(grantID.Hex()+".+1.s", grantID[:], 2, "")
+	f.Add("65A1B2C3D4E5F60718293A4B.01.secret.with.dots", grantID[:], 9223372036854775807, "x")
+	f.Add(grantID.Hex()+".0.secret", grantID[:], 0, "secret")
+
+	f.Fuzz(func(t *testing.T, token string, idBytes []byte, generation int, secret string) {
+
+		// A presented token is refused, or names a live generation and a secret that survive a rebuild
+		if parsedID, parsedGeneration, parsedSecret, err := ParseRefreshToken(token); err == nil {
+			require.GreaterOrEqual(t, parsedGeneration, 1)
+			require.NotEmpty(t, parsedSecret)
+
+			againID, againGeneration, againSecret, againErr := ParseRefreshToken(BuildRefreshToken(parsedID, parsedGeneration, parsedSecret))
+			require.NoError(t, againErr)
+			require.Equal(t, parsedID, againID)
+			require.Equal(t, parsedGeneration, againGeneration)
+			require.Equal(t, parsedSecret, againSecret)
+		}
+
+		// Every token this server can build parses back into its own parts
+		if (len(idBytes) != 12) || (generation < 1) || (secret == "") {
+			return
+		}
+
+		var builtID primitive.ObjectID
+		copy(builtID[:], idBytes)
+
+		resultID, resultGeneration, resultSecret, err := ParseRefreshToken(BuildRefreshToken(builtID, generation, secret))
+		require.NoError(t, err)
+		require.Equal(t, builtID, resultID)
+		require.Equal(t, generation, resultGeneration)
+		require.Equal(t, secret, resultSecret)
+	})
+}

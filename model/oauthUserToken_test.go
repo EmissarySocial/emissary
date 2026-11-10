@@ -344,3 +344,42 @@ func TestOAuthUserToken_TokenResponse(t *testing.T) {
 		require.NotContains(t, response, "profile")
 	})
 }
+
+// FuzzVerifyRedirectURI requires a token request to name the redirect_uri its code was issued to, and a URL
+// client to name one at all
+func FuzzVerifyRedirectURI(f *testing.F) {
+
+	f.Add("https://client.example.com/callback", "https://client.example.com/callback", true)
+	f.Add("https://client.example.com/callback", "https://client.example.com/other", false)
+	f.Add("https://client.example.com/callback", "https://client.example.com/callback/", true)
+	f.Add("https://client.example.com/callback", "", true)
+	f.Add("https://client.example.com/callback", "", false)
+	f.Add("", "https://anything.example.com/", true)
+
+	f.Fuzz(func(t *testing.T, issuedTo string, presented string, urlClient bool) {
+
+		token := NewOAuthUserToken()
+		token.SetRedirectURI(issuedTo)
+
+		client := NewOAuthClient()
+
+		if urlClient {
+			client.ClientURL = "https://client.example.com/"
+		}
+
+		switch err := token.VerifyRedirectURI(client, presented); {
+
+		// A grant issued before the redirect_uri was recorded has nothing to compare
+		case issuedTo == "":
+			require.NoError(t, err)
+
+		// RULE: A named redirect_uri must be the very one the code was issued to
+		case presented != "":
+			require.Equal(t, presented == issuedTo, err == nil)
+
+		// RULE: Only a registered client may leave it out
+		default:
+			require.Equal(t, !urlClient, err == nil)
+		}
+	})
+}

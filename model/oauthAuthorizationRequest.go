@@ -28,6 +28,7 @@ type OAuthAuthorizationRequest struct {
 	CodeChallengeMethod string `json:"codeChallengeMethod" query:"code_challenge_method" form:"code_challenge_method"`
 	ForceLogin          bool   `json:"forceLogin"          query:"force_login"           form:"force_login"`
 	Language            string `json:"language"            query:"language"              form:"language"`
+	Me                  string `json:"me"                  query:"me"` // IndieAuth §5.2 hint, shown on the consent page and never posted back
 }
 
 // NewOAuthAuthorizationRequest returns a fully initialized, empty OAuthAuthorizationRequest

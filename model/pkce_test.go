@@ -241,3 +241,46 @@ func TestOAuthAuthorizationRequest_validatePKCE(t *testing.T) {
 		require.Nil(t, req.validatePKCE())
 	})
 }
+
+// FuzzVerifyPKCE requires a bound challenge to accept the verifier it was made from, and nothing else
+func FuzzVerifyPKCE(f *testing.F) {
+
+	const verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+
+	f.Add(verifier, verifier, true)
+	f.Add(verifier, verifier, false)
+	f.Add(verifier, verifier+"x", true)
+	f.Add(verifier, "", true)
+	f.Add("", "", true)
+	f.Add("short", "short", false)
+	f.Add(strings.Repeat("a", 128), strings.Repeat("a", 129), false)
+	f.Add("ünïcode-ünïcode-ünïcode-ünïcode-ünïcode-ünïcode", "ünïcode-ünïcode-ünïcode-ünïcode-ünïcode-ünïcode", false)
+
+	f.Fuzz(func(t *testing.T, bound string, presented string, useS256 bool) {
+
+		challenge, method := bound, PKCEMethodPlain
+
+		if useS256 {
+			sum := sha256.Sum256([]byte(bound))
+			challenge, method = base64.RawURLEncoding.EncodeToString(sum[:]), PKCEMethodS256
+		}
+
+		token := NewOAuthUserToken()
+		token.SetPKCEChallenge(challenge, method)
+		err := token.VerifyPKCE(presented)
+
+		// With nothing bound, only the absence of a panic is pinned here; RFC 9700 §4.8.2 is still open
+		if challenge == "" {
+			return
+		}
+
+		// RULE: A malformed verifier never passes
+		if !isValidPKCEVerifier(presented) {
+			require.Error(t, err)
+			return
+		}
+
+		// RULE: A well-formed verifier passes only when it is the one the challenge was made from
+		require.Equal(t, presented == bound, err == nil, "bound %q, presented %q, S256 %v", bound, presented, useS256)
+	})
+}

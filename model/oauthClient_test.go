@@ -2,6 +2,8 @@ package model
 
 import (
 	"encoding/json"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
@@ -154,4 +156,73 @@ func TestOAuthClient_AllowsRedirectURI(t *testing.T) {
 	// A port in the client_id must match, and so must its absence
 	allows(ported, "http://localhost:8080/callback", true, "same port")
 	allows(ported, "http://localhost/callback", false, "default port")
+}
+
+// FuzzAllowsRedirectURI requires a client to send a User only to an address it lists, or, when it lists none,
+// to its own host, with no fragment and no credentials
+func FuzzAllowsRedirectURI(f *testing.F) {
+
+	const clientURL = "https://client.example.com/"
+
+	f.Add(clientURL, "", "https://client.example.com/callback")
+	f.Add(clientURL, "", "https://evil.example.com/callback")
+	f.Add(clientURL, "", "https://client.example.com@evil.example.com/")
+	f.Add(clientURL, "", "https://user@client.example.com/")
+	f.Add(clientURL, "", "https://client.example.com/#fragment")
+	f.Add(clientURL, "", "http://client.example.com/callback")
+	f.Add(clientURL, "", "https://client.example.com:443/callback")
+	f.Add(clientURL, "", "https://CLIENT.example.com/callback")
+	f.Add(clientURL, "", "https://client.example.com.evil.example/")
+	f.Add(clientURL, "", `https://client.example.com\@evil.example.com/`)
+	f.Add(clientURL, "", "//client.example.com/callback")
+	f.Add("", "https://registered.example.com/callback", "https://registered.example.com/callback")
+	f.Add(clientURL, "https://client.example.com/listed", "https://client.example.com/other")
+
+	f.Fuzz(func(t *testing.T, clientURL string, listed string, redirectURI string) {
+
+		client := NewOAuthClient()
+		client.ClientURL = clientURL
+
+		if listed != "" {
+			client.RedirectURIs = append(client.RedirectURIs, listed)
+		}
+
+		allowed := client.AllowsRedirectURI(redirectURI)
+
+		// RULE: There is no redirect to an empty address
+		if redirectURI == "" {
+			require.False(t, allowed)
+			return
+		}
+
+		// RULE: A published list is matched exactly, and nothing else is allowed
+		if listed != "" {
+			require.Equal(t, redirectURI == listed, allowed)
+			return
+		}
+
+		// RULE: A registered client that lists nothing allows nothing
+		if clientURL == "" {
+			require.False(t, allowed)
+			return
+		}
+
+		if !allowed {
+			return
+		}
+
+		// RULE: The origin fallback stays on the client's own host, with no fragment and no credentials
+		require.NotContains(t, redirectURI, "#")
+
+		redirect, err := url.Parse(redirectURI)
+		require.NoError(t, err)
+		require.Nil(t, redirect.User)
+
+		origin, err := url.Parse(clientURL)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, redirect.Hostname())
+		require.True(t, strings.EqualFold(origin.Hostname(), redirect.Hostname()), "%q is not on %q", redirectURI, clientURL)
+		require.True(t, strings.EqualFold(origin.Scheme, redirect.Scheme), "%q changes the scheme of %q", redirectURI, clientURL)
+	})
 }
