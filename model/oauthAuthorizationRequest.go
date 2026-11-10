@@ -38,7 +38,13 @@ func NewOAuthAuthorizationRequest() OAuthAuthorizationRequest {
 
 // Scopes returns the requested OAuth scopes, split into individual values
 func (req OAuthAuthorizationRequest) Scopes() []string {
-	return strings.Split(req.Scope, " ")
+	return ParseOAuthScopes(req.Scope)
+}
+
+// hasScope returns TRUE if the request names at least one scope
+func (req OAuthAuthorizationRequest) hasScope() bool {
+
+	return len(req.Scopes()) > 0
 }
 
 // Validate confirms that a request is valid based on the settings in the OAuthClient.
@@ -57,12 +63,13 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 		return derp.BadRequest(location, "Invalid redirect_uri", "provided: "+req.RedirectURI, "allowed: "+strings.Join(client.RedirectURIs, ","))
 	}
 
-	// RULE: If missing, use default value for Scope
-	if req.Scope == "" {
+	// RULE: A registered client that names no scope gets every scope it registered.  A URL client
+	// that names none asks only who the User is (IndieAuth §5.2), so its scope stays empty.
+	if (req.Scope == "") && (client.ClientURL == "") {
 		req.Scope = strings.Join(client.Scopes, " ")
 	}
 
-	// RULE: Verify that scope is valid
+	// RULE: Verify that scope is valid.  A request that names no scope asks for nothing, so there is nothing to refuse
 	if client.Scopes.NotEmpty() {
 		for _, scope := range req.Scopes() {
 			if !slice.Contains(client.Scopes, scope) {
@@ -77,6 +84,11 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 	case "token":
 	default:
 		req.ResponseType = "code"
+	}
+
+	// RULE: The implicit grant returns an access token, so a request that names no scope has nothing to return
+	if (req.ResponseType == "token") && !req.hasScope() {
+		return derp.BadRequest(location, "A scope is required when response_type is 'token'")
 	}
 
 	// RULE: PKCE (RFC 7636). Normalize and validate the challenge method.

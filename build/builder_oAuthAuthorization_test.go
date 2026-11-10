@@ -304,8 +304,9 @@ func TestDescribeScopes(t *testing.T) {
 	// Scopes the dataset does not describe follow, by name, in the order requested
 	require.Equal(t, []string{"read", "create", "made-up"}, values("create read made-up create"))
 
-	// A tab does not separate scopes, here or on the grant, so the page shows what is stored
-	require.Equal(t, []string{"read\twrite"}, values("read\twrite"))
+	// Tabs and commas separate scopes, here and on the grant, so the page shows what is stored
+	require.Equal(t, []string{"read", "write"}, values("read\twrite"))
+	require.Equal(t, []string{"read", "write"}, values("write,read"))
 
 	// An unknown scope is named, never described as anything it is not
 	other := describeScopes([]string{"create"})
@@ -496,6 +497,17 @@ func TestConsentPage_DescribesTheRequest(t *testing.T) {
 		page := render(t, client, model.OAuthAuthorizationRequest{RedirectURI: "https://app.example/callback"})
 		require.Contains(t, page, `App address:</span> https://app.example/`)
 		require.Contains(t, page, `Sends you back to:</span> https://app.example/callback`)
+	})
+
+	t.Run("cancel posts a refusal back to the client", func(t *testing.T) {
+		page := render(t, client, model.OAuthAuthorizationRequest{RedirectURI: "https://app.example/callback"})
+		require.Contains(t, page, `<button type="submit" name="decision" value="deny"`)
+		require.NotContains(t, page, "history.back")
+
+		// An out-of-band request has nowhere to send a refusal, so the button only goes back
+		page = render(t, client, model.OAuthAuthorizationRequest{RedirectURI: model.OAuthRedirectURIOutOfBand})
+		require.NotContains(t, page, `value="deny"`)
+		require.Contains(t, page, "history.back")
 	})
 
 	t.Run("out of band sends the User nowhere", func(t *testing.T) {

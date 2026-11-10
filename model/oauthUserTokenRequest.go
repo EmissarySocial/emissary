@@ -31,12 +31,11 @@ func NewOAuthUserTokenRequest() OAuthUserTokenRequest {
 
 // Scopes returns the requested OAuth scopes, split into individual values, defaulting to "read"
 func (o OAuthUserTokenRequest) Scopes() []string {
-	if o.Scope == "" {
-		return []string{"read"}
+	if scopes := ParseOAuthScopes(o.Scope); len(scopes) > 0 {
+		return scopes
 	}
 
-	scope := strings.ReplaceAll(o.Scope, ",", " ")
-	return strings.Split(scope, " ")
+	return []string{"read"}
 }
 
 // Validate confirms that a request is valid based on the settings in the OAuthClient.

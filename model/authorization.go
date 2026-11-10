@@ -2,7 +2,6 @@ package model
 
 import (
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -114,7 +113,7 @@ func (authorization Authorization) IsGroupMember(groupIDs ...primitive.ObjectID)
 // HasScope returns TRUE if the named OAuth scope was granted to this token
 func (authorization Authorization) HasScope(scope string) bool {
 
-	// Scopes() splits an empty claim into one empty scope, which must never match
+	// An empty scope names nothing, so it never matches
 	if scope == "" {
 		return false
 	}
@@ -125,7 +124,7 @@ func (authorization Authorization) HasScope(scope string) bool {
 // Scopes returns a slice of scopes that this Authorization token is allowed to use.
 // This implements the toot.ScopesGetter interface.
 func (authorization Authorization) Scopes() []string {
-	return strings.Split(authorization.Scope, " ")
+	return ParseOAuthScopes(authorization.Scope)
 }
 
 // Debug returns this Authorization as a map, for logging and troubleshooting

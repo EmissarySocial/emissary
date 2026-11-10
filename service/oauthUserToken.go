@@ -274,13 +274,11 @@ func (service *OAuthUserToken) CreateFromUser(session data.Session, user *model.
 // client's full scope set when the request specifies none.
 func scopesFromString(scope string, fallback sliceof.String) sliceof.String {
 
-	fields := strings.Fields(strings.ReplaceAll(scope, ",", " "))
-
-	if len(fields) == 0 {
-		return fallback
+	if scopes := model.ParseOAuthScopes(scope); len(scopes) > 0 {
+		return scopes
 	}
 
-	return fields
+	return fallback
 }
 
 // Create creates a new grant (OAuthUserToken) for the provided application and
@@ -502,13 +500,15 @@ func (service *OAuthUserToken) RefreshGrant(session data.Session, grant *model.O
 // the granted set (RFC 6749 §6 — a refresh may narrow scope but never widen it).
 func narrowScopes(granted sliceof.String, requested string) (sliceof.String, error) {
 
-	if requested == "" {
+	requestedScopes := model.ParseOAuthScopes(requested)
+
+	if len(requestedScopes) == 0 {
 		return granted, nil
 	}
 
 	result := sliceof.NewString()
 
-	for _, scope := range strings.Fields(strings.ReplaceAll(requested, ",", " ")) {
+	for _, scope := range requestedScopes {
 
 		if !slice.Contains(granted, scope) {
 			return nil, derp.BadRequest("service.OAuthUserToken.narrowScopes", "Requested scope exceeds granted scope", scope)
