@@ -257,10 +257,17 @@ func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.
 	})
 }
 
-// WithFactory handles boilerplate code for requests that require only the domain Factory
+// WithFactory handles boilerplate code for requests that require only the domain Factory, and
+// treats an OAuth access token as no credential at all, so an app's token is never a web session
 func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
+	return withoutAccessTokens(WithAPIFactory(serverFactory, fn))
+}
 
-	const location = "handler.WithFactory"
+// WithAPIFactory handles boilerplate code for requests that require only the domain Factory, and
+// leaves an OAuth access token in the request for the wrappers that read one
+func WithAPIFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
+
+	const location = "handler.WithAPIFactory"
 
 	return func(ctx echo.Context) error {
 
@@ -466,37 +473,74 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.Me
 	})
 }
 
-// WithOAuthUser handles boilerplate code for requests that load a user from an OAuth token
+// WithOAuthUser handles boilerplate code for requests that an OAuth client makes with an access token
+// carrying the ActivityPub portability scope, loading the grant and the User the token names
 func WithOAuthUser(serverFactory *server.Factory, fn WithFunc2[model.OAuthUserToken, model.User]) echo.HandlerFunc {
 
-	return WithAuthenticatedUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+	const location = "handler.WithOAuthUser"
 
-		const location = "handler.WithOAuthUser"
+	// WithAPIFactory leaves the access token in the request, so steranko parses it as the caller's claims
+	return WithAPIFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-		// RULE: Can only request routes that match the authenticated UserID
-		if ctx.Param("userId") != user.UserID.Hex() {
-			return derp.NotFound(location, "UserID in URL must match authenticated User")
-		}
+		authorization := getAuthorization(ctx)
 
-		// The access token (validated by WithAuthenticatedUser) carries the grant ID.
-		grantID := getAuthorization(ctx).OAuthUserTokenID
-
-		if grantID.IsZero() {
-			return derp.Unauthorized(location, "Access token is not an OAuth grant")
+		// RULE: The caller presents an access token with the portability scope for the User named in the URL
+		if err := requireAccessToken(authorization, model.OAuthUserTokenScopeActivityPubPortability, ctx.Param("userId")); err != nil {
+			return derp.Wrap(err, location, "Checking access token")
 		}
 
 		// Load the grant by ID. A missing record means the grant was revoked, so the
 		// (still-signed) access token is no longer honored.
-		oauthUserTokenService := factory.OAuthUserToken()
 		oauthUserToken := model.NewOAuthUserToken()
 
-		if err := oauthUserTokenService.LoadByID(session, user.UserID, grantID, &oauthUserToken); err != nil {
+		if err := factory.OAuthUserToken().LoadByID(session, authorization.UserID, authorization.OAuthUserTokenID, &oauthUserToken); err != nil {
 			return derp.Wrap(err, location, "Loading OAuthUserToken", derp.WithUnauthorized())
 		}
 
+		// Load the User the token was issued for
+		user := model.NewUser()
+
+		if err := factory.User().LoadByID(session, authorization.UserID, &user); err != nil {
+			return derp.Wrap(err, location, "Loading User", derp.WithUnauthorized())
+		}
+
+		// RULE: A User who has moved to another server has no account here for an app to reach
+		if user.MovedTo != "" {
+			return derp.Unauthorized(location, "User has moved to another server")
+		}
+
 		// Call the continuation function
-		return fn(ctx, factory, session, &oauthUserToken, user)
+		return fn(ctx, factory, session, &oauthUserToken, &user)
 	})
+}
+
+// requireAccessToken reports why these claims may not use an OAuth route for the User named in the URL
+func requireAccessToken(authorization model.Authorization, scope string, userID string) error {
+
+	const location = "handler.requireAccessToken"
+
+	// RULE: Only an OAuth access token may use this route; a cookie session is refused
+	if !authorization.IsAccessToken() {
+		return derp.Unauthorized(location, "An OAuth access token is required")
+	}
+
+	// RULE: The token must name the grant it was issued from, so that revoking the grant refuses it
+	if authorization.OAuthUserTokenID.IsZero() {
+		return derp.Unauthorized(location, "Access token is not an OAuth grant")
+	}
+
+	// RULE: The token must have been granted the scope this route requires
+	if !authorization.HasScope(scope) {
+		return derp.Forbidden(location, "Access token does not carry the required scope", scope)
+	}
+
+	// RULE: Can only request routes that match the token's UserID
+	if userID != authorization.UserID.Hex() {
+		return derp.NotFound(location, "UserID in URL must match the access token's User")
+	}
+
+	// Station
+	return nil
 }
 
 // WithOwner handles boilerplate code for requests that are restricted to the domain owner

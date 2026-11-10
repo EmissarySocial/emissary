@@ -112,3 +112,43 @@ func TestAuthorization_RevalidateRoundTrip(t *testing.T) {
 	require.True(t, ok, "Revalidate must survive the JSON round-trip")
 	require.Greater(t, time.Since(at), 10*time.Minute, "the round-tripped session must read as stale")
 }
+
+// TestAuthorization_IsAccessToken confirms which claims mark an OAuth client, including the legacy shape
+// with APIUser and no grant ID
+func TestAuthorization_IsAccessToken(t *testing.T) {
+
+	session := NewAuthorization()
+	session.UserID = primitive.NewObjectID()
+	session.DomainOwner = true
+	require.False(t, session.IsAccessToken(), "a session carries neither marker")
+	require.False(t, NewAuthorization().IsAccessToken(), "anonymous carries neither marker")
+
+	token := session
+	token.APIUser = true
+	token.OAuthUserTokenID = primitive.NewObjectID()
+	require.True(t, token.IsAccessToken())
+
+	legacy := session
+	legacy.APIUser = true
+	require.True(t, legacy.IsAccessToken(), "APIUser alone, as minted before grants were recorded")
+
+	grantOnly := session
+	grantOnly.OAuthUserTokenID = primitive.NewObjectID()
+	require.True(t, grantOnly.IsAccessToken(), "a grant ID alone")
+}
+
+// TestAuthorization_HasScope confirms scope membership against the space-separated Scope claim
+func TestAuthorization_HasScope(t *testing.T) {
+
+	auth := NewAuthorization()
+	auth.Scope = "read write activitypub_account_portability"
+	require.True(t, auth.HasScope("read"))
+	require.True(t, auth.HasScope("activitypub_account_portability"))
+	require.False(t, auth.HasScope("follow"))
+	require.False(t, auth.HasScope("rea"), "a prefix is not a match")
+	require.False(t, auth.HasScope(""), "an empty scope is never granted")
+
+	empty := NewAuthorization()
+	require.False(t, empty.HasScope("read"), "no scopes were granted")
+	require.False(t, empty.HasScope(""), "an empty scope is never granted, even with no scopes")
+}

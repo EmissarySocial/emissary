@@ -1,6 +1,7 @@
 package model
 
 import (
+	"slices"
 	"strings"
 	"time"
 
@@ -87,6 +88,11 @@ func (authorization Authorization) IsIdentity() bool {
 	return !authorization.IdentityID.IsZero()
 }
 
+// IsAccessToken returns TRUE if these claims were minted for an OAuth client rather than for a signed-in person
+func (authorization Authorization) IsAccessToken() bool {
+	return authorization.APIUser || !authorization.OAuthUserTokenID.IsZero()
+}
+
 // AllGroupIDs returns a slice of groups that this authorization belongs to,
 // including the magic "Anonymous", and (if valid) "Authenticated" groups.
 func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
@@ -103,6 +109,17 @@ func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
 // IsGroupMember returns TRUE if this authorization contains any one of the specified groupIDs
 func (authorization Authorization) IsGroupMember(groupIDs ...primitive.ObjectID) bool {
 	return slice.ContainsAny(authorization.AllGroupIDs(), groupIDs...)
+}
+
+// HasScope returns TRUE if the named OAuth scope was granted to this token
+func (authorization Authorization) HasScope(scope string) bool {
+
+	// Scopes() splits an empty claim into one empty scope, which must never match
+	if scope == "" {
+		return false
+	}
+
+	return slices.Contains(authorization.Scopes(), scope)
 }
 
 // Scopes returns a slice of scopes that this Authorization token is allowed to use.
