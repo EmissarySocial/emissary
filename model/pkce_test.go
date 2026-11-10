@@ -205,7 +205,7 @@ func TestOAuthAuthorizationRequest_Validate_PublicClientRequiresPKCE(t *testing.
 	})
 
 	t.Run("public client, implicit token grant is exempt", func(t *testing.T) {
-		req := OAuthAuthorizationRequest{ResponseType: "token"}
+		req := OAuthAuthorizationRequest{ResponseType: "token", Scope: "read"}
 		require.Nil(t, req.Validate(newClient("")))
 	})
 }
