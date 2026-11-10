@@ -78,7 +78,7 @@
 									label: Owner
 									children: [
 										{type: "toggle", path: "isOwner", options: {true-text: "Domain Owner (full control)", false-text: "Domain Owner (full control)"}}
-										{type: "toggle", path: "isPrimary",  options: {show-if: "isOwner is true", true-text: "Primary User (for IndieAuth)", false-text: "Primary User (for IndieAuth)"}}
+										{type: "toggle", path: "isPrimary",  options: {true-text: "Primary User (for IndieAuth)", false-text: "Primary User (for IndieAuth)"}}
 									]
 								}
 							]
@@ -145,7 +145,7 @@
 										label: Owner
 										children: [
 											{type: "toggle", path: "isOwner", options: {true-text: "Domain Owner (full control)", false-text: "Domain Owner (full control)"}}
-											{type: "toggle", path: "isPrimary",  options: {show-if: "isOwner is true", true-text: "Primary User (for IndieAuth)", false-text: "Primary User (for IndieAuth)"}}
+											{type: "toggle", path: "isPrimary",  options: {true-text: "Primary User (for IndieAuth)", false-text: "Primary User (for IndieAuth)"}}
 										]
 									}
 								]

@@ -323,6 +323,7 @@ var iconSVGs = map[string]string{
 	"cc-by-nc-nd":      iconCC + " " + iconCCBy + " " + iconCCNc + " " + iconCCNd,
 	"cc0":              iconCC0,
 	"public-domain":    iconPublicDomain,
+	"crown":            iconCrown,
 }
 
 // iconCopyright is the copyright symbol
@@ -485,6 +486,10 @@ q2 -17 -1.5 -33t-13.5 -30q-16 -22 -41 -32q-17 -7 -35.5 -6.5t-35.5 7.5q-28 12 -43
 </svg>`
 
 // iconBluesky is the Bluesky logo
-const iconBluesky = `<svg xmlns="http://www.w3.org/2000/svg" style="height:1em;" fill="currentColor" class="bi bi-bluesky" viewBox="0 0 16 16">
+const iconBluesky = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-bluesky" viewBox="0 0 16 16" style="height:1em;">
   <path d="M3.468 1.948C5.303 3.325 7.276 6.118 8 7.616c.725-1.498 2.698-4.29 4.532-5.668C13.855.955 16 .186 16 2.632c0 .489-.28 4.105-.444 4.692-.572 2.04-2.653 2.561-4.504 2.246 3.236.551 4.06 2.375 2.281 4.2-3.376 3.464-4.852-.87-5.23-1.98-.07-.204-.103-.3-.103-.218 0-.081-.033.014-.102.218-.379 1.11-1.855 5.444-5.231 1.98-1.778-1.825-.955-3.65 2.28-4.2-1.85.315-3.932-.205-4.503-2.246C.28 6.737 0 3.12 0 2.632 0 .186 2.145.955 3.468 1.948"/>
+</svg>`
+
+const iconCrown = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" fill-rule="evenodd" class="bi bi-crown" viewBox="0 0 16 16" style="height:1.2em;">
+  <path d="M2.33 12h11.37l1.5-9.32-.1-.08-4 4.52L8 1.17 4.89 7.12.943 2.6l-.17.08zm2.78-3.12L8 3.33l2.9 5.55 2.8-3.23-.9 5.35H3.17l-.89-5.35zM2.75 13h10.5a.5.5 0 0 1 0 1H2.75a.5.5 0 0 1 0-1z"/>
 </svg>`
