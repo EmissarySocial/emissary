@@ -333,6 +333,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 		}
 
 		result.Token = token
+		result.CodeRedeemed = true // there is no authorization code in this path
 	}
 
 	// Save the grant to the database

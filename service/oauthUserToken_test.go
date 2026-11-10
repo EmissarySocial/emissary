@@ -574,3 +574,28 @@ func TestExchangeCode_MastodonAppTokenHasNoExpiry(t *testing.T) {
 		require.WithinDuration(t, time.Now().Add(model.OAuthAccessTokenLifetime), expiry.Time, time.Minute)
 	}
 }
+
+// TestCreate_ImplicitGrantHasNoCode verifies that a grant whose token was returned directly cannot
+// also be redeemed as an authorization code, which would add the refresh token an implicit grant never gets
+func TestCreate_ImplicitGrantHasNoCode(t *testing.T) {
+
+	service, session := newTestOAuthUserTokenService(t)
+
+	client := model.NewOAuthClient()
+	client.ClientSecret = "secret"
+	client.RedirectURIs = append(client.RedirectURIs, "https://client.example/callback")
+	client.Scopes = append(client.Scopes, "read")
+
+	authorization := model.Authorization{UserID: primitive.NewObjectID()}
+	request := model.OAuthAuthorizationRequest{ResponseType: "token", ClientID: client.ClientID.Hex(), Scope: "read"}
+
+	grant, err := service.Create(session, client, authorization, request)
+	require.NoError(t, err)
+	require.NotEmpty(t, grant.Token)
+	require.True(t, grant.CodeRedeemed)
+
+	// The access token names the grant's ID, which is also its code, so the code must already be spent
+	err = service.ExchangeCode(session, &grant)
+	require.True(t, derp.IsBadRequest(err))
+	require.Empty(t, grant.RefreshToken)
+}
