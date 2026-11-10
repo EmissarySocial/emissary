@@ -31,7 +31,7 @@ func (service *User) connectBluesky(session data.Session, user *model.User) erro
 		}
 
 		// This is a legitimate error.
-		return derp.Wrap(err, location, "Loading Bluesky configuration", user)
+		return derp.Wrap(err, location, "Loading Bluesky configuration", user.UserID)
 	}
 
 	// If the user has chosen to bridge, then Follow/Unblock the Bridgy Fed Actor

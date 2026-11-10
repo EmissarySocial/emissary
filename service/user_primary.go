@@ -43,3 +43,27 @@ func (service *User) applyPrimaryUser(session data.Session, user *model.User) er
 	// There can be only one
 	return nil
 }
+
+// recordPrimaryUser keeps Domain.PrimaryUserID in step with a User that was just saved or deleted
+func (service *User) recordPrimaryUser(session data.Session, user *model.User) error {
+
+	const location = "service.User.recordPrimaryUser"
+
+	// A User who represents the domain is its primary user
+	if user.RepresentsDomain() {
+
+		if err := service.domainService.SetPrimaryUser(session, user.UserID); err != nil {
+			return derp.Wrap(err, location, "Recording the primary user", user.UserID)
+		}
+
+		return nil
+	}
+
+	// Anyone else is not, so the domain forgets this User if it named them
+	if err := service.domainService.ClearPrimaryUser(session, user.UserID); err != nil {
+		return derp.Wrap(err, location, "Clearing the primary user", user.UserID)
+	}
+
+	// The king is dead, long live the king
+	return nil
+}

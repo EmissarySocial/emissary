@@ -321,6 +321,80 @@ func (service *Domain) inviteOwner(session data.Session, owner *model.User) {
  * Common Data Methods
  ******************************************/
 
+// SetPrimaryUser records the User who represents this domain
+func (service *Domain) SetPrimaryUser(session data.Session, userID primitive.ObjectID) error {
+
+	const location = "service.Domain.SetPrimaryUser"
+
+	// RULE: The zero ID means nobody, so only ClearPrimaryUser may write it
+	if userID.IsZero() {
+		return derp.Internal(location, "UserID is required")
+	}
+
+	// NO-OP: the cached record already names this User
+	if service.Cached().PrimaryUserID == userID {
+		return nil
+	}
+
+	// Start the write from the stored record, never from the cache
+	writableDomain := model.NewWritableDomain()
+
+	if err := service.Load(session, &writableDomain); err != nil {
+		return derp.Wrap(err, location, "Loading Domain", userID)
+	}
+
+	// NO-OP: another server wrote it since the cached record was read
+	if writableDomain.PrimaryUserID == userID {
+		return nil
+	}
+
+	writableDomain.PrimaryUserID = userID
+
+	if err := service.Save(session, &writableDomain, "Primary user changed"); err != nil {
+		return derp.Wrap(err, location, "Saving Domain", userID)
+	}
+
+	// Done and dusted
+	return nil
+}
+
+// ClearPrimaryUser forgets the primary user, but only while the domain still names this User
+func (service *Domain) ClearPrimaryUser(session data.Session, userID primitive.ObjectID) error {
+
+	const location = "service.Domain.ClearPrimaryUser"
+
+	// NO-OP: a User with no ID was never the primary user
+	if userID.IsZero() {
+		return nil
+	}
+
+	// NO-OP: the cached record names someone else, or nobody
+	if service.Cached().PrimaryUserID != userID {
+		return nil
+	}
+
+	// Start the write from the stored record, never from the cache
+	writableDomain := model.NewWritableDomain()
+
+	if err := service.Load(session, &writableDomain); err != nil {
+		return derp.Wrap(err, location, "Loading Domain", userID)
+	}
+
+	// NO-OP: another server named a different User since the cached record was read
+	if writableDomain.PrimaryUserID != userID {
+		return nil
+	}
+
+	writableDomain.PrimaryUserID = primitive.NilObjectID
+
+	if err := service.Save(session, &writableDomain, "Primary user cleared"); err != nil {
+		return derp.Wrap(err, location, "Saving Domain", userID)
+	}
+
+	// The throne is empty
+	return nil
+}
+
 // Cached returns the cached, read-only Domain record.  A service that has never loaded one returns a
 // blank Domain.  To change the record, Load a WritableDomain and Save it (see AGENTS.md).
 func (service *Domain) Cached() *model.Domain {

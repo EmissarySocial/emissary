@@ -28,6 +28,7 @@ func newUserDeleteTestService() (User, <-chan struct{}) {
 
 	return User{
 		annotationService:     &Annotation{},
+		domainService:         &Domain{},
 		folderService:         &Folder{},
 		followerService:       &Follower{},
 		followingService:      &Following{},

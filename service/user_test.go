@@ -1,9 +1,12 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
+	mockdb "github.com/benpate/data-mock"
 	"github.com/benpate/derp"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -51,4 +54,27 @@ func TestUser_ValidateUsername_StreamErrorIsNotAvailability(t *testing.T) {
 
 	require.Error(t, err)
 	require.Equal(t, 500, derp.ErrorCode(err))
+}
+
+// TestUser_Save_ErrorsCarryNoUser verifies that a refused save names the User by ID, and never carries
+// the password hash or a live reset code into the error log
+func TestUser_Save_ErrorsCarryNoUser(t *testing.T) {
+
+	user := model.NewUser()
+	user.Password = "$2a$12$abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRS"
+	user.PasswordReset.AuthCode = "reset-code-that-takes-over-the-account"
+
+	// A missing email address is refused before the service reads anything
+	session, err := mockdb.New().Session(context.Background())
+	require.NoError(t, err)
+
+	err = (&User{}).Save(session, &user, "test")
+
+	require.True(t, derp.IsBadRequest(err))
+	secretcheck.RequireAbsent(t, err, user.Password)
+	secretcheck.RequireAbsent(t, err, user.PasswordReset.AuthCode)
+
+	found, findErr := secretcheck.Find(err, user.UserID.Hex())
+	require.NoError(t, findErr)
+	require.NotEmpty(t, found, "the error should still name the User")
 }
