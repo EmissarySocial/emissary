@@ -55,12 +55,17 @@ func GetMetadata(host string, clientID string, allowPrivateIPs bool) (Metadata, 
 		return Metadata{}, false, derp.BadGateway(location, "client_id answered with a server error", clientID, statusCode)
 	}
 
-	// Any other answer that is not a readable document publishes no metadata: a redirect, a 4xx, or a body that is too large
-	if sendError != nil {
-		return Metadata{}, false, nil
+	// RULE: Only a client that answers 2xx exists.  A 404 or a redirect that leads nowhere names nothing to authorize
+	if (statusCode < http.StatusOK) || (statusCode >= http.StatusMultipleChoices) {
+		return Metadata{}, false, derp.BadRequest(location, "client_id did not answer successfully", clientID, statusCode)
 	}
 
-	// So does anything that is not JSON, such as an HTML page
+	// RULE: An answer that cannot be read, such as a body over the size limit, is refused.  The cause may quote the body
+	if sendError != nil {
+		return Metadata{}, false, derp.BadRequest(location, "client_id sent an answer that cannot be read", clientID)
+	}
+
+	// Anything that is not JSON, such as an HTML page, publishes no metadata
 	result := Metadata{}
 
 	if err := json.Unmarshal(body, &result); err != nil {
@@ -72,6 +77,11 @@ func GetMetadata(host string, clientID string, allowPrivateIPs bool) (Metadata, 
 		return Metadata{}, false, nil
 	}
 
+	// RULE: A document is served at the client_id itself.  One reached through a redirect is another address's document
+	if wasRedirected(txn.Response(), clientID) {
+		return Metadata{}, false, derp.BadRequest(location, "Client ID Metadata Document must not be served through a redirect", clientID)
+	}
+
 	// RULE: Prevent impersonation: a document that names a different client is refused
 	if documentClientID, err := ParseClientID(result.ClientID); (err != nil) || (documentClientID != clientID) {
 		return Metadata{}, false, derp.BadRequest(location, "Client ID Metadata Document names a different client_id", clientID)
@@ -79,4 +89,22 @@ func GetMetadata(host string, clientID string, allowPrivateIPs bool) (Metadata, 
 
 	// Woot.
 	return result, true, nil
+}
+
+// wasRedirected returns TRUE if the answer came from an address other than the client_id that was requested
+func wasRedirected(response *http.Response, clientID string) bool {
+
+	// With no request on record there is nothing to compare, so the answer is treated as the client's own
+	if (response == nil) || (response.Request == nil) || (response.Request.URL == nil) {
+		return false
+	}
+
+	// An address that is not a valid client_id, such as an IP address, is certainly not this one
+	answeredBy, err := ParseClientID(response.Request.URL.String())
+
+	if err != nil {
+		return true
+	}
+
+	return answeredBy != clientID
 }

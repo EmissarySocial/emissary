@@ -117,6 +117,7 @@ func TestNewURLClient(t *testing.T) {
 		client := newURLClient("https://fed.brid.gy/", cimd.Metadata{ClientName: "Ignored"}, false)
 		require.Equal(t, "https://fed.brid.gy/", client.ClientURL)
 		require.Equal(t, "fed.brid.gy", client.Name)
+		require.Equal(t, []string{model.OAuthUserTokenScopeProfile, model.OAuthUserTokenScopeEmail}, []string(client.Scopes))
 		require.Empty(t, client.RedirectURIs)
 		require.Empty(t, client.IconURL)
 		require.Empty(t, client.Website)

@@ -91,9 +91,23 @@ func TestGetMetadata(t *testing.T) {
 	fallback("JSON that is not an object", "/list", http.StatusOK, "application/json", `["a","b"]`)
 	fallback("a body that is not JSON", "/broken", http.StatusOK, "application/json", `{"client_id":`)
 	fallback("an empty body", "/empty", http.StatusOK, "application/json", ``)
-	fallback("a 404", "/missing", http.StatusNotFound, "text/html", `Not Found`)
-	fallback("a 410", "/gone", http.StatusGone, "text/plain", `Gone`)
-	fallback("a body over the size limit", "/huge", http.StatusOK, "application/json", `{"client_name":"`+strings.Repeat("x", maxDocumentSize)+`"}`)
+
+	// Each of these answers names no client that exists, so the lookup fails and no client is created
+	refusal := func(name string, path string, status int, contentType string, body string) {
+		t.Run(name, func(t *testing.T) {
+			clientID := serve(path, status, contentType, body)
+			_, published, err := GetMetadata("localhost", clientID, true)
+			require.True(t, derp.IsBadRequest(err), "answers %d", derp.ErrorCode(err))
+			require.False(t, published)
+			secretcheck.RequireAbsent(t, err, "secret-looking")
+			<-accepted
+		})
+	}
+
+	refusal("a 404", "/missing", http.StatusNotFound, "text/html", `secret-looking body`)
+	refusal("a 410", "/gone", http.StatusGone, "text/plain", `Gone`)
+	refusal("a 304", "/unchanged", http.StatusNotModified, "text/plain", ``)
+	refusal("a body over the size limit", "/huge", http.StatusOK, "application/json", `{"client_name":"`+strings.Repeat("x", maxDocumentSize)+`"}`)
 
 	t.Run("a server error is refused, so the next attempt retries", func(t *testing.T) {
 		clientID := serve("/down", http.StatusServiceUnavailable, "text/plain", "secret-looking body")
@@ -145,4 +159,57 @@ func TestGetMetadata_PrivateIPs(t *testing.T) {
 	require.Error(t, err)
 	require.False(t, published)
 	require.False(t, requested, "a private address was fetched")
+}
+
+// TestGetMetadata_Redirects verifies that a redirect is followed to a page, and never to a document
+func TestGetMetadata_Redirects(t *testing.T) {
+
+	var base string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		switch r.URL.Path {
+
+		case "/to-page":
+			http.Redirect(w, r, base+"/page", http.StatusFound)
+
+		case "/to-document":
+			http.Redirect(w, r, base+"/document", http.StatusFound)
+
+		case "/to-nowhere":
+			http.Redirect(w, r, base+"/missing", http.StatusFound)
+
+		case "/page":
+			w.Header().Set("Content-Type", "text/html")
+			_, _ = w.Write([]byte(`<html></html>`))
+
+		case "/document":
+			// The document names the address that redirected here, which is the impersonation to refuse
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"client_id":"` + base + `/to-document","client_name":"Borrowed","redirect_uris":["https://evil.example.com/callback"]}`))
+
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	base = strings.Replace(server.URL, "127.0.0.1", "localhost", 1)
+
+	// A redirect to an HTML page is an IndieAuth client that moved its home page
+	metadata, published, err := GetMetadata("localhost", base+"/to-page", true)
+	require.NoError(t, err)
+	require.False(t, published)
+	require.Equal(t, Metadata{}, metadata)
+
+	// A redirect to a document is refused, even when the document names the address that was asked for
+	_, published, err = GetMetadata("localhost", base+"/to-document", true)
+	require.True(t, derp.IsBadRequest(err), "answers %d", derp.ErrorCode(err))
+	require.False(t, published)
+
+	// A redirect that ends in a 404 names nothing
+	_, published, err = GetMetadata("localhost", base+"/to-nowhere", true)
+	require.True(t, derp.IsBadRequest(err), "answers %d", derp.ErrorCode(err))
+	require.False(t, published)
+
 }

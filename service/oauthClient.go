@@ -246,8 +246,10 @@ func newURLClient(clientURL string, metadata cimd.Metadata, published bool) mode
 	result.ClientURL = clientURL
 	result.Name = uri.Hostname(clientURL)
 
-	// A client that publishes no metadata is named by its hostname, and may redirect only to its own origin
+	// A client that publishes no metadata is named by its hostname, and may redirect only to its own origin.
+	// RULE: Nothing describes it but its address, so it may learn who the User is and nothing more
 	if !published {
+		result.Scopes = append(result.Scopes, model.OAuthUserTokenScopeProfile, model.OAuthUserTokenScopeEmail)
 		return result
 	}
 
