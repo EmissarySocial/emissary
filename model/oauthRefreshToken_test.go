@@ -226,3 +226,22 @@ func FuzzParseRefreshToken(f *testing.F) {
 		require.Equal(t, secret, resultSecret)
 	})
 }
+
+// TestIssuedRefreshSecret confirms only the current secret and the one before it prove a grant
+func TestIssuedRefreshSecret(t *testing.T) {
+
+	grant := NewOAuthUserToken()
+	grant.InitRefresh("first", time.Now())
+	grant.RotateRefresh("second", time.Now().Add(-24*time.Hour))
+
+	require.True(t, grant.IssuedRefreshSecret(2, "second"))
+	require.True(t, grant.IssuedRefreshSecret(1, "first"), "the prior secret proves the grant however old it is")
+	require.False(t, grant.IssuedRefreshSecret(2, "first"))
+	require.False(t, grant.IssuedRefreshSecret(1, "second"))
+	require.False(t, grant.IssuedRefreshSecret(2, ""))
+
+	// A grant whose code was never exchanged has issued no secret
+	unused := NewOAuthUserToken()
+	require.False(t, unused.IssuedRefreshSecret(0, ""))
+	require.False(t, unused.IssuedRefreshSecret(1, "x"))
+}

@@ -556,7 +556,7 @@ func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session da
 
 	// Resolve the grant behind the presented token. Per RFC 7009 an unresolvable
 	// token is not an error -- there is simply nothing to revoke.
-	grantID, ok := revokeGrantID(factory, transaction.Token)
+	presented, ok := parseRevocationToken(factory, transaction.Token)
 
 	if !ok {
 		return ctx.JSON(http.StatusOK, map[string]any{})
@@ -566,13 +566,18 @@ func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session da
 	userTokenService := factory.OAuthUserToken()
 	userToken := model.NewOAuthUserToken()
 
-	if err := userTokenService.LoadByClientAndID(session, grantID, oauthClient.ClientID, &userToken); err != nil {
+	if err := userTokenService.LoadByClientAndID(session, presented.grantID, oauthClient.ClientID, &userToken); err != nil {
 
 		if derp.IsNotFound(err) {
 			return ctx.JSON(http.StatusOK, map[string]any{})
 		}
 
 		return derp.Wrap(err, location, "Loading OAuthUserToken")
+	}
+
+	// RULE: A refresh token revokes its grant only when its secret is one the grant issued
+	if !presented.proves(userToken) {
+		return ctx.JSON(http.StatusOK, map[string]any{})
 	}
 
 	if err := userTokenService.Delete(session, &userToken, "Revoked by Client"); err != nil {
@@ -582,25 +587,42 @@ func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session da
 	return ctx.JSON(http.StatusOK, map[string]any{})
 }
 
-// revokeGrantID returns the grant ID behind a refresh token or an access-token JWT that was
-// presented for revocation
-func revokeGrantID(factory *service.Factory, token string) (primitive.ObjectID, bool) {
+// revocationToken is the grant that a token presented for revocation names, and the proof it carries
+type revocationToken struct {
+	grantID    primitive.ObjectID // The grant to revoke
+	generation int                // Refresh-token generation, or zero for an access token
+	secret     string             // Refresh-token secret, or empty for an access token
+}
 
-	// A refresh token carries the grant ID as its first segment.
-	if grantID, _, _, err := model.ParseRefreshToken(token); err == nil {
-		return grantID, true
+// parseRevocationToken reads a refresh token, or an access-token JWT, that was presented for revocation
+func parseRevocationToken(factory *service.Factory, token string) (revocationToken, bool) {
+
+	// A refresh token carries the grant ID, and a secret that the caller must check against the grant
+	if grantID, generation, secret, err := model.ParseRefreshToken(token); err == nil {
+		return revocationToken{grantID: grantID, generation: generation, secret: secret}, true
 	}
 
-	// Otherwise treat it as an access-token JWT and read the grant-ID claim.
+	// Otherwise treat it as an access-token JWT, whose verified signature is its own proof
 	parsed, err := factory.JWT().ParseString(token)
 
 	if err != nil {
-		return primitive.NilObjectID, false
+		return revocationToken{}, false
 	}
 
 	if claims, ok := parsed.Claims.(*model.Authorization); ok && !claims.OAuthUserTokenID.IsZero() {
-		return claims.OAuthUserTokenID, true
+		return revocationToken{grantID: claims.OAuthUserTokenID}, true
 	}
 
-	return primitive.NilObjectID, false
+	return revocationToken{}, false
+}
+
+// proves returns TRUE if this token shows that its holder was issued the grant
+func (token revocationToken) proves(grant model.OAuthUserToken) bool {
+
+	// An access token was verified by its signature when it was parsed
+	if token.secret == "" {
+		return true
+	}
+
+	return grant.IssuedRefreshSecret(token.generation, token.secret)
 }

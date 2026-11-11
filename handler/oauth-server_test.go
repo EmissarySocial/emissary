@@ -340,6 +340,56 @@ func TestPostOAuthToken_RefreshReuseRevocationCommits(t *testing.T) {
 	require.True(t, stored.IsDeleted(), "a reused refresh token revokes the grant")
 }
 
+// TestPostOAuthRevoke_RefreshTokenNeedsItsSecret confirms a refresh token revokes its grant only with a secret the grant issued
+func TestPostOAuthRevoke_RefreshTokenNeedsItsSecret(t *testing.T) {
+
+	const firstSecret = "first-refresh-secret"
+	const secondSecret = "second-refresh-secret"
+
+	// revoke posts the token for a new public client's grant, and reports whether the grant was revoked
+	revoke := func(t *testing.T, generation int, secret string) bool {
+
+		t.Helper()
+		server, session := newOAuthTestServer(t)
+
+		client := newOAuthClient("")
+		require.NoError(t, session.Collection("OAuthClient").Save(client, "test"))
+
+		grant := newOAuthGrant(client)
+		grant.InitRefresh(firstSecret, time.Now())
+		grant.RotateRefresh(secondSecret, time.Now())
+		require.NoError(t, session.Collection("OAuthUserToken").Save(grant, "test"))
+
+		recorder := postOAuthInTransaction(t, server, PostOAuthRevoke, url.Values{
+			"client_id": {client.ClientID.Hex()},
+			"token":     {model.BuildRefreshToken(grant.OAuthUserTokenID, generation, secret)},
+		})
+
+		// RULE: Every answer is 200, so a caller cannot tell a wrong secret from an unknown grant (RFC 7009)
+		require.Equal(t, http.StatusOK, recorder.Code)
+
+		stored := model.NewOAuthUserToken()
+		require.NoError(t, session.Collection("OAuthUserToken").Load(exp.Equal("_id", grant.OAuthUserTokenID), &stored))
+		return stored.IsDeleted()
+	}
+
+	t.Run("the current secret revokes", func(t *testing.T) {
+		require.True(t, revoke(t, 2, secondSecret))
+	})
+
+	t.Run("the secret before it revokes", func(t *testing.T) {
+		require.True(t, revoke(t, 1, firstSecret))
+	})
+
+	t.Run("a guessed secret revokes nothing", func(t *testing.T) {
+		require.False(t, revoke(t, 2, "x"))
+	})
+
+	t.Run("the right secret under the wrong generation revokes nothing", func(t *testing.T) {
+		require.False(t, revoke(t, 1, secondSecret))
+	})
+}
+
 // TestPostOAuthAuthorization_ReturnsTheIssuer confirms both authorization redirects name this server as their
 // issuer (RFC 9207, IndieAuth §5.2.1), and that a state cannot add parameters to the token fragment
 func TestPostOAuthAuthorization_ReturnsTheIssuer(t *testing.T) {
