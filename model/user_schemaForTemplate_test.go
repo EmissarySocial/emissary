@@ -60,10 +60,10 @@ func TestUserSchemaForTemplate_KeepsUserSchemaRules(t *testing.T) {
 	merged, isObject := UserSchemaForTemplate(bandwagonLikeSchema()).(schema.Object)
 	require.True(t, isObject)
 
-	// statusMessage keeps its 2048-character limit, though the Template redeclares it
+	// statusMessage keeps its 8192-character limit, though the Template redeclares it
 	statusMessage, isString := merged.Properties["statusMessage"].(schema.String)
 	require.True(t, isString)
-	require.Equal(t, 2048, statusMessage.MaxLength)
+	require.Equal(t, 8192, statusMessage.MaxLength)
 
 	// A non-string data rule is ignored, because data holds only strings
 	data, isObject := merged.Properties["data"].(schema.Object)
