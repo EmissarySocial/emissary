@@ -152,3 +152,11 @@ Template validation checks every form path against the template's own schema. Un
 ## An outbox's schema validates profile saves, and only its `data` strings count
 
 The Outbox builder validates against `model.UserSchemaForTemplate`, which is `UserSchema` plus the String rules the outbox declares under `data`. Every other field keeps `UserSchema`'s rules, even where the outbox redeclares it, and every `data` value stays capped at 4096 characters. A non-String `data` rule is ignored, because `User.Data` holds only strings. An invalid value is dropped, not refused: `form.SetURLValues` logs a field that fails and saves the rest.
+
+## A remote value never goes inside `hx-vals`
+
+`hx-vals` holds JSON inside an HTML attribute. `html/template` escapes a value there for HTML only, so a `"` becomes `&#34;`, the browser decodes it back, and htmx parses JSON in which the value has closed its own string. A remote post whose ID held `","type":"Announce","url":"…` turned a reader's Like into a Boost of a URL the sender chose (found 2026-11-10). Put the value in the link, as `?url={{$url | urlquery}}`, and keep `hx-vals` to constants. `set-response` reads `url` from the link or the body. `TestTemplates_NoFederatedValueInHxVals` checks the folders that draw federated content.
+
+## Bump `?v=` when a global bundle changes
+
+The global stylesheet, JavaScript, and hyperscript bundles are served for an hour (`model.Bundle.GetCacheControl`), and a rolling deploy serves old and new pages side by side. A page that pairs a new bundle with a cached old one breaks without an error: the new JavaScript calls a hyperscript function the old bundle no longer has. So every theme's `includes-head.html` and `includes-foot.html` put one `?v=` number on all three, and a release that changes any file under `theme-global/stylesheet`, `javascript`, or `hyperscript` raises it in the same commit. Themes in other repositories carry their own copy of the number.

@@ -89,3 +89,23 @@ func TestStepSetResponse_Post_RejectsInvalidTarget(t *testing.T) {
 	require.True(t, result.Halt, "an invalid reaction target must halt the pipeline")
 	require.NotNil(t, result.Error, "an invalid reaction target must produce an error")
 }
+
+// TestTxnStepSetResponse_Bind_ReadsTheURLFromTheQuery confirms the Like and Boost buttons can name
+// their target in the link, encoded, and post only the constant `type` and `exists` values
+func TestTxnStepSetResponse_Bind_ReadsTheURLFromTheQuery(t *testing.T) {
+
+	// A target whose text would close a JSON string, were it written into `hx-vals`
+	const target = `https://remote.example/post","type":"Announce","x":"`
+
+	form := url.Values{"type": {vocab.ActivityTypeLike}, "exists": {"true"}}
+	link := "/@me/newsfeed/like-button?url=" + url.QueryEscape(target)
+
+	request := httptest.NewRequest(http.MethodPost, link, strings.NewReader(form.Encode()))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	transaction := txnStepSetResponse{}
+	require.NoError(t, transaction.Bind(request))
+	require.Equal(t, target, transaction.URL)
+	require.Equal(t, vocab.ActivityTypeLike, transaction.Type)
+	require.True(t, transaction.Exists)
+}
