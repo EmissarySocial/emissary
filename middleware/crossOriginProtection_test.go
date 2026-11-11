@@ -96,3 +96,29 @@ func TestCrossOriginProtection_CrossSiteDelete(t *testing.T) {
 		require.True(t, derp.IsForbidden(err))
 	}
 }
+
+// TestCrossOriginProtection_OpenRoutes verifies that an open route accepts a cross-site POST, and
+// that its neighbours, and its other methods, are still refused
+func TestCrossOriginProtection_OpenRoutes(t *testing.T) {
+
+	protection := CrossOriginProtection("POST /oauth/token")
+
+	// post sends a cross-site request to the path, and returns the middleware's answer
+	post := func(method string, path string) error {
+		request := httptest.NewRequest(method, "https://emissary.example"+path, nil)
+		request.Header.Set("Sec-Fetch-Site", "cross-site")
+		request.Header.Set("Origin", "https://client.example")
+		request.Host = "emissary.example"
+
+		ctx := echo.New().NewContext(request, httptest.NewRecorder())
+		return protection(func(_ echo.Context) error { return nil })(ctx)
+	}
+
+	require.NoError(t, post(http.MethodPost, "/oauth/token"))
+
+	for _, path := range []string{"/oauth/authorize", "/oauth/token/extra", "/oauth/tokens", "/@me/settings"} {
+		require.Equal(t, http.StatusForbidden, derp.ErrorCode(post(http.MethodPost, path)), path)
+	}
+
+	require.Equal(t, http.StatusForbidden, derp.ErrorCode(post(http.MethodDelete, "/oauth/token")))
+}

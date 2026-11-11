@@ -276,7 +276,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// CSRF protection: reject state-changing requests from other web origins.
 	// This backstops the SameSite=Lax cookie policy, which is enforced only by the browser.
-	e.Use(mw.CrossOriginProtection())
+	// The two OAuth endpoints stay open to browser-based clients, and read no cookie.
+	e.Use(mw.CrossOriginProtection("POST /oauth/token", "POST /oauth/revoke"))
 
 	// Restore Steranko in the future
 	// e.Use(steranko.Middleware(factory))
