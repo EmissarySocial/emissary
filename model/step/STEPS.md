@@ -855,6 +855,7 @@ Reformats a Stream's content: converts between formats, optionally strips HTML, 
 | Attribute | Description |
 | --- | --- |
 | format | `MARKDOWN`, `EDITORJS`, or `HTML`. Any other value is a load-time error; an empty value leaves the format alone |
+| hard&#8209;wraps | A template, executed against the builder. When it gives `true`, every line break in the content becomes a `<br>`; anything else, and the default `false`, keeps standard Markdown, where a line ends with `\` or two spaces to break. Requires `format: "MARKDOWN"`; beside any other format it is a load-time error. Write `true`, or read the choice from the Stream: `"{{.Data \`hardWraps\`}}"` |
 | remove&#8209;html | Strip HTML from the source content |
 | add&#8209;links | Convert bare URLs into links |
 | add&#8209;tags | **Deprecated and ignored.** Logs a warning when the Template loads |

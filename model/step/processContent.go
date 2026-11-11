@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -13,6 +15,7 @@ import (
 // older Templates that set them continue to load.
 type ProcessContent struct {
 	Format     string
+	HardWraps  *template.Template // When it executes to "true", every line break in MARKDOWN content becomes a <br>
 	RemoveHTML bool
 	AddLinks   bool
 	AddTags    bool   // Deprecated: #hashtags are processed automatically in Stream.Save
@@ -20,12 +23,28 @@ type ProcessContent struct {
 }
 
 // NewProcessContent returns a fully initialized ProcessContent record
-func NewProcessContent(stepInfo mapof.Any) (ProcessContent, error) {
+func NewProcessContent(stepInfo mapof.Any, funcMap template.FuncMap) (ProcessContent, error) {
+
+	const location = "model.step.NewProcessContent"
 
 	format := stepInfo.GetString("format")
 
 	if allowed := (sliceof.String{"", "MARKDOWN", "EDITORJS", "HTML"}); allowed.NotContains(format) {
 		return ProcessContent{}, derp.Validation("Format must be one of [MARKDOWN, EDITORJS, HTML]")
+	}
+
+	// RULE: "hard-wraps" changes how Markdown is rendered, so it is a mistake beside any other format
+	hardWrapsString := stepInfo.GetString("hard-wraps")
+
+	if (hardWrapsString != "") && (format != "MARKDOWN") {
+		return ProcessContent{}, derp.Validation("The \"hard-wraps\" option requires format: MARKDOWN")
+	}
+
+	// "hard-wraps" is a template, so a Template can read the choice from its data.  It defaults to "false".
+	hardWraps, err := template.New("hard-wraps").Funcs(funcMap).Parse(first(hardWrapsString, "false"))
+
+	if err != nil {
+		return ProcessContent{}, derp.Wrap(err, location, "Parsing `hard-wraps` template")
 	}
 
 	addTags := stepInfo.GetBool("add-tags")
@@ -38,6 +57,7 @@ func NewProcessContent(stepInfo mapof.Any) (ProcessContent, error) {
 
 	return ProcessContent{
 		Format:     format,
+		HardWraps:  hardWraps,
 		RemoveHTML: stepInfo.GetBool("remove-html"),
 		AddLinks:   stepInfo.GetBool("add-links"),
 		AddTags:    addTags,

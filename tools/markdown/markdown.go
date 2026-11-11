@@ -6,6 +6,8 @@
 // all Markdown is parsed with the same extensions and sanitized with the same
 // policy.  Adding an extension or loosening the sanitizer here changes Markdown
 // everywhere, which is the point: there must not be a second, weaker converter.
+// ToHTMLHardWraps is the one variant: the same converter and sanitizer, with
+// every line break rendered as a <br>.
 package markdown
 
 import (
@@ -18,6 +20,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
 	"go.abhg.dev/goldmark/anchor"
 )
@@ -25,7 +28,11 @@ import (
 // converter returns the shared Goldmark parser, building it on first use.
 // Goldmark converters are safe for concurrent use, so one instance serves every
 // conversion instead of paying to rebuild it per call.
-var converter = sync.OnceValue(newConverter)
+var converter = sync.OnceValue(func() goldmark.Markdown { return newConverter(false) })
+
+// hardWrapConverter returns the shared Goldmark parser that renders every line break as a <br>.
+// It is the same converter in every other respect, and its output takes the same sanitizer.
+var hardWrapConverter = sync.OnceValue(func() goldmark.Markdown { return newConverter(true) })
 
 // policy returns the shared bluemonday sanitization policy, building it on first
 // use.  A bluemonday Policy is safe for concurrent use once constructed.
@@ -33,8 +40,16 @@ var policy = sync.OnceValue(newPolicy)
 
 // ToHTML converts Markdown source into sanitized HTML.
 func ToHTML(source string) string {
+	return toHTML(converter(), source)
+}
 
-	markdown := converter()
+// ToHTMLHardWraps converts Markdown source into sanitized HTML, rendering every line break as a <br>.
+func ToHTMLHardWraps(source string) string {
+	return toHTML(hardWrapConverter(), source)
+}
+
+// toHTML converts Markdown source with the provided converter, and sanitizes the result
+func toHTML(markdown goldmark.Markdown, source string) string {
 
 	// A converter is only nil if Goldmark failed to build one, which cannot
 	// happen with a static configuration.  Refuse to emit unconverted source.
@@ -70,8 +85,17 @@ func Sanitize(value string) string {
 	return sanitizer.Sanitize(value)
 }
 
-// newConverter builds the Goldmark converter used for every conversion.
-func newConverter() goldmark.Markdown {
+// newConverter builds a Goldmark converter.  With hardWraps, every line break in a paragraph
+// becomes a <br>; nothing else differs between the two.
+func newConverter(hardWraps bool) goldmark.Markdown {
+
+	// Raw HTML embedded in Markdown is passed through to the renderer instead of being
+	// escaped.  This is only safe because Sanitize always runs afterwards.
+	rendererOptions := []renderer.Option{html.WithUnsafe()}
+
+	if hardWraps {
+		rendererOptions = append(rendererOptions, html.WithHardWraps())
+	}
 
 	// This extension adds anchor tags next to all headers
 	anchorExtension := &anchor.Extender{
@@ -94,12 +118,7 @@ func newConverter() goldmark.Markdown {
 			// and themes color them in the browser
 			anchorExtension,
 		),
-		goldmark.WithRendererOptions(
-			// Raw HTML embedded in Markdown is passed through to the renderer
-			// instead of being escaped.  This is only safe because Sanitize
-			// always runs afterwards -- never call the converter on its own.
-			html.WithUnsafe(),
-		),
+		goldmark.WithRendererOptions(rendererOptions...),
 	)
 }
 

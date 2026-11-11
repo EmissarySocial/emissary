@@ -42,6 +42,18 @@ func (service *Content) New(format string, raw string) model.Content {
 	return result
 }
 
+// NewHardWraps builds a Markdown Content record whose HTML renders every line break as a <br>.
+// The record's Format is still MARKDOWN: the choice is the calling Template's, and is not stored.
+func (service *Content) NewHardWraps(raw string) model.Content {
+
+	result := model.NewContent()
+	result.Format = model.ContentFormatMarkdown
+	result.Raw = raw
+	result.HTML = markdown.ToHTMLHardWraps(raw)
+
+	return result
+}
+
 // Format renders a Content record's raw value into sanitized HTML, based on its source format
 func (service *Content) Format(content *model.Content) {
 
