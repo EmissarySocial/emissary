@@ -36,6 +36,11 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		return template.HTML(markdown.ToHTML(convert.String(value))) // #nosec G203 -- markdown.ToHTML sanitizes its output
 	}
 
+	// markdownHardWraps converts as "markdown" does, and also renders every line break as a <br>
+	result["markdownHardWraps"] = func(value any) template.HTML {
+		return template.HTML(markdown.ToHTMLHardWraps(convert.String(value))) // #nosec G203 -- markdown.ToHTMLHardWraps sanitizes its output
+	}
+
 	// toTime reads a time, including an Emissary DateTime or a "2006-01-02" string, for templates to format
 	result["toTime"] = toTime
 
