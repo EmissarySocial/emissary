@@ -358,8 +358,8 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
 	e.HEAD("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
-	e.GET("/.echo", handler.GetEcho(factory))
-	e.HEAD("/.echo", handler.GetEcho(factory))
+	e.GET("/.echo", handler.WithOwner(factory, handler.GetEcho))
+	e.HEAD("/.echo", handler.WithOwner(factory, handler.GetEcho))
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
 	e.GET("/.geocode/network", handler.WithFactory(factory, handler.GetGeocodeNetwork))
 	e.HEAD("/.geocode/network", refuseHead) // GET only: each request calls a paid IP-geolocation provider

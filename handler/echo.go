@@ -5,111 +5,127 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sort"
+	"net/url"
+	"slices"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/labstack/echo/v4"
+	"github.com/benpate/steranko"
 )
 
-// GetEcho is a simple handler that returns the request headers and body as the response.  This is useful for testing and debugging.
-func GetEcho(serverFactory *server.Factory) echo.HandlerFunc {
+// echoMaxBodyBytes caps the request body that GetEcho reads back
+const echoMaxBodyBytes = 65535
 
-	return func(ctx echo.Context) error {
+// echoRedacted stands in for every credential that GetEcho would otherwise print
+const echoRedacted = "(redacted)"
 
-		r := ctx.Request()
-		var b bytes.Buffer
+// GetEcho returns the request as plain text, with its credentials redacted, for the domain owner to debug with
+func GetEcho(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
 
-		fmt.Fprintf(&b, "HTTP REQUEST ECHO\n\n")
+	const location = "handler.GetEcho"
 
-		fmt.Fprintf(&b, "  %-12s %s\n", "Method:", r.Method)
-		fmt.Fprintf(&b, "  %-12s %s\n", "URL:", r.URL.String())
-		fmt.Fprintf(&b, "  %-12s %s\n", "Proto:", r.Proto)
-		fmt.Fprintf(&b, "  %-12s %s\n", "Remote:", ctx.RealIP())
-		fmt.Fprintf(&b, "  %-12s %s\n", "ClientIP:", serverFactory.ClientIP(r))
-		fmt.Fprintf(&b, "  %-12s %s\n", "Host:", r.Host)
+	request := ctx.Request()
+	var buffer bytes.Buffer
 
-		// ── Query Parameters ─────────────────────────────────────────
-		if queryParams := ctx.QueryParams(); len(queryParams) > 0 {
-			fmt.Fprintf(&b, "\nQuery Parameters\n")
-			keys := make([]string, 0, len(queryParams))
-			for k := range queryParams {
-				keys = append(keys, k)
-			}
-			sort.Strings(keys)
-			for _, k := range keys {
-				for _, v := range queryParams[k] {
-					fmt.Fprintf(&b, "  %-20s %s\n", k+":", v)
-				}
-			}
-		}
+	// Write the request line and the addresses the server sees
+	fmt.Fprintf(&buffer, "HTTP REQUEST ECHO\n\n")
+	fmt.Fprintf(&buffer, "  %-12s %s\n", "Method:", request.Method)
+	fmt.Fprintf(&buffer, "  %-12s %s\n", "URL:", request.URL.String())
+	fmt.Fprintf(&buffer, "  %-12s %s\n", "Proto:", request.Proto)
+	fmt.Fprintf(&buffer, "  %-12s %s\n", "Remote:", ctx.RealIP())
+	fmt.Fprintf(&buffer, "  %-12s %s\n", "ClientIP:", factory.ClientIP(request))
+	fmt.Fprintf(&buffer, "  %-12s %s\n", "Host:", request.Host)
 
-		// ── Headers ───────────────────────────────────────────────────
-		fmt.Fprintf(&b, "\nHeaders\n")
-		headerKeys := make([]string, 0, len(r.Header))
-		for k := range r.Header {
-			headerKeys = append(headerKeys, k)
-		}
-		sort.Strings(headerKeys)
-		for _, k := range headerKeys {
-			for _, v := range r.Header[k] {
-				fmt.Fprintf(&b, "  %-30s %s\n", k+":", v)
-			}
-		}
-
-		// ── Cookies ───────────────────────────────────────────────────
-		if cookies := r.Cookies(); len(cookies) > 0 {
-			fmt.Fprintf(&b, "\nCookies\n")
-			for _, cookie := range cookies {
-				fmt.Fprintf(&b, "  %-20s %s\n", cookie.Name+":", cookie.Value)
-			}
-		}
-
-		// ── Path Parameters ───────────────────────────────────────────
-		if paramNames := ctx.ParamNames(); len(paramNames) > 0 {
-			fmt.Fprintf(&b, "\nPath Parameters\n")
-			for _, k := range paramNames {
-				fmt.Fprintf(&b, "  %-20s %s\n", k+":", ctx.Param(k))
-			}
-		}
-
-		// ── Body ──────────────────────────────────────────────────────
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			return ctx.String(http.StatusInternalServerError, "failed to read body")
-		}
-		defer derp.ReportFunc(r.Body.Close)
-
-		fmt.Fprintf(&b, "\nBody (%d bytes)\n", len(body))
-		if len(body) == 0 {
-			fmt.Fprintf(&b, "  (empty)\n")
-		} else {
-			switch ct, bodyStr := r.Header.Get("Content-Type"), string(body); {
-			case strings.Contains(ct, "application/x-www-form-urlencoded"):
-				// Restore body so ParseForm can read it
-				r.Body = io.NopCloser(bytes.NewBuffer(body))
-				if err := r.ParseForm(); err == nil {
-					formKeys := make([]string, 0, len(r.Form))
-					for k := range r.Form {
-						formKeys = append(formKeys, k)
-					}
-					sort.Strings(formKeys)
-					for _, k := range formKeys {
-						for _, v := range r.Form[k] {
-							fmt.Fprintf(&b, "  %-20s %s\n", k+":", v)
-						}
-					}
-				} else {
-					fmt.Fprintf(&b, "  %s\n", bodyStr)
-				}
-			default:
-				for _, line := range strings.Split(bodyStr, "\n") {
-					fmt.Fprintf(&b, "  %s\n", line)
-				}
-			}
-		}
-
-		return ctx.String(http.StatusOK, b.String())
+	// Write the query parameters
+	if queryParams := ctx.QueryParams(); len(queryParams) > 0 {
+		fmt.Fprintf(&buffer, "\nQuery Parameters\n")
+		echoValues(&buffer, queryParams)
 	}
+
+	// Write the headers.  RULE: A header that carries a credential is named and never printed
+	fmt.Fprintf(&buffer, "\nHeaders\n")
+	for _, name := range echoSortedKeys(request.Header) {
+		for _, value := range request.Header[name] {
+			fmt.Fprintf(&buffer, "  %-30s %s\n", name+":", echoHeaderValue(name, value))
+		}
+	}
+
+	// Write the cookie names.  RULE: A cookie's value is never printed, because the session is one
+	if cookies := request.Cookies(); len(cookies) > 0 {
+		fmt.Fprintf(&buffer, "\nCookies\n")
+		for _, cookie := range cookies {
+			fmt.Fprintf(&buffer, "  %-20s %s\n", cookie.Name+":", echoRedacted)
+		}
+	}
+
+	// RULE: Read a bounded body, so a large request cannot exhaust memory
+	body, err := io.ReadAll(io.LimitReader(request.Body, echoMaxBodyBytes))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Reading request body", derp.WithBadRequest())
+	}
+
+	defer derp.ReportFunc(request.Body.Close)
+
+	// Write the body
+	fmt.Fprintf(&buffer, "\nBody (%d bytes)\n", len(body))
+	echoBody(&buffer, request.Header.Get("Content-Type"), body)
+
+	return ctx.String(http.StatusOK, buffer.String())
+}
+
+// echoHeaderValue returns the header's value, or a placeholder if the header carries a credential
+func echoHeaderValue(name string, value string) string {
+
+	switch http.CanonicalHeaderKey(name) {
+	case "Authorization", "Cookie", "Proxy-Authorization":
+		return echoRedacted
+	}
+
+	return value
+}
+
+// echoBody writes a request body to the buffer, as form values where it holds a form
+func echoBody(buffer *bytes.Buffer, contentType string, body []byte) {
+
+	if len(body) == 0 {
+		fmt.Fprintf(buffer, "  (empty)\n")
+		return
+	}
+
+	if strings.Contains(contentType, "application/x-www-form-urlencoded") {
+		if values, err := url.ParseQuery(string(body)); err == nil {
+			echoValues(buffer, values)
+			return
+		}
+	}
+
+	for line := range strings.SplitSeq(string(body), "\n") {
+		fmt.Fprintf(buffer, "  %s\n", line)
+	}
+}
+
+// echoValues writes every value to the buffer, ordered by name
+func echoValues(buffer *bytes.Buffer, values map[string][]string) {
+
+	for _, name := range echoSortedKeys(values) {
+		for _, value := range values[name] {
+			fmt.Fprintf(buffer, "  %-20s %s\n", name+":", value)
+		}
+	}
+}
+
+// echoSortedKeys returns the names in a set of values, in alphabetical order
+func echoSortedKeys(values map[string][]string) []string {
+
+	result := make([]string, 0, len(values))
+
+	for name := range values {
+		result = append(result, name)
+	}
+
+	slices.Sort(result)
+	return result
 }
