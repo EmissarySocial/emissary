@@ -3,10 +3,13 @@ package build
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -100,4 +103,35 @@ func TestStepSetData_SetFormValues(t *testing.T) {
 		require.Error(t, err)
 		require.Empty(t, object["color"])
 	})
+}
+
+// stubSetDataBuilder is a build.Builder exposing only the three methods that StepSetData.Post reaches
+type stubSetDataBuilder struct {
+	Builder
+	stream *model.Stream
+	req    *http.Request
+}
+
+// object implements the Builder interface, returning this stub's Stream
+func (b stubSetDataBuilder) object() data.Object { return b.stream }
+
+// request implements the Builder interface, returning this stub's request
+func (b stubSetDataBuilder) request() *http.Request { return b.req }
+
+// schema implements the Builder interface, returning the Stream schema
+func (b stubSetDataBuilder) schema() schema.Schema { return schema.New(model.StreamSchema()) }
+
+// TestStepSetData_Post_IgnoresTheQueryString confirms `from-form` reads the request body alone, so a
+// value in a crafted link is never joined onto the one the visitor posted
+func TestStepSetData_Post_IgnoresTheQueryString(t *testing.T) {
+
+	body := url.Values{"label": {"Mine"}}
+	request := httptest.NewRequest(http.MethodPost, "/stream/edit?label=Theirs", strings.NewReader(body.Encode()))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	stream := model.NewStream()
+	builder := stubSetDataBuilder{stream: &stream, req: request}
+
+	require.Nil(t, StepSetData{FromForm: []string{"label"}}.Post(builder, nil))
+	require.Equal(t, "Mine", stream.Label)
 }

@@ -64,8 +64,8 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	if len(step.FromForm) > 0 {
 
-		// Collect form POST information
-		transaction, err := formdata.Parse(builder.request())
+		// RULE: Read the request body only, so a crafted link cannot add to a field the visitor saves
+		transaction, err := formdata.ParseBody(builder.request())
 
 		if err != nil {
 			result := derp.Wrap(err, location, "Binding body", derp.WithBadRequest())
