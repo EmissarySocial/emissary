@@ -6,7 +6,7 @@
 
 	<!-- Placeholder for a reply hidden by the viewer's rules; click to reveal it in place. -->
 	<div class="card padding margin-bottom turboclick" role="button"
-		hx-get="/@me/newsfeed/browse-tree-reply?url={{$url}}&reveal=true"
+		hx-get="/@me/newsfeed/browse-tree-reply?url={{$url | urlquery}}&reveal=true"
 		hx-target="this"
 		hx-swap="outerHTML"
 		hx-push-url="false">
@@ -122,7 +122,7 @@
 							<div class="ToggleContent" style="display:none;">
 								{{- range $index, $replyURL := $replies -}}
 									<div 
-										hx-get="/@me/newsfeed/browse-tree-reply?url={{$replyURL}}"
+										hx-get="/@me/newsfeed/browse-tree-reply?url={{$replyURL | urlquery}}"
 										hx-trigger="intersect once"
 										hx-target="this"
 										hx-swap="outerHTML"
