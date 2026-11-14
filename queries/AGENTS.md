@@ -56,9 +56,9 @@ No task queued by [consumer/scheduleDaily.go](../consumer/scheduleDaily.go), [sc
 
 An update pipeline whose new value references the field it replaces (`{$set: {loc: {type: "Point", coordinates: "$loc"}}}`) does **not** replace an array-valued field: it produces an array of N identical documents, one per original element. Only a real MongoDB shows this. Use a plain, non-pipeline `$set` with a literal document computed in Go.
 
-## Two search indexes key on fields nothing writes
+## Three search indexes key on fields nothing writes
 
-`idx_SearchResult_Notified` leads with `notifiedDate`, which `model.SearchResult` no longer carries and nothing writes, so it serves no query. `idx_SearchQuery_Notified` is empty: `model.SearchQuery` has neither `notifiedDate` nor `timeoutDate`, so its partial filter (`notifiedDate: 0`) matches no document. SearchResult's `lockId` and `timeoutDate` are real despite being absent from the model: `queries.LockSearchResults` writes them directly. The allow-list in `sync/searchResult_test.go` records all three keys.
+`model.SearchQuery` has neither `notifiedDate` nor `timeoutDate`, so `idx_SearchQuery_Notified`'s partial filter (`notifiedDate: 0`) matches no document and the index is empty. `idx_SearchResult_Notified` and `idx_SearchResult_Locked` index every SearchResult for `notifiedDate`, `timeoutDate`, and `lockId`, which nothing has read or written since 2025-11-06; `queries.LockSearchResults`, which wrote the last two, has no caller. The allow-list in `sync/searchResult_test.go` hides all three keys. [BUG-332](../../emissary-specs/bugs/BUG-332-Three-Search-Indexes-Key-On-Fields-Nothing-Writes.md) removes them.
 
 ## A Stream's rank starts at 1, and 0 means "not set"
 
