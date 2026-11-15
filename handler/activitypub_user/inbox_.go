@@ -22,7 +22,7 @@ func GetInboxCollection(ctx *steranko.Context, factory *service.Factory, session
 
 	inboxService := factory.Inbox()
 
-	return collection.Serve(ctx,
+	return collection.Serve(ctx.Response(), ctx.Request(),
 		user.ActivityPubURL()+"/pub/inbox",
 		inboxService.CollectionCount(session, user.UserID, exp.All()),
 		inboxService.CollectionIterator(session, user.UserID, exp.All()),
@@ -38,7 +38,7 @@ func GetInboxCollection_DirectMessages(ctx *steranko.Context, factory *service.F
 	inboxService := factory.Inbox()
 	criteria := exp.Equal("isPublic", false)
 
-	return collection.Serve(ctx,
+	return collection.Serve(ctx.Response(), ctx.Request(),
 		user.ActivityPubURL()+"/pub/inbox/direct-messages",
 		inboxService.CollectionCount(session, user.UserID, criteria),
 		inboxService.CollectionIteratorWithLabels(session, user.UserID, criteria, factory.Rule()),
@@ -54,7 +54,7 @@ func GetInboxCollection_DirectMessages_MLS(ctx *steranko.Context, factory *servi
 	inboxService := factory.Inbox()
 	criteria := exp.Equal("isPublic", false).AndEqual("mediaType", vocab.MediaTypeMLS)
 
-	return collection.Serve(ctx,
+	return collection.Serve(ctx.Response(), ctx.Request(),
 		user.ActivityPubURL()+"/pub/inbox/direct-messages/mls",
 		inboxService.CollectionCount(session, user.UserID, criteria),
 		inboxService.CollectionIteratorWithLabels(session, user.UserID, criteria, factory.Rule()),
@@ -106,6 +106,9 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 		return derp.Wrap(err, location, "Receiving ActivityPub request")
 	}
+
+	// A request that passed validation proves that its host is running again
+	factory.ReviveHost(activity.ActorID())
 
 	// Drop duplicate activities so retries and multiple deliveries are processed only once
 	if inbox_IsDuplicateActivity(context, activity) {

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/EmissarySocial/emissary/queries/sync"
+	floodgatemongo "github.com/EmissarySocial/emissary/tools/floodgate-mongo"
 	"github.com/benpate/derp"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -41,6 +42,10 @@ func SyncSharedIndexes(ctx context.Context, session *mongo.Database) {
 	}
 
 	if err := sync.Queue(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
+	if err := floodgatemongo.SyncIndexes(ctx, session); err != nil {
 		derp.Report(err)
 	}
 

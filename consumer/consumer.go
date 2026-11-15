@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/turbine/queue"
 )
@@ -81,6 +82,13 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case "Outbox-Publish":
 		return WithSession(consumer.serverFactory, args, OutboxPublish)
 
+	// Fan an activity out to its recipients, or deliver it to one of them
+	case delivery.TaskFanOut, delivery.TaskSend:
+		return Delivery(consumer.serverFactory, task)
+
+	case service.TaskOutbox2Email:
+		return WithFactory(consumer.serverFactory, args, Outbox2Email)
+
 	case "PollFollowing-Index":
 		return WithSession(consumer.serverFactory, args, PollFollowing_Index)
 
@@ -98,6 +106,9 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 
 	case "PurgeDomeLog":
 		return PurgeDomeLog(consumer.serverFactory)
+
+	case TaskProbeDormantHosts:
+		return ProbeDormantHosts(consumer.serverFactory)
 
 	case "PurgeImports":
 		return WithSession(consumer.serverFactory, args, PurgeImports)
