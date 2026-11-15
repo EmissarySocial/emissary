@@ -54,6 +54,9 @@ func (service *Export) FindService(collectionName string) (Exportable, error) {
 	case "emissary-newsFeed":
 		return service.factory.NewsFeed(), nil
 
+	case "emissary-outboxItem":
+		return service.factory.Outbox2(), nil
+
 	case "emissary-outboxMessage":
 		return service.factory.Outbox(), nil
 

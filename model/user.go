@@ -273,7 +273,6 @@ func (user User) GetJSONLD() mapof.Any {
 		// vocab.ContextTypeSocialWebMLS,
 	}
 
-	exportURL := user.ActivityPubURL() + "/export"
 	serverURL := uri.Host(user.ProfileURL)
 
 	result := mapof.Any{
@@ -306,28 +305,6 @@ func (user User) GetJSONLD() mapof.Any {
 			vocab.EndpointStartMigration:     serverURL + "/@" + user.UserID.Hex() + "/export/start",
 			vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
 			vocab.EndpointProxyURL:           serverURL + "/.proxy",
-		},
-
-		vocab.PropertyMigration: mapof.String{
-			"outbox":                   exportURL + "/outbox",
-			"content":                  exportURL + "/content",
-			"following":                exportURL + "/following",
-			"blocked":                  exportURL + "/blocked",
-			"emissary:annotation":      exportURL + "/emissary-annotation",
-			"emissary:circle":          exportURL + "/emissary-circle",
-			"emissary:conversation":    exportURL + "/emissary-conversation",
-			"emissary:folder":          exportURL + "/emissary-folder",
-			"emissary:follower":        exportURL + "/emissary-follower",
-			"emissary:following":       exportURL + "/emissary-following",
-			"emissary:newsItem":        exportURL + "/emissary-newsItem",
-			"emissary:merchantAccount": exportURL + "/emissary-merchantAccount",
-			"emissary:outboxMessage":   exportURL + "/emissary-outboxMessage",
-			"emissary:privilege":       exportURL + "/emissary-privilege",
-			"emissary:product":         exportURL + "/emissary-product",
-			"emissary:response":        exportURL + "/emissary-response",
-			"emissary:rule":            exportURL + "/emissary-rule",
-			"emissary:stream":          exportURL + "/emissary-stream",
-			"emissary:user":            exportURL + "/emissary-user",
 		},
 	}
 
@@ -385,6 +362,26 @@ func (user User) GetJSONLD() mapof.Any {
 // ActivityPubURL returns the canonical ActivityPub actor ID for this User (their profile URL)
 func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
+}
+
+// MigrationJSONLD returns the `migration` property of this User's actor document: the URL of
+// every collection that an account export serves
+func (user User) MigrationJSONLD() mapof.String {
+
+	exportURL := user.ActivityPubURL() + "/export"
+
+	result := mapof.String{
+		"outbox":    exportURL + "/outbox",
+		"content":   exportURL + "/content",
+		"following": exportURL + "/following",
+		"blocked":   exportURL + "/blocked",
+	}
+
+	for _, collection := range MigrationCollections() {
+		result[collection.Key] = exportURL + "/" + collection.Path
+	}
+
+	return result
 }
 
 // CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor
