@@ -12,9 +12,9 @@ package service
 import (
 	"encoding/json"
 	"iter"
-	"maps"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -50,10 +50,14 @@ func (delivery followerDelivery) deliver(session data.Session, actorType string,
 	const location = "service.followerDelivery.deliver"
 
 	// RULE: Deliver the stripped payload, never the original. Blind recipients still RECEIVE the
-	// activity (the caller enumerated them from the full addressing) but must not SEE the list.
-	payload := maps.Clone(activity)
-	delete(payload, vocab.PropertyBTo)
-	delete(payload, vocab.PropertyBCC)
+	// activity (the caller enumerated them from the full addressing) but must not SEE the list,
+	// at any level of nesting.
+	payload, err := assanitizer.WithoutBlindRecipients(activity)
+
+	// RULE: An activity that cannot be stripped never will be, so this is a bad request, not a retry
+	if err != nil {
+		return derp.Wrap(err, location, "Removing blind recipients", derp.WithBadRequest())
+	}
 
 	// Serialize the payload once, so every ActivityPub delivery task shares the same string
 	serialized, err := json.Marshal(payload)
