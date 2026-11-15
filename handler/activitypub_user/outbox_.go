@@ -65,7 +65,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 // GetOutboxActivity returns a specific activity from the User's outbox
 func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
-	const location = "handler.activitypub_user.GetOutboxCollection"
+	const location = "handler.activitypub_user.GetOutboxActivity"
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
@@ -80,7 +80,19 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "OutboxMessageID must be a valid ObjectID", outboxMessageToken, derp.WithNotFound())
 	}
 
-	// Load the Outbox Message
+	// Serve the activity from Outbox2 when it is stored there
+	item := model.NewOutboxItem()
+	err = factory.Outbox2().LoadByID(session, model.ActorTypeUser, user.UserID, outboxMessageID, &item)
+
+	if err == nil {
+		return getOutboxItem(ctx, factory, session, &item)
+	}
+
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Loading outbox activity", "activityId: "+outboxMessageToken)
+	}
+
+	// Otherwise, load the legacy Outbox Message
 	outboxService := factory.Outbox()
 	outboxMessage := model.NewOutboxMessage()
 	if err := outboxService.LoadByID(session, user.UserID, outboxMessageID, &outboxMessage); err != nil {
@@ -95,6 +107,20 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 	// Return the activity as a JSON-LD document
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, outboxMessage.GetJSONLD())
+}
+
+// getOutboxItem writes an Outbox2 activity to the response, when the request's signer may read it
+func getOutboxItem(ctx *steranko.Context, factory *service.Factory, session data.Session, item *model.OutboxItem) error {
+
+	result, err := activitypub.VisibleOutboxItem(factory.Permission(), session, ctx.Request(), item)
+
+	// RULE: Return a refusal as it is, so the peer reads its fixed message
+	if err != nil {
+		return err
+	}
+
+	ctx.Response().Header().Set("Content-Type", "application/activity+json")
+	return ctx.JSON(http.StatusOK, result)
 }
 
 // PostOutbox allows an Authenticated User to POST messages to their outbox, to be delivered to the
@@ -137,6 +163,10 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 		return derp.Wrap(err, location, "Handling ActivityPub request")
 	}
 
-	// Handler writes its response directly to the context
+	// RULE: Most handlers write their own response. One that wrote nothing published nothing, so it answers 200.
+	if ctx.Response().Committed {
+		return nil
+	}
+
 	return ctx.NoContent(http.StatusOK)
 }

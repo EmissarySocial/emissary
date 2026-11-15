@@ -202,3 +202,68 @@ func TestOutbox2_RangeByActivityURL(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, slices.Collect(items))
 }
+
+// TestOutbox2_removeByObjectID verifies that the removal is scoped to one actor and one object,
+// and that an empty object removes nothing
+func TestOutbox2_removeByObjectID(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	otherID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	const object = "https://example.test/notes/1"
+
+	withObject := func(objectID string) func(*model.OutboxItem) {
+		return func(item *model.OutboxItem) { item.ObjectID = objectID }
+	}
+
+	test.save(t, model.ActorTypeUser, userID, 1, anonymous, withObject(object))
+	test.save(t, model.ActorTypeUser, userID, 2, anonymous, withObject(object))
+	test.save(t, model.ActorTypeUser, userID, 3, anonymous, withObject("https://example.test/notes/2"))
+	test.save(t, model.ActorTypeUser, userID, 4, anonymous, withObject(""))
+	test.save(t, model.ActorTypeUser, otherID, 5, anonymous, withObject(object))
+	test.save(t, model.ActorTypeStream, userID, 6, anonymous, withObject(object))
+
+	// An empty object matches the row that has none, and must not remove it
+	require.NoError(t, test.service.removeByObjectID(test.session, model.ActorTypeUser, userID, ""))
+	require.Equal(t, int64(6), countOutbox2(t, test.session))
+
+	// Both of this actor's rows for the object go, and nothing else
+	require.NoError(t, test.service.removeByObjectID(test.session, model.ActorTypeUser, userID, object))
+	require.Equal(t, int64(4), countOutbox2(t, test.session))
+
+	remaining, err := test.service.HasObject(test.session, model.ActorTypeUser, userID, object)
+	require.NoError(t, err)
+	require.False(t, remaining)
+
+	// A second run finds nothing and succeeds
+	require.NoError(t, test.service.removeByObjectID(test.session, model.ActorTypeUser, userID, object))
+	require.Equal(t, int64(4), countOutbox2(t, test.session))
+}
+
+// TestOutbox2_removeByActivityURL verifies that the removal is scoped to one actor and one URL,
+// and that an empty URL removes nothing
+func TestOutbox2_removeByActivityURL(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	otherID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	like := test.save(t, model.ActorTypeUser, userID, 1, anonymous, nil)
+	test.save(t, model.ActorTypeUser, userID, 2, anonymous, nil)
+	test.save(t, model.ActorTypeUser, otherID, 3, anonymous, nil)
+
+	require.NoError(t, test.service.removeByActivityURL(test.session, model.ActorTypeUser, userID, ""))
+	require.Equal(t, int64(3), countOutbox2(t, test.session))
+
+	// Another actor cannot remove this activity by naming its URL
+	require.NoError(t, test.service.removeByActivityURL(test.session, model.ActorTypeUser, otherID, like.URL))
+	require.Equal(t, int64(3), countOutbox2(t, test.session))
+
+	require.NoError(t, test.service.removeByActivityURL(test.session, model.ActorTypeUser, userID, like.URL))
+	require.Equal(t, int64(2), countOutbox2(t, test.session))
+}

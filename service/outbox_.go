@@ -22,6 +22,7 @@ type Outbox struct {
 	followerService   *Follower
 	identityService   *Identity
 	importItemService *ImportItem
+	outbox2Service    *Outbox2
 	ruleService       *Rule
 	streamService     *Stream
 	templateService   *Template
@@ -46,6 +47,7 @@ func (service *Outbox) Refresh(factory *Factory) {
 	service.followerService = factory.Follower()
 	service.identityService = factory.Identity()
 	service.importItemService = factory.ImportItem()
+	service.outbox2Service = factory.Outbox2()
 	service.ruleService = factory.Rule()
 	service.streamService = factory.Stream()
 	service.templateService = factory.Template()

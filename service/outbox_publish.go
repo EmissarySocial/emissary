@@ -145,7 +145,9 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 	// Rebuild the recipient set (followers + addressees by default; the override list otherwise),
 	// iterating lazily from the activity's FULL addressing. publishRecipients reads to/cc AND
 	// bto/bcc (RangeAddressees), so enumeration must see the blind fields before they are stripped.
-	document := streams.NewDocument(activity)
+	// RULE: The document needs a client. A reply is also delivered to the author of the post
+	// it answers, and that author is found by loading the post.
+	document := streams.NewDocument(activity, streams.WithClient(service.deliveryClient(actorType, actorID)))
 	recipientSeq := service.publishRecipients(session, actorType, actorID, document, config)
 
 	// Filter and deliver to each recipient in turn
@@ -155,6 +157,17 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 
 	// Success!!
 	return nil
+}
+
+// deliveryClient returns the sending actor's client, which loads what an activity refers to.
+// A service built without an ActivityStream service has none, and loads nothing.
+func (service *Outbox) deliveryClient(actorType string, actorID primitive.ObjectID) streams.Client {
+
+	if service.activityService == nil {
+		return nil
+	}
+
+	return service.activityService.Client(actorType, actorID)
 }
 
 // delivery returns the follower delivery loop, wired with this service's dependencies

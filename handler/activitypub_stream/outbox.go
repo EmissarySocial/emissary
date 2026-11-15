@@ -78,7 +78,19 @@ func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session d
 		return derp.Wrap(err, location, "OutboxMessageID must be a valid ObjectID", outboxMessageToken, derp.WithNotFound())
 	}
 
-	// Load the OutboxMessage, scoped to THIS Stream so one actor cannot serve another's activity
+	// Serve the activity from Outbox2 when it is stored there, scoped to THIS Stream
+	item := model.NewOutboxItem()
+	err = factory.Outbox2().LoadByID(session, model.ActorTypeStream, stream.StreamID, outboxMessageID, &item)
+
+	if err == nil {
+		return getOutboxItem(ctx, factory, session, &item)
+	}
+
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Loading outbox activity", "activityId: "+outboxMessageToken)
+	}
+
+	// Otherwise, load the legacy OutboxMessage, scoped to THIS Stream so one actor cannot serve another's activity
 	outboxService := factory.Outbox()
 	outboxMessage := model.NewOutboxMessage()
 
@@ -105,4 +117,18 @@ func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session d
 
 	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
 	return ctx.JSON(http.StatusOK, outboxMessage.GetJSONLD())
+}
+
+// getOutboxItem writes an Outbox2 activity to the response, when the request's signer may read it
+func getOutboxItem(ctx *steranko.Context, factory *service.Factory, session data.Session, item *model.OutboxItem) error {
+
+	result, err := activitypub.VisibleOutboxItem(factory.Permission(), session, ctx.Request(), item)
+
+	// RULE: Return a refusal as it is, so the peer reads its fixed message
+	if err != nil {
+		return err
+	}
+
+	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
+	return ctx.JSON(http.StatusOK, result)
 }

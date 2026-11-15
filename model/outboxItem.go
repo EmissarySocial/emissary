@@ -3,7 +3,7 @@ package model
 import (
 	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/benpate/data/journal"
-	"github.com/benpate/hannibal/property"
+	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -24,7 +24,7 @@ type OutboxItem struct {
 	Recipients   sliceof.String     `json:"recipients"   bson:"recipients"`   // All IDs who should receive this activity (to, cc, bto, bcc) including indirect recipients such as Public, circles, etc.
 	Permissions  Permissions        `json:"permissions"  bson:"permissions"`  // Groups that may read this activity in the outbox collection
 
-	journal.Journal `json:"-" bson:",inline"`
+	journal.Journal `json:"journal" bson:",inline"`
 }
 
 // NewOutboxItem returns a fully initialized OutboxItem
@@ -51,12 +51,25 @@ func (item OutboxItem) ID() string {
 // It is part of the JSONLDGetter interface
 func (item OutboxItem) GetJSONLD() mapof.Any {
 
+	const location = "model.OutboxItem.GetJSONLD"
+
 	// RULE: AS2 §5.1 forbids disclosing blind recipients. Strip a copy, because delivery
 	// still reads the full addressing from the stored activity.
-	result := property.Map(item.Activity).Clone().Map()
-	assanitizer.StripKeys(result, vocab.PropertyBTo, vocab.PropertyBCC)
+	result, err := assanitizer.WithoutBlindRecipients(item.Activity)
 
-	return mapof.Any(result)
+	// RULE: An activity that cannot be stripped is not served at all. This method cannot
+	// return an error, so it is reported and an empty document is returned.
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Removing blind recipients", item.ActivityID.Hex()))
+		return mapof.NewAny()
+	}
+
+	// An item with no activity is served as an empty document
+	if result == nil {
+		return mapof.NewAny()
+	}
+
+	return result
 }
 
 // Created returns the creation date of this item, in Unix milliseconds
@@ -68,6 +81,27 @@ func (item OutboxItem) Created() int64 {
 /******************************************
  * Other Methods
  ******************************************/
+
+// IsVisibleTo returns TRUE if a viewer may read this item: one who holds any of its permissions,
+// the actor that published it, or an actor that it names as a recipient
+func (item OutboxItem) IsVisibleTo(permissions Permissions, actorURL string) bool {
+
+	if item.Permissions.Intersects(permissions) {
+		return true
+	}
+
+	// RULE: An unsigned viewer has no identity to match against the addressing
+	if actorURL == "" {
+		return false
+	}
+
+	if actorURL == item.Activity.GetString(vocab.PropertyActor) {
+		return true
+	}
+
+	// Only an exact match counts. A collection that the item names does not admit its members here.
+	return item.Recipients.Contains(actorURL)
+}
 
 // CalcRecipients calculates the unique list of recipients for this OutboxItem
 // by examining the `to`, `cc`, `bto`, and `bcc` properties of the original

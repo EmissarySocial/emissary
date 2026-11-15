@@ -60,7 +60,7 @@ func newStreamDeleteTest(t *testing.T) streamDeleteTest {
 		collectionService:   &Collection{locatorService: &Locator{host: "https://example.test"}},
 		domainService:       &Domain{},
 		draftService:        &StreamDraft{},
-		outboxService:       &Outbox{userService: &User{keyService: keyService}},
+		outboxService:       &Outbox{userService: &User{keyService: keyService}, outbox2Service: &Outbox2{}},
 		outbox2Service:      &Outbox2{},
 		searchResultService: &SearchResult{},
 		streamSourceService: &StreamSource{},

@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TestOutboxItemSchema returns the rosetta schema that describes a TestOutboxItem
@@ -103,4 +104,48 @@ func TestOutboxItem_Created(t *testing.T) {
 	item := OutboxItem{Journal: journal.Journal{CreateDate: 1700000000123}}
 	require.Equal(t, int64(1700000000123), item.Created())
 	require.Zero(t, NewOutboxItem().Created())
+}
+
+// TestOutboxItem_IsVisibleTo verifies who may read a single item from an outbox
+func TestOutboxItem_IsVisibleTo(t *testing.T) {
+
+	const author = "https://example.com/@author"
+	const recipient = "https://remote.example/@recipient"
+	const stranger = "https://remote.example/@stranger"
+
+	circleID := primitive.NewObjectID()
+	anonymous := NewAnonymousPermissions()
+
+	// newItem returns a direct message from the author to the recipient, readable by the provided permissions
+	newItem := func(permissions Permissions) OutboxItem {
+		item := NewOutboxItem()
+		item.Permissions = permissions
+		item.Activity = mapof.Any{
+			vocab.PropertyActor: author,
+			vocab.PropertyTo:    []string{recipient, author + "/pub/followers"},
+			vocab.PropertyBCC:   []string{"https://remote.example/@blind"},
+		}
+		item.CalcRecipients()
+		return item
+	}
+
+	private := newItem(NewPermissions())
+	require.False(t, private.IsVisibleTo(anonymous, ""), "an unsigned viewer cannot read a private item")
+	require.False(t, private.IsVisibleTo(anonymous, stranger), "a signed stranger cannot read a private item")
+	require.False(t, private.IsVisibleTo(nil, ""), "a viewer with no permissions reads nothing")
+	require.True(t, private.IsVisibleTo(anonymous, recipient), "a named recipient can read it")
+	require.True(t, private.IsVisibleTo(anonymous, "https://remote.example/@blind"), "a blind recipient can read it")
+	require.True(t, private.IsVisibleTo(anonymous, author), "its own actor can read it")
+	require.False(t, private.IsVisibleTo(anonymous, author+"/pub/followers/x"), "a collection it names admits no one by itself")
+
+	public := newItem(NewAnonymousPermissions())
+	require.True(t, public.IsVisibleTo(anonymous, ""), "anyone can read a public item")
+
+	circle := newItem(Permissions{circleID})
+	require.False(t, circle.IsVisibleTo(anonymous, stranger), "a stranger is outside the circle")
+	require.True(t, circle.IsVisibleTo(Permissions{MagicGroupIDAnonymous, circleID}, stranger), "a circle member can read it")
+
+	// An item with no actor and no recipients never matches an empty viewer
+	empty := NewOutboxItem()
+	require.False(t, empty.IsVisibleTo(anonymous, ""))
 }
