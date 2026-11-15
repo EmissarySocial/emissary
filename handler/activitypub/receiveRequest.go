@@ -29,7 +29,7 @@ func ReceiveRequest(request *http.Request, client streams.Client, keys PublicKey
 
 	// The validator chain goes FIRST: caller options that patch the HTTPSig entry in place (as
 	// router.WithPublicKeyFinder does) would be discarded if a later option replaced the chain.
-	options = append([]router.Option{InboxValidators(keys, checker, session, userID)}, options...)
+	options = append([]router.Option{InboxValidators(request, keys, checker, session, userID)}, options...)
 
 	// Receive and parse the activity
 	activity, err := router.ReceiveRequest(request, client, options...)
