@@ -542,12 +542,30 @@ func (service *Follower) RangeFollowers(session data.Session, parentType string,
 
 	// RULE: Followers blocked by a rule are excluded from delivery fan-out (R8). Only
 	// BLOCKED is excluded -- other states keep their existing delivery behavior.
-	return service.Range(
-		session,
-		exp.Equal("parentId", parentID).
-			AndEqual("type", parentType).
-			AndNotEqual("stateId", model.FollowerStateBlocked),
-	)
+	return service.Range(session, deliverableFollowers(parentType, parentID))
+}
+
+// ListFollowers returns the same Followers as RangeFollowers, and an error when the query
+// cannot be run. A fan-out uses it, so that a database failure is never read as "no followers".
+func (service *Follower) ListFollowers(session data.Session, parentType string, parentID primitive.ObjectID) (iter.Seq[model.Follower], error) {
+
+	const location = "service.Follower.ListFollowers"
+
+	iterator, err := service.List(session, deliverableFollowers(parentType, parentID))
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Querying Followers", "parentId: "+parentID.Hex())
+	}
+
+	return RangeFunc(iterator, model.NewFollower), nil
+}
+
+// deliverableFollowers matches the Followers of one actor that a delivery fan-out may reach
+func deliverableFollowers(parentType string, parentID primitive.ObjectID) exp.Expression {
+
+	return exp.Equal("parentId", parentID).
+		AndEqual("type", parentType).
+		AndNotEqual("stateId", model.FollowerStateBlocked)
 }
 
 // RangeBlockedByUserID returns an iterator containing every BLOCKED Follower of the provided User.

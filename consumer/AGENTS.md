@@ -90,6 +90,14 @@ A missing case in `PreProcessor` is silent: the name falls through, `Priority` k
 
 `WithSender` in [wrappers.go](wrappers.go) binds the send locator with `BoundToSender(args["actor"])` so recipient resolution respects the sender's block rules, and constructs the hannibal sender with `AllowPrivateIPs` from the server factory — FALSE in production, true only for local/dev federation on a private network. Both `Outbox:SendTo*` task names come from `hannibal/sender` constants; use the constants, not string literals.
 
+## Delivery tasks run outside a transaction, and are routed by the sending actor
+
+`Delivery:FanOut` and `Delivery:Send` are hannibal's delivery pipeline, and `Outbox2-Email` is its email recipient. [delivery.go](delivery.go) runs all three through `WithFactory` and a plain session, deliberately **not** `WithSession`: a send makes an HTTP request, a fan-out over a large follower list can outlast MongoDB's 60-second limit on a transaction, and none of them writes to the domain database. The pipeline is built once per task by `Outbox2.Pipeline`, bound to the actor in the task's `actor` argument, because its lookups run on that task's session.
+
+A send task carries no `hostname`, so `getHostnameFromArgs` finds its domain from the `actor` URL. Keep that argument's name. A fan-out is priority 16, so that it runs promptly after its commit; sends and emails are 256, so that a large fan-out cannot delay user-facing work. Hannibal sets the retry count and the one-day backoff cap on each send task when it queues it.
+
+The legacy `Outbox:SendToAllRecipients`, `Outbox:SendToSingleRecipient` and `Outbox-Publish` tasks are still registered. Other senders (Accepts, Follows, search results) and the legacy outbox still queue them.
+
 ## The lifecycle hooks run for EVERY task, so each one checks the task name first
 
 `OnSuccess`, `OnError`, and `OnFailure` in [consumer.go](consumer.go) are called by turbine for every task in the system, not only the ones that care. A hook that skipped its `task.Name` check would send every success in Emissary looking for a `StreamSource` record. `SyncStreamSource` is the only task that acts on them today.

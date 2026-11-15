@@ -10,26 +10,37 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/sender"
+	"github.com/benpate/floodgate"
+	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Outbox2 manages the "Outbox2" collection: the ActivityPub-native outbox for all local
-// actor types (Users, Streams, and Searches).
+// Outbox2 manages the "Outbox2" collection: the ActivityPub-native outbox of local Users and Streams
 type Outbox2 struct {
-	// Outbox2 is replacing the legacy Outbox service -- see emissary-specs/OUTBOX2-MIGRATION.md.
+	// Outbox2 is replacing the legacy Outbox service -- see emissary-specs/projects/OUTBOX2-OMNIBUS.md.
 
-	inboxService    *Inbox
-	activityService *ActivityStream
-	locator         *Locator
-	getSendLocator  func(data.Session) SendLocator
-	queue           *queue.Queue
-	host            string
+	inboxService     *Inbox
+	activityService  *ActivityStream
+	followerService  *Follower
+	circleService    *Circle
+	privilegeService *Privilege
+	identityService  *Identity
+	ruleService      *Rule
+	domainEmail      followerEmailer
+	legacyOutbox     legacyOutboxRemover
+	importedObjects  importedObjectFinder
+	objectCache      documentDeleter
+	locator          *Locator
+	getSendLocator   func(data.Session) SendLocator
+	queue            *queue.Queue
+	floodgate        func() floodgate.Gate
+	host             string
 }
 
 // NewOutbox2 returns a fully populated Outbox2 service
@@ -45,6 +56,16 @@ func NewOutbox2() Outbox2 {
 func (service *Outbox2) Refresh(factory *Factory) {
 	service.inboxService = factory.Inbox()
 	service.activityService = factory.ActivityStream()
+	service.followerService = factory.Follower()
+	service.circleService = factory.Circle()
+	service.privilegeService = factory.Privilege()
+	service.floodgate = factory.Floodgate
+	service.identityService = factory.Identity()
+	service.ruleService = factory.Rule()
+	service.domainEmail = factory.Email()
+	service.legacyOutbox = factory.Outbox()
+	service.importedObjects = importedStreamFinder{importItemService: factory.ImportItem(), streamService: factory.Stream()}
+	service.objectCache = factory.ActivityStream()
 	service.locator = factory.Locator()
 	service.queue = factory.Queue()
 	service.host = factory.Host()
@@ -105,58 +126,13 @@ func (service *Outbox2) Load(session data.Session, criteria exp.Expression, resu
 	return nil
 }
 
-// Save adds/updates an OutboxItem in the database. New items also loop back to the
-// actor's own inbox (when self-addressed) and enqueue post-commit delivery to all recipients.
+// Save stores an OutboxItem in the database, and sends nothing. Only Publish and an import call it.
 func (service *Outbox2) Save(session data.Session, item *model.OutboxItem, note string) error {
 
 	const location = "service.Outbox2.Save"
 
-	if item.IsNew() {
-
-		// Calculate the ActivityURL for this message and the user who sent it.
-		item.URL = service.locator.ActivityURL(item.ActorType, item.ActorID, item.ActivityID)
-
-		// Calculate the list of unique recipients
-		item.CalcRecipients()
-
-		// If the actor is also a recipient, then we can put it straight into their inbox
-		if actorURL := service.locator.UserURL(item.ActorID); item.Recipients.Contains(actorURL) {
-
-			asActivity := streams.NewDocument(item.Activity)
-
-			inboxActivity := model.NewInboxActivity()
-			inboxActivity.ActivityID = asActivity.ID()
-			inboxActivity.UserID = item.ActorID
-			inboxActivity.ActorID = asActivity.ActorID()
-			inboxActivity.Context = asActivity.Context()
-			inboxActivity.ActivityType = asActivity.Type()
-			inboxActivity.ObjectType = asActivity.Object().Type()
-			inboxActivity.ObjectID = asActivity.Object().ID()
-			inboxActivity.MediaType = asActivity.Object().MediaType()
-			inboxActivity.ReceivedDate = time.Now().UnixMilli()
-			inboxActivity.RawActivity = item.Activity
-			inboxActivity.IsPublic = asActivity.IsPublic()
-			inboxActivity.PublishedDate = asActivity.Published().UnixMilli()
-
-			if err := service.inboxService.Save(session, &inboxActivity, "Saved directly from outbox"); err != nil {
-				return derp.Wrap(err, location, "Saving item to inbox", inboxActivity)
-			}
-		}
-
-		// Send ActivityPub notifications to recipient(s) POST-COMMIT. Enqueuing the
-		// fan-out as a task (released only after this transaction commits) keeps the
-		// signed HTTP sends off the request's open transaction. The old synchronous
-		// sender.Send delivered to local inboxes before this txn committed, so a
-		// receiver's own (gated) task could 404 on rows not yet visible on its
-		// separate majority-read session. The Outbox:SendToAllRecipients consumer
-		// rebuilds the Sender with AllowPrivateIPs threaded via WithSender
-		// (consumer/wrappers.go). See POST-COMMIT-TASKS-DESIGN.md / POST-COMMIT-FEDERATION.md F0.
-		postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, item.Activity)
-	}
-
-	// Save the value to the database
 	if err := service.collection(session).Save(item, note); err != nil {
-		return derp.Wrap(err, location, "Saving Outbox activity", item, note)
+		return derp.Wrap(err, location, "Saving Outbox activity", "activityId: "+item.ActivityID.Hex(), note)
 	}
 
 	return nil
@@ -171,20 +147,24 @@ func (service *Outbox2) Send(session data.Session, activity mapof.Any) error {
 
 	const location = "service.Outbox2.Send"
 
+	document := streams.NewDocument(activity)
+
 	// RULE: The activity must identify its actor -- the send consumer signs with this actor's key
-	if streams.NewDocument(activity).ActorID() == "" {
-		return derp.Internal(location, "Activity must include an actor", activity)
+	if document.ActorID() == "" {
+		return derp.Internal(location, "Activity must include an actor", "activityId: "+document.ID())
 	}
 
-	// Enqueue delivery to all addressed recipients (released only after the transaction commits)
-	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, activity)
+	// Queue delivery to everyone the activity names (released only after the transaction commits)
+	if err := service.queueDelivery(session, document); err != nil {
+		return derp.Wrap(err, location, "Queueing delivery", "activityId: "+document.ID())
+	}
 
 	// boom.
 	return nil
 }
 
-// PutUserActivity saves a User's own addressed (non-public) activity into their outbox, which
-// delivers it to every recipient it names. It returns the activity's server-assigned URL.
+// PutUserActivity publishes a User's own addressed (non-public) activity from their outbox, and
+// returns the activity's server-assigned URL.
 func (service *Outbox2) PutUserActivity(session data.Session, userID primitive.ObjectID, activity streams.Document) (string, error) {
 
 	const location = "service.Outbox2.PutUserActivity"
@@ -205,24 +185,191 @@ func (service *Outbox2) PutUserActivity(session data.Session, userID primitive.O
 		return "", derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+activity.ActorID(), activity.Map())
 	}
 
-	outboxItem := model.NewOutboxItem()
-	outboxItem.URL = service.locator.ActivityURL(model.ActorTypeUser, userID, outboxItem.ActivityID)
+	// RULE: An Undo may only reverse the actor's own activities (ActivityPub §6.10)
+	if err := requireUndoActorMatches(activity); err != nil {
+		return "", derp.Wrap(err, location, "Validating Undo")
+	}
 
 	// RULE: The server assigns the activity's canonical id, replacing any client-provided
 	// value (ActivityPub §6.1). Client-generated ids (e.g. "urn:uuid:...") are not
 	// dereferenceable URLs, and remote servers reject activities that carry them.
-	activity.SetProperty(vocab.PropertyID, outboxItem.URL)
+	activity.SetProperty(vocab.PropertyID, "")
 
-	outboxItem.ActorType = model.ActorTypeUser
-	outboxItem.ActorID = userID
-	outboxItem.Activity = activity.Map()
-	outboxItem.Recipients = activity.Recipients()
+	// RULE: The JSON-LD spelling goes too. Publish reads `@id` when `id` is empty, so a client
+	// could otherwise choose its activity's URL, on this host or on someone else's.
+	delete(activity.Map(), vocab.PropertyID_Alternate)
 
-	if err := service.Save(session, &outboxItem, "Created via ActivityPub Outbox2"); err != nil {
-		return "", derp.Wrap(err, location, "Saving Outbox2 activity")
+	// Publish with no permissions, so delivery follows the client's addressing alone
+	activityURL, err := service.Publish(session, model.ActorTypeUser, userID, activity, model.NewPermissions())
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Publishing activity")
 	}
 
-	return outboxItem.URL, nil
+	return activityURL, nil
+}
+
+// requireUndoActorMatches returns an error when an Undo names an activity performed by another actor
+func requireUndoActorMatches(activity streams.Document) error {
+
+	const location = "service.requireUndoActorMatches"
+
+	// This function is only needed for `Undo` activities
+	if activity.Types().NotContains(vocab.ActivityTypeUndo) {
+		return nil
+	}
+
+	// RULE: Every embedded activity must name the correct actor.
+	actorID := activity.ActorID()
+
+	if actorID == "" {
+		return derp.Forbidden(location, "Undo actor must not be empty")
+	}
+
+	for object := range activity.Object().Range() {
+
+		if actorID != object.ActorID() {
+			return derp.Forbidden(location, "Undo actor must match the actor of the undone activity")
+		}
+	}
+
+	// Success-berg
+	return nil
+}
+
+// Publish stores an activity in an actor's outbox and queues its delivery for after the transaction
+// commits. It returns the activity's URL. Each writer addresses its own activity; Publish adds no one.
+func (service *Outbox2) Publish(session data.Session, actorType string, actorID primitive.ObjectID, activity streams.Document, permissions model.Permissions) (string, error) {
+
+	const location = "service.Outbox2.Publish"
+
+	// RULE: The activity must identify its actor, before anything is stored. Delivery signs
+	// with that actor's key, and expands only that actor's collections.
+	if activity.ActorID() == "" {
+		return "", derp.Internal(location, "Activity must include an actor", "actorType: "+actorType, "actorId: "+actorID.Hex())
+	}
+
+	item := model.NewOutboxItem()
+
+	// Keep a carried-in canonical id (a Like or a Block has a record of its own), or mint one
+	activityURL := activity.ID()
+
+	if activityURL == "" {
+		activityURL = service.locator.ActivityURL(actorType, actorID, item.ActivityID)
+
+	} else {
+
+		// RULE: Publish an activity once. Look its URL up first, because a duplicate-key
+		// error would abort the whole request transaction.
+		count, err := service.collection(session).Count(exp.Equal("url", activityURL))
+
+		if err != nil {
+			return "", derp.Wrap(err, location, "Checking for a published activity", activityURL)
+		}
+
+		if count > 0 {
+			return activityURL, nil
+		}
+	}
+
+	// RULE: Every activity needs an id that peers can dereference
+	if activityURL == "" {
+		return "", derp.Internal(location, "Cannot mint an activity URL for this actor type", "actorType: "+actorType)
+	}
+
+	// Stamp the id, so the caller and every recipient see the same URL
+	activity.SetProperty(vocab.PropertyID, activityURL)
+
+	// Describe the activity, so later lookups by URL, object, and type find it
+	item.ActorType = actorType
+	item.ActorID = actorID
+	item.URL = activityURL
+	item.Activity = activity.Map()
+	item.ActivityType = activity.Type()
+	item.ObjectID = activity.Object().ID()
+	item.Permissions = permissions
+	item.CalcRecipients()
+
+	// Put a self-addressed activity straight into the actor's own inbox
+	if err := service.loopback(session, &item); err != nil {
+		return "", derp.Wrap(err, location, "Saving activity to the actor's inbox", activityURL)
+	}
+
+	// Store the activity
+	if err := service.Save(session, &item, "Published"); err != nil {
+		return "", derp.Wrap(err, location, "Saving Outbox2 activity", activityURL)
+	}
+
+	// Deliver it once the transaction commits
+	if err := service.queueDelivery(session, activity); err != nil {
+		return "", derp.Wrap(err, location, "Queueing delivery", activityURL)
+	}
+
+	return activityURL, nil
+}
+
+// loopback writes a User's self-addressed activity straight into their own inbox. The delivered
+// copy still arrives later, and the inbox accepts it as a duplicate.
+func (service *Outbox2) loopback(session data.Session, item *model.OutboxItem) error {
+
+	const location = "service.Outbox2.loopback"
+
+	// RULE: Only a User has an inbox here
+	if item.ActorType != model.ActorTypeUser {
+		return nil
+	}
+
+	// RULE: Only an activity addressed to its own actor loops back
+	if !item.Recipients.Contains(service.locator.UserURL(item.ActorID)) {
+		return nil
+	}
+
+	asActivity := streams.NewDocument(item.Activity)
+
+	inboxActivity := model.NewInboxActivity()
+	inboxActivity.ActivityID = asActivity.ID()
+	inboxActivity.UserID = item.ActorID
+	inboxActivity.ActorID = asActivity.ActorID()
+	inboxActivity.Context = asActivity.Context()
+	inboxActivity.ActivityType = asActivity.Type()
+	inboxActivity.ObjectType = asActivity.Object().Type()
+	inboxActivity.ObjectID = asActivity.Object().ID()
+	inboxActivity.MediaType = asActivity.Object().MediaType()
+	inboxActivity.ReceivedDate = time.Now().UnixMilli()
+	inboxActivity.RawActivity = item.Activity
+	inboxActivity.IsPublic = asActivity.IsPublic()
+	inboxActivity.PublishedDate = asActivity.Published().UnixMilli()
+
+	if err := service.inboxService.Save(session, &inboxActivity, "Saved directly from outbox"); err != nil {
+		return derp.Wrap(err, location, "Saving item to inbox", "activityId: "+inboxActivity.ActivityID)
+	}
+
+	return nil
+}
+
+// queueDelivery queues the fan-out of an activity to everyone it names, for after the
+// transaction commits. The task carries the activity as it was given, blind recipients included.
+func (service *Outbox2) queueDelivery(session data.Session, activity streams.Document) error {
+
+	const location = "service.Outbox2.queueDelivery"
+
+	// RULE: The actor is read as a reference, because an activity may embed its actor as an
+	// object, and a worker given no actor expands no followers and applies no one's rules.
+	actorID := activity.ActorID()
+
+	if actorID == "" {
+		return derp.Internal(location, "Activity must include an actor", "activityId: "+activity.ID())
+	}
+
+	// "hostname" and "actor" are for the consumer that routes the task to this domain
+	postcommit.Publish(session, service.queue, delivery.TaskFanOut, mapof.Any{
+		"hostname": uri.Hostname(service.host),
+		"actor":    actorID,
+		"activity": activity.Map(),
+	})
+
+	// Queued, and waiting on a commit
+	return nil
 }
 
 // Delete removes an OutboxItem from the database (HARD delete)
@@ -377,6 +524,58 @@ func (service *Outbox2) RangeByActivityURL(session data.Session, actorType strin
 		AndEqual("url", activityURL)
 
 	return service.Range(session, criteria)
+}
+
+// removeByObjectID deletes every activity in an actor's outbox that acts on the provided object
+func (service *Outbox2) removeByObjectID(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) error {
+
+	const location = "service.Outbox2.removeByObjectID"
+
+	// RULE: An empty objectID would match every activity that has no object
+	if objectID == "" {
+		return nil
+	}
+
+	items, err := service.RangeByObjectID(session, actorType, actorID, objectID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading outbox activities", objectID)
+	}
+
+	return service.removeAll(session, items)
+}
+
+// removeByActivityURL deletes the activity in an actor's outbox that has the provided URL
+func (service *Outbox2) removeByActivityURL(session data.Session, actorType string, actorID primitive.ObjectID, activityURL string) error {
+
+	const location = "service.Outbox2.removeByActivityURL"
+
+	// RULE: An empty URL identifies no activity
+	if activityURL == "" {
+		return nil
+	}
+
+	items, err := service.RangeByActivityURL(session, actorType, actorID, activityURL)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading outbox activities", activityURL)
+	}
+
+	return service.removeAll(session, items)
+}
+
+// removeAll deletes each of the provided activities
+func (service *Outbox2) removeAll(session data.Session, items iter.Seq[model.OutboxItem]) error {
+
+	const location = "service.Outbox2.removeAll"
+
+	for item := range items {
+		if err := service.Delete(session, &item, "Un-Publishing"); err != nil {
+			return derp.Wrap(err, location, "Deleting outbox activity", "activityId: "+item.ActivityID.Hex())
+		}
+	}
+
+	return nil
 }
 
 // LoadByID retrieves a single OutboxItem that matches the provided actor and activityID

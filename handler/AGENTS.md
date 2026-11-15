@@ -71,7 +71,7 @@ Setup routes (`setup_*.go`) are registered only in setup mode, behind `mw.Localh
 
 ## Reading a property of a bare-URL Document fetches it
 
-hannibal's `Document.Get` on a string value treats the string as an id and loads it through the document's client before reading the key; only `Get("id")` is exempt. So `activity.Object().Actor()`, `.ActorID()`, `.Type()` and the like each make an outbound request whenever the object arrived as a URL rather than embedded. A validator that only means to look at what the client sent must skip string values first (`IsString()`), as `requireUndoActorMatches` ([activitypub_user/outbox_wildcard.go](activitypub_user/outbox_wildcard.go)) does, or it fetches on behalf of whoever posted the activity. Its test proves this with a client that counts every `Load`.
+hannibal's `Document.Get` on a string value treats the string as an id and loads it through the document's client before reading the key; only `Get("id")` is exempt. So `activity.Object().Actor()`, `.ActorID()`, `.Type()` and the like each make an outbound request whenever the object arrived as a URL rather than embedded. A validator that only means to look at what the client sent must skip string values first (`IsString()`), as `requireUndoActorMatches` ([../service/outbox2.go](../service/outbox2.go)) does, or it fetches on behalf of whoever posted the activity. Its test proves this with a client that counts every `Load`.
 
 ## `/.proxy` serves anonymous visitors, but only actors
 
