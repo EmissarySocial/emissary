@@ -1,6 +1,6 @@
 module github.com/EmissarySocial/emissary
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.4.0
@@ -13,11 +13,12 @@ require (
 	github.com/benpate/data-mongo v0.36.0
 	github.com/benpate/data-slice v0.3.0
 	github.com/benpate/delta v0.3.0
-	github.com/benpate/derp v0.49.0
+	github.com/benpate/derp v0.50.0
 	github.com/benpate/digit v0.17.0
 	github.com/benpate/digital-dome v0.10.0
 	github.com/benpate/exp v0.12.0
 	github.com/benpate/exp-builder v0.13.0
+	github.com/benpate/floodgate v0.0.0-00010101000000-000000000000
 	github.com/benpate/form v0.33.0
 	github.com/benpate/geo v0.5.0
 	github.com/benpate/hannibal v0.47.0
@@ -26,15 +27,15 @@ require (
 	github.com/benpate/mediaserver v0.21.0
 	github.com/benpate/oembed v0.5.0
 	github.com/benpate/re v0.7.0
-	github.com/benpate/remote v0.27.0
-	github.com/benpate/rosetta v0.46.0
+	github.com/benpate/remote v0.29.0
+	github.com/benpate/rosetta v0.49.0
 	github.com/benpate/sherlock v0.23.0
 	github.com/benpate/sniff v0.4.0
 	github.com/benpate/steranko v0.33.0
 	github.com/benpate/table v0.11.0
 	github.com/benpate/toot v0.11.0
 	github.com/benpate/toot-echo v0.8.0
-	github.com/benpate/turbine v0.13.0
+	github.com/benpate/turbine v0.14.0
 	github.com/benpate/uri v0.10.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0
@@ -71,8 +72,8 @@ require (
 	github.com/yuin/goldmark v1.8.7
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.10
-	go.yaml.in/yaml/v3 v3.0.5
-	golang.org/x/crypto v0.58.0
+	go.yaml.in/yaml/v3 v3.0.6
+	golang.org/x/crypto v0.59.0
 	golang.org/x/net v0.62.0
 	golang.org/x/oauth2 v0.37.0
 	willnorris.com/go/microformats v1.2.0
@@ -111,7 +112,7 @@ require (
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
-	github.com/klauspost/compress v1.20.3 // indirect
+	github.com/klauspost/compress v1.20.4 // indirect
 	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
@@ -126,16 +127,15 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.2.0 // indirect
+	github.com/xdg-go/scram v1.4.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e // indirect
+	golang.org/x/exp v0.0.0-20261113113407-e3970619a1a4 // indirect
 	golang.org/x/image v0.47.0 // indirect
-	golang.org/x/sync v0.24.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
