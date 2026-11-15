@@ -222,6 +222,7 @@ func TestNestedSteps_Switch(t *testing.T) {
 var unpinnedPostReaders = map[string]string{
 	"add-stream":         "not pinned: sets with-data values rendered from templates, not POSTed fields",
 	"delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+	"edit-attachments":   "not pinned: stores, deletes, and sorts attachments through the Attachment service",
 	"edit-connection":    "not pinned: provider forms are defined in Go, not in templates",
 	"edit-content":       "not pinned: content is converted by service.Content, not set through form or schema",
 	"require-password":   "not pinned: checks a password against the database",
@@ -232,7 +233,6 @@ var unpinnedPostReaders = map[string]string{
 	"set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
 	"set-thumbnail":      "not pinned: writes the ID or URL of a stored attachment",
 	"sort":               "not pinned: POST keys are database record IDs",
-	"sort-attachments":   "not pinned: POST keys are database record IDs",
 	"sort-widgets":       "not pinned: POST keys are widget IDs on a stored Stream",
 	"upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 }
@@ -273,10 +273,38 @@ func editModelObjectCase(name string, current step.EditModelObject, context buil
 		Schema:    context.Schema,
 		NewObject: context.NewObject,
 		Apply: func(object any, values url.Values) error {
-			stepForm := form.New(context.Schema, element)
+			stepForm := form.New(context.Schema, element, editModelObjectOptions(current, object)...)
 			return stepForm.SetURLValues(object, values, nil)
 		},
 	}
+}
+
+// editModelObjectOptions reproduces build.StepEditModelObject.getOptions. An option that renders
+// against the builder renders as "" here, as it does when executeTemplate fails (see AGENTS.md)
+func editModelObjectOptions(current step.EditModelObject, object any) []string {
+
+	result := make([]string, 0, len(current.Options))
+
+	// build.StepEditModelObject.getOptions asks builder.object(), which every model answers
+	isNew := false
+
+	if journaled, ok := object.(interface{ IsNew() bool }); ok {
+		isNew = journaled.IsNew()
+	}
+
+	for _, option := range current.Options {
+
+		optionString := renderLiteral(postField{}, option)
+
+		// Remove "delete" options from new objects.
+		if isNew && strings.HasPrefix(optionString, "delete:") {
+			continue
+		}
+
+		result = append(result, optionString)
+	}
+
+	return result
 }
 
 // addModelObjectCase reproduces build.StepAddModelObject.Post, which sets every request key

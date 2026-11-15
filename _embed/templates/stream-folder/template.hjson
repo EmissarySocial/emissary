@@ -108,7 +108,7 @@
 		add-child: {
 			roles: ["author", "editor"]
 			steps:[
-				{do:"add-stream", location:"child", title:"Add Item", comment:"Created by {{.Author.DisplayName}}"}
+				{do:"add-stream", location:"child", title:"Add Item"}
 				{do:"refresh-page"}
 			]
 		}
@@ -124,7 +124,7 @@
 			steps: [
 				{do:"as-modal", steps: [
 					{do:"set-simple-sharing", role: "viewer", title:"Sharing Settings", message:"Select Which People Can See This Folder"}
-					{do:"save", message:"Sharing updated by {{.Author}}"}
+					{do:"save", comment:"Sharing updated"}
 				]}
 			]
 		}
@@ -137,7 +137,7 @@
 				// cached form values; formdata.Parse caches on the Request and re-reads nothing.
 				{do:"set-data", from-form:["data.format"]}
 				{do:"sort-widgets"}
-				{do:"save", message:"Widgets updated by {{.Author}}"}
+				{do:"save", comment:"Widgets updated"}
 				{do:"view-html", method:"both"}
 			]
 		}
@@ -146,7 +146,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"edit-widget"}
-				{do:"save", comment:"Widget updated by {{.Author}}"}
+				{do:"save", comment:"Widget updated"}
 			]
 		}
 

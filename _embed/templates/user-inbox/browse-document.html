@@ -56,6 +56,7 @@
 				hx-push-url="false">
 			</span>
 			<span hx-get="/@me/newsfeed/annotation-button?url={{$document.ID | urlquery}}{{if $notesOpen}}&selected=true{{end}}" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
+			{{template "share-button" $document.ID}}
 		</div>
 
 		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">

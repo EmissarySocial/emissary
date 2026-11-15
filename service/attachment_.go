@@ -1,7 +1,10 @@
 package service
 
 import (
+	"bytes"
+	"cmp"
 	"iter"
+	"slices"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -241,18 +244,51 @@ func (service *Attachment) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// QueryByObjectID returns all Attachments that match the provided object (type and ID)
+// QueryByObjectID returns all Attachments that match the provided object (type and ID), in rank order
 func (service *Attachment) QueryByObjectID(session data.Session, objectType string, objectID primitive.ObjectID) ([]model.Attachment, error) {
-	return service.Query(
-		session,
-		exp.Equal("objectType", objectType).
-			AndEqual("objectId", objectID),
-		option.SortAsc("rank"))
+
+	result, err := service.Query(session, categoryCriteria(objectType, objectID, ""), option.SortAsc("rank"))
+
+	if err != nil {
+		return result, err
+	}
+
+	return sortByRank(result), nil
 }
 
-// QueryByCategory returns all Attachments that match the provided object (type and ID).  If the "category"
-// parameter is provided, then only Attachments with that category will be returned.
+// QueryByCategory returns all Attachments that match the provided object (type and ID), in rank order.
+// If the "category" parameter is provided, then only Attachments with that category will be returned.
 func (service *Attachment) QueryByCategory(session data.Session, objectType string, objectID primitive.ObjectID, category string) ([]model.Attachment, error) {
+
+	result, err := service.Query(session, categoryCriteria(objectType, objectID, category), option.SortAsc("rank"))
+
+	if err != nil {
+		return result, err
+	}
+
+	return sortByRank(result), nil
+}
+
+// sortByRank orders Attachments by rank, and equal ranks by ID, so that files stored before
+// ranks were assigned come back in upload order. The database sorts by rank alone, because
+// data-mongo keeps only the last sort option it is given, so the tie-break is applied here.
+func sortByRank(attachments []model.Attachment) []model.Attachment {
+
+	slices.SortStableFunc(attachments, func(a model.Attachment, b model.Attachment) int {
+
+		if byRank := cmp.Compare(a.Rank, b.Rank); byRank != 0 {
+			return byRank
+		}
+
+		return bytes.Compare(a.AttachmentID[:], b.AttachmentID[:])
+	})
+
+	return attachments
+}
+
+// categoryCriteria matches the Attachments on an object that are in the category, or every
+// Attachment on the object when the category is empty.
+func categoryCriteria(objectType string, objectID primitive.ObjectID, category string) exp.Expression {
 
 	criteria := exp.Equal("objectType", objectType).
 		AndEqual("objectId", objectID)
@@ -261,7 +297,7 @@ func (service *Attachment) QueryByCategory(session data.Session, objectType stri
 		criteria = criteria.AndEqual("category", category)
 	}
 
-	return service.Query(session, criteria, option.SortAsc("rank"))
+	return criteria
 }
 
 // LoadFirstByCategory retrieves the highest-ranked Attachment on an object that falls in one of the provided categories
@@ -355,6 +391,66 @@ func (service *Attachment) DeleteByID(session data.Session, objectType string, o
 
 	// Success.
 	return nil
+}
+
+// DeleteFromCategory removes one Attachment from the object's category. An ID that is not one of
+// that category's files on that object is refused as a bad request, and nothing is deleted.
+func (service *Attachment) DeleteFromCategory(session data.Session, objectType string, objectID primitive.ObjectID, category string, attachmentID primitive.ObjectID, note string) error {
+
+	const location = "service.Attachment.DeleteFromCategory"
+
+	// Load the Attachment, scoped to the object that owns it
+	attachment := model.NewAttachment(objectType, objectID)
+
+	if err := service.LoadByID(session, objectType, objectID, attachmentID, &attachment); err != nil {
+
+		if derp.IsNotFound(err) {
+			return derp.BadRequest(location, "Attachment is not on this object", objectType, objectID, attachmentID)
+		}
+
+		return derp.Wrap(err, location, "Loading attachment", objectType, objectID, attachmentID)
+	}
+
+	// RULE: Each caller deletes only the files of its own category
+	if attachment.Category != category {
+		return derp.BadRequest(location, "Attachment is not in this category", attachmentID, category)
+	}
+
+	if err := service.Delete(session, &attachment, note); err != nil {
+		return derp.Wrap(err, location, "Deleting attachment", attachmentID)
+	}
+
+	// And it's gone.
+	return nil
+}
+
+// CountByCategory returns how many Attachments the object holds in the category, or in every
+// category when it is empty
+func (service *Attachment) CountByCategory(session data.Session, objectType string, objectID primitive.ObjectID, category string) (int, error) {
+
+	count, err := service.Count(session, categoryCriteria(objectType, objectID, category))
+
+	if err != nil {
+		return 0, derp.Wrap(err, "service.Attachment.CountByCategory", "Counting attachments", objectType, objectID, category)
+	}
+
+	return int(count), nil
+}
+
+// CountByCriteria returns how many Attachments on the object match the criteria, scoped the way DeleteByCriteria scopes a delete
+func (service *Attachment) CountByCriteria(session data.Session, objectType string, objectID primitive.ObjectID, criteria exp.Expression) (int, error) {
+
+	criteria = criteria.
+		AndEqual("objectType", objectType).
+		AndEqual("objectId", objectID)
+
+	count, err := service.Count(session, criteria)
+
+	if err != nil {
+		return 0, derp.Wrap(err, "service.Attachment.CountByCriteria", "Counting attachments", objectType, objectID)
+	}
+
+	return int(count), nil
 }
 
 // DeleteByCriteria removes all attachments from the provided object/type within a criteria expression (virtual delete)

@@ -1,6 +1,2 @@
-<div role="button" class="bold link" script="on click
-	navigator.share({
-		title: '{{.Label}}',
-		url:'{{.URL}}',
-		text: '{{.Summary}}'
-	})">{{icon "share"}} Share Page</div>
+<!-- RULE: Stream text travels in data attributes, never inside the script, where a quote would end the string (see ../AGENTS.md) -->
+<div role="button" class="bold link" script="install Share" data-share-url="{{.URL}}" data-share-title="{{.Label}}" data-share-text="{{.Summary}}" hidden>{{icon "share"}} Share Page</div>

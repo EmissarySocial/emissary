@@ -1,0 +1,370 @@
+-- Drives the list form widget: Enter, Backspace, and Alt with the arrows edit the rows, the grip drags one,
+-- and the add button and each X add and remove one. The rows are plain inputs, so the Save posts them in order.
+behavior ListWidget
+
+	init
+		call listWidgetRefresh(me, false)
+		call listWidgetSortable(me)
+	end
+
+	-- RULE: Sortable may arrive after this behavior installs, so the drag attaches whenever it does
+	on sortableReady from window
+		call listWidgetSortable(me)
+	end
+
+	-- Sortable sends update, which bubbles from the rows, only when a drag changes their order
+	on update
+		call listWidgetMoved(me, event.item)
+	end
+
+	on input
+		call listWidgetRefresh(me, false)
+	end
+
+	on click
+		set button to the closest <button/> to the target
+
+		if no button then
+			exit
+		end
+
+		if button.matches('.list-add') then
+			call listWidgetInsert(me, null)
+		else if button.matches('.list-remove') then
+			call listWidgetRemove(me, button, false)
+		end
+	end
+
+	-- RULE: Enter during IME composition commits the typed word, and must never add a row or submit
+	on keydown[key is 'Enter' and not isComposing]
+		if not listWidgetIsRow(me, target) then
+			exit
+		end
+
+		halt the event
+		call listWidgetInsert(me, target)
+	end
+
+	on keydown[key is 'Backspace' and not altKey and not ctrlKey and not metaKey]
+		if not listWidgetIsRow(me, target) then
+			exit
+		end
+
+		if target.value is not '' then
+			exit
+		end
+
+		halt the event
+		call listWidgetRemove(me, target, true)
+	end
+
+	-- RULE: Alt with an arrow moves the text cursor on macOS, so it is halted only in a row, where it moves the row
+	on keydown[altKey and (key is 'ArrowUp' or key is 'ArrowDown' or key is 'Home' or key is 'End')]
+		if not listWidgetIsRow(me, target) then
+			exit
+		end
+
+		halt the event
+		call listWidgetMove(me, target, event.key)
+	end
+
+end
+
+js
+// LIST_WIDGET_REPEAT is what a screen reader hears on a row that repeats an earlier one
+const LIST_WIDGET_REPEAT = "Repeats an earlier row, and is dropped when the form is saved"
+
+// listWidgetSortables holds every row container that Sortable already drives
+const listWidgetSortables = new WeakSet()
+
+// RULE: Only // comments in this block. Hyperscript reads a slash-star comment as code,
+// so a quote or the bare word that closes this block, written inside one, breaks the bundle.
+
+// listWidgetRows returns the rows of the widget, in their order
+function listWidgetRows(widget) {
+	return Array.from(widget.querySelectorAll(":scope > table > tbody > tr"))
+}
+
+// listWidgetRowOf returns the row that holds the element, or null when the element is in no row of this widget
+function listWidgetRowOf(widget, element) {
+
+	if (!(element instanceof Element)) {
+		return null
+	}
+
+	const row = element.closest("tr")
+
+	if (row === null || row.parentElement === null || row.parentElement.parentElement === null) {
+		return null
+	}
+
+	// RULE: The row must be one of this widget, never of a table around it
+	if (row.parentElement.parentElement.parentElement !== widget) {
+		return null
+	}
+
+	return row
+}
+
+// listWidgetIsRow returns true when the element is the text input of one of the widget rows
+function listWidgetIsRow(widget, element) {
+	return element instanceof HTMLInputElement && listWidgetRowOf(widget, element) !== null
+}
+
+// listWidgetInputOf returns the text input of a row
+function listWidgetInputOf(row) {
+	return row.querySelector("input")
+}
+
+// listWidgetLimit reads one of the limits the server wrote on the widget, or zero when it wrote none
+function listWidgetLimit(widget, name) {
+	const result = parseInt(widget.dataset[name] || "0", 10)
+	return isNaN(result) ? 0 : result
+}
+
+// listWidgetFocus moves the focus into a row input, with the cursor at the given place or at its close
+function listWidgetFocus(row, start, finish) {
+
+	const input = listWidgetInputOf(row)
+
+	if (input === null) {
+		return
+	}
+
+	const length = input.value.length
+
+	input.focus()
+	input.setSelectionRange(start === undefined ? length : start, finish === undefined ? length : finish)
+}
+
+// listWidgetAnnounce says the message in the widget live region
+function listWidgetAnnounce(widget, message) {
+
+	const status = widget.querySelector(":scope > .list-status")
+
+	if (status === null) {
+		return
+	}
+
+	// Clear it first, so the same message twice is read twice
+	status.textContent = ""
+	window.setTimeout(() => { status.textContent = message }, 50)
+}
+
+// listWidgetRefresh redraws the limits, the repeat marks, and the validity from the rows, and sends change when they changed
+function listWidgetRefresh(widget, changed) {
+
+	const rows = listWidgetRows(widget)
+	const minimum = listWidgetLimit(widget, "minimum")
+	const maximum = listWidgetLimit(widget, "maximum")
+	const seen = new Set()
+
+	// The add button goes at the maximum, and each X is disabled at the minimum, as the server draws them
+	const add = widget.querySelector(":scope > .list-add")
+
+	if (add !== null) {
+		add.hidden = (maximum > 0) && (rows.length >= maximum)
+	}
+
+	rows.forEach((row) => {
+
+		const remove = row.querySelector(".list-remove")
+
+		if (remove !== null) {
+			remove.disabled = rows.length <= minimum
+		}
+
+		// RULE: A repeat ignores case and outer spaces, as the server cleanup does, and the first copy is kept
+		const input = listWidgetInputOf(row)
+		const key = (input === null) ? "" : input.value.trim().toLowerCase()
+		const isRepeat = (key !== "") && seen.has(key)
+
+		row.classList.toggle("list-repeat", isRepeat)
+
+		if (input !== null) {
+			if (isRepeat) {
+				input.setAttribute("aria-description", LIST_WIDGET_REPEAT)
+			} else {
+				input.removeAttribute("aria-description")
+			}
+		}
+
+		if (key !== "") {
+			seen.add(key)
+		}
+	})
+
+	// RULE: Count what the server keeps, so the browser stops a Save that the schema would refuse
+	let message = ""
+	const needed = Math.max(minimum, widget.dataset.required === "true" ? 1 : 0)
+
+	if (seen.size < needed) {
+		message = (needed === 1) ? "Add at least 1 value" : "Add at least " + needed + " values"
+	}
+
+	rows.forEach((row, index) => {
+		const input = listWidgetInputOf(row)
+		if (input !== null) {
+			input.setCustomValidity(index === 0 ? message : "")
+		}
+	})
+
+	if (changed) {
+		widget.dispatchEvent(new Event("change", { bubbles: true }))
+	}
+}
+
+// listWidgetInsert adds a blank row below the row holding the element, or at the bottom when there is none
+function listWidgetInsert(widget, element) {
+
+	const maximum = listWidgetLimit(widget, "maximum")
+	const rows = listWidgetRows(widget)
+
+	// RULE: No row past the maximum, which the schema would refuse
+	if ((maximum > 0) && (rows.length >= maximum)) {
+		listWidgetAnnounce(widget, "This list holds at most " + maximum)
+		return
+	}
+
+	const template = widget.querySelector(":scope > template.list-template")
+	const tbody = widget.querySelector(":scope > table > tbody")
+
+	if (template === null || tbody === null || template.content.firstElementChild === null) {
+		return
+	}
+
+	const row = template.content.firstElementChild.cloneNode(true)
+	const after = listWidgetRowOf(widget, element)
+
+	if (after === null) {
+		tbody.append(row)
+	} else {
+		after.after(row)
+	}
+
+	listWidgetFocus(row)
+	listWidgetRefresh(widget, true)
+}
+
+// listWidgetRemove removes the row holding the element, moving the focus up for Backspace and down for the X
+function listWidgetRemove(widget, element, focusAbove) {
+
+	const row = listWidgetRowOf(widget, element)
+	const rows = listWidgetRows(widget)
+
+	// RULE: Never below the minimum, where the server would refuse the list
+	if (row === null || rows.length <= listWidgetLimit(widget, "minimum")) {
+		return
+	}
+
+	// The only row is cleared rather than removed, so the list always has a row to type in
+	if (rows.length === 1) {
+		const input = listWidgetInputOf(row)
+		if (input !== null && input.value !== "") {
+			input.value = ""
+			listWidgetFocus(row)
+			listWidgetRefresh(widget, true)
+		}
+		return
+	}
+
+	const above = row.previousElementSibling
+	const below = row.nextElementSibling
+	const next = focusAbove ? (above || below) : (below || above)
+
+	row.remove()
+	listWidgetFocus(next)
+	listWidgetAnnounce(widget, "Row removed")
+	listWidgetRefresh(widget, true)
+}
+
+// listWidgetMove moves the row holding the input one step up or down, or to the top or bottom, for the key pressed
+function listWidgetMove(widget, input, key) {
+
+	const row = listWidgetRowOf(widget, input)
+
+	if (row === null) {
+		return
+	}
+
+	const tbody = row.parentElement
+	const start = input.selectionStart
+	const finish = input.selectionEnd
+
+	switch (key) {
+
+	case "ArrowUp":
+		if (row.previousElementSibling === null) {
+			return
+		}
+		tbody.insertBefore(row, row.previousElementSibling)
+		break
+
+	case "ArrowDown":
+		if (row.nextElementSibling === null) {
+			return
+		}
+		row.nextElementSibling.after(row)
+		break
+
+	case "Home":
+		if (row === tbody.firstElementChild) {
+			return
+		}
+		tbody.prepend(row)
+		break
+
+	case "End":
+		if (row === tbody.lastElementChild) {
+			return
+		}
+		tbody.append(row)
+		break
+
+	default:
+		return
+	}
+
+	// RULE: Moving a row takes the focus out of it, so the focus and the cursor go back where they were
+	listWidgetFocus(row, start, finish)
+	listWidgetMoved(widget, row)
+}
+
+// listWidgetMoved announces where a moved row now sits, and redraws the marks for its new order
+function listWidgetMoved(widget, row) {
+
+	const rows = listWidgetRows(widget)
+	const position = rows.indexOf(row)
+
+	if (position >= 0) {
+		listWidgetAnnounce(widget, "Moved to " + (position + 1) + " of " + rows.length)
+	}
+
+	listWidgetRefresh(widget, true)
+}
+
+// listWidgetSortable lets the widget rows drag by their grip, loading Sortable first when the page has none
+function listWidgetSortable(widget) {
+
+	const tbody = widget.querySelector(":scope > table > tbody")
+
+	if (tbody === null || listWidgetSortables.has(tbody)) {
+		return
+	}
+
+	// RULE: Sortable loads once per page through sortContainer, and its arrival fires sortableReady, which calls this again
+	if (window.Sortable === undefined) {
+		loadSortable()
+		return
+	}
+
+	listWidgetSortables.add(tbody)
+
+	// RULE: ghostClass is the option Sortable defines; draggable-whisper is the theme class for it
+	new window.Sortable(tbody, {
+		handle: ".list-handle",
+		animation: 150,
+		ghostClass: "draggable-whisper",
+	})
+}
+end

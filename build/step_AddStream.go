@@ -32,6 +32,11 @@ type StepAddStream struct {
 // Get builds the HTML for this step - either a modal template selector, or the embedded edit form
 func (step StepAddStream) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
+	// A request naming an action runs it on the unsaved child, which is how a widget on the create form works before the Save
+	if actionID := builder.QueryParam("action"); actionID != "" {
+		return step.subAction(builder, buffer, actionID, Pipeline.Get)
+	}
+
 	if step.Style == "inline" {
 
 		if err := step.getInline(builder, buffer); err != nil {
@@ -46,6 +51,84 @@ func (step StepAddStream) Get(builder Builder, buffer io.Writer) PipelineBehavio
 	}
 
 	return Halt()
+}
+
+// subAction runs the named action on a child that is not saved yet, and answers with that action's
+// result alone: no chooser, no default children, no redirect, and nothing else the add would do.
+// This is how a create form's multi-file zone stages files before the form is saved.
+func (step StepAddStream) subAction(builder Builder, buffer io.Writer, actionID string, run func(Pipeline, Factory, Builder, io.Writer) PipelineResult) PipelineBehavior {
+
+	const location = "build.StepAddStream.subAction"
+
+	factory := builder.factory()
+	_, template, err := step.getBestTemplate(factory.Template(), step.parentRole(builder), builder.QueryParam("templateId"))
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Invalid Template. Check template roles and 'containedBy' values."))
+	}
+
+	// RULE: Only an action that create runs through include may run before the Save, because the
+	// Save finishes that action's work; any other action could save a child that create never shaped
+	createAction, exists := template.Action("create")
+
+	if !exists {
+		return Halt().WithError(derp.BadRequest(location, "The template has no create action", template.TemplateID, actionID))
+	}
+
+	if !Pipeline(createAction.Steps).Includes(actionID) {
+		return Halt().WithError(derp.BadRequest(location, "The create action does not include this action", template.TemplateID, actionID))
+	}
+
+	child, err := step.newChild(builder, &template)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Creating new stream"))
+	}
+
+	// The child's builder enforces the action's own permissions, with the signed-in User as the author
+	childBuilder, err := NewStream(factory, builder.session(), builder.request(), builder.response(), template, &child, actionID)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Creating child stream builder", actionID))
+	}
+
+	childBuilder.setArguments(builder.getArguments())
+
+	result := run(Pipeline(childBuilder.action().Steps), factory, childBuilder, buffer)
+
+	if result.Error != nil {
+		return Halt().WithError(derp.Wrap(result.Error, location, "Running action on new stream", actionID))
+	}
+
+	// The action's answer is the whole response, so nothing after this step runs
+	result.Halt = true
+	return UseResult(result)
+}
+
+// newChild mints the child stream the request describes, placed and filled as its Save will place and fill it
+func (step StepAddStream) newChild(builder Builder, template *model.Template) (model.Stream, error) {
+
+	const location = "build.StepAddStream.newChild"
+
+	child := builder.factory().Stream().New()
+	child.StateID = step.StateID
+
+	// Assign the current user as the author (with silent failure, but why would it do that?)
+	if user, err := builder.getUser(); err == nil {
+		child.SetAttributedTo(user.PersonLink())
+	}
+
+	// Validate and set the location for the new Stream
+	if err := step.setLocation(builder, template, &child); err != nil {
+		return model.Stream{}, derp.Wrap(err, location, "Getting location for new stream")
+	}
+
+	// Apply custom stream data from the "with-data" map
+	if err := step.setStreamData(builder, &child); err != nil {
+		return model.Stream{}, derp.Wrap(err, location, "Setting stream data")
+	}
+
+	return child, nil
 }
 
 // modalAddStream builds an HTML dialog that lists all of the templates that the user can create
@@ -156,25 +239,11 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 		b.Close() // DIV
 	}
 
-	// If there is a child builder, then build it here
+	// Create a new child stream, placed as Post will place it, so its "create" steps can read .Parent
+	child, err := step.newChild(builder, &newTemplate)
 
-	// Create a new child stream
-	streamService := factory.Stream()
-	child := streamService.New()
-	child.StateID = step.StateID
-
-	if user, err := builder.getUser(); err == nil {
-		child.SetAttributedTo(user.PersonLink())
-	}
-
-	// Place the child exactly as Post will, so its "create" steps can read .Parent
-	if err := step.setLocation(builder, &newTemplate, &child); err != nil {
-		return derp.Wrap(err, location, "Getting location for new stream")
-	}
-
-	// Apply custom stream data from the "with-data" map
-	if err := step.setStreamData(builder, &child); err != nil {
-		return derp.Wrap(err, location, "Setting stream data")
+	if err != nil {
+		return derp.Wrap(err, location, "Creating new stream")
 	}
 
 	// Create a new child builder
@@ -212,6 +281,11 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 
 	const location = "build.StepAddStream.Post"
 
+	// A request naming an action runs it on the unsaved child, as on GET
+	if actionID := builder.QueryParam("action"); actionID != "" {
+		return step.subAction(builder, buffer, actionID, Pipeline.Post)
+	}
+
 	// Collect prerequisites
 	factory := builder.factory()
 	templateService := factory.Template()
@@ -225,23 +299,10 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	}
 
 	// Create the new Stream
-	streamService := factory.Stream()
-	newStream := streamService.New()
-	newStream.StateID = step.StateID
+	newStream, err := step.newChild(builder, &template)
 
-	// Assign the current user as the author (with silent failure, but why would it do that?)
-	if user, err := builder.getUser(); err == nil {
-		newStream.SetAttributedTo(user.PersonLink())
-	}
-
-	// Validate and set the location for the new Stream
-	if err := step.setLocation(builder, &template, &newStream); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Getting location for new stream"))
-	}
-
-	// Apply custom stream data from the "with-data" map
-	if err := step.setStreamData(builder, &newStream); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Setting stream data"))
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Creating new stream"))
 	}
 
 	// Create a builder for the new Stream
@@ -261,7 +322,7 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	}
 
 	// Create the new Stream's default children, which does nothing unless the "create" action saved it
-	if err := streamService.CreateDefaultChildrenForStream(builder.session(), &newStream); err != nil {
+	if err := factory.Stream().CreateDefaultChildrenForStream(builder.session(), &newStream); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Creating default children", newStream.StreamID))
 	}
 

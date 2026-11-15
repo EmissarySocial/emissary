@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"html/template"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -123,4 +124,19 @@ func TestNoteActions_Reply(t *testing.T) {
 	closed := renderNoteActions(t, noteActionsBuilder{repliesClosed: true})
 	require.NotContains(t, closed, "Reply</button>")
 	require.Contains(t, closed, "</span> Like</button>")
+}
+
+// TestNoteActions_ShareIsLast confirms that every visitor gets one Share button, last in the bar and sent hidden
+func TestNoteActions_ShareIsLast(t *testing.T) {
+
+	const share = `<button type="button" script="install Share" data-share-url="https://example.social/0123456789abcdef01234567" hidden><span aria-hidden="true" class="margin-left-xs"></span> Share</button>`
+
+	for _, builder := range []noteActionsBuilder{{}, {signedIn: true}, {repliesClosed: true}} {
+
+		html := strings.TrimSpace(renderNoteActions(t, builder))
+
+		require.Equal(t, 1, strings.Count(html, share), "%+v", builder)
+		require.True(t, strings.HasSuffix(html, share+"</span>"), "Share is last: %+v", builder)
+		require.Regexp(t, `\s`+regexp.QuoteMeta(share), html, "Share is set apart from the button before it: %+v", builder)
+	}
 }

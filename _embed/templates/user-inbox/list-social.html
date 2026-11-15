@@ -24,7 +24,7 @@
 			<!-- Placeholder for a message hidden by the viewer's rules; click to open it revealed. -->
 			<div class="message max-width-640 card padding margin-bottom">
 				<div role="button" class="padding-vertical-sm turboclick"
-					hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&folderId={{$folderID}}&origin.followingId={{$internalID}}&reveal=true"
+					hx-get="/@me/newsfeed/browse?url={{$document.ID | urlquery}}"
 					hx-push-url="false">
 					{{- template "hidden-placeholder" $document -}}
 				</div>

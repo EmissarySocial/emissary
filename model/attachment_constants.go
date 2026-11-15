@@ -42,3 +42,7 @@ const AttachmentStatusFailed = "FAILED"
 // AttachmentCategoryStreamSource is the category of every file that a StreamSource copies into
 // a Stream.  Synchronization manages these, and never touches an attachment in any other category.
 const AttachmentCategoryStreamSource = "stream-source"
+
+// AttachmentCategoryStaging is the category of a file uploaded for an object that does not
+// exist yet.  It is filed under the User who uploaded it until the object's own step adopts it.
+const AttachmentCategoryStaging = "upload-staging"

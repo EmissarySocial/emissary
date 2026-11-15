@@ -8,7 +8,26 @@ behavior Clipboard
 		end
 
 		set the clippedValue to the textElement's innerText
-		call copyToClipboard(clippedValue)
+
+		-- navigator.clipboard exists only in a secure context (https or localhost), so a site served
+		-- over plain http copies from a hidden textarea with execCommand("copy") instead
+		if navigator.clipboard then
+			call navigator.clipboard.writeText(clippedValue)
+		else
+			make a <textarea/> called hiddenText
+			set hiddenText.value to clippedValue
+			call hiddenText.setAttribute("readonly", "")
+			set hiddenText.style.position to "fixed"
+			set hiddenText.style.opacity to "0"
+			put hiddenText at the end of document.body
+			call hiddenText.select()
+			set copied to document.execCommand("copy")
+			remove hiddenText
+
+			if not copied then
+				throw "Unable to copy to the clipboard"
+			end
+		end
 
 		tell <.clipboard-copy-button /> in me
 			hide yourself

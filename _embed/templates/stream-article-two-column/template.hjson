@@ -77,7 +77,7 @@
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"set-data", from-form:["data.left", "data.right", "data.columns"]}
-					{do:"save", message:"Content edited by {{.Author}}"}
+					{do:"save", comment:"Content edited"}
 				]}
 			]
 		}
@@ -91,7 +91,7 @@
 				{do:"with-draft", steps: [
 					{do:"set-data", from-form:["data.width", "data.columns"]}
 					{do:"sort-widgets"}
-					{do:"save", message:"Widgets updated by {{.Author}}"}
+					{do:"save", comment:"Widgets updated"}
 					{do:"view-html", method:"both"}
 				]}
 			]

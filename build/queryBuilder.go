@@ -151,7 +151,7 @@ func (builder QueryBuilder[T]) Featured() QueryBuilder[T] {
 
 // Tags limits this query to records carrying at least one of the provided tags
 func (builder QueryBuilder[T]) Tags(tags ...string) QueryBuilder[T] {
-	builder.criteria = builder.criteria.AndIn("tags.Name", tags)
+	builder.criteria = builder.criteria.AndIn("tags.name", tags)
 	return builder
 }
 

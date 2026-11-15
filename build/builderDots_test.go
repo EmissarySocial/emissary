@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -36,18 +37,11 @@ var withStepBuilders = map[string]reflect.Type{
 	"with-rule":       reflect.TypeFor[Model](),
 }
 
-// knownUserInboxProblems lists the user-inbox problems this check finds that another bug still owns
+// knownUserInboxProblems lists what this check reports for user-inbox that is not a defect
 var knownUserInboxProblems = []string{
 
-	// BUG-331: actions whose templates do not exist
-	`action "browse-document-detail" > browse-document-detail: no such template`,
-	`action "message-code" > message-code: no such template`,
-	`action "responses-replies" > responses-replies > action "responses-replies-list" > responses-replies-list: no such template`,
-	`action "responses-replies-list" > responses-replies-list: no such template`,
-
-	// BUG-331: actions that render with a builder their templates were not written for
+	// Every /@me/newsfeed route requires sign-in, and only the signed-out branch calls StreamID
 	`action "btn-social-outline" > btn-social-outline: build.Inbox has no StreamID`,
-	`action "message-set-response" > message-set-response > message-responses > reply-button: build.Model has no CanReplyTo`,
 }
 
 // TestBuilderDots_UserInbox confirms that every user-inbox template calls only what its builder has
@@ -75,6 +69,63 @@ func TestBuilderDots_FindsBUG330(t *testing.T) {
 	problems := strings.Join(checker.checkAction("bug-330"), "\n")
 	require.Contains(t, problems, `action "bug-330" > browse-annotation-modal > action "browse-annotation" > browse-annotation`)
 	require.Contains(t, problems, "reply-button: build.Model has no CanReplyTo")
+}
+
+// TestBuilderDots_UserInboxLinks confirms that every link into the inbox names an action the inbox has
+func TestBuilderDots_UserInboxLinks(t *testing.T) {
+
+	checker := loadDotChecker(t, reflect.TypeFor[Inbox](), "user-inbox", "base-social")
+	links := loadNewsfeedLinks(t, "user-inbox", "base-social")
+	require.NotEmpty(t, links)
+
+	require.Empty(t, danglingLinks(links, checker.actions))
+}
+
+// TestBuilderDots_Links pins which links are found, and which of them are reported
+func TestBuilderDots_Links(t *testing.T) {
+
+	t.Run("a literal link names its action", func(t *testing.T) {
+		require.Equal(t, []string{"browse"}, findNewsfeedLinks(`<span hx-get="/@me/newsfeed/browse?url={{$url | urlquery}}">`))
+	})
+
+	t.Run("a BasePath link names its action", func(t *testing.T) {
+		require.Equal(t, []string{"like-button"}, findNewsfeedLinks(`hx-post="{{.BasePath}}/like-button?url={{$url}}"`))
+	})
+
+	t.Run("a link inside an HTML comment is ignored", func(t *testing.T) {
+		require.Empty(t, findNewsfeedLinks("<!--\n<a hx-get=\"/@me/newsfeed/gone\">\n-->"))
+	})
+
+	t.Run("a link inside an hjson comment is ignored", func(t *testing.T) {
+		require.Empty(t, findNewsfeedLinks("\t\t// see /@me/newsfeed/gone\n\t\t# or /@me/newsfeed/gone"))
+	})
+
+	t.Run("a link built from a variable is not checked", func(t *testing.T) {
+		require.Empty(t, findNewsfeedLinks(`hx-get="/@me/newsfeed/{{$action}}?url=x"`))
+	})
+
+	t.Run("the bare inbox URL names no action", func(t *testing.T) {
+		require.Empty(t, findNewsfeedLinks(`<a href="/@me/newsfeed">Inbox</a>`))
+	})
+
+	t.Run("every link is found, in order", func(t *testing.T) {
+		require.Equal(t, []string{"list", "browse", "list"}, findNewsfeedLinks(`/@me/newsfeed/list /@me/newsfeed/browse?x /@me/newsfeed/list`))
+	})
+
+	t.Run("only a link to a missing action is reported", func(t *testing.T) {
+		links := map[string][]string{
+			"browse":            {"user-inbox/list.html"},
+			"replies-recursive": {"user-inbox/b.html", "user-inbox/a.html"},
+		}
+		require.Equal(t, []string{
+			`user-inbox/a.html links "replies-recursive", which is not an action`,
+			`user-inbox/b.html links "replies-recursive", which is not an action`,
+		}, danglingLinks(links, map[string]any{"browse": nil}))
+	})
+
+	t.Run("nothing missing reports nothing", func(t *testing.T) {
+		require.Empty(t, danglingLinks(nil, nil))
+	})
 }
 
 // TestBuilderDots_Walker pins how the walker tracks a builder through a template
@@ -635,4 +686,98 @@ func hasAccessor(builder reflect.Type, name string) bool {
 	}
 
 	return false
+}
+
+/******************************************
+ * Links
+ ******************************************/
+
+// newsfeedLink matches a link to an inbox action, written out or through .BasePath
+var newsfeedLink = regexp.MustCompile(`(?:/@me/newsfeed|\{\{\s*\.BasePath\s*\}\})/([a-z][a-z0-9-]*)`)
+
+// htmlComment matches an HTML comment, which the minifier deletes before a template is parsed
+var htmlComment = regexp.MustCompile(`(?s)<!--.*?-->`)
+
+// hjsonComment matches a whole-line hjson comment
+var hjsonComment = regexp.MustCompile(`(?m)^\s*(?://|#).*$`)
+
+// findNewsfeedLinks returns the action named by each inbox link in content, skipping comments
+func findNewsfeedLinks(content string) []string {
+
+	content = htmlComment.ReplaceAllString(content, "")
+	content = hjsonComment.ReplaceAllString(content, "")
+	result := make([]string, 0)
+
+	for _, match := range newsfeedLink.FindAllStringSubmatch(content, -1) {
+		result = append(result, match[1])
+	}
+
+	return result
+}
+
+// loadNewsfeedLinks reads each Template folder's definition, HTML, and hyperscript, child first,
+// and maps each linked action to the files that link it
+func loadNewsfeedLinks(t *testing.T, folders ...string) map[string][]string {
+
+	t.Helper()
+
+	result := make(map[string][]string)
+	seen := make(map[string]bool)
+
+	for _, folder := range folders {
+
+		// Find the files, the way the Template loader does
+		directory := filepath.Join("..", "_embed", "templates", folder)
+		html, err := filepath.Glob(filepath.Join(directory, "*.html"))
+		require.NoError(t, err)
+
+		hyperscript, err := filepath.Glob(filepath.Join(directory, "hyperscript", "*._hs"))
+		require.NoError(t, err)
+
+		paths := append([]string{filepath.Join(directory, "template.hjson")}, html...)
+		paths = append(paths, hyperscript...)
+
+		// Collect each file's links, letting the child's copy of an HTML or hyperscript file win
+		for _, path := range paths {
+
+			filename := filepath.Base(path)
+			location := folder + "/" + filename
+
+			if (filename != "template.hjson") && seen[filename] {
+				continue
+			}
+			seen[filename] = true
+
+			content, err := os.ReadFile(path) // #nosec G304 -- a file globbed from a checked-in template folder
+			require.NoError(t, err)
+
+			for _, actionID := range findNewsfeedLinks(string(content)) {
+				if !slices.Contains(result[actionID], location) {
+					result[actionID] = append(result[actionID], location)
+				}
+			}
+		}
+	}
+
+	return result
+}
+
+// danglingLinks reports each file that links an action missing from actions, in a stable order
+func danglingLinks(links map[string][]string, actions map[string]any) []string {
+
+	result := make([]string, 0)
+
+	for actionID, files := range links {
+
+		if _, exists := actions[actionID]; exists {
+			continue
+		}
+
+		for _, file := range files {
+			result = append(result, fmt.Sprintf("%s links %q, which is not an action", file, actionID))
+		}
+	}
+
+	slices.Sort(result)
+	return result
 }

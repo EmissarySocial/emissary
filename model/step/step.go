@@ -91,6 +91,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "edit":
 		return NewEditModelObject(stepInfo, funcMap)
 
+	case "edit-attachments":
+		return NewEditAttachments(stepInfo)
+
 	case "edit-connection":
 		return NewEditConnection(stepInfo)
 
@@ -231,9 +234,6 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 
 	case "sort":
 		return NewSort(stepInfo)
-
-	case "sort-attachments":
-		return NewSortAttachments(stepInfo)
 
 	case "sort-widgets":
 		return NewSortWidgets(stepInfo)
