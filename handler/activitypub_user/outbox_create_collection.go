@@ -1,8 +1,6 @@
 package activitypub_user
 
 import (
-	"net/http"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -41,6 +39,5 @@ func outbox_CreateOrderedCollection(context Context, activity streams.Document) 
 	// Participants fetch it on demand; it is not federated as a standalone activity.
 
 	// Write the response to the client
-	context.context.Response().Header().Set("Location", collectionService.ActivityPubURL(collection.UserID, collection.CollectionID))
-	return context.context.NoContent(http.StatusCreated)
+	return respondCreated(context, collectionService.ActivityPubURL(collection.UserID, collection.CollectionID))
 }

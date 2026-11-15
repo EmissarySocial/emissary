@@ -1,8 +1,6 @@
 package activitypub_user
 
 import (
-	"net/http"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -70,6 +68,5 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 	}
 
 	// Write the response to the context
-	context.context.Response().Header().Set("Location", keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
-	return context.context.NoContent(http.StatusAccepted)
+	return respondCreated(context, keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
 }
