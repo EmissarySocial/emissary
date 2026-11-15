@@ -82,6 +82,29 @@ func TestDomainSchema_ThemeDataIsSeparateFromData(t *testing.T) {
 	require.Empty(t, writableDomain.Data["stylesheet"])
 }
 
+// TestDomainSchema_PrimaryUserIDIsNotWritable verifies that no form can name the primary user
+func TestDomainSchema_PrimaryUserIDIsNotWritable(t *testing.T) {
+
+	writableDomain := NewWritableDomain()
+	s := schema.New(DomainSchema())
+
+	require.NotNil(t, s.Set(&writableDomain, "primaryUserId", primitive.NewObjectID().Hex()))
+	require.True(t, writableDomain.PrimaryUserID.IsZero())
+}
+
+// TestDomain_HasPrimaryUser verifies that a Domain has a primary user exactly when it names one
+func TestDomain_HasPrimaryUser(t *testing.T) {
+
+	readOnlyDomain := NewDomain()
+	require.False(t, readOnlyDomain.HasPrimaryUser())
+
+	readOnlyDomain.PrimaryUserID = primitive.NewObjectID()
+	require.True(t, readOnlyDomain.HasPrimaryUser())
+
+	// A clone names the same User
+	require.Equal(t, readOnlyDomain.PrimaryUserID, readOnlyDomain.Clone().PrimaryUserID)
+}
+
 // TestDomainURLs_RequireHostname pins the reason a Domain must carry its own hostname: Host()
 // prefixes every derived URL, so a blank Hostname yields "https:///..." -- a scheme with no
 // authority.  That value reaches federation actors, OAuth client metadata, oEmbed, and email links,

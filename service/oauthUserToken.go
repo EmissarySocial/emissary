@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -83,16 +84,17 @@ func (service *OAuthUserToken) Load(session data.Session, criteria exp.Expressio
 // Save adds/updates an OAuthUserToken in the database
 func (service *OAuthUserToken) Save(session data.Session, application *model.OAuthUserToken, note string) error {
 
-	const location = "service.OAuthUserToken"
+	const location = "service.OAuthUserToken.Save"
 
-	// Validate the value (using the global application schema) before saving
+	// Validate the value (using the global application schema) before saving.  Errors name the
+	// grant's ID, never the grant, whose Data holds its PKCE challenge.
 	if _, err := service.Schema().Validate(application); err != nil {
-		return derp.Wrap(err, location, "Validating OAuthUserToken using OAuthUserTokenSchema", application)
+		return derp.Wrap(err, location, "Validating OAuthUserToken using OAuthUserTokenSchema", application.OAuthUserTokenID)
 	}
 
 	// Try to save the OAuthUserToken to the database
 	if err := service.collection(session).Save(application, note); err != nil {
-		return derp.Wrap(err, location, "Saving OAuthUserToken", application, note)
+		return derp.Wrap(err, location, "Saving OAuthUserToken", application.OAuthUserTokenID, note)
 	}
 
 	return nil
@@ -103,7 +105,7 @@ func (service *OAuthUserToken) Delete(session data.Session, application *model.O
 
 	// Delete this OAuthUserToken
 	if err := service.collection(session).Delete(application, note); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Deleting OAuthUserToken", application, note)
+		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Deleting OAuthUserToken", application.OAuthUserTokenID, note)
 	}
 
 	// Bueno!!
@@ -125,7 +127,7 @@ func (service *OAuthUserToken) DeleteMany(session data.Session, criteria exp.Exp
 	// Loop over each OAuthUserToken and delete it
 	for userToken := model.NewOAuthUserToken(); it.Next(&userToken); userToken = model.NewOAuthUserToken() {
 		if err := service.Delete(session, &userToken, note); err != nil {
-			return derp.Wrap(err, location, "Deleting stream", userToken)
+			return derp.Wrap(err, location, "Deleting OAuthUserToken", userToken.OAuthUserTokenID)
 		}
 	}
 
@@ -272,13 +274,11 @@ func (service *OAuthUserToken) CreateFromUser(session data.Session, user *model.
 // client's full scope set when the request specifies none.
 func scopesFromString(scope string, fallback sliceof.String) sliceof.String {
 
-	fields := strings.Fields(strings.ReplaceAll(scope, ",", " "))
-
-	if len(fields) == 0 {
-		return fallback
+	if scopes := model.ParseOAuthScopes(scope); len(scopes) > 0 {
+		return scopes
 	}
 
-	return fields
+	return fallback
 }
 
 // Create creates a new grant (OAuthUserToken) for the provided application and
@@ -317,6 +317,9 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	// matching verifier. No-op when the client did not use PKCE.
 	result.SetPKCEChallenge(transaction.CodeChallenge, transaction.CodeChallengeMethod)
 
+	// Record the redirect_uri the code is issued to, so the token endpoint can require the same one
+	result.SetRedirectURI(transaction.RedirectURI)
+
 	// RULE: The implicit ("token") grant returns its access token directly from the
 	// authorization endpoint, so it is minted now. The code grant defers minting to
 	// ExchangeCode.
@@ -328,26 +331,52 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 		}
 
 		result.Token = token
+		result.CodeRedeemed = true // there is no authorization code in this path
 	}
 
 	// Save the grant to the database
 	if err := service.Save(session, &result, "Create"); err != nil {
-		return model.OAuthUserToken{}, derp.Wrap(err, location, "Saving OAuthUserToken", result)
+		return model.OAuthUserToken{}, derp.Wrap(err, location, "Saving OAuthUserToken", result.OAuthUserTokenID)
 	}
 
 	return result, nil
 }
 
-// ExchangeCode completes an authorization-code grant (RFC 6749 §4.1.3): it
-// verifies the code is still redeemable (single-use and short-lived), then mints
-// the access token and the INITIAL refresh token, marks the code consumed, and
-// saves. The caller (the token handler) has already authenticated the client and
-// verified PKCE.
+// ExchangeCode redeems an authorization code exactly once (RFC 6749 §4.1.3), and mints the grant's first
+// access and refresh tokens when it issues them.  The caller has already authenticated the client.
 func (service *OAuthUserToken) ExchangeCode(session data.Session, grant *model.OAuthUserToken) error {
 
 	const location = "service.OAuthUserToken.ExchangeCode"
 
-	now := time.Now()
+	// Spend the code, so that no other request can redeem it
+	if err := service.RedeemCode(session, grant); err != nil {
+		return derp.Wrap(err, location, "Redeeming authorization code")
+	}
+
+	// RULE: A grant with no scope only confirms who the User is, so it mints nothing (IndieAuth §5.3.3)
+	if !grant.IssuesAccessToken() {
+		return nil
+	}
+
+	// Mint the access token + initial refresh token for this grant.  A failure from here on is
+	// the server's, so it is reported and the redemption rolls back with it.
+	if err := service.mintInitialTokens(grant, time.Now()); err != nil {
+		return derp.Wrap(err, location, "Minting tokens", derp.WithInternalError())
+	}
+
+	// RULE: Persist the refresh hash so the refresh token can be validated later.
+	if err := service.Save(session, grant, "Exchange authorization code"); err != nil {
+		return derp.Wrap(err, location, "Saving grant", derp.WithInternalError())
+	}
+
+	return nil
+}
+
+// RedeemCode spends an authorization code exactly once, and mints nothing (IndieAuth §5.3.2).  The
+// caller has already authenticated the client.
+func (service *OAuthUserToken) RedeemCode(session data.Session, grant *model.OAuthUserToken) error {
+
+	const location = "service.OAuthUserToken.RedeemCode"
 
 	// RULE: An authorization code is single-use (RFC 6749 §4.1.2).
 	if grant.CodeRedeemed {
@@ -355,23 +384,24 @@ func (service *OAuthUserToken) ExchangeCode(session data.Session, grant *model.O
 	}
 
 	// RULE: An authorization code is short-lived.
-	if grant.IsCodeExpired(now) {
+	if grant.IsCodeExpired(time.Now()) {
 		return derp.BadRequest(location, "Authorization code has expired")
 	}
 
-	// Mint the access token + initial refresh token for this grant.
-	if err := service.mintInitialTokens(grant, now); err != nil {
-		return derp.Wrap(err, location, "Minting tokens")
+	// RULE: The database decides which request redeems the code, so two servers cannot both redeem it
+	redeemed, err := queries.RedeemOAuthCode(session, grant.OAuthUserTokenID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Marking authorization code redeemed", grant.OAuthUserTokenID)
+	}
+
+	if !redeemed {
+		return derp.BadRequest(location, "Authorization code has already been used")
 	}
 
 	grant.CodeRedeemed = true
 
-	// RULE: Persist the consumed code + refresh hash so the code cannot be replayed
-	// and the refresh token can be validated later.
-	if err := service.Save(session, grant, "Exchange authorization code"); err != nil {
-		return derp.Wrap(err, location, "Saving grant")
-	}
-
+	// Mischief managed
 	return nil
 }
 
@@ -470,13 +500,15 @@ func (service *OAuthUserToken) RefreshGrant(session data.Session, grant *model.O
 // the granted set (RFC 6749 §6 — a refresh may narrow scope but never widen it).
 func narrowScopes(granted sliceof.String, requested string) (sliceof.String, error) {
 
-	if requested == "" {
+	requestedScopes := model.ParseOAuthScopes(requested)
+
+	if len(requestedScopes) == 0 {
 		return granted, nil
 	}
 
 	result := sliceof.NewString()
 
-	for _, scope := range strings.Fields(strings.ReplaceAll(requested, ",", " ")) {
+	for _, scope := range requestedScopes {
 
 		if !slice.Contains(granted, scope) {
 			return nil, derp.BadRequest("service.OAuthUserToken.narrowScopes", "Requested scope exceeds granted scope", scope)

@@ -2,8 +2,12 @@ package build
 
 import (
 	"io"
+	"strings"
+	"text/template"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/html"
 )
 
@@ -13,6 +17,7 @@ import (
 // stays convertible from model.step.ProcessContent.
 type StepProcessContent struct {
 	Format     string
+	HardWraps  *template.Template // When it executes to "true", every line break in MARKDOWN content becomes a <br>
 	RemoveHTML bool
 	AddLinks   bool
 	AddTags    bool   // Deprecated: #hashtags are processed automatically in Stream.Save
@@ -41,7 +46,15 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 
 	stream := streamBuilder._stream
 
-	if step.Format != "" {
+	switch {
+
+	case step.Format == "":
+		// An empty format leaves the content as it is
+
+	case step.useHardWraps(builder):
+		stream.Content = contentService.NewHardWraps(stream.Content.Raw)
+
+	default:
 		stream.Content = contentService.New(step.Format, stream.Content.Raw)
 	}
 
@@ -57,4 +70,19 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 	// automatically in Stream.Save (driven by the Template's tagPaths / tagUrl).
 
 	return Continue()
+}
+
+// useHardWraps returns TRUE if this step renders MARKDOWN content with every line break as a <br>.
+// Anything but "true" from the template is FALSE, so a missing value keeps standard Markdown.
+func (step StepProcessContent) useHardWraps(data any) bool {
+
+	if step.Format != model.ContentFormatMarkdown {
+		return false
+	}
+
+	if step.HardWraps == nil {
+		return false
+	}
+
+	return convert.Bool(strings.TrimSpace(executeTemplate(step.HardWraps, data)))
 }

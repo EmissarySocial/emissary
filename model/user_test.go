@@ -40,6 +40,7 @@ func TestUserSchema(t *testing.T) {
 		{"isPublic", "true", true},
 		{"isBridgeBluesky", "true", true},
 		{"isOwner", "true", true},
+		{"isPrimary", "true", true},
 		{"isIndexable", "true", true},
 		{"inboxTemplate", "INBOX", nil},
 		{"outboxTemplate", "OUTBOX", nil},
@@ -194,4 +195,82 @@ func TestUser_HashedPasswordAccessors(t *testing.T) {
 	user.SetHashedPassword("$2a$12$not-really-a-hash-but-stored-verbatim")
 	require.Equal(t, "$2a$12$not-really-a-hash-but-stored-verbatim", user.Password)
 	require.Equal(t, "$2a$12$not-really-a-hash-but-stored-verbatim", user.GetHashedPassword())
+}
+
+// TestUser_RepresentsDomain verifies that only a live owner flagged primary represents the domain
+func TestUser_RepresentsDomain(t *testing.T) {
+
+	newUser := func(isOwner bool, isPrimary bool) User {
+		user := NewUser()
+		user.IsOwner = isOwner
+		user.IsPrimary = isPrimary
+		return user
+	}
+
+	require.True(t, newUser(true, true).RepresentsDomain())
+	require.False(t, newUser(true, false).RepresentsDomain(), "an owner who is not primary")
+	require.False(t, newUser(false, true).RepresentsDomain(), "a primary flag on a User who is not an owner")
+	require.False(t, newUser(false, false).RepresentsDomain())
+	require.False(t, User{}.RepresentsDomain(), "an empty User")
+
+	// RULE: A deleted User represents nobody, even with both flags set
+	deleted := newUser(true, true)
+	deleted.SetDeleted("test")
+	require.False(t, deleted.RepresentsDomain())
+}
+
+// TestUser_IndieAuthMe verifies that only the public primary user gets a `me`
+func TestUser_IndieAuthMe(t *testing.T) {
+
+	const profileURL = "https://example.com/@000000000000000000000001"
+
+	newUser := func(isPrimary bool, isPublic bool) User {
+		user := NewUser()
+		user.IsOwner = true
+		user.IsPrimary = isPrimary
+		user.IsPublic = isPublic
+		user.ProfileURL = profileURL
+		return user
+	}
+
+	require.Equal(t, profileURL, newUser(true, true).IndieAuthMe())
+	require.Empty(t, newUser(true, false).IndieAuthMe(), "a non-public profile answers 404, so no client could confirm it")
+	require.Empty(t, newUser(false, true).IndieAuthMe(), "an owner who is not primary")
+	require.Empty(t, User{}.IndieAuthMe())
+
+	demoted := newUser(true, true)
+	demoted.IsOwner = false
+	require.Empty(t, demoted.IndieAuthMe(), "a primary flag on a User who is not an owner")
+
+	deleted := newUser(true, true)
+	deleted.SetDeleted("test")
+	require.Empty(t, deleted.IndieAuthMe())
+}
+
+// TestUser_SummaryCarriesPrimary verifies that the summary the admin user list reads names the primary user
+func TestUser_SummaryCarriesPrimary(t *testing.T) {
+
+	user := NewUser()
+	require.False(t, user.Summary().IsPrimary)
+
+	user.IsPrimary = true
+	require.True(t, user.Summary().IsPrimary)
+	require.Contains(t, UserSummaryFields(), "isPrimary")
+}
+
+// TestUser_PrimaryStaysOutOfTheActor verifies that the primary flag is not published, so changing it
+// federates no profile Update
+func TestUser_PrimaryStaysOutOfTheActor(t *testing.T) {
+
+	user := NewUser()
+	user.Username = "sarah"
+	before, err := user.CalcProfileFingerprint()
+	require.NoError(t, err)
+
+	user.IsOwner = true
+	user.IsPrimary = true
+	after, err := user.CalcProfileFingerprint()
+	require.NoError(t, err)
+
+	require.Equal(t, before, after)
 }

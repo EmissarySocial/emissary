@@ -3014,6 +3014,7 @@
 				"isBridgeBluesky (toggle, schema.Boolean)",
 				"isIndexable (toggle, schema.Boolean)",
 				"isOwner (toggle, schema.Boolean)",
+				"isPrimary (toggle, schema.Boolean)",
 				"isPublic (toggle, schema.Boolean)",
 				"outboxTemplate (select, schema.String)",
 				"username (text, schema.String)"
@@ -3028,6 +3029,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3042,6 +3044,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3061,6 +3064,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3077,6 +3081,7 @@
 						"isBridgeBluesky": "bool true",
 						"isIndexable": "bool true",
 						"isOwner": "bool true",
+						"isPrimary": "bool true",
 						"isPublic": "bool true",
 						"outboxTemplate": "string Sample outboxTemplate",
 						"username": "string visitor_name"
@@ -3089,6 +3094,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"

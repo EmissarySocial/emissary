@@ -235,3 +235,40 @@ func FuzzToHTML(f *testing.F) {
 		requireNoActiveContent(t, ToHTML(source), source)
 	})
 }
+
+// TestToHTMLHardWraps confirms that every line break becomes a <br>, and that nothing else changes.
+func TestToHTMLHardWraps(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		source   string
+		expected string
+	}{
+		{name: "single break", source: "one\ntwo", expected: "<p>one<br>\ntwo</p>\n"},
+		{name: "windows break", source: "one\r\ntwo", expected: "<p>one<br>\ntwo</p>\n"},
+		{name: "blank line is still a paragraph", source: "one\n\ntwo", expected: "<p>one</p>\n<p>two</p>\n"},
+		{name: "trailing spaces still break once", source: "one  \ntwo", expected: "<p>one<br>\ntwo</p>\n"},
+		{name: "list items are unchanged", source: "- one\n- two", expected: "<ul>\n<li>one</li>\n<li>two</li>\n</ul>\n"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.Equal(t, test.expected, ToHTMLHardWraps(test.source))
+		})
+	}
+}
+
+// TestToHTML_SoftWraps pins the default: a single line break in a paragraph is not a <br>.
+func TestToHTML_SoftWraps(t *testing.T) {
+	require.Equal(t, "<p>one\ntwo</p>\n", ToHTML("one\ntwo"))
+	require.Equal(t, "<p>one<br>\ntwo</p>\n", ToHTML("one\\\ntwo"))
+}
+
+// TestToHTMLHardWraps_Sanitizes confirms that the hard-wrap converter's output takes the same sanitizer.
+func TestToHTMLHardWraps_Sanitizes(t *testing.T) {
+
+	result := ToHTMLHardWraps("one\ntwo <script>alert(1)</script>")
+
+	require.NotContains(t, result, "<script")
+	require.Contains(t, result, "<br>")
+}

@@ -11,16 +11,16 @@
 
 <body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
 
-	<main>
+	<main style="container-type:inline-size;">
 
-		<div class="margin-horizontal-auto" style="width:clamp(540px, 50%, 720px);">
+		<div class="margin-horizontal-auto padding width-100% max-width-720">
 
-			<div class="margin-vertical-lg">
-				<img src="{{$domain.ImageURL}}" alt="{{$domain.Name}}" style="max-width:50%; max-height:64px;">
+			<div>
+				<img src="{{$domain.ImageURL}}" alt="{{$domain.Name}}" style="max-width:80%; max-height:64px;">
 			</div>
 
 			{{- $userIconURL := $user.IconURL -}}
-			<div class="flex-row flex-align-center margin-bottom">
+			<div class="flex-row flex-align-center margin-top margin-bottom-xl">
 				<div class="width-32">
 					{{- if ne "" $userIconURL -}}
 						<img src="{{$userIconURL}}" alt="" class="circle width-100%">
@@ -39,7 +39,21 @@
 				</div>
 			</div>
 
-			<div class="card" style="padding:16px 32px; line-height:150%;">
+			<!-- RULE: me is an unverified hint, so it only warns; the grant goes to the signed-in User -->
+			{{- if .SignedInAsSomeoneElse -}}
+				<div class="alert-blue text-sm">
+					{{$name}} asked to sign in <b>{{.Me}}</b>, but you are signed in as <b>@{{$user.Username}}@{{$domain.Host}}</b>.
+					<a hx-post="{{.SwitchAccountURL}}">Switch Account</a>
+				</div>
+			{{- end -}}
+
+			<div class="margin-bottom">
+				The following service is requesting access to your account on 
+				<b>{{.Hostname}}</b>.  You can revoke this permission any time
+				by going Edit Profile &rarr; Security &rarr; OAuth Clients.
+			</div>
+
+			<div class="card padding">
 
 				<form action="/oauth/authorize" method="post"
 					script="on submit add .htmx-request">
@@ -49,46 +63,69 @@
 					<input type="hidden" name="scope" value="{{.Scope}}">
 					<input type="hidden" name="state" value="{{.State}}">
 					<input type="hidden" name="response_type" value="{{.ResponseType}}">
+					<input type="hidden" name="code_challenge" value="{{.CodeChallenge}}">
+					<input type="hidden" name="code_challenge_method" value="{{.CodeChallengeMethod}}">
 
-					<div class="flex-row flex-align-center margin-top margin-bottom-lg">
+					<div class="flex-row flex-align-center">
 						{{- if ne "" .IconURL -}}
 							<img src="{{.IconURL}}" alt="" class="circle width-64">
 						{{- end -}}
 						<div class="flex-grow">
-							<div class="margin-none"><span class="text-lg bold">{{$name}}</span> is requesting permission to:</div>
-							<div class="text-sm margin-none"><a href="{{.Website}}" target="_blank" rel="noopener noreferrer">{{.Website }} {{icon "link-outbound"}}</a></div>
+							<div class="margin-none"><span class="text-xl bold">{{$name}}</span></div>
+							<div class="text-sm margin-none"><a href="{{.Website}}" target="_blank" rel="noopener noreferrer">{{.Website }}</a></div>
 						</div>
 					</div>
 
-					{{- range .Scopes -}}
-						{{- if eq . "activitypub_account_portability" -}}
-							<div class="margin-top">
-								<div class="text-red text-lg">{{icon "alert"}} <b>Export All of Your Data</b></div>
-								<div class="margin-bottom text-red">
-									Do not approve this request unless you are <b>migrating your profile.</b>
+					{{- $scopes := .Scopes -}}
+					{{- if not $scopes -}}
+						<div class="margin-top-lg">
+							<div class="bold">Confirm Who You Are</div>
+							<div class="text-sm text-gray">{{$name}} learns your profile address, and nothing else in your account.</div>
+						</div>
+					{{- else -}}
+						<div class="table margin-top-lg">
+							{{- range $scopes -}}
+								{{- $style := iif (eq .Value "activitypub_account_portability") "text-red" "" -}}
+								<div class="flex-row margin-top-sm {{$style}}">
+									<div class="text-xl margin-none margin-right-xs">{{icon .Icon}}</div>
+									<div class="flex-grow">
+										<div class="bold">{{.Label}}</div>
+										<div class="text-sm text-gray">{{.Description}}</div>
+									</div>
 								</div>
-							</div>
-						{{- else -}}
-							<div class="margin-top">{{.}}</div>
-						{{- end -}}
+							{{- end -}}
+						</div>
 					{{- end -}}
 
-					<div class="margin-top-lg">
-						<span class="htmx-request-show">
-							<button disabled class="primary">
-								{{icon "loading"}} Working On It...
-							</button>
-						</span>
-						<span class="htmx-request-hide">
-							<button type="submit" class="primary">
-								Yes. Allow Access
-							</button>
-						</span>
+					<!-- IndieAuth §10.1: show where the client is, and where approval sends the User -->
+					<div class="text-sm margin-top">
+						{{- if ne "" .ClientURL -}}
+							<div><span class="text-gray">App address:</span> {{.ClientURL}}</div>
+						{{- end -}}
+						{{- if not .IsOutOfBand -}}
+							<div><span class="text-gray">Sends you back to:</span> {{.RedirectURI}}</div>
+						{{- end -}}
+					</div>
 
-						<button script="on click halt the event then window.history.back()">No. Cancel this Request</button>
-						<span id="message" class="text-red" hidden></span>
+					<div class="margin-top-xl">
+						<button disabled class="htmx-request-show primary width-100% sm:width-auto margin-bottom">
+							{{icon "loading"}} Working On It...
+						</button>
+
+						<button type="submit" class="htmx-request-hide primary width-100% sm:width-auto margin-bottom">
+							Yes. Allow Access
+						</button>
+
+						<!-- RULE: a refusal goes back to the app as access_denied; an out-of-band request has no app address -->
+						{{- if .IsOutOfBand -}}
+							<button class="width-100% sm:width-auto margin-bottom" script="on click halt the event then window.history.back()">No. Cancel this Request</button>
+						{{- else -}}
+							<button type="submit" name="decision" value="deny" class="width-100% sm:width-auto margin-bottom">No. Cancel this Request</button>
+						{{- end -}}
 
 					</div>
+
+					<span id="message" class="text-red width-100% sm:width-auto" hidden></span>
 
 				</form>
 

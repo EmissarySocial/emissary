@@ -146,7 +146,7 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 		return NewMarkNotificationsRead(stepInfo)
 
 	case "process-content":
-		return NewProcessContent(stepInfo)
+		return NewProcessContent(stepInfo, funcMap)
 
 	case "process-tags":
 		return NewProcessTags(stepInfo)

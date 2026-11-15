@@ -276,7 +276,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// CSRF protection: reject state-changing requests from other web origins.
 	// This backstops the SameSite=Lax cookie policy, which is enforced only by the browser.
-	e.Use(mw.CrossOriginProtection())
+	// The two OAuth endpoints stay open to browser-based clients, and read no cookie.
+	e.Use(mw.CrossOriginProtection("POST /oauth/token", "POST /oauth/revoke"))
 
 	// Restore Steranko in the future
 	// e.Use(steranko.Middleware(factory))
@@ -357,8 +358,8 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
 	e.HEAD("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
-	e.GET("/.echo", handler.GetEcho(factory))
-	e.HEAD("/.echo", handler.GetEcho(factory))
+	e.GET("/.echo", handler.WithOwner(factory, handler.GetEcho))
+	e.HEAD("/.echo", handler.WithOwner(factory, handler.GetEcho))
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
 	e.GET("/.geocode/network", handler.WithFactory(factory, handler.GetGeocodeNetwork))
 	e.HEAD("/.geocode/network", refuseHead) // GET only: each request calls a paid IP-geolocation provider
@@ -802,7 +803,10 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// OAuth Server
 	e.GET("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
 	e.HEAD("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
-	e.POST("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.PostOAuthAuthorization))
+	e.POST("/oauth/authorize", handler.RouteOAuthAuthorization(
+		handler.WithFactory(factory, handler.PostOAuthAuthorizationRedemption),
+		handler.WithAuthenticatedUser(factory, handler.PostOAuthAuthorization),
+	))
 	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
