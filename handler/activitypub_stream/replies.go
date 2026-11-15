@@ -13,7 +13,7 @@ func GetRepliesCollection(ctx *steranko.Context, factory *service.Factory, sessi
 
 	// RULE: A Stream with closed replies shows none, but keeps them, so reopening restores them (REPLY-CONTROLS §1.2)
 	if !stream.AcceptsReplies() {
-		return collection.ServeEmpty(ctx, stream.ActivityPubRepliesURL())
+		return collection.ServeEmpty(ctx.Response(), ctx.Request(), stream.ActivityPubRepliesURL())
 	}
 
 	return serveCollection(

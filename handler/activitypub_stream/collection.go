@@ -22,7 +22,7 @@ func serveCollection(ctx *steranko.Context, factory *service.Factory, session da
 	if err != nil {
 
 		if derp.IsNotFound(err) {
-			return collection.ServeEmpty(ctx, collectionURL)
+			return collection.ServeEmpty(ctx.Response(), ctx.Request(), collectionURL)
 		}
 
 		return derp.Wrap(err, location, "Loading collection")
@@ -36,7 +36,8 @@ func serveCollection(ctx *steranko.Context, factory *service.Factory, session da
 	collectionItemService := factory.CollectionItem()
 
 	return collection.Serve(
-		ctx,
+		ctx.Response(),
+		ctx.Request(),
 		collectionURL,
 		collectionItemService.CollectionCount(session, stream.StreamID, record.CollectionID, exp.All()),
 		collectionItemService.CollectionIterator(session, stream.StreamID, record.CollectionID, exp.All()),

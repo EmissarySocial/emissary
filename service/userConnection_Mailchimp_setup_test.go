@@ -136,10 +136,10 @@ func redirectToTestServer(t *testing.T, serverURL string) remote.Option {
 			return nil
 		},
 
-		ModifyRequest: func(_ *remote.Transaction, request *http.Request) *http.Response {
+		ModifyRequest: func(_ *remote.Transaction, request *http.Request) (*http.Response, error) {
 			request.URL.Scheme = parsed.Scheme
 			request.URL.Host = parsed.Host
-			return nil
+			return nil, nil
 		},
 	}
 }

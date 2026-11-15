@@ -169,7 +169,7 @@ func proxyVisitorHeaders(clientIP string, userAgent string) remote.Option {
 	}
 
 	return remote.Option{
-		ModifyRequest: func(_ *remote.Transaction, request *http.Request) *http.Response {
+		ModifyRequest: func(_ *remote.Transaction, request *http.Request) (*http.Response, error) {
 
 			// Name the visitor's address (RFC 7239), quoting it and bracketing IPv6
 			if address != nil {
@@ -187,7 +187,7 @@ func proxyVisitorHeaders(clientIP string, userAgent string) remote.Option {
 			}
 
 			// Send the request as normal
-			return nil
+			return nil, nil
 		},
 	}
 }

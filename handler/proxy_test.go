@@ -47,7 +47,9 @@ func applyVisitorHeaders(t *testing.T, clientIP string, userAgent string) http.H
 	request.Header.Set("User-Agent", "Emissary (+https://example.social)")
 
 	option := proxyVisitorHeaders(clientIP, userAgent)
-	require.Nil(t, option.ModifyRequest(nil, request))
+	response, err := option.ModifyRequest(nil, request)
+	require.NoError(t, err)
+	require.Nil(t, response)
 
 	return request.Header
 }
