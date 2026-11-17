@@ -4,10 +4,10 @@ import (
 	"slices"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -122,7 +122,7 @@ func (service *Outbox2) UndoActivity(session data.Session, actorType string, act
 
 	// Embed the caller's copy of the original, because its row may already be gone (RULES P7-2).
 	// It is copied first, so that stripping the blind recipients leaves the caller's map intact.
-	embedded, err := assanitizer.WithoutBlindRecipients(originalActivity)
+	embedded, err := hannibal.StripBlindRecipients(originalActivity)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Removing blind recipients", activityURL)

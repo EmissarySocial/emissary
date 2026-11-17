@@ -14,10 +14,10 @@ import (
 	"iter"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -52,12 +52,14 @@ func (delivery followerDelivery) deliver(session data.Session, actorType string,
 	// RULE: Deliver the stripped payload, never the original. Blind recipients still RECEIVE the
 	// activity (the caller enumerated them from the full addressing) but must not SEE the list,
 	// at any level of nesting.
-	payload, err := assanitizer.WithoutBlindRecipients(activity)
+	stripped, err := hannibal.StripBlindRecipients(activity)
 
 	// RULE: An activity that cannot be stripped never will be, so this is a bad request, not a retry
 	if err != nil {
 		return derp.Wrap(err, location, "Removing blind recipients", derp.WithBadRequest())
 	}
+
+	payload := mapof.Any(stripped)
 
 	// Serialize the payload once, so every ActivityPub delivery task shares the same string
 	serialized, err := json.Marshal(payload)

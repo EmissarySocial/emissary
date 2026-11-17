@@ -6,11 +6,11 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
-	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/collection"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -134,7 +134,7 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 	// blind recipients from delivery enumeration.
 	if inboxActivity.RawActivity != nil {
 
-		rawActivity, err := assanitizer.WithoutBlindRecipients(inboxActivity.RawActivity)
+		rawActivity, err := hannibal.StripBlindRecipients(inboxActivity.RawActivity)
 
 		// RULE: An activity that cannot be stripped is not saved, because it would be readable
 		if err != nil {

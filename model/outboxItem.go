@@ -1,9 +1,9 @@
 package model
 
 import (
-	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -55,7 +55,7 @@ func (item OutboxItem) GetJSONLD() mapof.Any {
 
 	// RULE: AS2 §5.1 forbids disclosing blind recipients. Strip a copy, because delivery
 	// still reads the full addressing from the stored activity.
-	result, err := assanitizer.WithoutBlindRecipients(item.Activity)
+	result, err := hannibal.StripBlindRecipients(item.Activity)
 
 	// RULE: An activity that cannot be stripped is not served at all. This method cannot
 	// return an error, so it is reported and an empty document is returned.
@@ -64,11 +64,7 @@ func (item OutboxItem) GetJSONLD() mapof.Any {
 		return mapof.NewAny()
 	}
 
-	// An item with no activity is served as an empty document
-	if result == nil {
-		return mapof.NewAny()
-	}
-
+	// An item with no activity comes back as an empty document
 	return result
 }
 
