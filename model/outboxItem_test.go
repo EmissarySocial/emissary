@@ -93,6 +93,48 @@ func TestOutboxItem_GetJSONLD(t *testing.T) {
 	require.Contains(t, item.Activity[vocab.PropertyObject], vocab.PropertyBCC)
 }
 
+// TestOutboxItem_GetJSONLD_DatabaseTypes verifies that an activity read from MongoDB is stripped
+// inside the driver's own document and array types, which keep their types
+func TestOutboxItem_GetJSONLD_DatabaseTypes(t *testing.T) {
+
+	objectID := primitive.NewObjectID()
+
+	item := NewOutboxItem()
+	item.Activity = mapof.Any{
+		"_id":       objectID,
+		"published": primitive.DateTime(1700000000000),
+		"bcc":       primitive.A{"https://example.com/@carol"},
+		"object": primitive.M{
+			"bto":        primitive.A{"https://example.com/@bob"},
+			"attachment": primitive.A{primitive.M{"bcc": "https://example.com/@dave", "name": "a"}},
+		},
+	}
+
+	require.Equal(t, mapof.Any{
+		"_id":       objectID,
+		"published": primitive.DateTime(1700000000000),
+		"object": primitive.M{
+			"attachment": primitive.A{primitive.M{"name": "a"}},
+		},
+	}, item.GetJSONLD())
+
+	require.Contains(t, item.Activity, "bcc")
+	require.Contains(t, item.Activity["object"], "bto")
+}
+
+// TestOutboxItem_GetJSONLD_CannotBeStripped verifies that an activity holding a value that could
+// hide a blind recipient is served as an empty document
+func TestOutboxItem_GetJSONLD_CannotBeStripped(t *testing.T) {
+
+	item := NewOutboxItem()
+	item.Activity = mapof.Any{
+		"type":   "Create",
+		"object": primitive.D{{Key: "bcc", Value: "https://example.com/@blind"}},
+	}
+
+	require.Empty(t, item.GetJSONLD())
+}
+
 // TestOutboxItem_GetJSONLD_Empty verifies that an item with no activity returns an empty document
 func TestOutboxItem_GetJSONLD_Empty(t *testing.T) {
 	require.Empty(t, NewOutboxItem().GetJSONLD())

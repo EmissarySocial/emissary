@@ -62,7 +62,7 @@ func newOutbox2CorpusTest(t *testing.T) outbox2CorpusTest {
 	t.Helper()
 
 	database := newDomainTestDatabase(t)
-	require.NoError(t, querysync.Outbox2(context.Background(), database))
+	require.NoError(t, querysync.OutboxItem(context.Background(), database))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
@@ -241,7 +241,7 @@ func TestOutbox2_Corpus_PutUserActivity(t *testing.T) {
 			require.NotEqual(t, originalID, activityURL)
 
 			item := model.NewOutboxItem()
-			require.NoError(t, test.session.Collection("Outbox2").Load(exp.Equal("url", activityURL), &item))
+			require.NoError(t, test.session.Collection("OutboxItem").Load(exp.Equal("url", activityURL), &item))
 			require.Equal(t, activityURL, item.Activity.GetString("id"))
 			require.NotContains(t, item.Activity, "@id", "a client cannot name its own activity in the JSON-LD spelling either")
 		})
@@ -281,7 +281,7 @@ func (test outbox2CorpusTest) publish(t *testing.T, example corpus.Example) corp
 
 	// Read the row back, so that everything below sees the types MongoDB returns
 	item := model.NewOutboxItem()
-	require.NoError(t, test.session.Collection("Outbox2").Load(exp.Equal("url", activityURL), &item))
+	require.NoError(t, test.session.Collection("OutboxItem").Load(exp.Equal("url", activityURL), &item))
 	require.JSONEq(t, expectedJSON, marshalCorpusJSON(t, item.Activity), "the stored activity")
 	require.Equal(t, test.userID, item.ActorID)
 
@@ -337,7 +337,7 @@ func (test outbox2CorpusTest) publishRefused(t *testing.T, example corpus.Exampl
 
 	t.Helper()
 
-	before, err := test.session.Collection("Outbox2").Count(exp.All())
+	before, err := test.session.Collection("OutboxItem").Count(exp.All())
 	require.NoError(t, err)
 
 	document := decodeCorpusJSON(t, example.JSON)
@@ -347,7 +347,7 @@ func (test outbox2CorpusTest) publishRefused(t *testing.T, example corpus.Exampl
 	require.True(t, derp.IsInternalServerError(err))
 	require.Empty(t, activityURL)
 
-	after, err := test.session.Collection("Outbox2").Count(exp.All())
+	after, err := test.session.Collection("OutboxItem").Count(exp.All())
 	require.NoError(t, err)
 	require.Equal(t, before, after, "a refused document is not stored")
 	require.Empty(t, test.spool.Drain(), "a refused document queues nothing")
@@ -380,7 +380,7 @@ func (test outbox2CorpusTest) publishAgain(t *testing.T, example corpus.Example,
 
 	t.Helper()
 
-	before, err := test.session.Collection("Outbox2").Count(exp.All())
+	before, err := test.session.Collection("OutboxItem").Count(exp.All())
 	require.NoError(t, err)
 
 	activityURL, err := test.service.Publish(test.session, model.ActorTypeUser, test.userID, streams.NewDocument(mapof.Any(decodeCorpusJSON(t, example.JSON))), model.NewPermissions())
@@ -388,7 +388,7 @@ func (test outbox2CorpusTest) publishAgain(t *testing.T, example corpus.Example,
 	require.Equal(t, id, activityURL)
 	require.Empty(t, test.spool.Drain(), "a repeated id queues nothing")
 
-	after, err := test.session.Collection("Outbox2").Count(exp.All())
+	after, err := test.session.Collection("OutboxItem").Count(exp.All())
 	require.NoError(t, err)
 	require.Equal(t, before, after, "a repeated id stores nothing")
 }

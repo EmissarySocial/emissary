@@ -21,7 +21,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Outbox2 manages the "Outbox2" collection: the ActivityPub-native outbox of local Users and Streams
+// Outbox2 manages the "OutboxItem" collection: the ActivityPub-native outbox of local Users and Streams
 type Outbox2 struct {
 	// Outbox2 is replacing the legacy Outbox service -- see emissary-specs/projects/OUTBOX2-OMNIBUS.md.
 
@@ -83,7 +83,7 @@ func (service *Outbox2) Close() {
 
 // collection returns the mongo collection where OutboxItems are stored
 func (service *Outbox2) collection(session data.Session) data.Collection {
-	return session.Collection("Outbox2")
+	return session.Collection("OutboxItem")
 }
 
 // New creates a newly initialized OutboxItem that is ready to use

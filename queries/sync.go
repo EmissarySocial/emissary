@@ -151,7 +151,7 @@ func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONA
 		derp.Report(err)
 	}
 
-	if err := sync.Outbox2(ctx, session); err != nil {
+	if err := sync.OutboxItem(ctx, session); err != nil {
 		derp.Report(err)
 	}
 

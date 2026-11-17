@@ -28,7 +28,7 @@ func newOutbox2QueryTest(t *testing.T) outbox2QueryTest {
 	t.Helper()
 
 	database := newDomainTestDatabase(t)
-	require.NoError(t, querysync.Outbox2(context.Background(), database))
+	require.NoError(t, querysync.OutboxItem(context.Background(), database))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
@@ -55,7 +55,7 @@ func (test outbox2QueryTest) save(t *testing.T, actorType string, actorID primit
 		mutate(&item)
 	}
 
-	require.NoError(t, test.session.Collection("Outbox2").Save(&item, "test"))
+	require.NoError(t, test.session.Collection("OutboxItem").Save(&item, "test"))
 	return item
 }
 

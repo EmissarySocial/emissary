@@ -71,12 +71,12 @@ func newOutbox2PublishTest(t *testing.T) (*Outbox2, data.Session, *postcommit.Ta
 	return &outbox2, session, spool
 }
 
-// countOutbox2 returns the number of rows in the Outbox2 collection
+// countOutbox2 returns the number of rows in the OutboxItem collection
 func countOutbox2(t *testing.T, session data.Session) int64 {
 
 	t.Helper()
 
-	count, err := session.Collection("Outbox2").Count(exp.All())
+	count, err := session.Collection("OutboxItem").Count(exp.All())
 	require.NoError(t, err)
 	return count
 }
@@ -122,7 +122,7 @@ func TestOutbox2_Publish_MintsAndQueues(t *testing.T) {
 
 	// The row describes the activity
 	item := model.NewOutboxItem()
-	require.NoError(t, session.Collection("Outbox2").Load(exp.Equal("url", activityURL), &item))
+	require.NoError(t, session.Collection("OutboxItem").Load(exp.Equal("url", activityURL), &item))
 	require.Equal(t, model.ActorTypeUser, item.ActorType)
 	require.Equal(t, userID, item.ActorID)
 	require.Equal(t, vocab.ActivityTypeCreate, item.ActivityType)

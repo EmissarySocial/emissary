@@ -67,7 +67,7 @@ func TestObject_CreateAddressed(t *testing.T) {
 
 	// The activity is in the sender's outbox, addressed to the same recipient
 	item := model.NewOutboxItem()
-	require.NoError(t, session.Collection("Outbox2").Load(exp.Equal("actorId", userID), &item))
+	require.NoError(t, session.Collection("OutboxItem").Load(exp.Equal("actorId", userID), &item))
 	require.Equal(t, activityURL, item.URL)
 	require.True(t, item.Recipients.Contains("https://remote.example/@bob"))
 }
@@ -103,7 +103,7 @@ func TestOutbox2_PutUserActivity_RefusesOtherActor(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, http.StatusForbidden, derp.ErrorCode(err))
 
-	count, err := session.Collection("Outbox2").Count(exp.All())
+	count, err := session.Collection("OutboxItem").Count(exp.All())
 	require.NoError(t, err)
 	require.Zero(t, count)
 }
