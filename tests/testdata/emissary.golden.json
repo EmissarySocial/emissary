@@ -2701,6 +2701,7 @@
 				"isBridgeBluesky (toggle, schema.Boolean)",
 				"isIndexable (toggle, schema.Boolean)",
 				"isOwner (toggle, schema.Boolean)",
+				"isPrimary (toggle, schema.Boolean)",
 				"isPublic (toggle, schema.Boolean)",
 				"outboxTemplate (select, schema.String)",
 				"username (text, schema.String)"
@@ -2715,6 +2716,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -2729,6 +2731,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -2748,6 +2751,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -2764,6 +2768,7 @@
 						"isBridgeBluesky": "bool true",
 						"isIndexable": "bool true",
 						"isOwner": "bool true",
+						"isPrimary": "bool true",
 						"isPublic": "bool true",
 						"outboxTemplate": "string Sample outboxTemplate",
 						"username": "string visitor_name"
@@ -2776,6 +2781,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3508,7 +3514,7 @@
 						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
 						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (8154 bytes, sha256 f35be94a9c79)"
 					},
 					"types": {
 						"data.tags": "string",
@@ -4728,7 +4734,7 @@
 					"changes": {
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
 						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (8154 bytes, sha256 f35be94a9c79)"
 					},
 					"types": {
 						"displayName": "string",
@@ -5409,7 +5415,7 @@
 						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
 						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (8154 bytes, sha256 f35be94a9c79)"
 					},
 					"types": {
 						"data.tags": "string",
