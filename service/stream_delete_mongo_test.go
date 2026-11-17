@@ -165,7 +165,7 @@ func (test streamDeleteTest) saveOutbox2Activity(t *testing.T, actorType string,
 	item.ActivityType = activityType
 	item.ObjectID = objectID
 
-	require.NoError(t, test.session.Collection("Outbox2").Save(&item, "test setup"))
+	require.NoError(t, test.session.Collection("OutboxItem").Save(&item, "test setup"))
 	return item
 }
 
@@ -174,7 +174,7 @@ func (test streamDeleteTest) countOutbox2(t *testing.T, actorType string, actorI
 
 	t.Helper()
 
-	result, err := test.session.Collection("Outbox2").Count(exp.Equal("actorType", actorType).AndEqual("actorId", actorID))
+	result, err := test.session.Collection("OutboxItem").Count(exp.Equal("actorType", actorType).AndEqual("actorId", actorID))
 	require.NoError(t, err)
 	return result
 }
