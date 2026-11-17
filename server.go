@@ -725,6 +725,8 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.HEAD("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
+	e.GET("/@:userId/pub/circles/:circleId", handler.WithUser(factory, ap_user.GetCircle))
+	e.HEAD("/@:userId/pub/circles/:circleId", handler.WithUser(factory, ap_user.GetCircle))
 	e.GET("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
 	e.HEAD("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
