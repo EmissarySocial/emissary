@@ -30,9 +30,9 @@ type documentDeleter interface {
 // addressingProperties lists the properties that name an activity's recipients
 var addressingProperties = []string{vocab.PropertyTo, vocab.PropertyCC, vocab.PropertyBTo, vocab.PropertyBCC}
 
-// DeleteActivity removes the activities that published an object from an actor's outbox, and
-// publishes a Delete that is addressed as the object was
-func (service *Outbox2) DeleteActivity(session data.Session, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
+// DeleteActivity removes the activities that published an object from an actor's outbox, and publishes
+// a Delete addressed as the object was, or to audience when no Create or Update of it is stored here
+func (service *Outbox2) DeleteActivity(session data.Session, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions, audience mapof.Any) error {
 
 	const location = "service.Outbox2.DeleteActivity"
 
@@ -49,14 +49,14 @@ func (service *Outbox2) DeleteActivity(session data.Session, actorType string, a
 	}
 
 	// Read the original addressing BEFORE removing the rows that hold it
-	addressing, err := service.deleteAddressing(session, actorType, actorID, objectID, permissions)
+	addressing, err := service.deleteAddressing(session, actorType, actorID, objectID, audience)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Reading original addressing", objectID)
 	}
 
 	// Remove the activities that published this object from both outboxes
-	if err := service.removeByObjectID(session, actorType, actorID, objectID); err != nil {
+	if err := service.RemoveByObjectID(session, actorType, actorID, objectID); err != nil {
 		return derp.Wrap(err, location, "Removing outbox activities", objectID)
 	}
 
@@ -148,9 +148,37 @@ func (service *Outbox2) UndoActivity(session data.Session, actorType string, act
 	return nil
 }
 
+// PublishAnnounce stores and delivers a public "Announce" of object by a local actor, addressed to
+// Public and that actor's followers, and returns the Announce's URL
+func (service *Outbox2) PublishAnnounce(session data.Session, actorType string, actorID primitive.ObjectID, actorURL string, object streams.Document) (string, error) {
+
+	const location = "service.Outbox2.PublishAnnounce"
+
+	// A boost reaches the booster's followers and Public, never the original's private audience.
+	// It carries no id, so Publish mints one that can be fetched from the actor's outbox.
+	announce := streams.NewDocument(mapof.Any{
+		vocab.AtContext:         vocab.ContextTypeActivityStreams,
+		vocab.PropertyType:      vocab.ActivityTypeAnnounce,
+		vocab.PropertyActor:     actorURL,
+		vocab.PropertyObject:    object.Map(),
+		vocab.PropertyPublished: datetime.Now(),
+		vocab.PropertyTo:        []string{vocab.NamespacePublic},
+		vocab.PropertyCC:        []string{service.locator.FollowersURL(actorType, actorID)},
+	})
+
+	activityURL, err := service.Publish(session, actorType, actorID, announce, model.NewAnonymousPermissions())
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Publishing Announce", "actorId: "+actorID.Hex())
+	}
+
+	// Boosted. To infinity, and beyond!
+	return activityURL, nil
+}
+
 // deleteAddressing returns the addressing for a Delete of the provided object: the addressing of
-// the newest activity that published it, or one built from its permissions when no such row exists
-func (service *Outbox2) deleteAddressing(session data.Session, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) (mapof.Any, error) {
+// the newest activity that published it, or the caller's audience when no such row exists
+func (service *Outbox2) deleteAddressing(session data.Session, actorType string, actorID primitive.ObjectID, objectID string, audience mapof.Any) (mapof.Any, error) {
 
 	const location = "service.Outbox2.deleteAddressing"
 
@@ -163,33 +191,19 @@ func (service *Outbox2) deleteAddressing(session data.Session, actorType string,
 		return nil, derp.Wrap(err, location, "Loading original activity", objectID)
 	}
 
-	// An object published through the legacy outbox has no row here to copy from
+	// RULE: An object published through the legacy outbox has no row here to copy from. Its writer
+	// knows who it was shared with, and permissions alone cannot name a circle.
+	result := mapof.NewAny()
+
 	if len(originals) == 0 {
-		return addressingFromPermissions(permissions, followersURL), nil
+		copyAddressing(result, audience)
+		return result, nil
 	}
 
-	result := mapof.NewAny()
 	copyAddressing(result, originals[0].Activity)
 	addFollowersToPublic(result, followersURL)
 
 	return result, nil
-}
-
-// addressingFromPermissions returns the addressing for an activity about an object whose own
-// addressing was never stored: Public and the actor's followers when anyone may read the
-// object, and no one otherwise
-func addressingFromPermissions(permissions model.Permissions, followersURL string) mapof.Any {
-
-	if permissions.IsAnonymous() {
-		return mapof.Any{
-			vocab.PropertyTo: []string{vocab.NamespacePublic},
-			vocab.PropertyCC: []string{followersURL},
-		}
-	}
-
-	// RULE: Delivery follows addressing alone, so naming the followers of a restricted object
-	// would tell every follower about it. Its writer must supply the audience.
-	return mapof.NewAny()
 }
 
 // addFollowersToPublic adds the actor's followers collection to `cc` when the addressing names

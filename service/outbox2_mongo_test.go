@@ -203,9 +203,9 @@ func TestOutbox2_RangeByActivityURL(t *testing.T) {
 	require.Empty(t, slices.Collect(items))
 }
 
-// TestOutbox2_removeByObjectID verifies that the removal is scoped to one actor and one object,
+// TestOutbox2_RemoveByObjectID verifies that the removal is scoped to one actor and one object,
 // and that an empty object removes nothing
-func TestOutbox2_removeByObjectID(t *testing.T) {
+func TestOutbox2_RemoveByObjectID(t *testing.T) {
 
 	test := newOutbox2QueryTest(t)
 
@@ -227,11 +227,11 @@ func TestOutbox2_removeByObjectID(t *testing.T) {
 	test.save(t, model.ActorTypeStream, userID, 6, anonymous, withObject(object))
 
 	// An empty object matches the row that has none, and must not remove it
-	require.NoError(t, test.service.removeByObjectID(test.session, model.ActorTypeUser, userID, ""))
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeUser, userID, ""))
 	require.Equal(t, int64(6), countOutbox2(t, test.session))
 
 	// Both of this actor's rows for the object go, and nothing else
-	require.NoError(t, test.service.removeByObjectID(test.session, model.ActorTypeUser, userID, object))
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeUser, userID, object))
 	require.Equal(t, int64(4), countOutbox2(t, test.session))
 
 	remaining, err := test.service.HasObject(test.session, model.ActorTypeUser, userID, object)
@@ -239,7 +239,7 @@ func TestOutbox2_removeByObjectID(t *testing.T) {
 	require.False(t, remaining)
 
 	// A second run finds nothing and succeeds
-	require.NoError(t, test.service.removeByObjectID(test.session, model.ActorTypeUser, userID, object))
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeUser, userID, object))
 	require.Equal(t, int64(4), countOutbox2(t, test.session))
 }
 

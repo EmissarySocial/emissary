@@ -44,7 +44,7 @@ func (service *Outbox) DeleteActivity(session data.Session, actorType string, ac
 	}
 
 	// RULE: Remove the Outbox2 activities too, because writers move to Outbox2 one at a time
-	if err := service.outbox2Service.removeByObjectID(session, actorType, actorID, objectID); err != nil {
+	if err := service.outbox2Service.RemoveByObjectID(session, actorType, actorID, objectID); err != nil {
 		return derp.Wrap(err, location, "Removing Outbox2 activities", objectID)
 	}
 

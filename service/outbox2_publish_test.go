@@ -161,7 +161,7 @@ func TestOutbox2_DeleteActivity_CopiesPrivateAddressing(t *testing.T) {
 	})
 	test.tasks.Drain()
 
-	require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions))
+	require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions, nil))
 
 	// The Create is gone from both outboxes, and the object from the cache
 	require.Zero(t, test.count(t, vocab.ActivityTypeCreate))
@@ -205,7 +205,7 @@ func TestOutbox2_DeleteActivity_PublicAddsFollowers(t *testing.T) {
 			vocab.PropertyCC: []string{mentioned},
 		})
 
-		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions))
+		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions, nil))
 
 		deleted := test.only(t, vocab.ActivityTypeDelete)
 		require.Equal(t, []string{vocab.NamespacePublic}, deleted.Activity.GetSliceOfString(vocab.PropertyTo))
@@ -223,7 +223,7 @@ func TestOutbox2_DeleteActivity_PublicAddsFollowers(t *testing.T) {
 			vocab.PropertyCC: []string{vocab.NamespacePublic},
 		})
 
-		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions))
+		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions, nil))
 
 		deleted := test.only(t, vocab.ActivityTypeDelete)
 		require.Equal(t, []string{test.followers()}, deleted.Activity.GetSliceOfString(vocab.PropertyTo))
@@ -257,7 +257,7 @@ func TestOutbox2_DeleteActivity_UsesNewestPublication(t *testing.T) {
 	saved.save(t, model.ActorTypeUser, test.userID, 200, permissions, withActivity(vocab.ActivityTypeUpdate, second))
 	saved.save(t, model.ActorTypeUser, test.userID, 300, permissions, withActivity(vocab.ActivityTypeDelete, "https://remote.example/@stale"))
 
-	require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions))
+	require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions, nil))
 
 	// Every earlier row for the object is gone, the stale Delete included
 	require.Zero(t, test.count(t, vocab.ActivityTypeCreate))
@@ -275,7 +275,8 @@ func TestOutbox2_DeleteActivity_WithoutOriginal(t *testing.T) {
 
 		test := newOutbox2FollowUpTest(t)
 
-		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, "https://example.com/notes/5", model.NewAnonymousPermissions()))
+		audience := mapof.Any{vocab.PropertyTo: []string{vocab.NamespacePublic}, vocab.PropertyCC: []string{test.followers()}}
+		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, "https://example.com/notes/5", model.NewAnonymousPermissions(), audience))
 
 		deleted := test.only(t, vocab.ActivityTypeDelete)
 		require.Equal(t, []string{vocab.NamespacePublic}, deleted.Activity.GetSliceOfString(vocab.PropertyTo))
@@ -288,11 +289,25 @@ func TestOutbox2_DeleteActivity_WithoutOriginal(t *testing.T) {
 		test := newOutbox2FollowUpTest(t)
 		permissions := model.Permissions{primitive.NewObjectID()}
 
-		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, "https://example.com/notes/6", permissions))
+		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, "https://example.com/notes/6", permissions, mapof.NewAny()))
 
 		deleted := test.only(t, vocab.ActivityTypeDelete)
-		require.Empty(t, deleted.Recipients, "a restricted object with no stored addressing names no one, and never its followers")
+		require.Empty(t, deleted.Recipients, "an empty audience names no one, and never the followers")
 		require.Equal(t, permissions, deleted.Permissions)
+	})
+
+	t.Run("circle", func(t *testing.T) {
+
+		test := newOutbox2FollowUpTest(t)
+		circleURL := test.actor() + "/pub/circles/" + primitive.NewObjectID().Hex()
+		permissions := model.Permissions{primitive.NewObjectID()}
+
+		audience := mapof.Any{vocab.PropertyTo: []string{circleURL}}
+		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, "https://example.com/notes/9", permissions, audience))
+
+		deleted := test.only(t, vocab.ActivityTypeDelete)
+		require.Equal(t, []string{circleURL}, deleted.Activity.GetSliceOfString(vocab.PropertyTo), "the circle that received it hears of its deletion")
+		require.Empty(t, deleted.Activity.GetSliceOfString(vocab.PropertyCC), "and no followers are added to a restricted audience")
 	})
 }
 
@@ -302,8 +317,8 @@ func TestOutbox2_DeleteActivity_Refuses(t *testing.T) {
 	test := newOutbox2FollowUpTest(t)
 	permissions := model.NewAnonymousPermissions()
 
-	require.Error(t, test.service.DeleteActivity(test.session, model.ActorTypeSearchQuery, test.userID, "https://example.com/notes/7", permissions))
-	require.Error(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, "", permissions))
+	require.Error(t, test.service.DeleteActivity(test.session, model.ActorTypeSearchQuery, test.userID, "https://example.com/notes/7", permissions, nil))
+	require.Error(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, "", permissions, nil))
 
 	require.Zero(t, countOutbox2(t, test.session))
 	require.Empty(t, test.removals.objectIDs)
@@ -406,7 +421,8 @@ func TestOutbox2_DeleteActivity_StreamActor(t *testing.T) {
 	streamID := primitive.NewObjectID()
 	streamURL := "https://example.com/" + streamID.Hex()
 
-	require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeStream, streamID, "https://example.com/notes/8", model.NewAnonymousPermissions()))
+	audience := mapof.Any{vocab.PropertyTo: []string{vocab.NamespacePublic}, vocab.PropertyCC: []string{streamURL + "/pub/followers"}}
+	require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeStream, streamID, "https://example.com/notes/8", model.NewAnonymousPermissions(), audience))
 
 	items, err := test.service.Query(test.session, exp.Equal("actorId", streamID))
 	require.NoError(t, err)
@@ -414,4 +430,70 @@ func TestOutbox2_DeleteActivity_StreamActor(t *testing.T) {
 	require.Equal(t, streamURL, items[0].Activity.GetString(vocab.PropertyActor))
 	require.Equal(t, []string{streamURL + "/pub/followers"}, items[0].Activity.GetSliceOfString(vocab.PropertyCC))
 	require.Equal(t, streamURL+"/pub/outbox/"+items[0].ActivityID.Hex(), items[0].URL)
+}
+
+// TestOutbox2_PublishAnnounce verifies that a Stream's boost is stored in its outbox under a URL
+// that can be fetched, addressed to Public and the Stream's followers, and fanned out once
+func TestOutbox2_PublishAnnounce(t *testing.T) {
+
+	test := newOutbox2FollowUpTest(t)
+	streamID := primitive.NewObjectID()
+	streamURL := "https://example.com/" + streamID.Hex()
+
+	note := streams.NewDocument(mapof.Any{
+		vocab.PropertyID:      "https://remote.example/notes/1",
+		vocab.PropertyType:    vocab.ObjectTypeNote,
+		vocab.PropertyTo:      []any{"https://remote.example/@carol"},
+		vocab.PropertyContent: "Hello",
+	})
+
+	activityURL, err := test.service.PublishAnnounce(test.session, model.ActorTypeStream, streamID, streamURL, note)
+	require.NoError(t, err)
+	require.Equal(t, streamURL+"/pub/outbox/", activityURL[:len(streamURL)+len("/pub/outbox/")], "the Stream's outbox route serves this URL")
+
+	// The row is the Stream's, public, and about the Note
+	items, err := test.service.Query(test.session, exp.Equal("actorId", streamID))
+	require.NoError(t, err)
+	require.Len(t, items, 1)
+	require.Equal(t, model.ActorTypeStream, items[0].ActorType)
+	require.Equal(t, vocab.ActivityTypeAnnounce, items[0].ActivityType)
+	require.Equal(t, "https://remote.example/notes/1", items[0].ObjectID)
+	require.True(t, items[0].Permissions.IsAnonymous())
+
+	// One fan-out carries it to Public and the Stream's followers, never to the Note's own audience
+	tasks := test.tasks.Drain()
+	require.Len(t, tasks, 1)
+	require.Equal(t, delivery.TaskFanOut, tasks[0].Name)
+	require.Equal(t, streamURL, tasks[0].Arguments.GetString("actor"))
+
+	activity := tasks[0].Arguments.GetMap("activity")
+	require.Equal(t, activityURL, activity.GetString(vocab.PropertyID))
+	require.Equal(t, []string{vocab.NamespacePublic}, activity.GetSliceOfString(vocab.PropertyTo))
+	require.Equal(t, []string{streamURL + "/pub/followers"}, activity.GetSliceOfString(vocab.PropertyCC))
+}
+
+// TestOutbox2_PublishAnnounce_RemovedByDelete verifies that a Delete of a boosted Note finds the
+// Stream's Announce of it, which is how the Stream's Delete handler looks it up
+func TestOutbox2_PublishAnnounce_RemovedByDelete(t *testing.T) {
+
+	test := newOutbox2FollowUpTest(t)
+	streamID := primitive.NewObjectID()
+	streamURL := "https://example.com/" + streamID.Hex()
+
+	boost := func(noteURL string) {
+		note := streams.NewDocument(mapof.Any{vocab.PropertyID: noteURL, vocab.PropertyType: vocab.ObjectTypeNote, vocab.PropertyContent: "Hello"})
+		_, err := test.service.PublishAnnounce(test.session, model.ActorTypeStream, streamID, streamURL, note)
+		require.NoError(t, err)
+	}
+
+	boost("https://remote.example/notes/1")
+	boost("https://remote.example/notes/2")
+
+	// The inbound Delete names the Note, and that is the key the row was stored under
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeStream, streamID, "https://remote.example/notes/1"))
+
+	items, err := test.service.Query(test.session, exp.Equal("actorId", streamID))
+	require.NoError(t, err)
+	require.Len(t, items, 1)
+	require.Equal(t, "https://remote.example/notes/2", items[0].ObjectID)
 }
