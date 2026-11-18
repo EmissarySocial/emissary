@@ -301,7 +301,7 @@ func TestOutbox2_emailPublisher(t *testing.T) {
 	service := Outbox2{host: "https://example.com", queue: taskQueue, domainEmail: emailer}
 
 	publish := service.emailPublisher(actor)
-	activity := map[string]any{"type": "Create"}
+	activity := map[string]any{"type": "Create", "object": map[string]any{"type": "Note", "content": "Hello"}}
 	require.NoError(t, publish(actor+"/pub/outbox/1", "mailto:carol@remote.example", activity))
 
 	require.Len(t, recorder.tasks, 1)
@@ -318,6 +318,62 @@ func TestOutbox2_emailPublisher(t *testing.T) {
 	publish = service.emailPublisher(actor)
 	require.NoError(t, publish(actor+"/pub/outbox/1", "mailto:dana@remote.example", activity))
 	require.Len(t, recorder.tasks, 1)
+}
+
+// TestOutbox2_emailPublisher_ProfileUpdate verifies that a profile change reaches no email follower,
+// because the email would show nothing
+func TestOutbox2_emailPublisher_ProfileUpdate(t *testing.T) {
+
+	const actor = "https://example.com/@author"
+
+	recorder := &queuedTasks{}
+	taskQueue := queue.New(queue.WithPreProcessor(recorder.preProcessor), queue.WithBufferSize(8))
+	service := Outbox2{host: "https://example.com", queue: taskQueue, domainEmail: &switchableEmailer{configured: true}}
+
+	// The same shape that User.SendProfileUpdate sends to its followers collection
+	activity := map[string]any{
+		"type":   "Update",
+		"actor":  actor,
+		"cc":     []any{actor + "/pub/followers"},
+		"object": map[string]any{"id": actor, "type": "Person", "name": "Author"},
+	}
+
+	require.NoError(t, service.emailPublisher(actor)(actor+"#updates/1", "mailto:carol@remote.example", activity))
+	require.Empty(t, recorder.tasks)
+}
+
+// TestHasEmailContent verifies that only an activity that brings an embedded post with something to show is emailed
+func TestHasEmailContent(t *testing.T) {
+
+	note := map[string]any{"type": "Note", "content": "Hello"}
+
+	// test checks one activity
+	test := func(name string, activity map[string]any, expected bool) {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, expected, hasEmailContent(activity))
+		})
+	}
+
+	test("a Create of a Note", map[string]any{"type": "Create", "object": note}, true)
+	test("an Update of an Article with only a name", map[string]any{"type": "Update", "object": map[string]any{"type": "Article", "name": "Title"}}, true)
+	test("an Announce of a Note", map[string]any{"type": "Announce", "object": note}, true)
+	test("an object as mapof.Any", map[string]any{"type": "Create", "object": mapof.Any{"type": "Note", "content": "Hello"}}, true)
+
+	test("a Create of an empty Note", map[string]any{"type": "Create", "object": map[string]any{"type": "Note"}}, false)
+	test("a Create of an object named by its URL", map[string]any{"type": "Create", "object": "https://remote.example/notes/1"}, false)
+	test("a Create with no object", map[string]any{"type": "Create"}, false)
+	test("an Update of a Person", map[string]any{"type": "Update", "object": map[string]any{"type": "Person", "name": "Author"}}, false)
+	test("an Update of a Service", map[string]any{"type": "Update", "object": map[string]any{"type": "Service", "name": "Stream"}}, false)
+	test("a Delete", map[string]any{"type": "Delete", "object": map[string]any{"type": "Tombstone", "name": "Gone"}}, false)
+	test("an Announce of a Delete", map[string]any{"type": "Announce", "object": map[string]any{"type": "Delete", "object": "https://remote.example/notes/1"}}, false)
+	test("an Announce of a Create of a Note", map[string]any{"type": "Announce", "object": map[string]any{"type": "Create", "object": note}}, true)
+	test("an Announce of a Create of a URL", map[string]any{"type": "Announce", "object": map[string]any{"type": "Create", "object": "https://remote.example/notes/1"}}, false)
+	test("an Undo", map[string]any{"type": "Undo", "object": note}, false)
+	test("an Accept", map[string]any{"type": "Accept", "object": map[string]any{"type": "Follow"}}, false)
+	test("a Like", map[string]any{"type": "Like", "object": note}, false)
+	test("no type", map[string]any{"object": note}, false)
+	test("an empty activity", map[string]any{}, false)
+	test("a nil activity", nil, false)
 }
 
 // TestOutbox2_SendEmail verifies that only a confirmed Follower of the sending actor is emailed

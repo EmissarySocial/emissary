@@ -21,6 +21,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/floodgate/remotegate"
 	"github.com/benpate/hannibal/delivery"
+	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -174,6 +176,12 @@ func (service *Outbox2) emailPublisher(actorURL string) func(string, string, map
 			return nil
 		}
 
+		// RULE: The email shows the activity's object, so an activity with nothing to show is not
+		// emailed. A Delete, an Accept, or a profile Update would otherwise arrive blank.
+		if !hasEmailContent(activity) {
+			return nil
+		}
+
 		// RULE: The signature keeps a retried fan-out from queueing a second email while the first waits
 		task := queue.NewTask(
 			TaskOutbox2Email,
@@ -193,6 +201,33 @@ func (service *Outbox2) emailPublisher(actorURL string) func(string, string, map
 
 		return nil
 	}
+}
+
+// hasEmailContent returns TRUE if an activity creates, updates, or announces a post that has a name
+// or content for an email to show
+func hasEmailContent(activity map[string]any) bool {
+
+	// RULE: Only these activity types bring a post to read. A Delete, an Undo, an Accept,
+	// a Follow, or a Like has nothing to put in the email.
+	switch streams.NewDocument(activity).Type() {
+	case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate, vocab.ActivityTypeAnnounce:
+	default:
+		return false
+	}
+
+	// Read the post exactly as the email will show it
+	object := streams.NewDocument(followerEmailObject(activity))
+
+	// RULE: A profile is not a post, so an Update of an actor is not emailed
+	if object.IsActor() {
+		return false
+	}
+
+	if object.Name() != "" {
+		return true
+	}
+
+	return object.Content() != ""
 }
 
 // SendEmail emails one activity to one address, on behalf of the local actor that sent it.

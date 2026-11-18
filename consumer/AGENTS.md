@@ -96,7 +96,7 @@ A missing case in `PreProcessor` is silent: the name falls through, `Priority` k
 
 A send task carries no `hostname`, so `getHostnameFromArgs` finds its domain from the `actor` URL. Keep that argument's name. A fan-out is priority 16, so that it runs promptly after its commit; sends and emails are 256, so that a large fan-out cannot delay user-facing work. Hannibal sets the retry count and the one-day backoff cap on each send task when it queues it.
 
-The legacy `Outbox:SendToAllRecipients`, `Outbox:SendToSingleRecipient` and `Outbox-Publish` tasks are still registered. Other senders (Accepts, Follows, search results) and the legacy outbox still queue them.
+The legacy `Outbox:SendToAllRecipients`, `Outbox:SendToSingleRecipient` and `Outbox-Publish` tasks are still registered. Search results, an account's `Move`, the identity verification message, and the legacy outbox still queue them. Accepts, Rejects, Follows, Undos of a Follow, and a Stream's rebroadcasts go through `Outbox2.Send` and the pipeline.
 
 ## The lifecycle hooks run for EVERY task, so each one checks the task name first
 

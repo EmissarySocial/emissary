@@ -24,6 +24,8 @@ import (
 
 // SendAccept queues an "Accept" activity addressed to the accepted activity's actor (typically the
 // sender of a Follow request). actorURL is the accepting local actor's canonical URL (actor.ActorID()).
+//
+// Deprecated: use Outbox2.SendAccept, which sends through the delivery pipeline.
 func (service *Outbox) SendAccept(session data.Session, actorURL string, acceptID string, activity streams.Document) {
 
 	accept := mapof.Any{
@@ -42,6 +44,8 @@ func (service *Outbox) SendAccept(session data.Session, actorURL string, acceptI
 
 // SendRejectFollow queues a "Reject" of a follower's Follow, addressed to that follower, so their server
 // knows the follow has ended. actorURL is the local actor being followed.
+//
+// Deprecated: use Outbox2.SendRejectFollow, which sends through the delivery pipeline.
 func (service *Outbox) SendRejectFollow(session data.Session, actorURL string, rejectID string, followerURL string) {
 
 	// The Follow is described by its actor and object, which is what Mastodon matches a Reject on,
@@ -65,6 +69,8 @@ func (service *Outbox) SendRejectFollow(session data.Session, actorURL string, r
 
 // SendFollow queues a "Follow" activity addressed to remoteActorID (the actor being followed).
 // actorURL is the following local actor's canonical URL (actor.ActorID()).
+//
+// Deprecated: use Outbox2.SendFollow, which sends through the delivery pipeline.
 func (service *Outbox) SendFollow(session data.Session, actorURL string, followID string, remoteActorID string) {
 
 	follow := mapof.Any{
@@ -95,6 +101,8 @@ func (service *Outbox) SendFollow(session data.Session, actorURL string, followI
 // actor is the spec-correct behavior (https://www.w3.org/TR/activitypub/#undo-activity-outbox) and
 // the entire point of an unfollow. This is a behavior FIX; flagged for review.
 // See POST-COMMIT-FEDERATION.md F4.
+//
+// Deprecated: use Outbox2.SendUndoFollow, which sends through the delivery pipeline.
 func (service *Outbox) SendUndoFollow(session data.Session, actorURL string, follow mapof.Any) {
 
 	undo := mapof.Any{
@@ -119,6 +127,8 @@ func (service *Outbox) SendUndoFollow(session data.Session, actorURL string, fol
 // NOTE: the old outbox.Actor.SendAnnounce ALSO delivered to the boosted object's own addressees
 // (object.RangeAddressees()); this standard-boost addressing intentionally does not — a boost
 // reaches the booster's followers + Public, not the original post's private audience.
+//
+// Deprecated: use Outbox2.SendAnnounce, which sends through the delivery pipeline.
 func (service *Outbox) SendAnnounce(session data.Session, actorURL string, announceID string, object streams.Document, followersURL string) {
 
 	announce := mapof.Any{
