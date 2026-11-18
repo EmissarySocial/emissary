@@ -2,6 +2,7 @@ package service
 
 import (
 	"iter"
+	"math"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -441,10 +442,7 @@ func (service *Outbox2) QueryByParentAndDate(session data.Session, actorType str
 		return make([]model.OutboxItem, 0), nil
 	}
 
-	// RULE: An item is visible only to a caller who holds one of its permissions
-	criteria := exp.Equal("actorType", actorType).
-		AndEqual("actorId", actorID).
-		AndIn("permissions", permissions).
+	criteria := visibleCriteria(actorType, actorID, permissions).
 		And(exp.LessThan("createDate", maxDate))
 
 	result, err := service.Query(session, criteria, option.SortDesc("createDate"), option.MaxRows(int64(maxRows)))
@@ -454,6 +452,47 @@ func (service *Outbox2) QueryByParentAndDate(session data.Session, actorType str
 	}
 
 	return result, nil
+}
+
+// PagingSummary returns how many items in an actor's outbox the caller's permissions can see, and the
+// maxDate that makes QueryByParentAndDate return the last page of them
+func (service *Outbox2) PagingSummary(session data.Session, actorType string, actorID primitive.ObjectID, permissions model.Permissions, pageSize int) (int64, int64, error) {
+
+	const location = "service.Outbox2.PagingSummary"
+
+	// RULE: A page holds at least one item
+	if pageSize < 1 {
+		return 0, 0, derp.Internal(location, "Page size must be positive", pageSize)
+	}
+
+	// Count what the caller can see
+	totalItems, err := service.CountByParent(session, actorType, actorID, permissions)
+
+	if err != nil {
+		return 0, 0, derp.Wrap(err, location, "Counting outbox", "actorType: "+actorType, "actorId: "+actorID.Hex())
+	}
+
+	// RULE: When every item fits on one page, the first page is also the last
+	if totalItems <= int64(pageSize) {
+		return totalItems, math.MaxInt64, nil
+	}
+
+	// The last page holds the oldest items, so its cursor is the date of the item just newer than them.
+	// Reading those few dates oldest first reaches it without skipping through the whole outbox.
+	lastSize := lastPageSize(totalItems, pageSize)
+	criteria := visibleCriteria(actorType, actorID, permissions)
+	oldest, err := service.Query(session, criteria, option.SortAsc("createDate"), option.MaxRows(lastSize+1), option.Fields("createDate"))
+
+	if err != nil {
+		return 0, 0, derp.Wrap(err, location, "Querying oldest outbox items", "actorType: "+actorType, "actorId: "+actorID.Hex())
+	}
+
+	// RULE: An outbox that shrank after it was counted pages from the start
+	if int64(len(oldest)) <= lastSize {
+		return totalItems, math.MaxInt64, nil
+	}
+
+	return totalItems, oldest[lastSize].CreateDate, nil
 }
 
 // CountByParent returns the number of items in an actor's outbox that the caller's permissions can see
@@ -467,11 +506,7 @@ func (service *Outbox2) CountByParent(session data.Session, actorType string, ac
 	}
 
 	// RULE: Count only what the caller could read, so totalItems does not reveal private activity
-	criteria := exp.Equal("actorType", actorType).
-		AndEqual("actorId", actorID).
-		AndIn("permissions", permissions)
-
-	count, err := service.Count(session, criteria)
+	count, err := service.Count(session, visibleCriteria(actorType, actorID, permissions))
 
 	if err != nil {
 		return 0, derp.Wrap(err, location, "Counting outbox", "actorType: "+actorType, "actorId: "+actorID.Hex())
@@ -480,12 +515,46 @@ func (service *Outbox2) CountByParent(session data.Session, actorType string, ac
 	return count, nil
 }
 
-// RangeByObjectID returns an iterator over every OutboxItem in an actor's outbox that acts on the provided object
+// lastPageSize returns how many items the last page holds when totalItems are split into pages of pageSize
+func lastPageSize(totalItems int64, pageSize int) int64 {
+
+	// RULE: No items, or no pages, leave nothing for a last page
+	if totalItems < 1 || pageSize < 1 {
+		return 0
+	}
+
+	// A remainder of zero means the last page is full
+	if remainder := totalItems % int64(pageSize); remainder > 0 {
+		return remainder
+	}
+
+	return int64(pageSize)
+}
+
+// visibleCriteria matches the items in an actor's outbox that a caller holding the provided permissions may read
+func visibleCriteria(actorType string, actorID primitive.ObjectID, permissions model.Permissions) exp.Expression {
+
+	// RULE: An item is visible only to a caller who holds one of its permissions
+	return exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
+		AndIn("permissions", permissions)
+}
+
+// RangeByObjectID returns an iterator over every OutboxItem in an actor's outbox that acts on the provided
+// object, including an Announce of an activity that does
 func (service *Outbox2) RangeByObjectID(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) (iter.Seq[model.OutboxItem], error) {
+
+	// RULE: A parent Stream announces its child's Create or Update, so its row names that activity
+	// as the object. Match the child inside it too, or unpublishing the child leaves it served.
+	announced := exp.Equal("activityType", vocab.ActivityTypeAnnounce).
+		And(exp.Or(
+			exp.Equal("activity.object.object", objectID),
+			exp.Equal("activity.object.object.id", objectID),
+		))
 
 	criteria := exp.Equal("actorType", actorType).
 		AndEqual("actorId", actorID).
-		AndEqual("objectId", objectID)
+		And(exp.Or(exp.Equal("objectId", objectID), announced))
 
 	return service.Range(session, criteria)
 }

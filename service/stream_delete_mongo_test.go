@@ -20,6 +20,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -492,4 +493,53 @@ func TestStreamDelete_UndoesPublication(t *testing.T) {
 		requireCount(t, test.webhooks, 1, "stream:delete only")
 		require.Zero(t, countSyndication(test))
 	})
+}
+
+// TestStream_UnpublishOutboxStream_RemovesTheAnnounce verifies that unpublishing a child removes the
+// parent Stream's Announce of it, and sends the parent's followers a Delete
+func TestStream_UnpublishOutboxStream_RemovesTheAnnounce(t *testing.T) {
+
+	// OUTBOX2-OMNIBUS §7.8 O15: the Announce names the child's Create, so a lookup by the child missed it
+	test := newStreamDeleteTest(t)
+
+	parentTemplate := model.NewTemplate("parent", nil)
+	parentTemplate.Actor.BoostChildren = true
+	test.service.templateService = &Template{templates: set.Map[model.Template]{"parent": parentTemplate}}
+
+	authorID := primitive.NewObjectID()
+	parentID := primitive.NewObjectID()
+	stream := test.saveStream(t, authorID, parentID, true)
+	stream.ParentTemplateID = "parent"
+
+	// announce stores the parent's Announce of a Create of the object, as publish_outbox_stream writes it
+	announce := func(objectURL string) model.OutboxItem {
+
+		createURL := "https://example.test/@" + authorID.Hex() + "/pub/outbox/" + primitive.NewObjectID().Hex()
+		item := test.saveOutbox2Activity(t, model.ActorTypeStream, parentID, createURL, vocab.ActivityTypeAnnounce)
+		item.Activity = mapof.Any{
+			vocab.PropertyType:  vocab.ActivityTypeAnnounce,
+			vocab.PropertyActor: "https://example.test/" + parentID.Hex(),
+			vocab.PropertyObject: mapof.Any{
+				vocab.PropertyID:     createURL,
+				vocab.PropertyType:   vocab.ActivityTypeCreate,
+				vocab.PropertyObject: mapof.Any{vocab.PropertyID: objectURL, vocab.PropertyType: vocab.ObjectTypeArticle},
+			},
+		}
+
+		require.NoError(t, test.session.Collection("OutboxItem").Save(&item, "test setup"))
+		return item
+	}
+
+	announced := announce(stream.URL)
+	sibling := announce("https://example.test/" + primitive.NewObjectID().Hex())
+
+	require.NoError(t, test.service.unpublish_outbox_stream(test.session, &stream))
+	require.Equal(t, 1, test.deletesSent(t), "the parent's followers are told the child is gone")
+
+	// The child's Announce is gone, its sibling's stays, and the parent's Delete takes its place
+	remaining := model.NewOutboxItem()
+	err := test.service.outbox2Service.LoadByID(test.session, model.ActorTypeStream, parentID, announced.ActivityID, &remaining)
+	require.True(t, derp.IsNotFound(err), "the unpublished child's Announce is removed")
+	require.NoError(t, test.service.outbox2Service.LoadByID(test.session, model.ActorTypeStream, parentID, sibling.ActivityID, &remaining))
+	require.Equal(t, int64(2), test.countOutbox2(t, model.ActorTypeStream, parentID))
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"net/http"
 	"strings"
 	"testing"
@@ -828,4 +829,32 @@ func (client *countingClient) Save(streams.Document) error {
 // Delete does nothing, because nothing in these tests writes to the cache
 func (client *countingClient) Delete(string) error {
 	return nil
+}
+
+// TestLastPageSize verifies how many items the last page holds, for every remainder and for the inputs
+// that leave no last page at all
+func TestLastPageSize(t *testing.T) {
+
+	// test checks the size of the last page for one total and page size
+	test := func(totalItems int64, pageSize int, expected int64) {
+		require.Equal(t, expected, lastPageSize(totalItems, pageSize), "totalItems: %d, pageSize: %d", totalItems, pageSize)
+	}
+
+	test(1, 60, 1)
+	test(59, 60, 59)
+	test(60, 60, 60)
+	test(61, 60, 1)
+	test(120, 60, 60)
+	test(121, 60, 1)
+	test(7, 3, 1)
+	test(9, 3, 3)
+	test(5, 1, 1)
+	test(math.MaxInt64, 60, math.MaxInt64%60)
+
+	// Nothing to page, or no page to put it on
+	test(0, 60, 0)
+	test(-1, 60, 0)
+	test(math.MinInt64, 60, 0)
+	test(10, 0, 0)
+	test(10, -60, 0)
 }

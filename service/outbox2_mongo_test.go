@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math"
 	"slices"
 	"testing"
 
@@ -9,6 +10,10 @@ import (
 	querysync "github.com/EmissarySocial/emissary/queries/sync"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
+	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -143,6 +148,95 @@ func TestOutbox2_CountByParent(t *testing.T) {
 	require.Zero(t, count(nil))
 }
 
+// TestOutbox2_PagingSummary verifies the count and the last-page cursor, which must name the page that
+// following `next` from the first page ends on, for every page size and permission set
+func TestOutbox2_PagingSummary(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	groupID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+	members := model.Permissions{model.MagicGroupIDAnonymous, groupID}
+
+	summary := func(permissions model.Permissions, pageSize int) (int64, int64) {
+		totalItems, lastPageDate, err := test.service.PagingSummary(test.session, model.ActorTypeUser, userID, permissions, pageSize)
+		require.NoError(t, err)
+		return totalItems, lastPageDate
+	}
+
+	// An empty outbox has nothing on its first page, and that page is also its last
+	totalItems, lastPageDate := summary(anonymous, 3)
+	require.Zero(t, totalItems)
+	require.Equal(t, int64(math.MaxInt64), lastPageDate)
+
+	// Seven public items, two for group members, one no one may read, and rows from other outboxes
+	for createDate := int64(10); createDate <= 70; createDate += 10 {
+		test.save(t, model.ActorTypeUser, userID, createDate, anonymous, nil)
+	}
+
+	test.save(t, model.ActorTypeUser, userID, 15, model.Permissions{groupID}, nil)
+	test.save(t, model.ActorTypeUser, userID, 25, model.Permissions{groupID}, nil)
+	test.save(t, model.ActorTypeUser, userID, 5, model.NewPermissions(), nil)
+	test.save(t, model.ActorTypeUser, userID, 1, anonymous, func(item *model.OutboxItem) { item.DeleteDate = 999 })
+	test.save(t, model.ActorTypeUser, primitive.NewObjectID(), 2, anonymous, nil)
+	test.save(t, model.ActorTypeStream, userID, 3, anonymous, nil)
+
+	// Spot checks: the last page of seven in threes holds only the oldest item
+	totalItems, lastPageDate = summary(anonymous, 3)
+	require.Equal(t, int64(7), totalItems)
+	require.Equal(t, int64(20), lastPageDate)
+
+	// Members count nine, and their last page is full
+	totalItems, lastPageDate = summary(members, 3)
+	require.Equal(t, int64(9), totalItems)
+	require.Equal(t, int64(25), lastPageDate)
+
+	// walk follows `next` from the first page, as CollectionPage writes it, and returns the cursor of the last page reached
+	walk := func(permissions model.Permissions, pageSize int) int64 {
+
+		for cursor := int64(math.MaxInt64); ; {
+			page, err := test.service.QueryByParentAndDate(test.session, model.ActorTypeUser, userID, permissions, cursor, pageSize)
+			require.NoError(t, err)
+
+			if len(page) < pageSize {
+				return cursor
+			}
+
+			next := page[len(page)-1].CreateDate
+
+			// A full last page links to an empty one, which is not the last page
+			following, err := test.service.QueryByParentAndDate(test.session, model.ActorTypeUser, userID, permissions, next, pageSize)
+			require.NoError(t, err)
+
+			if len(following) == 0 {
+				return cursor
+			}
+
+			cursor = next
+		}
+	}
+
+	for name, permissions := range map[string]model.Permissions{"anonymous": anonymous, "members": members} {
+		for pageSize := 1; pageSize <= 10; pageSize++ {
+			_, lastPageDate := summary(permissions, pageSize)
+			require.Equal(t, walk(permissions, pageSize), lastPageDate, "%s, pageSize: %d", name, pageSize)
+		}
+	}
+
+	// RULE: a caller with no permissions sees an empty outbox, without querying for its oldest items
+	totalItems, lastPageDate = summary(model.NewPermissions(), 3)
+	require.Zero(t, totalItems)
+	require.Equal(t, int64(math.MaxInt64), lastPageDate)
+
+	// RULE: a page must hold at least one item
+	for _, pageSize := range []int{0, -1} {
+		_, _, err := test.service.PagingSummary(test.session, model.ActorTypeUser, userID, anonymous, pageSize)
+		require.Error(t, err)
+		require.True(t, derp.IsInternalServerError(err))
+	}
+}
+
 // TestOutbox2_RangeByObjectID verifies that only the actor's own items for that object are returned
 func TestOutbox2_RangeByObjectID(t *testing.T) {
 
@@ -266,4 +360,50 @@ func TestOutbox2_removeByActivityURL(t *testing.T) {
 
 	require.NoError(t, test.service.removeByActivityURL(test.session, model.ActorTypeUser, userID, like.URL))
 	require.Equal(t, int64(2), countOutbox2(t, test.session))
+}
+
+// TestOutbox2_RemoveByObjectID_Announced verifies that removing an object also removes this actor's
+// Announces of a Create or Update of it, whether the activity embeds the object or names it by URL
+func TestOutbox2_RemoveByObjectID_Announced(t *testing.T) {
+
+	// OUTBOX2-OMNIBUS §7.8 O15: the parent Stream's Announce names the child's Create, not the child
+	test := newOutbox2QueryTest(t)
+
+	parentID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	const child = "https://example.test/child"
+
+	// announcing returns a mutation that makes a row an activity of the given type, whose object is
+	// an activity on the given object
+	announcing := func(activityType string, object any) func(*model.OutboxItem) {
+		return func(item *model.OutboxItem) {
+			activityURL := "https://example.test/@author/pub/outbox/" + primitive.NewObjectID().Hex()
+			item.ActivityType = activityType
+			item.ObjectID = activityURL
+			item.Activity = mapof.Any{
+				vocab.PropertyType:   activityType,
+				vocab.PropertyActor:  "https://example.test/" + parentID.Hex(),
+				vocab.PropertyObject: mapof.Any{vocab.PropertyID: activityURL, vocab.PropertyType: vocab.ActivityTypeCreate, vocab.PropertyObject: object},
+			}
+		}
+	}
+
+	embedded := test.save(t, model.ActorTypeStream, parentID, 1, anonymous, announcing(vocab.ActivityTypeAnnounce, mapof.Any{vocab.PropertyID: child}))
+	byURL := test.save(t, model.ActorTypeStream, parentID, 2, anonymous, announcing(vocab.ActivityTypeAnnounce, child))
+
+	// Rows that must stay: another child, an activity that is not an Announce, and another actor's Announce
+	other := test.save(t, model.ActorTypeStream, parentID, 3, anonymous, announcing(vocab.ActivityTypeAnnounce, mapof.Any{vocab.PropertyID: "https://example.test/other"}))
+	notAnnounce := test.save(t, model.ActorTypeStream, parentID, 4, anonymous, announcing(vocab.ActivityTypeAdd, mapof.Any{vocab.PropertyID: child}))
+	elsewhere := test.save(t, model.ActorTypeStream, primitive.NewObjectID(), 5, anonymous, announcing(vocab.ActivityTypeAnnounce, mapof.Any{vocab.PropertyID: child}))
+
+	items, err := test.service.RangeByObjectID(test.session, model.ActorTypeStream, parentID, child)
+	require.NoError(t, err)
+	require.ElementsMatch(t, []primitive.ObjectID{embedded.ActivityID, byURL.ActivityID}, activityIDs(slices.Collect(items)))
+
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeStream, parentID, child))
+
+	remaining, err := test.service.Query(test.session, exp.All())
+	require.NoError(t, err)
+	require.ElementsMatch(t, []primitive.ObjectID{other.ActivityID, notAnnounce.ActivityID, elsewhere.ActivityID}, activityIDs(remaining))
 }

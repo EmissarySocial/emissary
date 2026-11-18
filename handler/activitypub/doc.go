@@ -14,8 +14,8 @@
 // authoritative gate on the VERIFIED actor, runs after verification, in the inbox handlers
 // themselves.  IsWireGateException and IsMLSCreate name the activities Stage 1 must never discard.
 //
-// Outbound, Collection and CollectionPage build the paged OrderedCollections that back the outbox,
-// followers, liked, featured, and children URLs.  Serving them from here is what keeps every
+// Outbound, Collection, PagedCollection, and CollectionPage build the paged OrderedCollections that
+// back the outbox, followers, liked, featured, and children URLs.  Serving them from here keeps every
 // collection's paging shape identical across actor types.  Both page builders OMIT any item that
 // cannot identify itself -- an empty `id` -- and page from the QUERY results rather than the
 // rendered items, so an omission cannot truncate the collection.  See handler/AGENTS.md.
