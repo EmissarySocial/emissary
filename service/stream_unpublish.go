@@ -126,9 +126,10 @@ func (service *Stream) unpublish_outbox_user(session data.Session, userID primit
 
 	const location = "service.Stream.unpublish_outbox_user"
 
-	// Send the Delete from the User's outbox
+	// Send the Delete from the User's outbox. It copies the addressing of the Stream's Create, and a
+	// Stream that was published before Outbox2 has none, so it falls back to the Stream's audience.
 	log.Trace().Str("id", stream.URL).Msg("Publishing a DELETE from User's outbox")
-	if err := service.outboxService.DeleteActivity(session, model.FollowerTypeUser, userID, stream.URL, stream.DefaultAllow); err != nil {
+	if err := service.outbox2Service.DeleteActivity(session, model.ActorTypeUser, userID, stream.URL, stream.DefaultAllow, service.audienceMap(stream)); err != nil {
 		return derp.Wrap(err, location, "Unpublishing activity", stream.URL)
 	}
 
@@ -158,8 +159,8 @@ func (service *Stream) unpublish_outbox_stream(session data.Session, stream *mod
 		return nil
 	}
 
-	// Send the Delete from the parent Stream's outbox
-	if err := service.outboxService.DeleteActivity(session, model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow); err != nil {
+	// Send the Delete from the parent Stream's outbox, to the audience that the parent announced it to
+	if err := service.outbox2Service.DeleteActivity(session, model.ActorTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow, service.parentAudience(stream)); err != nil {
 		return derp.Wrap(err, location, "Publishing a DELETE activity for this Stream", stream.URL)
 	}
 

@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/derp/plugins"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
@@ -34,8 +35,8 @@ type streamDeleteTest struct {
 	tasks    *postcommit.Tasks
 }
 
-// newStreamDeleteTest returns a Stream service wired with every service that Delete calls.
-// Loading a signing key always fails, so a Delete that is sent stops there and is counted.
+// newStreamDeleteTest returns a Stream service wired with every service that Delete calls. A Delete is
+// queued for delivery after the commit, and loading a signing key always fails and is counted.
 func newStreamDeleteTest(t *testing.T) streamDeleteTest {
 
 	t.Helper()
@@ -54,14 +55,21 @@ func newStreamDeleteTest(t *testing.T) streamDeleteTest {
 	}
 
 	keyService := &EncryptionKey{}
+	locator := &Locator{host: "https://example.test"}
+
+	// Outbox2's removals from the legacy outbox and the object cache are recorded, not made
+	removals := &removalRecorder{}
+	outbox2 := &Outbox2{locator: locator, host: "https://example.test", legacyOutbox: removals, objectCache: removals}
+	legacyOutbox := &Outbox{userService: &User{keyService: keyService}, outbox2Service: outbox2}
 
 	service := Stream{
 		attachmentService:   &Attachment{},
-		collectionService:   &Collection{locatorService: &Locator{host: "https://example.test"}},
+		collectionService:   &Collection{locatorService: locator},
 		domainService:       &Domain{},
 		draftService:        &StreamDraft{},
-		outboxService:       &Outbox{userService: &User{keyService: keyService}, outbox2Service: &Outbox2{}},
-		outbox2Service:      &Outbox2{},
+		locatorService:      locator,
+		outboxService:       legacyOutbox,
+		outbox2Service:      outbox2,
 		searchResultService: &SearchResult{},
 		streamSourceService: &StreamSource{},
 		webhookService:      webhookService,
@@ -179,6 +187,27 @@ func (test streamDeleteTest) countOutbox2(t *testing.T, actorType string, actorI
 	return result
 }
 
+// deletesSent returns the number of Delete activities queued for delivery since it was last called
+func (test streamDeleteTest) deletesSent(t *testing.T) int {
+
+	t.Helper()
+
+	result := 0
+
+	for _, task := range test.tasks.Drain() {
+
+		if task.Name != delivery.TaskFanOut {
+			continue
+		}
+
+		if task.Arguments.GetMap("activity").GetString(vocab.PropertyType) == vocab.ActivityTypeDelete {
+			result++
+		}
+	}
+
+	return result
+}
+
 // requireCount waits for the counter to reach `want`, then confirms that it stays there
 func requireCount(t *testing.T, counter *atomic.Int32, want int32, label string) {
 
@@ -202,7 +231,8 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveCreate(t, authorID, stream)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 1, "one Delete is signed by the author")
+		require.Equal(t, 1, test.deletesSent(t), "one Delete is queued as the author")
+		requireCount(t, test.keyLoads, 0, "the Delete is signed by the send task, never inside the request")
 	})
 
 	t.Run("never federated", func(t *testing.T) {
@@ -210,7 +240,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		stream := test.saveStream(t, primitive.NewObjectID(), primitive.NewObjectID(), true)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 0, "a Stream followers never received sends no Delete")
+		require.Equal(t, 0, test.deletesSent(t), "a Stream followers never received sends no Delete")
 	})
 
 	t.Run("another actor's outbox", func(t *testing.T) {
@@ -219,7 +249,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveCreate(t, primitive.NewObjectID(), stream)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 0, "only the author's outbox counts")
+		require.Equal(t, 0, test.deletesSent(t), "only the author's outbox counts")
 	})
 
 	t.Run("no author", func(t *testing.T) {
@@ -227,7 +257,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		stream := test.saveStream(t, primitive.NilObjectID, primitive.NewObjectID(), true)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 0, "a Stream with no author sends no Delete")
+		require.Equal(t, 0, test.deletesSent(t), "a Stream with no author sends no Delete")
 	})
 
 	t.Run("children", func(t *testing.T) {
@@ -240,7 +270,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveCreate(t, authorID, child)
 
 		require.NoError(t, test.service.Delete(test.session, &parent, "test"))
-		requireCount(t, test.keyLoads, 2, "the parent and its one federated child each send a Delete")
+		require.Equal(t, 2, test.deletesSent(t), "the parent and its one federated child each send a Delete")
 	})
 
 	t.Run("unpublished", func(t *testing.T) {
@@ -252,7 +282,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveActivity(t, authorID, stream, vocab.ActivityTypeDelete)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 0, "an unpublished Stream was already withdrawn, so it sends no second Delete")
+		require.Equal(t, 0, test.deletesSent(t), "an unpublished Stream was already withdrawn, so it sends no second Delete")
 	})
 
 	t.Run("updated", func(t *testing.T) {
@@ -262,7 +292,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveActivity(t, authorID, stream, vocab.ActivityTypeUpdate)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 1, "an Update publishes the Stream as a Create does")
+		require.Equal(t, 1, test.deletesSent(t), "an Update publishes the Stream as a Create does")
 	})
 
 	t.Run("republished", func(t *testing.T) {
@@ -273,7 +303,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveCreate(t, authorID, stream)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 1, "a Stream published again after unpublishing sends one Delete")
+		require.Equal(t, 1, test.deletesSent(t), "a Stream published again after unpublishing sends one Delete")
 	})
 
 	t.Run("Outbox2", func(t *testing.T) {
@@ -283,7 +313,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveOutbox2Activity(t, model.ActorTypeUser, authorID, stream.URL, vocab.ActivityTypeCreate)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 1, "a Create in Outbox2 counts as a Create in the legacy outbox")
+		require.Equal(t, 1, test.deletesSent(t), "a Create in Outbox2 counts as a Create in the legacy outbox")
 	})
 
 	t.Run("Outbox2 unpublished", func(t *testing.T) {
@@ -293,7 +323,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveOutbox2Activity(t, model.ActorTypeUser, authorID, stream.URL, vocab.ActivityTypeDelete)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 0, "a Delete in Outbox2 does not count as a publication")
+		require.Equal(t, 0, test.deletesSent(t), "a Delete in Outbox2 does not count as a publication")
 	})
 
 	t.Run("another actor's Outbox2", func(t *testing.T) {
@@ -302,7 +332,7 @@ func TestStreamDelete_FederatesADelete(t *testing.T) {
 		test.saveOutbox2Activity(t, model.ActorTypeUser, primitive.NewObjectID(), stream.URL, vocab.ActivityTypeCreate)
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.keyLoads, 0, "only the author's Outbox2 counts")
+		require.Equal(t, 0, test.deletesSent(t), "only the author's Outbox2 counts")
 	})
 }
 
@@ -356,6 +386,19 @@ func (reports *streamDeleteReports) withMessage(message string) []error {
 	return result
 }
 
+// failingRemover is a legacy outbox that cannot remove anything
+type failingRemover struct{}
+
+// removeOutboxMessagesByObjectID always fails
+func (failingRemover) removeOutboxMessagesByObjectID(data.Session, string, primitive.ObjectID, string) error {
+	return derp.Internal("test", "The legacy outbox is unavailable in this test")
+}
+
+// removeOutboxMessagesByActivityURL always fails
+func (failingRemover) removeOutboxMessagesByActivityURL(data.Session, string, primitive.ObjectID, string) error {
+	return derp.Internal("test", "The legacy outbox is unavailable in this test")
+}
+
 // TestStreamDelete_ReportNamesTheStream verifies that a Delete which cannot be sent is reported
 // with the Stream's ID, and never carries the Stream itself
 func TestStreamDelete_ReportNamesTheStream(t *testing.T) {
@@ -371,8 +414,11 @@ func TestStreamDelete_ReportNamesTheStream(t *testing.T) {
 	stream.Label = "label-that-must-not-be-reported"
 	test.saveCreate(t, authorID, stream)
 
+	// The Delete fails before it is queued, when the legacy outbox's rows cannot be removed
+	test.service.outbox2Service.legacyOutbox = failingRemover{}
+
 	require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-	requireCount(t, test.keyLoads, 1, "the Delete fails at the author's signing key")
+	require.Zero(t, test.deletesSent(t), "a Delete that fails is not queued")
 
 	federating := reports.withMessage("Federating Delete")
 	require.Len(t, federating, 1)
@@ -389,8 +435,9 @@ func TestStream_UnpublishOutboxStream_ErrorNamesTheStream(t *testing.T) {
 	parentTemplate := model.NewTemplate("parent", nil)
 	parentTemplate.Actor.BoostChildren = true
 	test.service.templateService = &Template{templates: set.Map[model.Template]{"parent": parentTemplate}}
-	test.service.keyService = &EncryptionKey{}
-	test.service.outboxService.streamService = &test.service
+
+	// The Delete fails before it is queued, when the legacy outbox's rows cannot be removed
+	test.service.outbox2Service.legacyOutbox = failingRemover{}
 
 	stream := test.saveStream(t, primitive.NewObjectID(), primitive.NewObjectID(), true)
 	stream.ParentTemplateID = "parent"
@@ -398,7 +445,7 @@ func TestStream_UnpublishOutboxStream_ErrorNamesTheStream(t *testing.T) {
 
 	err := test.service.unpublish_outbox_stream(test.session, &stream)
 	require.Error(t, err)
-	requireCount(t, test.keyLoads, 1, "the Delete fails at the parent Stream's signing key")
+	require.Zero(t, test.deletesSent(t), "a Delete that fails is not queued")
 	secretcheck.RequireAbsent(t, err, stream.Label)
 }
 

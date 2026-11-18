@@ -122,7 +122,7 @@ func TestUserDelete_ClearsOutbox2BeforeStreams(t *testing.T) {
 		t.Fatal("Delete never sent the user:delete webhook")
 	}
 
-	requireCount(t, test.keyLoads, 0, "deleting a User sends no Delete for each of their Streams")
+	require.Zero(t, test.deletesSent(t), "deleting a User sends no Delete for each of their Streams")
 	require.Zero(t, test.countOutbox2(t, model.ActorTypeUser, owner.UserID))
 	require.Equal(t, int64(1), test.countOutbox2(t, model.ActorTypeUser, otherUserID))
 }
