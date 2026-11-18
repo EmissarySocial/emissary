@@ -66,3 +66,25 @@ c38f7e75adccdc510e53517a52f0a80e76986e1b:service/userConnection_test.go:generic-
 4d241e967f70c267160bd6cf56238d5b2bae98f2:model/vault_nonces_test.go:stripe-access-token:207
 4d241e967f70c267160bd6cf56238d5b2bae98f2:model/vault_nonces_test.go:generic-api-key:208
 4d241e967f70c267160bd6cf56238d5b2bae98f2:model/vault_nonces_test.go:stripe-access-token:215
+
+# Reviewed 2026-11-18: placeholder tokens in tests. Every value is the counting sequence
+# "0123456789abcdef" repeated, which the rule matches as a hex run. None is a credential.
+#
+# build/step_AsModal_background_test.go
+# Test fixture: a 24-char placeholder used as both a URL path and its token
+e626b2ebc0da98b59998d84c9b807ce9fd2a5172:build/step_AsModal_background_test.go:generic-api-key:25
+
+# service/streamSource_webhook_test.go
+# Test fixture: placeholder webhook token
+32ea97ef8b8a79b6220106753e2bd188cc1f32e3:service/streamSource_webhook_test.go:generic-api-key:28
+32ea97ef8b8a79b6220106753e2bd188cc1f32e3:service/streamSource_webhook_test.go:generic-api-key:55
+32ea97ef8b8a79b6220106753e2bd188cc1f32e3:service/streamSource_webhook_test.go:generic-api-key:72
+
+# handler/streamSource_test.go
+# Test fixture: the same placeholder webhook token
+d56c9da5e04e585f668b6213a812652bf707762b:handler/streamSource_test.go:generic-api-key:224
+d56c9da5e04e585f668b6213a812652bf707762b:handler/streamSource_test.go:generic-api-key:263
+
+# integration-tests/replycontrols/run.sh
+# Integration test script: placeholder master key for a throwaway local server
+d3b90abc239a7705a9e679dd6a760ca912f7f824:integration-tests/replycontrols/run.sh:generic-api-key:119
