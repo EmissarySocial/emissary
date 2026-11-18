@@ -20,6 +20,7 @@ import (
 	"github.com/benpate/hannibal/corpus"
 	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"github.com/stretchr/testify/require"
@@ -582,4 +583,50 @@ func (corpusSigner) ActorID() string {
 // PrivateKey returns no key, because the fan-out does not sign
 func (corpusSigner) PrivateKey() (string, crypto.PrivateKey) {
 	return "", nil
+}
+
+// countInbox returns the number of activities in the test User's inbox
+func (test outbox2CorpusTest) countInbox(t *testing.T) int64 {
+
+	t.Helper()
+
+	count, err := test.session.Collection("Inbox").Count(exp.Equal("userId", test.userID))
+	require.NoError(t, err)
+	return count
+}
+
+// selfAddressed returns a Create of a Note that the test User addresses to their own actor
+func (test outbox2CorpusTest) selfAddressed() streams.Document {
+	return streams.NewDocument(mapof.Any{
+		vocab.PropertyType:   vocab.ActivityTypeCreate,
+		vocab.PropertyActor:  test.world.Actor,
+		vocab.PropertyTo:     []any{test.world.Actor},
+		vocab.PropertyObject: mapof.Any{vocab.PropertyType: vocab.ObjectTypeNote, vocab.PropertyContent: "Hello"},
+	})
+}
+
+// TestOutbox2_PutUserActivity_LoopsBack verifies that a client's activity addressed to its own
+// actor is written straight into that actor's inbox, which conversations-mls reads at once
+func TestOutbox2_PutUserActivity_LoopsBack(t *testing.T) {
+
+	test := newOutbox2CorpusTest(t)
+
+	activityURL, err := test.service.PutUserActivity(test.session, test.userID, test.selfAddressed())
+	require.NoError(t, err)
+	require.Equal(t, int64(1), test.countInbox(t))
+
+	duplicate := test.service.inboxService.IsDuplicateActivity(test.session, test.userID, activityURL)
+	require.True(t, duplicate, "the delivered copy is dropped as a duplicate")
+}
+
+// TestOutbox2_Publish_NoLoopback verifies that Publish never writes to an inbox, so a self-addressed
+// reaction is processed by the inbox handlers when its delivered copy arrives
+func TestOutbox2_Publish_NoLoopback(t *testing.T) {
+
+	test := newOutbox2CorpusTest(t)
+
+	activityURL, err := test.service.Publish(test.session, model.ActorTypeUser, test.userID, test.selfAddressed(), model.NewAnonymousPermissions())
+	require.NoError(t, err)
+	require.Zero(t, test.countInbox(t))
+	require.False(t, test.service.inboxService.IsDuplicateActivity(test.session, test.userID, activityURL))
 }

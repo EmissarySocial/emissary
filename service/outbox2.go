@@ -206,6 +206,12 @@ func (service *Outbox2) PutUserActivity(session data.Session, userID primitive.O
 		return "", derp.Wrap(err, location, "Publishing activity")
 	}
 
+	// RULE: conversations-mls reads the KeyPackages it addresses to its own actor within the same
+	// request, so only a client's own activity is also written straight into its actor's inbox
+	if err := service.loopback(session, userID, activity); err != nil {
+		return "", derp.Wrap(err, location, "Saving activity to the actor's inbox", activityURL)
+	}
+
 	return activityURL, nil
 }
 
@@ -290,11 +296,6 @@ func (service *Outbox2) Publish(session data.Session, actorType string, actorID 
 	item.Permissions = permissions
 	item.CalcRecipients()
 
-	// Put a self-addressed activity straight into the actor's own inbox
-	if err := service.loopback(session, &item); err != nil {
-		return "", derp.Wrap(err, location, "Saving activity to the actor's inbox", activityURL)
-	}
-
 	// Store the activity
 	if err := service.Save(session, &item, "Published"); err != nil {
 		return "", derp.Wrap(err, location, "Saving Outbox2 activity", activityURL)
@@ -309,26 +310,23 @@ func (service *Outbox2) Publish(session data.Session, actorType string, actorID 
 }
 
 // loopback writes a User's self-addressed activity straight into their own inbox. The delivered
-// copy still arrives later, and the inbox accepts it as a duplicate.
-func (service *Outbox2) loopback(session data.Session, item *model.OutboxItem) error {
+// copy still arrives later, and the inbox drops it as a duplicate.
+func (service *Outbox2) loopback(session data.Session, userID primitive.ObjectID, asActivity streams.Document) error {
 
 	const location = "service.Outbox2.loopback"
 
-	// RULE: Only a User has an inbox here
-	if item.ActorType != model.ActorTypeUser {
-		return nil
-	}
-
 	// RULE: Only an activity addressed to its own actor loops back
-	if !item.Recipients.Contains(service.locator.UserURL(item.ActorID)) {
+	item := model.NewOutboxItem()
+	item.Activity = asActivity.Map()
+	item.CalcRecipients()
+
+	if !item.Recipients.Contains(service.locator.UserURL(userID)) {
 		return nil
 	}
-
-	asActivity := streams.NewDocument(item.Activity)
 
 	inboxActivity := model.NewInboxActivity()
 	inboxActivity.ActivityID = asActivity.ID()
-	inboxActivity.UserID = item.ActorID
+	inboxActivity.UserID = userID
 	inboxActivity.ActorID = asActivity.ActorID()
 	inboxActivity.Context = asActivity.Context()
 	inboxActivity.ActivityType = asActivity.Type()
@@ -526,10 +524,11 @@ func (service *Outbox2) RangeByActivityURL(session data.Session, actorType strin
 	return service.Range(session, criteria)
 }
 
-// removeByObjectID deletes every activity in an actor's outbox that acts on the provided object
-func (service *Outbox2) removeByObjectID(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) error {
+// RemoveByObjectID deletes every activity in an actor's outbox that acts on the provided object,
+// and sends nothing
+func (service *Outbox2) RemoveByObjectID(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) error {
 
-	const location = "service.Outbox2.removeByObjectID"
+	const location = "service.Outbox2.RemoveByObjectID"
 
 	// RULE: An empty objectID would match every activity that has no object
 	if objectID == "" {
