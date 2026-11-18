@@ -49,6 +49,14 @@ The failure this guards against is a *concatenation*, not a missing field. `Outb
 
 Two details to preserve. Paging math reads the QUERY results (`len(values)`), never the rendered `OrderedItems` — paging from the rendered list would let one omitted item end the collection at whatever page happened to contain it. And the omission belongs in the shared builders, not in each of the four `activitypub_*` packages, for the reason [activitypub/doc.go](activitypub/doc.go) gives about every other collection rule.
 
+## A User's or Stream's outbox is read from `OutboxItem` alone
+
+Both outbox collections and both single-activity GETs read `service.Outbox2` and nothing else (OUTBOX2-OMNIBUS §1.22, §1.23). A row still in the legacy `Outbox` collection is not served until the §1.21 migration copies it.
+
+- **`totalItems` and `last` apply the reader's permissions,** through `Outbox2.PagingSummary`, the same filter each page uses, so the count never reveals how much private activity an outbox holds. `last` is the `publishDate` cursor that following `next` from `first` ends on, so a crawler that reads either sees the same pages.
+- **`PagedCollection` returns a map, not `streams.OrderedCollection`,** whose `omitempty` drops a zero `totalItems`; Funkwhale refuses a collection without it.
+- **A public activity is served without parsing the signature.** Any other activity needs a signer that `OutboxItem.IsVisibleTo` admits, and a hidden one answers 404, never 403, so a stranger cannot learn that it exists.
+
 ## Every caller-supplied or remote URL is guarded before it reaches an href or redirect
 
 - `uri.IsSafeRedirectURL` is the gate for link targets: `getIntent_Continue` ([intent_continue.go](intent_continue.go)) replaces an unsafe URL with `/@me` BEFORE both the displayed text and the href, so the page always shows the URL it links to; `safeIntentURL` ([intent_header.go](intent_header.go)) returns `""` for unsafe values so the html builder omits the attribute entirely. Remote actor profile/icon URLs count as untrusted — a fetched actor can serve `javascript:` URLs.

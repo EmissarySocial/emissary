@@ -85,16 +85,44 @@ func TestVisibleOutboxItem_PublicIsOpen(t *testing.T) {
 	result, err := VisibleOutboxItem(fixedSignature{permissions: model.NewAnonymousPermissions()}, nil, nil, &item)
 	require.NoError(t, err)
 	require.NotEmpty(t, result)
+	require.NotContains(t, result, vocab.PropertyBCC)
 }
 
-// TestVisibleOutboxItem_InvalidSignatureIsRefused verifies that a signature error is returned as it is
-func TestVisibleOutboxItem_InvalidSignatureIsRefused(t *testing.T) {
+// TestVisibleOutboxItem_PublicSkipsTheSignature verifies that a public item is served even when the
+// request's signature would not verify, so a relay's subscribers can re-fetch it cheaply
+func TestVisibleOutboxItem_PublicSkipsTheSignature(t *testing.T) {
 
-	item := directMessage()
-	item.Permissions = model.NewAnonymousPermissions()
 	refusal := derp.Unauthorized("test", "Invalid HTTP Signature")
 
-	result, err := VisibleOutboxItem(fixedSignature{err: refusal}, nil, nil, &item)
-	require.Equal(t, refusal, err)
-	require.Nil(t, result)
+	for name, permissions := range map[string]model.Permissions{
+		"anonymous":            model.NewAnonymousPermissions(),
+		"anonymous and others": {model.MagicGroupIDAuthenticated, model.MagicGroupIDAnonymous},
+	} {
+		item := directMessage()
+		item.Permissions = permissions
+
+		result, err := VisibleOutboxItem(fixedSignature{err: refusal}, nil, nil, &item)
+		require.NoError(t, err, name)
+		require.Equal(t, item.Activity[vocab.PropertyID], result[vocab.PropertyID], name)
+		require.NotContains(t, result, vocab.PropertyBCC, name)
+	}
+}
+
+// TestVisibleOutboxItem_InvalidSignatureIsRefused verifies that a signature error refuses any item that is
+// not public, and is returned as it is
+func TestVisibleOutboxItem_InvalidSignatureIsRefused(t *testing.T) {
+
+	refusal := derp.Unauthorized("test", "Invalid HTTP Signature")
+
+	for name, permissions := range map[string]model.Permissions{
+		"none":          model.NewPermissions(),
+		"authenticated": model.NewAuthenticatedPermissions(),
+	} {
+		item := directMessage()
+		item.Permissions = permissions
+
+		result, err := VisibleOutboxItem(fixedSignature{err: refusal}, nil, nil, &item)
+		require.Equal(t, refusal, err, name)
+		require.Nil(t, result, name)
+	}
 }
