@@ -6,13 +6,12 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
-	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/collection"
-	"github.com/benpate/hannibal/property"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/ranges"
@@ -129,14 +128,20 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 	// ours alone, and the first point where it becomes readable. (BUG-07)
 	//
 	// Copy BEFORE stripping. RawActivity aliases a live map on both write paths -- Document.Map()
-	// hands back the underlying container, and Outbox2.Save assigns OutboxItem.Activity directly
+	// hands back the underlying container, and Outbox2.Publish assigns OutboxItem.Activity directly
 	// -- and callers upstream still read full addressing from it: IsPublic, isDirectMessage,
 	// CalcRecipients, and Deliver's RangeAddressees. Stripping in place would silently drop
 	// blind recipients from delivery enumeration.
 	if inboxActivity.RawActivity != nil {
-		rawActivity := property.Map(inboxActivity.RawActivity).Clone().Map()
-		assanitizer.StripKeys(rawActivity, vocab.PropertyBTo, vocab.PropertyBCC)
-		inboxActivity.RawActivity = mapof.Any(rawActivity)
+
+		rawActivity, err := hannibal.StripBlindRecipients(inboxActivity.RawActivity)
+
+		// RULE: An activity that cannot be stripped is not saved, because it would be readable
+		if err != nil {
+			return derp.Wrap(err, location, "Removing blind recipients")
+		}
+
+		inboxActivity.RawActivity = rawActivity
 	}
 
 	// Validate the record using the schema

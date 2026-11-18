@@ -207,7 +207,13 @@ func (service *ImportItem) LoadNext(session data.Session, userID primitive.Objec
 		AndEqual("stateId", model.ImportItemStateNew).
 		AndEqual("importId", importID)
 
-	return service.Load(session, criteria, result)
+	// RULE: Import in the order the items were created, which is the order of the import plan.
+	// An item that refers to another, such as an outbox activity to its Stream, must come second.
+	if err := service.collection(session).Load(notDeleted(criteria), result, option.SortAsc("_id")); err != nil {
+		return derp.Wrap(err, "service.ImportItem.LoadNext", "Loading next ImportItem", "importId: "+importID.Hex())
+	}
+
+	return nil
 }
 
 // RangeByImportID returns an iterator for all ImportItems that match the provided UserID and ImportID

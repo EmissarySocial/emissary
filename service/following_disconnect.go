@@ -57,10 +57,17 @@ func (service *Following) Disconnect(session data.Session, following *model.Foll
 
 // disconnect_ActivityPub queues an ActivityPub "Undo" of the original "Follow" request, delivered
 // post-commit to the followed actor per spec (https://www.w3.org/TR/activitypub/#undo-activity-outbox).
-// It carries the Follow as payload (Outbox.SendUndoFollow), NOT a row reference, because the caller
+// It carries the Follow as payload (Outbox2.SendUndoFollow), NOT a row reference, because the caller
 // (Following.deleteNoStats) has already deleted the Following row. See POST-COMMIT-FEDERATION.md F4.
 func (service *Following) disconnect_ActivityPub(session data.Session, following *model.Following) {
+
+	const location = "service.Following.disconnect_ActivityPub"
+
 	followMap := service.AsJSONLD(following)
 	actorURL := service.ActivityPubActorID(following)
-	service.outboxService.SendUndoFollow(session, actorURL, followMap)
+
+	// Disconnect cannot fail its caller, which has already deleted the Following, so a failure is reported
+	if err := service.outbox2Service.SendUndoFollow(session, actorURL, followMap); err != nil {
+		derp.Report(derp.Wrap(err, location, "Sending Undo of a Follow", "followingId: "+following.FollowingID.Hex()))
+	}
 }

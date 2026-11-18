@@ -20,11 +20,12 @@ import (
 type PublicKeyProvider interface {
 	PublicKeyFinder(keyID string) (string, error)
 	RefreshPublicKey(keyID string) (string, error)
+	RequestHostname(request *http.Request) string
 }
 
 // InboxValidators returns the router Option that installs the canonical inbox validator chain (Stage 1
 // of the block gate plus the standard validators). Pass NilObjectID as userID for admin-tier inboxes.
-func InboxValidators(keys PublicKeyProvider, checker RuleChecker, session data.Session, userID primitive.ObjectID) router.Option {
+func InboxValidators(request *http.Request, keys PublicKeyProvider, checker RuleChecker, session data.Session, userID primitive.ObjectID) router.Option {
 
 	// keys is required, not optional: hannibal's own HTTPSig validator treats a nil key finder as
 	// permission to fetch the key itself, outside Emissary's client stack. See ReceiveRequest for the
@@ -33,11 +34,14 @@ func InboxValidators(keys PublicKeyProvider, checker RuleChecker, session data.S
 	// The two finders travel together as ONE argument so that no inbox can install the primary without
 	// the refresh -- an inbox that did would silently stop repairing key rotation. (BUG-22)
 
+	// RULE: The signed host is the one the server factory reads, which believes X-Forwarded-Host
+	// only when the server's configuration says a proxy sets it.
+
 	// One definition so the chain cannot drift: WithValidators REPLACES it wholesale, so hand-assembling
 	// it per handler risks omitting the signature check and silently disabling verification there.
 	return router.WithValidators(
 		NewRuleValidator(checker, session, userID),
-		validator.NewHTTPSig(keys.PublicKeyFinder, sigs.WithRefreshKey(keys.RefreshPublicKey)),
+		validator.NewHTTPSig(keys.PublicKeyFinder, sigs.WithRefreshKey(keys.RefreshPublicKey), sigs.WithHostname(keys.RequestHostname(request))),
 		validator.NewDeletedObject(),
 	)
 }

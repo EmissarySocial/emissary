@@ -8,19 +8,37 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // Collection returns an OrderedCollection stub that points at the first page of the named collection
 func Collection(collectionID string) streams.OrderedCollection {
 
-	// Determine the first page URL
-	firstPageURL := list.First(collectionID, '?') + "?publishDate=" + convert.String(math.MaxInt64)
-
 	// Generate a new Collection stub
 	result := streams.NewOrderedCollection(collectionID)
-	result.First = firstPageURL
+	result.First = pageURL(collectionID, math.MaxInt64)
 
 	return result
+}
+
+// PagedCollection returns an OrderedCollection stub that counts its items and links its first page and
+// the page that lastPageDate starts
+func PagedCollection(collectionID string, totalItems int64, lastPageDate int64) mapof.Any {
+
+	// RULE: A map, because OrderedCollection omits a zero totalItems, and Funkwhale requires the property
+	return mapof.Any{
+		vocab.AtContext:          streams.DefaultContext(),
+		vocab.PropertyID:         collectionID,
+		vocab.PropertyType:       vocab.CoreTypeOrderedCollection,
+		vocab.PropertyTotalItems: totalItems,
+		vocab.PropertyFirst:      pageURL(collectionID, math.MaxInt64),
+		vocab.PropertyLast:       pageURL(collectionID, lastPageDate),
+	}
+}
+
+// pageURL returns the URL of the page of a collection that holds the items created before publishDate
+func pageURL(collectionID string, publishDate int64) string {
+	return list.First(collectionID, '?') + "?publishDate=" + convert.String(publishDate)
 }
 
 // CollectionPage returns one page of an OrderedCollection, rendering each value as a JSON-LD document

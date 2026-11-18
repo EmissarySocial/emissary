@@ -30,13 +30,25 @@ func (service *ActivityStream) VerifySignature(request *http.Request) (sigs.Sign
 
 	const location = "service.ActivityStream.VerifySignature"
 
-	signature, err := sigs.Verify(request, service.PublicKeyFinder, sigs.WithRefreshKey(service.RefreshPublicKey))
+	// The signed host is the one the server factory reads, as in the inbox validators
+	signature, err := sigs.Verify(request, service.PublicKeyFinder, sigs.WithRefreshKey(service.RefreshPublicKey), sigs.WithHostname(service.RequestHostname(request)))
 
 	if err != nil {
 		return signature, derp.Wrap(err, location, "Verifying HTTP Signature")
 	}
 
 	return signature, nil
+}
+
+// RequestHostname returns the public hostname that a request was sent to. It is empty until the
+// service is wired, and an empty name leaves the verifier reading the request's own Host.
+func (service *ActivityStream) RequestHostname(request *http.Request) string {
+
+	if service.requestHostname == nil {
+		return ""
+	}
+
+	return service.requestHostname(request)
 }
 
 // loadPublicKey returns the Actor document that carries the public key named by a keyID.

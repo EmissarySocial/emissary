@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,37 +25,45 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 		return derp.NotFound(location, "Actor not found")
 	}
 
+	// Retrieve permissions from the request signature, which decide what the count and every page show
 	permissions, err := factory.Permission().ParseHTTPSignature(session, ctx.Request())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid HTTP Signature")
 	}
 
-	// If the request is for the collection itself, then return a summary and the URL of the first page
+	// Read the page cursor, which is empty when the collection itself is requested
+	outboxService := factory.Outbox2()
 	publishDateString := ctx.QueryParam("publishDate")
 
+	// If the request is for the collection itself, then return its size and the URLs of its first and last pages
 	if publishDateString == "" {
+
+		totalItems, lastPageDate, err := outboxService.PagingSummary(session, model.ActorTypeStream, stream.StreamID, permissions, activitypub.OutboxPageSize)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Counting outbox activities")
+		}
+
 		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
-		result := activitypub.Collection(stream.ActivityPubOutboxURL())
+		result := activitypub.PagedCollection(stream.ActivityPubOutboxURL(), totalItems, lastPageDate)
 		return ctx.JSON(http.StatusOK, result)
 	}
 
 	// Fall through means that we're looking for a specific page of the collection
 	publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
 	pageID := fullURL(factory, ctx)
-	pageSize := 60
 
-	// Retrieve a page of messages from the database
-	outboxService := factory.Outbox()
-	messages, err := outboxService.QueryByParentAndDate(session, model.FollowerTypeStream, stream.StreamID, permissions, publishedDate, 60)
+	// Retrieve a page of activities from the database
+	items, err := outboxService.QueryByParentAndDate(session, model.ActorTypeStream, stream.StreamID, permissions, publishedDate, activitypub.OutboxPageSize)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Loading outbox messages")
+		return derp.Wrap(err, location, "Loading outbox activities")
 	}
 
 	// Return results as an OrderedCollectionPage
 	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
-	result := activitypub.CollectionPage(pageID, stream.ActivityPubOutboxURL(), pageSize, messages)
+	result := activitypub.CollectionPage(pageID, stream.ActivityPubOutboxURL(), activitypub.OutboxPageSize, items)
 	return ctx.JSON(http.StatusOK, result)
 }
 
@@ -78,31 +85,26 @@ func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session d
 		return derp.Wrap(err, location, "OutboxMessageID must be a valid ObjectID", outboxMessageToken, derp.WithNotFound())
 	}
 
-	// Load the OutboxMessage, scoped to THIS Stream so one actor cannot serve another's activity
-	outboxService := factory.Outbox()
-	outboxMessage := model.NewOutboxMessage()
+	// Load the activity, scoped to THIS Stream so one actor cannot serve another's activity
+	item := model.NewOutboxItem()
 
-	if err := outboxService.LoadByID(session, stream.StreamID, outboxMessageID, &outboxMessage); err != nil {
-		return derp.Wrap(err, location, "Loading outbox message", outboxMessageID)
+	if err := factory.Outbox2().LoadByID(session, model.ActorTypeStream, stream.StreamID, outboxMessageID, &item); err != nil {
+		return derp.Wrap(err, location, "Loading outbox activity", "activityId: "+outboxMessageToken)
 	}
 
-	// RULE: The permissions in the HTTP signature must satisfy the message's own permissions.
-	// The collection applies the same test as a query filter; a single item must apply it here.
-	permissions, err := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+	return getOutboxItem(ctx, factory, session, &item)
+}
 
+// getOutboxItem writes an Outbox2 activity to the response, when the request's signer may read it
+func getOutboxItem(ctx *steranko.Context, factory *service.Factory, session data.Session, item *model.OutboxItem) error {
+
+	result, err := activitypub.VisibleOutboxItem(factory.Permission(), session, ctx.Request(), item)
+
+	// RULE: Return a refusal as it is, so the peer reads its fixed message
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid HTTP Signature")
-	}
-
-	if !slice.ContainsAny(outboxMessage.Permissions, permissions...) {
-		return derp.Forbidden(location, "You do not have permission to view this content")
-	}
-
-	// RULE: A message with no Actor has no `id` to answer with, so there is nothing here to serve
-	if outboxMessage.ActivityPubURL() == "" {
-		return derp.NotFound(location, "Outbox message cannot be identified", outboxMessageID)
+		return err
 	}
 
 	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
-	return ctx.JSON(http.StatusOK, outboxMessage.GetJSONLD())
+	return ctx.JSON(http.StatusOK, result)
 }

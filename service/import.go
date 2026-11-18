@@ -588,6 +588,29 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		})
 	}
 
+	// Import Collections, and their items once the Collections exist
+	if collection := migration.Get("emissary:collection"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Collections",
+			Description: "High-fidelity import of all custom Collections",
+			Value:       "emissary:collection",
+			Href:        collection.String(),
+		})
+
+		if collection := migration.Get("emissary:collectionItem"); collection.NotNil() {
+			result.Append(form.LookupCode{
+				Group:       "Native",
+				Icon:        "patch-check-fill",
+				Label:       "Collection Items",
+				Description: "High-fidelity import of the contents of every Collection",
+				Value:       "emissary:collectionItem",
+				Href:        collection.String(),
+			})
+		}
+	}
+
 	// Import Follower records
 	if collection := migration.Get("emissary:follower"); collection.NotNil() {
 		result.Append(form.LookupCode{
@@ -633,18 +656,6 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 					Href:        collection.String(),
 				})
 			}
-
-			// Import Direct Messages IF we have Folders
-			if collection := migration.Get("emissary:conversation"); collection.NotNil() {
-				result.Append(form.LookupCode{
-					Group:       "Native",
-					Icon:        "patch-check-fill",
-					Label:       "Direct Messages",
-					Description: "High-fidelity import of all direct message conversations",
-					Value:       "emissary:conversation",
-					Href:        collection.String(),
-				})
-			}
 		}
 
 	} else if collection := migration.Get("following"); collection.NotNil() {
@@ -658,25 +669,47 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		})
 	}
 
-	// Try native Outbox Messages
-	if collection := migration.Get("emissary:outboxMessage"); collection.NotNil() {
+	// Import the outbox. A server that is moving to Outbox2 exports both native collections, and
+	// each holds different activities, so both are imported. Streams come first in this plan,
+	// because an imported activity embeds the imported copy of its Stream.
+	hasNativeOutbox := false
+
+	if collection := migration.Get("emissary:outboxItem"); collection.NotNil() {
+		hasNativeOutbox = true
 		result.Append(form.LookupCode{
 			Group:       "Native",
 			Icon:        "patch-check-fill",
 			Label:       "Outbox",
 			Description: "High-fidelity import of Emissary Outbox.",
+			Value:       "emissary:outboxItem",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:outboxMessage"); collection.NotNil() {
+		hasNativeOutbox = true
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Outbox (earlier format)",
+			Description: "High-fidelity import of Emissary Outbox.",
 			Value:       "emissary:outboxMessage",
 			Href:        collection.String(),
 		})
-	} else if collection := migration.Get("outbox"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "ActivityPub",
-			Icon:        "activitypub",
-			Label:       "Outbox",
-			Description: "ActivityPub-compatible format. May lose some details in translation",
-			Value:       "outbox",
-			Href:        collection.String(),
-		})
+	}
+
+	// Without a native outbox, fall back to the standard ActivityPub collection
+	if !hasNativeOutbox {
+		if collection := migration.Get("outbox"); collection.NotNil() {
+			result.Append(form.LookupCode{
+				Group:       "ActivityPub",
+				Icon:        "activitypub",
+				Label:       "Outbox",
+				Description: "ActivityPub-compatible format. May lose some details in translation",
+				Value:       "outbox",
+				Href:        collection.String(),
+			})
+		}
 	}
 
 	if collection := migration.Get("emissary:rule"); collection.NotNil() {

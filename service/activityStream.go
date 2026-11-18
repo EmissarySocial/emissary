@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto"
 	"iter"
+	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -45,6 +46,7 @@ type ActivityStream struct {
 	ruleService       *Rule
 	carpool           *clients.Carpool
 	hostname          string
+	requestHostname   func(*http.Request) string // The server factory's reading of the host a request was sent to
 	queue             *queue.Queue
 	version           string
 	newSession        func(time.Duration) (data.Session, context.CancelFunc, error)
@@ -73,6 +75,7 @@ func (service *ActivityStream) Refresh(factory *Factory) {
 	service.ruleService = factory.Rule()
 	service.carpool = factory.Carpool()
 	service.hostname = factory.Hostname()
+	service.requestHostname = factory.RequestHostname
 	service.version = factory.Version()
 	service.queue = factory.Queue()
 	service.newSession = factory.Session

@@ -2370,23 +2370,28 @@
 			"fields": [
 				"content.format (values, schema.String)",
 				"content.raw (values, schema.String)",
+				"data.showSummary (values, schema.Boolean)",
 				"name (values, schema.String)"
 			],
 			"values": {
 				"content.format": "EDITORJS (literal)",
 				"content.raw": "{\"time\":0,\"blocks\":[{\"type\":\"paragraph\",\"data\":{\"text\":\"Enter your article text here...\"}}],\"version\":\"2.31.5\"} (literal)",
+				"data.showSummary": "true (literal)",
 				"name": "New Article Title (literal)"
 			},
 			"results": {
-				"GET/empty": {},
+				"GET/empty": {
+					"error": ": data.showSummary: Value must be a boolean"
+				},
 				"GET/hostile": {
-					"error": ": content.format: Must be one of the specified values",
+					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"GET/literal": {
 					"changes": {
 						"content.format": "string EDITORJS",
 						"content.raw": "string \"{\\\"time\\\":0,\\\"blocks\\\":[{\\\"type\\\":\\\"paragraph\\\",\"... (111 bytes, sha256 01ee6e31d12a)",
+						"data.showSummary": "bool true",
 						"label": "string New Article Title"
 					}
 				},
@@ -2401,18 +2406,22 @@
 					"changes": {
 						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
+						"data.showSummary": "bool true",
 						"label": "string Sample name"
 					}
 				},
-				"POST/empty": {},
+				"POST/empty": {
+					"error": ": data.showSummary: Value must be a boolean"
+				},
 				"POST/hostile": {
-					"error": ": content.format: Must be one of the specified values",
+					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"POST/literal": {
 					"changes": {
 						"content.format": "string EDITORJS",
 						"content.raw": "string \"{\\\"time\\\":0,\\\"blocks\\\":[{\\\"type\\\":\\\"paragraph\\\",\"... (111 bytes, sha256 01ee6e31d12a)",
+						"data.showSummary": "bool true",
 						"label": "string New Article Title"
 					}
 				},
@@ -2427,6 +2436,7 @@
 					"changes": {
 						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
+						"data.showSummary": "bool true",
 						"label": "string Sample name"
 					}
 				}
@@ -2434,60 +2444,42 @@
 		},
 		"template:qwerty-article/delete-banner/2:set-data": {
 			"fields": [
-				"data.bannerUrl (values, schema.Any)"
+				"data.bannerUrl (values, schema.String)"
 			],
 			"values": {
 				"data.bannerUrl": " (literal)"
 			},
 			"results": {
-				"GET/empty": {
-					"changes": {
-						"data.bannerUrl": "string "
-					}
-				},
+				"GET/empty": {},
 				"GET/hostile": {
-					"changes": {
-						"data.bannerUrl": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)"
-					}
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
 				},
-				"GET/literal": {
-					"changes": {
-						"data.bannerUrl": "string "
-					}
-				},
+				"GET/literal": {},
 				"GET/prefilled": {
 					"changes": {
-						"data.bannerUrl": "string "
+						"data.bannerUrl": "removed"
 					}
 				},
 				"GET/typical": {
 					"changes": {
-						"data.bannerUrl": "string Sample data.bannerUrl"
+						"data.bannerUrl": "string https://example.com/data-bannerUrl"
 					}
 				},
-				"POST/empty": {
-					"changes": {
-						"data.bannerUrl": "string "
-					}
-				},
+				"POST/empty": {},
 				"POST/hostile": {
-					"changes": {
-						"data.bannerUrl": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)"
-					}
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
 				},
-				"POST/literal": {
-					"changes": {
-						"data.bannerUrl": "string "
-					}
-				},
+				"POST/literal": {},
 				"POST/prefilled": {
 					"changes": {
-						"data.bannerUrl": "string "
+						"data.bannerUrl": "removed"
 					}
 				},
 				"POST/typical": {
 					"changes": {
-						"data.bannerUrl": "string Sample data.bannerUrl"
+						"data.bannerUrl": "string https://example.com/data-bannerUrl"
 					}
 				}
 			}
@@ -2860,7 +2852,7 @@
 				"label (values, schema.String)"
 			],
 			"values": {
-				"label": "{{with .Data `layout`}}{{if eq . `gallery`}}Photos{{else}}{{if eq . `podcast`}}Podcast{{else}}{{if eq . `timeline`}}Timeline{{else}}{{if eq . `calendar`}}Calendar{{else}}{{if eq . `map`}}Map{{else}}{{if eq . `notes`}}Notes{{else}}Articles{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}{{end}} (renders against the builder; mocked)"
+				"label": "{{with .Data `layout`}}{{if eq . `gallery`}}Photos{{else}}{{if eq . `podcast`}}Podcast{{else}}{{if eq . `timeline`}}Timeline{{else}}{{if eq . `calendar`}}Calendar{{else}}{{if eq . `map`}}Map{{else}}{{if eq . `notes`}}Notes{{else}}{{if eq . `about`}}About{{else}}Articles{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}{{end}} (renders against the builder; mocked)"
 			},
 			"results": {
 				"GET/empty": {
@@ -2899,6 +2891,72 @@
 				"POST/typical": {
 					"changes": {
 						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:qwerty-collection/settings-about/2:set-data": {
+			"fields": [
+				"label (defaults, schema.String)",
+				"label (from-form, schema.String)"
+			],
+			"defaults": {
+				"label": "\"About\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"label": "string About"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"label": "string About"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string About"
+					}
+				},
+				"GET/prefilled": {},
+				"GET/typical": {
+					"changes": {
+						"label": "string About"
+					}
+				},
+				"POST/empty": {
+					"error": ": label: Value is required",
+					"types": {
+						"label": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"label": "string"
+					}
+				},
+				"POST/literal": {
+					"error": ": label: Value is required",
+					"types": {
+						"label": "string"
+					}
+				},
+				"POST/prefilled": {
+					"error": ": label: Value is required",
+					"types": {
+						"label": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string Sample label"
+					},
+					"types": {
+						"label": "string"
 					}
 				}
 			}
@@ -3302,9 +3360,9 @@
 				"POST/typical": {}
 			}
 		},
-		"template:qwerty-outbox/settings-about/0:set-data": {
+		"template:qwerty-outbox/settings-stylesheet-form/1:set-data": {
 			"fields": [
-				"data.show-about (from-form, schema.String)"
+				"data.stylesheet (from-form, schema.String)"
 			],
 			"results": {
 				"GET/empty": {},
@@ -3314,36 +3372,36 @@
 				"GET/typical": {},
 				"POST/empty": {
 					"types": {
-						"data.show-about": "unreadable"
+						"data.stylesheet": "unreadable"
 					}
 				},
 				"POST/hostile": {
-					"error": ": data.show-about: Must be one of the specified values",
+					"error": ": data.stylesheet: The stylesheet cannot contain \"\u003c/\" (line 1).",
 					"types": {
-						"data.show-about": "unreadable"
+						"data.stylesheet": "unreadable"
 					}
 				},
 				"POST/literal": {
 					"types": {
-						"data.show-about": "unreadable"
+						"data.stylesheet": "unreadable"
 					}
 				},
 				"POST/prefilled": {
 					"changes": {
 						"data": "document {}",
-						"data.show-about": "removed"
+						"data.stylesheet": "removed"
 					},
 					"types": {
-						"data.show-about": "unreadable"
+						"data.stylesheet": "unreadable"
 					}
 				},
 				"POST/typical": {
 					"changes": {
 						"data": "removed",
-						"data.show-about": "string true"
+						"data.stylesheet": "string Sample data.stylesheet"
 					},
 					"types": {
-						"data.show-about": "string"
+						"data.stylesheet": "string"
 					}
 				}
 			}
@@ -3363,94 +3421,6 @@
 				"POST/typical": {}
 			}
 		},
-		"template:qwerty-photo/create/0:as-modal.SubSteps/3:set-data": {
-			"fields": [
-				"data.photoCount (values, schema.Integer)"
-			],
-			"values": {
-				"data.photoCount": "{{len (.AttachmentsByCategory `photo`)}} (renders against the builder; mocked)"
-			},
-			"results": {
-				"GET/empty": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"GET/hostile": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"GET/literal": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"GET/prefilled": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"GET/typical": {
-					"changes": {
-						"data.photoCount": "int32 7"
-					}
-				},
-				"POST/empty": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"POST/hostile": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"POST/literal": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"POST/prefilled": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"POST/typical": {
-					"changes": {
-						"data.photoCount": "int32 7"
-					}
-				}
-			}
-		},
-		"template:qwerty-photo/edit/0:as-modal.SubSteps/4:set-data": {
-			"fields": [
-				"data.photoCount (values, schema.Integer)"
-			],
-			"values": {
-				"data.photoCount": "{{len (.AttachmentsByCategory `photo`)}} (renders against the builder; mocked)"
-			},
-			"results": {
-				"GET/empty": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"GET/hostile": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"GET/literal": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"GET/prefilled": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"GET/typical": {
-					"changes": {
-						"data.photoCount": "int32 7"
-					}
-				},
-				"POST/empty": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"POST/hostile": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"POST/literal": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"POST/prefilled": {
-					"error": ": data.photoCount: Value must be an integer"
-				},
-				"POST/typical": {
-					"changes": {
-						"data.photoCount": "int32 7"
-					}
-				}
-			}
-		},
 		"template:qwerty-photo/like-button/1:set-data": {
 			"fields": [],
 			"results": {
@@ -3464,6 +3434,50 @@
 				"POST/literal": {},
 				"POST/prefilled": {},
 				"POST/typical": {}
+			}
+		},
+		"template:qwerty-photo/photos/2:set-data": {
+			"fields": [
+				"data.photoCount (values, schema.Integer)"
+			],
+			"values": {
+				"data.photoCount": "{{len (.AttachmentsByCategory `photo`)}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/hostile": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/literal": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/prefilled": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/typical": {
+					"changes": {
+						"data.photoCount": "int32 7"
+					}
+				},
+				"POST/empty": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/hostile": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/literal": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/prefilled": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/typical": {
+					"changes": {
+						"data.photoCount": "int32 7"
+					}
+				}
 			}
 		},
 		"template:qwerty-placemark/btn-social-outline/1:set-data": {

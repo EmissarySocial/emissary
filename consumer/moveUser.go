@@ -96,6 +96,11 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 		return queue.Error(derp.Wrap(err, location, "Deleting related Outbox messages"))
 	}
 
+	// Delete related Outbox2 activities
+	if err := factory.Outbox2().DeleteByActor(session, model.ActorTypeUser, user.UserID); err != nil {
+		return queue.Error(derp.Wrap(err, location, "Deleting related Outbox2 activities"))
+	}
+
 	// Delete related NewsFeed/NewsItem
 	if err := factory.NewsFeed().DeleteByUserID(session, user.UserID, "moved"); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Deleting related NewsFeed/NewsItems"))

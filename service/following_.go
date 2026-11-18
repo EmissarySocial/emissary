@@ -34,7 +34,7 @@ type Following struct {
 	importItemService *ImportItem
 	keyService        *EncryptionKey
 	newsFeedService   *NewsFeed
-	outboxService     *Outbox
+	outbox2Service    *Outbox2
 	ruleService       *Rule
 	sseUpdateChannel  chan<- realtime.Message
 	streamService     *Stream
@@ -60,7 +60,7 @@ func (service *Following) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
 	service.keyService = factory.EncryptionKey()
 	service.newsFeedService = factory.NewsFeed()
-	service.outboxService = factory.Outbox()
+	service.outbox2Service = factory.Outbox2()
 	service.ruleService = factory.Rule()
 	service.queue = factory.Queue()
 	service.sseUpdateChannel = factory.SSEUpdateChannel()

@@ -26,7 +26,7 @@ type Response struct {
 	activityStreamService *ActivityStream
 	importItemService     *ImportItem
 	newsFeedService       *NewsFeed
-	outboxService         *Outbox
+	outbox2Service        *Outbox2
 	ruleService           *Rule
 	userService           *User
 	host                  string
@@ -51,7 +51,7 @@ func (service *Response) Refresh(factory *Factory) {
 	service.activityStreamService = factory.ActivityStream()
 	service.importItemService = factory.ImportItem()
 	service.newsFeedService = factory.NewsFeed()
-	service.outboxService = factory.Outbox()
+	service.outbox2Service = factory.Outbox2()
 	service.ruleService = factory.Rule()
 	service.userService = factory.User()
 	service.host = factory.Host()
@@ -169,15 +169,13 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 		derp.Report(derp.Wrap(err, location, "Loading User for Undo audience", response.UserID))
 	}
 
-	// Build the ORIGINAL activity's JSON-LD (embedded inline in the Undo) and apply the same
-	// per-type audience the original reaction used, so the Undo reaches exactly the same actors.
-	// Embedding it (rather than referencing by URL) matters because the Response row was just
-	// hard-deleted, so its /pub/liked/<id> URL would 404 if dereferenced (D7). The options spread
-	// MUST be preserved so an author-only reaction's Undo stays author-only (D7b).
+	// Rebuild the original reaction, addressed as it was, because the Undo embeds it and copies its
+	// addressing: an author-only Like makes an author-only Undo (D7b). It is embedded, not linked,
+	// because the Response row is already gone and its /pub/liked/<id> URL would 404 (D7).
 	originalActivity := response.GetJSONLD()
-	options := service.reactionAudience(&user, response, originalActivity, service.objectAuthorURL(response))
+	service.reactionAudience(&user, response, originalActivity, service.objectAuthorURL(response))
 
-	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, originalActivity, model.NewAnonymousPermissions(), options...); err != nil {
+	if err := service.outbox2Service.UndoActivity(session, model.ActorTypeUser, response.UserID, originalActivity, model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Sending Undo activity"))
 	}
 
@@ -463,15 +461,14 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 		return derp.Wrap(err, location, "Saving response", response)
 	}
 
-	// Build the outgoing activity map, then apply the per-type audience: Like/Dislike deliver
-	// author-only (via the returned WithRecipients option); Announce is stamped Public + cc and
-	// keeps the default follower fan-out (D7b / resolved Q3).  The author is read from the object
-	// already loaded during validation, so no second fetch is needed here.
+	// Build the outgoing activity, and address it by type: a Like or Dislike to its author alone, and
+	// an Announce to Public, followers, and the author (D7b / resolved Q3). The author is read from the
+	// object already loaded during validation, so no second fetch is needed here.
 	activityMap := response.GetJSONLD()
-	options := service.reactionAudience(user, &response, activityMap, object.AttributedTo().ID())
+	service.reactionAudience(user, &response, activityMap, object.AttributedTo().ID())
 
-	// Publish the new Response to the Outbox.
-	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, streams.NewDocument(activityMap), model.NewAnonymousPermissions(), options...); err != nil {
+	// Publish the new Response to the Outbox, which delivers to whoever the activity names
+	if _, err := service.outbox2Service.Publish(session, model.ActorTypeUser, user.UserID, streams.NewDocument(activityMap), model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Publishing Response", response))
 	}
 
@@ -589,23 +586,14 @@ func (service *Response) objectAuthorURL(response *model.Response) string {
 	return object.AttributedTo().ID()
 }
 
-// reactionAudience computes the delivery audience for a reaction and applies it to the outgoing
-// activity, following Mastodon (see COLLECTIONS-REDESIGN.md resolved Q3 / D7a / D7b):
-//
-//   - Like / Dislike: delivered ONLY to the liked object's AUTHOR. No `to`/`cc` on the wire (matching
-//     Mastodon's minimal Like). Returns WithRecipients(<author>) so the follower fan-out is replaced.
-//   - Announce (share): a broadcast. Stamps `to: [Public]` and `cc: [followers, author]` on the wire
-//     and returns no override, so the default follower fan-out runs; the author is added as an
-//     addressee (via `cc`) so they are delivered to as well.
-//
-// The `activity` map is mutated in place (Announce addressing). `user` is the reacting actor, needed
-// for its followers-collection URL. `authorURL` is the reacted-to object's author (attributedTo),
-// resolved by the caller -- "" when it could not be determined. When the author cannot be resolved,
-// Like/Dislike fall back to an empty recipient set (suppressing fan-out) rather than accidentally
-// broadcasting.
-func (service *Response) reactionAudience(user *model.User, response *model.Response, activity mapof.Any, authorURL string) []PublishOption {
+// reactionAudience addresses a reaction: a Like or Dislike to the reacted-to object's author alone,
+// and an Announce to Public, the reacting User's followers, and the author
+func (service *Response) reactionAudience(user *model.User, response *model.Response, activity mapof.Any, authorURL string) {
 
-	// Announce is a public broadcast: Public in `to`, followers + author in `cc`.
+	// Delivery reads addressing alone, so whoever is named here is everyone who receives the reaction.
+	// See COLLECTIONS-REDESIGN.md resolved Q3, D7a and D7b, and OUTBOX2-OMNIBUS §1.18.
+
+	// RULE: An Announce is a public broadcast, which also reaches the author
 	if response.Type == vocab.ActivityTypeAnnounce {
 
 		activity[vocab.PropertyTo] = []string{vocab.NamespacePublic}
@@ -616,15 +604,14 @@ func (service *Response) reactionAudience(user *model.User, response *model.Resp
 		}
 		activity[vocab.PropertyCC] = cc
 
-		// Default follower fan-out; the author reached via the `cc` addressee.
-		return nil
+		return
 	}
 
-	// Like / Dislike are author-only, with no `to`/`cc` on the wire.
+	// RULE: A Like or Dislike reaches the author alone, and an author who cannot be found means no one
 	if authorURL == "" {
 		log.Warn().Str("object", response.Object).Str("type", response.Type).Msg("Response: reacted-to object has no resolvable author; reaction will not be delivered")
-		return []PublishOption{WithRecipients()}
+		return
 	}
 
-	return []PublishOption{WithRecipients(authorURL)}
+	activity[vocab.PropertyTo] = []string{authorURL}
 }

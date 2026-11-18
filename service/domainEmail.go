@@ -7,6 +7,8 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/benpate/uri"
@@ -286,6 +288,7 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 
 			// Activity info available to the template
 			"Activity": activity,
+			"Object":   followerEmailObject(activity),
 
 			// Unsubscribe links available to the template (D18: two forms, two consumers)
 			"Unsubscribe":             follower.UnsubscribeLink(readOnlyDomain.Host()),
@@ -296,6 +299,32 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 	}
 
 	return nil
+}
+
+// followerEmailObject returns the post that a follower's email shows for an activity: its embedded
+// object, or the object of a Create or Update that it announces. It is empty when there is none.
+func followerEmailObject(activity mapof.Any) mapof.Any {
+
+	document := streams.NewDocument(activity)
+	object := document.Object()
+
+	// RULE: A Stream announces its new child as an Announce of the child's Create, so the email
+	// shows the child itself, not the Create
+	if document.Type() == vocab.ActivityTypeAnnounce {
+		if object.IsMap() {
+			switch object.Type() {
+			case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate:
+				object = object.Object()
+			}
+		}
+	}
+
+	// RULE: Show only an embedded object, because one named by its URL would have to be fetched
+	if !object.IsMap() {
+		return mapof.NewAny()
+	}
+
+	return mapof.Any(object.Map())
 }
 
 // host returns this Domain's hostname, with its protocol prefix

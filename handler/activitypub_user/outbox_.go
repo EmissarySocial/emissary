@@ -27,45 +27,52 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 		return derp.NotFound(location, "User not found")
 	}
 
-	// If the request is for the collection itself, then return a summary and the URL of the first page
-	publishDateString := ctx.QueryParam("publishDate")
-
-	if publishDateString == "" {
-		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		result := activitypub.Collection(user.ActivityPubOutboxURL())
-		return ctx.JSON(http.StatusOK, result)
-	}
-
-	// Retrieve permissions from the request signature
+	// Retrieve permissions from the request signature, which decide what the count and every page show
 	permissions, err := factory.Permission().ParseHTTPSignature(session, ctx.Request())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid HTTP Signature")
 	}
 
+	// Read the page cursor, which is empty when the collection itself is requested
+	outboxService := factory.Outbox2()
+	publishDateString := ctx.QueryParam("publishDate")
+
+	// If the request is for the collection itself, then return its size and the URLs of its first and last pages
+	if publishDateString == "" {
+
+		totalItems, lastPageDate, err := outboxService.PagingSummary(session, model.ActorTypeUser, user.UserID, permissions, activitypub.OutboxPageSize)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Counting outbox activities")
+		}
+
+		ctx.Response().Header().Set("Content-Type", "application/activity+json")
+		result := activitypub.PagedCollection(user.ActivityPubOutboxURL(), totalItems, lastPageDate)
+		return ctx.JSON(http.StatusOK, result)
+	}
+
 	// Fall through means that we're looking for a specific page of the collection
 	publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
-	outboxService := factory.Outbox()
 	pageID := fullURL(factory, ctx)
-	pageSize := 60
 
-	// Retrieve a page of messages from the database
-	messages, err := outboxService.QueryByParentAndDate(session, model.FollowerTypeUser, user.UserID, permissions, publishedDate, pageSize)
+	// Retrieve a page of activities from the database
+	items, err := outboxService.QueryByParentAndDate(session, model.ActorTypeUser, user.UserID, permissions, publishedDate, activitypub.OutboxPageSize)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Loading outbox messages")
+		return derp.Wrap(err, location, "Loading outbox activities")
 	}
 
 	// Return results as an OrderedCollectionPage
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
-	result := activitypub.CollectionPage(pageID, user.ActivityPubOutboxURL(), pageSize, messages)
+	result := activitypub.CollectionPage(pageID, user.ActivityPubOutboxURL(), activitypub.OutboxPageSize, items)
 	return ctx.JSON(http.StatusOK, result)
 }
 
 // GetOutboxActivity returns a specific activity from the User's outbox
 func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
-	const location = "handler.activitypub_user.GetOutboxCollection"
+	const location = "handler.activitypub_user.GetOutboxActivity"
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
@@ -80,21 +87,28 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "OutboxMessageID must be a valid ObjectID", outboxMessageToken, derp.WithNotFound())
 	}
 
-	// Load the Outbox Message
-	outboxService := factory.Outbox()
-	outboxMessage := model.NewOutboxMessage()
-	if err := outboxService.LoadByID(session, user.UserID, outboxMessageID, &outboxMessage); err != nil {
-		return derp.Wrap(err, location, "Loading outbox message", outboxMessageID)
+	// Load the activity from this User's outbox
+	item := model.NewOutboxItem()
+
+	if err := factory.Outbox2().LoadByID(session, model.ActorTypeUser, user.UserID, outboxMessageID, &item); err != nil {
+		return derp.Wrap(err, location, "Loading outbox activity", "activityId: "+outboxMessageToken)
 	}
 
-	// RULE: A message with no Actor has no `id` to answer with, so there is nothing here to serve
-	if outboxMessage.ActivityPubURL() == "" {
-		return derp.NotFound(location, "Outbox message cannot be identified", outboxMessageID)
+	return getOutboxItem(ctx, factory, session, &item)
+}
+
+// getOutboxItem writes an Outbox2 activity to the response, when the request's signer may read it
+func getOutboxItem(ctx *steranko.Context, factory *service.Factory, session data.Session, item *model.OutboxItem) error {
+
+	result, err := activitypub.VisibleOutboxItem(factory.Permission(), session, ctx.Request(), item)
+
+	// RULE: Return a refusal as it is, so the peer reads its fixed message
+	if err != nil {
+		return err
 	}
 
-	// Return the activity as a JSON-LD document
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
-	return ctx.JSON(http.StatusOK, outboxMessage.GetJSONLD())
+	return ctx.JSON(http.StatusOK, result)
 }
 
 // PostOutbox allows an Authenticated User to POST messages to their outbox, to be delivered to the
@@ -137,6 +151,10 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 		return derp.Wrap(err, location, "Handling ActivityPub request")
 	}
 
-	// Handler writes its response directly to the context
+	// RULE: Most handlers write their own response. One that wrote nothing published nothing, so it answers 200.
+	if ctx.Response().Committed {
+		return nil
+	}
+
 	return ctx.NoContent(http.StatusOK)
 }

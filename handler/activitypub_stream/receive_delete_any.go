@@ -45,6 +45,12 @@ func DeleteAny(context Context, activity streams.Document) error {
 		}
 	}
 
+	// Remove the Stream's own Announces of the object. Nothing is sent for them, because the
+	// Announce of the Delete below already tells every follower.
+	if err := context.factory.Outbox2().RemoveByObjectID(context.session, model.ActorTypeStream, context.stream.StreamID, objectID); err != nil {
+		return derp.Wrap(err, location, "Removing announces", objectID)
+	}
+
 	// Try to load the Actor for this user
 	actor, err := context.ActivityPubActor()
 
@@ -52,10 +58,12 @@ func DeleteAny(context Context, activity streams.Document) error {
 		return derp.Wrap(err, "handler.activityPub_stream.DeleteAny", "Loading actor", context.stream)
 	}
 
-	// Announce the deletion to the stream's followers as a post-commit send (F3, W6 option B).
+	// Announce the deletion to the stream's followers through the delivery pipeline, after this transaction commits
 	announceID := activitypub.FakeActivityID(activity)
 	followersURL := actor.ActorID() + "/pub/followers"
-	outboxService.SendAnnounce(context.session, actor.ActorID(), announceID, activity, followersURL)
+	if err := context.factory.Outbox2().SendAnnounce(context.session, actor.ActorID(), announceID, activity, followersURL); err != nil {
+		return derp.Wrap(err, location, "Announcing deletion", context.stream.StreamID)
+	}
 
 	// Voila!
 	return nil

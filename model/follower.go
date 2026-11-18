@@ -96,6 +96,12 @@ func (follower Follower) MethodLabel() string {
 	return "??"
 }
 
+// IsActive returns TRUE if this Follower is in the ACTIVE state, which an email Follower
+// reaches by clicking the link in its confirmation email
+func (follower Follower) IsActive() bool {
+	return follower.StateID == FollowerStateActive
+}
+
 // ParentURL returns the URL of the parent object that this Follower is following.
 func (follower Follower) ParentURL(host string) string {
 

@@ -49,6 +49,14 @@ The failure this guards against is a *concatenation*, not a missing field. `Outb
 
 Two details to preserve. Paging math reads the QUERY results (`len(values)`), never the rendered `OrderedItems` — paging from the rendered list would let one omitted item end the collection at whatever page happened to contain it. And the omission belongs in the shared builders, not in each of the four `activitypub_*` packages, for the reason [activitypub/doc.go](activitypub/doc.go) gives about every other collection rule.
 
+## A User's or Stream's outbox is read from `OutboxItem` alone
+
+Both outbox collections and both single-activity GETs read `service.Outbox2` and nothing else (OUTBOX2-OMNIBUS §1.22, §1.23). A row still in the legacy `Outbox` collection is not served until the §1.21 migration copies it.
+
+- **`totalItems` and `last` apply the reader's permissions,** through `Outbox2.PagingSummary`, the same filter each page uses, so the count never reveals how much private activity an outbox holds. `last` is the `publishDate` cursor that following `next` from `first` ends on, so a crawler that reads either sees the same pages.
+- **`PagedCollection` returns a map, not `streams.OrderedCollection`,** whose `omitempty` drops a zero `totalItems`; Funkwhale refuses a collection without it.
+- **A public activity is served without parsing the signature.** Any other activity needs a signer that `OutboxItem.IsVisibleTo` admits, and a hidden one answers 404, never 403, so a stranger cannot learn that it exists.
+
 ## Every caller-supplied or remote URL is guarded before it reaches an href or redirect
 
 - `uri.IsSafeRedirectURL` is the gate for link targets: `getIntent_Continue` ([intent_continue.go](intent_continue.go)) replaces an unsafe URL with `/@me` BEFORE both the displayed text and the href, so the page always shows the URL it links to; `safeIntentURL` ([intent_header.go](intent_header.go)) returns `""` for unsafe values so the html builder omits the attribute entirely. Remote actor profile/icon URLs count as untrusted — a fetched actor can serve `javascript:` URLs.
@@ -76,6 +84,10 @@ Setup routes (`setup_*.go`) are registered only in setup mode, behind `mw.Localh
 ## Outbound fetches go through clients that carry the SSRF policy
 
 `factory.Camper()` and `factory.ActivityStream()` thread the domain's `AllowPrivateIPs` setting into the remote transport, whose resolved-IP dial guard is the authoritative SSRF defense. Never call `digit.Lookup` (or build a bare remote client) directly from a handler — a bare lookup silently loses both the private-IP policy and the HTTP cache, which breaks every local-dev federation flow and weakens production. `PostProxyURL`'s `uri.IsLocalURL` check ([proxy.go](proxy.go)) is only a fast, friendly reject; it does no DNS resolution and must not be treated as the guard.
+
+## Reading a property of a bare-URL Document fetches it
+
+hannibal's `Document.Get` on a string value treats the string as an id and loads it through the document's client before reading the key; only `Get("id")` is exempt. So `activity.Object().Actor()`, `.ActorID()`, `.Type()` and the like each make an outbound request whenever the object arrived as a URL rather than embedded. A validator that only means to look at what the client sent must skip string values first (`IsString()`), as `requireUndoActorMatches` ([../service/outbox2.go](../service/outbox2.go)) does, or it fetches on behalf of whoever posted the activity. Its test proves this with a client that counts every `Load`.
 
 ## `/.proxy` serves anonymous visitors, but only actors
 

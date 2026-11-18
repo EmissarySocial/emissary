@@ -4,6 +4,7 @@ import (
 	"iter"
 
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/floodgate"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -19,4 +20,7 @@ type ServerFactory interface {
 	// non-public (private/loopback) addresses. FALSE in production; enabled only for
 	// local/dev federation between machines on a private network.
 	AllowPrivateIPs() bool
+
+	// Floodgate returns the circuit breaker for outbound deliveries, shared by every domain
+	Floodgate() floodgate.Gate
 }

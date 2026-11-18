@@ -54,6 +54,7 @@ type Stream struct {
 	locatorService      *Locator
 	notificationService *Notification
 	outboxService       *Outbox
+	outbox2Service      *Outbox2
 	permissionService   *Permission
 	searchResultService *SearchResult
 	searchTagService    *SearchTag
@@ -96,6 +97,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.locatorService = factory.Locator()
 	service.notificationService = factory.Notification()
 	service.outboxService = factory.Outbox()
+	service.outbox2Service = factory.Outbox2()
 	service.permissionService = factory.Permission()
 	service.ruleService = factory.Rule()
 	service.searchResultService = factory.SearchResult()
@@ -649,7 +651,7 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 
 	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259)
 	if err := service.federateDelete(session, stream); err != nil {
-		derp.Report(derp.Wrap(err, location, "Federating Delete", stream))
+		derp.Report(derp.Wrap(err, location, "Federating Delete", stream.StreamID))
 	}
 
 	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
@@ -693,6 +695,11 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	// RULE: Delete Outbox Messages
 	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
 		derp.Report(derp.Wrap(err, location, "Deleting outbox messages", stream, note))
+	}
+
+	// RULE: Delete this Stream's Outbox2 activities
+	if err := service.outbox2Service.DeleteByActor(session, model.ActorTypeStream, stream.StreamID); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting Outbox2 activities", stream.StreamID, note))
 	}
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated

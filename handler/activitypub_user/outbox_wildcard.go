@@ -1,8 +1,6 @@
 package activitypub_user
 
 import (
-	"net/http"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -24,7 +22,7 @@ func outbox_Wildcard(context Context, activity streams.Document) error {
 	}
 
 	// Send response to caller
-	return context.context.NoContent(http.StatusAccepted)
+	return respondCreated(context, "")
 }
 
 // putActivityIntoOutbox delivers an activity to every recipient it names

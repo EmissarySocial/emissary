@@ -20,7 +20,7 @@ type OutboxMessage struct {
 	ObjectID        string             `json:"objectId"        bson:"objectId"`     // URL of the object (if applicable)
 	Permissions     Permissions        `json:"permissions"     bson:"permissions"`  // List of permissions for this OutboxMessage
 
-	journal.Journal `json:"-" bson:",inline"`
+	journal.Journal `json:"journal" bson:",inline"`
 }
 
 // NewOutboxMessage returns a fully initialized OutboxMessage record

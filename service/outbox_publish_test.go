@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/sender"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -217,3 +218,74 @@ func (s deliverSession) Context() context.Context { return s.context }
 
 // Close implements the data.Session interface. The stub holds no resources to release.
 func (s deliverSession) Close() {}
+
+// TestOutbox_PublishRecipients_ReplyAuthor verifies that a reply is delivered to the author of
+// the post it answers, and that this needs a Document with a client, because the author is
+// found by loading the post
+func TestOutbox_PublishRecipients_ReplyAuthor(t *testing.T) {
+
+	const parentURL = "https://remote.example.org/notes/1"
+	const authorURL = "https://remote.example.org/users/bob"
+
+	reply := mapof.Any{
+		vocab.PropertyType:      vocab.ObjectTypeNote,
+		vocab.PropertyActor:     mapof.Any{vocab.PropertyID: "https://example.com/@alice"},
+		vocab.PropertyInReplyTo: parentURL,
+	}
+
+	client := replyParentClient{parentURL: parentURL, authorURL: authorURL}
+	service := Outbox{}
+	config := newPublishConfig(WithRecipients())
+
+	recipientsOf := func(document streams.Document) []string {
+		result := make([]string, 0)
+		for follower := range service.publishRecipients(nil, model.FollowerTypeUser, primitive.NewObjectID(), document, config) {
+			result = append(result, follower.Actor.ProfileURL)
+		}
+		return result
+	}
+
+	require.Contains(t, recipientsOf(streams.NewDocument(reply, streams.WithClient(client))), authorURL)
+	require.NotContains(t, recipientsOf(streams.NewDocument(reply)), authorURL, "with no client, the parent cannot be loaded")
+}
+
+// TestOutbox_DeliveryClient_WithoutActivityStream verifies that a service built without an
+// ActivityStream service hands Deliver no client, and does not panic
+func TestOutbox_DeliveryClient_WithoutActivityStream(t *testing.T) {
+
+	service := Outbox{}
+	require.Nil(t, service.deliveryClient(model.FollowerTypeUser, primitive.NewObjectID()))
+}
+
+// replyParentClient is a streams.Client that serves one Note and nothing else
+type replyParentClient struct {
+	parentURL string
+	authorURL string
+}
+
+// SetRootClient does nothing, because this client wraps no other
+func (client replyParentClient) SetRootClient(streams.Client) {}
+
+// Load returns the Note for its own URL, and refuses every other
+func (client replyParentClient) Load(url string, _ ...any) (streams.Document, error) {
+
+	if url != client.parentURL {
+		return streams.NilDocument(), derp.NotFound("replyParentClient.Load", "Unknown URL", url)
+	}
+
+	return streams.NewDocument(mapof.Any{
+		vocab.PropertyID:           client.parentURL,
+		vocab.PropertyType:         vocab.ObjectTypeNote,
+		vocab.PropertyAttributedTo: client.authorURL,
+	}, streams.WithClient(client)), nil
+}
+
+// Save does nothing, because nothing in these tests writes to the cache
+func (client replyParentClient) Save(streams.Document) error {
+	return nil
+}
+
+// Delete does nothing, because nothing in these tests writes to the cache
+func (client replyParentClient) Delete(string) error {
+	return nil
+}

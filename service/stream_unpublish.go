@@ -68,15 +68,16 @@ func (service *Stream) federateDelete(session data.Session, stream *model.Stream
 		return nil
 	}
 
-	// RULE: Send a Delete only while the author's outbox still holds the Stream.  Unpublishing
-	// removes it, and so does deleting the author, so neither one sends a second Delete.
-	published, err := service.outboxService.HasObject(session, model.FollowerTypeUser, authorID, stream.URL)
+	// RULE: Send a Delete only while the author's outbox still holds a Create or Update of the Stream.
+	// Unpublishing removes those and leaves only its own Delete, and deleting the author removes
+	// every row, so neither one sends a second Delete.
+	federated, err := service.isFederated(session, authorID, stream.URL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Checking the author's outbox", stream.URL)
 	}
 
-	if !published {
+	if !federated {
 		return nil
 	}
 
@@ -94,14 +95,41 @@ func (service *Stream) federateDelete(session data.Session, stream *model.Stream
 	return nil
 }
 
+// isFederated returns TRUE if the author's legacy outbox or Outbox2 still holds an activity that publishes the object
+func (service *Stream) isFederated(session data.Session, authorID primitive.ObjectID, objectID string) (bool, error) {
+
+	const location = "service.Stream.isFederated"
+
+	// Ask the legacy outbox, which holds every Stream published so far
+	published, err := service.outboxService.HasObject(session, model.ActorTypeUser, authorID, objectID)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Checking the legacy outbox", objectID)
+	}
+
+	if published {
+		return true, nil
+	}
+
+	// Ask Outbox2 too, because both outboxes are read until the migration moves every row
+	published, err = service.outbox2Service.HasObject(session, model.ActorTypeUser, authorID, objectID)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Checking Outbox2", objectID)
+	}
+
+	return published, nil
+}
+
 // unpublish_outbox_user sends a Delete for this Stream from the User's outbox
 func (service *Stream) unpublish_outbox_user(session data.Session, userID primitive.ObjectID, stream *model.Stream) error {
 
 	const location = "service.Stream.unpublish_outbox_user"
 
-	// Send the Delete from the User's outbox
+	// Send the Delete from the User's outbox. It copies the addressing of the Stream's Create, and a
+	// Stream that was published before Outbox2 has none, so it falls back to the Stream's audience.
 	log.Trace().Str("id", stream.URL).Msg("Publishing a DELETE from User's outbox")
-	if err := service.outboxService.DeleteActivity(session, model.FollowerTypeUser, userID, stream.URL, stream.DefaultAllow); err != nil {
+	if err := service.outbox2Service.DeleteActivity(session, model.ActorTypeUser, userID, stream.URL, stream.DefaultAllow, service.audienceMap(stream)); err != nil {
 		return derp.Wrap(err, location, "Unpublishing activity", stream.URL)
 	}
 
@@ -131,9 +159,9 @@ func (service *Stream) unpublish_outbox_stream(session data.Session, stream *mod
 		return nil
 	}
 
-	// Send the Delete from the parent Stream's outbox
-	if err := service.outboxService.DeleteActivity(session, model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow); err != nil {
-		return derp.Wrap(err, location, "Publishing a DELETE activity for this Stream", stream)
+	// Send the Delete from the parent Stream's outbox, to the audience that the parent announced it to
+	if err := service.outbox2Service.DeleteActivity(session, model.ActorTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow, service.parentAudience(stream)); err != nil {
+		return derp.Wrap(err, location, "Publishing a DELETE activity for this Stream", stream.URL)
 	}
 
 	// Done.

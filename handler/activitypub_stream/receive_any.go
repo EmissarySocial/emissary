@@ -121,7 +121,7 @@ func requireOwnObject(activity streams.Document) error {
 	return nil
 }
 
-// announce saves the activity into the Stream's outbox
+// announce boosts an activity to the Stream's followers, and keeps the Announce in the Stream's outbox
 func announce(context Context, activity streams.Document) error {
 
 	const location = "handler.activityPub_stream.announce"
@@ -133,29 +133,12 @@ func announce(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Loading actor", context.stream)
 	}
 
-	// Convert the Activity into an Inbox Message
-	// RULE: ActorURL is the Actor's own canonical URL, never just its ID.  It is what the
-	// published activity's `actor` property carries, and what its `id` is built from.
-	message := model.NewOutboxMessage()
-	message.ActorID = context.stream.StreamID
-	message.ActorType = model.FollowerTypeStream
-	message.ActorURL = actor.ActorID()
-	message.ActivityType = activity.Type()
-	message.ObjectID = activity.ID()
-
-	// Try to save the message to the content Actor's outbox
-	outboxService := context.factory.Outbox()
-	if err := outboxService.Save(context.session, &message, "via ActivityPub"); err != nil {
-		return derp.Wrap(err, location, "Saving message", context.stream.StreamID, activity.ID())
-	}
-
-	// Publish the Announce to the stream's followers as a post-commit send (F3, W6 option B). The
-	// activity is addressed to the stream's followers collection, which SendLocator.Recipient
-	// resolves; the signed delivery happens after commit and is per-recipient retryable.
+	// Store the Announce in the Stream's outbox, and deliver it after this transaction commits
 	log.Debug().Msg("Announcing document to followers")
-	announceID := context.stream.ActivityPubAnnouncedURL() + "/" + message.OutboxMessageID.Hex()
-	followersURL := actor.ActorID() + "/pub/followers"
-	outboxService.SendAnnounce(context.session, actor.ActorID(), announceID, activity, followersURL)
+
+	if _, err := context.factory.Outbox2().PublishAnnounce(context.session, model.ActorTypeStream, context.stream.StreamID, actor.ActorID(), activity); err != nil {
+		return derp.Wrap(err, location, "Announcing activity", context.stream.StreamID)
+	}
 
 	return nil
 }
