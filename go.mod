@@ -2,21 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.27.4
 
-// LOCAL DEVELOPMENT ONLY: remove each line once its library is tagged, and bump the pin below.
-replace github.com/benpate/derp => ../derp
-
-replace github.com/benpate/floodgate => ../floodgate
-
-replace github.com/benpate/hannibal => ../hannibal
-
-replace github.com/benpate/remote => ../remote
-
-replace github.com/benpate/rosetta => ../rosetta
-
-replace github.com/benpate/sherlock => ../sherlock
-
-replace github.com/benpate/turbine => ../turbine
-
 require (
 	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/aws/aws-sdk-go-v2 v1.48.0
@@ -33,18 +18,18 @@ require (
 	github.com/benpate/digital-dome v0.10.0
 	github.com/benpate/exp v0.12.0
 	github.com/benpate/exp-builder v0.13.0
-	github.com/benpate/floodgate v0.0.0-20261113011423-ac52e680a795
+	github.com/benpate/floodgate v0.1.0
 	github.com/benpate/form v0.34.0
 	github.com/benpate/geo v0.5.0
-	github.com/benpate/hannibal v0.47.0
+	github.com/benpate/hannibal v0.48.0
 	github.com/benpate/html v0.19.0
 	github.com/benpate/icon v0.6.0
 	github.com/benpate/mediaserver v0.21.0
 	github.com/benpate/oembed v0.5.0
 	github.com/benpate/re v0.7.0
-	github.com/benpate/remote v0.29.0
-	github.com/benpate/rosetta v0.49.0
-	github.com/benpate/sherlock v0.23.0
+	github.com/benpate/remote v0.30.0
+	github.com/benpate/rosetta v0.50.0
+	github.com/benpate/sherlock v0.24.0
 	github.com/benpate/sniff v0.4.0
 	github.com/benpate/steranko v0.33.0
 	github.com/benpate/table v0.11.0
@@ -90,7 +75,7 @@ require (
 	go.mongodb.org/mongo-driver v1.17.10
 	go.yaml.in/yaml/v3 v3.0.6
 	golang.org/x/crypto v0.59.0
-	golang.org/x/net v0.62.0
+	golang.org/x/net v0.63.0
 	golang.org/x/oauth2 v0.38.0
 	willnorris.com/go/microformats v1.2.0
 )
