@@ -138,7 +138,7 @@ func (service *Outbox) SendAnnounce(session data.Session, actorURL string, annou
 		vocab.PropertyActor:     actorURL,
 		vocab.PropertyObject:    object.Map(),
 		vocab.PropertyPublished: datetime.Now(),
-		vocab.PropertyTo:        []string{vocab.NamespacePublic},
+		vocab.PropertyTo:        []string{vocab.NamespaceActivityStreamsPublic},
 		vocab.PropertyCC:        []string{followersURL},
 	}
 

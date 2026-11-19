@@ -54,7 +54,7 @@ func (service *Outbox) DeleteActivity(session data.Session, actorType string, ac
 		vocab.AtContext:     vocab.ContextTypeActivityStreams,
 		vocab.PropertyActor: actor.ActorID(),
 		vocab.PropertyType:  vocab.ActivityTypeDelete,
-		vocab.PropertyTo:    vocab.NamespacePublic,
+		vocab.PropertyTo:    vocab.NamespaceActivityStreamsPublic,
 		vocab.PropertyObject: mapof.Any{
 			vocab.PropertyID:   objectID,
 			vocab.PropertyType: vocab.ObjectTypeTombstone,
