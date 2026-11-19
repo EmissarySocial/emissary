@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/toot/object"
@@ -38,7 +39,7 @@ func remoteReplyIDs(client streams.Client, factory *service.Factory, session dat
 	}
 
 	// Any other parent has to be read from its own server to learn who wrote it
-	parentDocument, err := client.Load(parentURL)
+	parentDocument, err := client.Load(parentURL, ascache.WithStaleAllowed())
 
 	// RULE: clients show "replying to" only when given both IDs, so a missing author hides the line
 	if err != nil {
@@ -125,7 +126,7 @@ func remoteAncestorsOf(client streams.Client, factory *service.Factory, session 
 		}
 
 		// Any other post is read from its own server
-		document, err := client.Load(url)
+		document, err := client.Load(url, ascache.WithStaleAllowed())
 
 		if err != nil {
 			return object.Status{}, "", false

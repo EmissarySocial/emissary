@@ -566,3 +566,22 @@ func TestClient_Load_ForeignDocumentCannotClaimAnotherHostsID(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "PEM-GENUINE", result.Get("publicKeyPem").String())
 }
+
+// TestClient_Load_StaleAllowedServesExpiredCopy confirms an opted-in read answers from an expired entry
+func TestClient_Load_StaleAllowedServesExpiredCopy(t *testing.T) {
+
+	client, origin := newTestClient()
+
+	_, err := client.Load("https://remote.example/@alice")
+	require.NoError(t, err)
+
+	ageCachedValue(t, client, "https://remote.example/@alice", 2*time.Hour)
+
+	_, err = client.Load("https://remote.example/@alice", WithStaleAllowed())
+	require.NoError(t, err)
+	require.Equal(t, 1, origin.calls, "the expired copy is served without contacting the origin")
+
+	_, err = client.Load("https://remote.example/@alice")
+	require.NoError(t, err)
+	require.Equal(t, 2, origin.calls, "a normal read still refuses the expired copy")
+}

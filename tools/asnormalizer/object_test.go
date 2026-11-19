@@ -129,3 +129,25 @@ func TestActor_KeepsJoinDateAndApprovalSetting(t *testing.T) {
 	require.NotContains(t, open, "published", "no date is stored when the account has none")
 	require.NotContains(t, open, "manuallyApprovesFollowers", "only a locked account stores the setting")
 }
+
+// TestActor_KeepsDiscoveryAndMove confirms an account's discovery opt-in and the account it moved to survive ingest
+func TestActor_KeepsDiscoveryAndMove(t *testing.T) {
+
+	moved := Actor(streams.NewDocument(map[string]any{
+		"type":         "Person",
+		"id":           "https://old.example/users/ben",
+		"discoverable": true,
+		"movedTo":      "https://new.example/users/ben",
+	}))
+
+	require.Equal(t, true, moved["discoverable"])
+	require.Equal(t, "https://new.example/users/ben", moved["movedTo"])
+
+	plain := Actor(streams.NewDocument(map[string]any{
+		"type": "Person",
+		"id":   "https://example.com/users/amy",
+	}))
+
+	require.NotContains(t, plain, "discoverable", "only an opted-in account stores the setting")
+	require.NotContains(t, plain, "movedTo")
+}

@@ -33,7 +33,7 @@ func (service *User) ExportDocument(session data.Session, userID primitive.Objec
 	result, err := json.Marshal(user)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Marshaling User", user)
+		return "", derp.Wrap(err, location, "Marshaling User", user.UserID)
 	}
 
 	// Success

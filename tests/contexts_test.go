@@ -82,7 +82,7 @@ func subContext(parent builderContext, composite step.Step) (builderContext, str
 	switch composite.(type) {
 
 	// These run their sub-steps against the same builder
-	case step.AsModal, step.AsTooltip, step.IfCondition, step.WithDraft, step.Save, step.AddModelObject:
+	case step.AsModal, step.AsTooltip, step.IfCondition, step.Switch, step.WithDraft, step.Save, step.AddModelObject:
 		return parent, ""
 
 	// build.Attachment

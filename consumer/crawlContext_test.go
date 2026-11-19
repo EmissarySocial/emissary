@@ -83,8 +83,8 @@ func TestClassifyContext_RemoteFailures(t *testing.T) {
 	require.Equal(t, contextOutcomeSkip, classifyOutcome(t, streams.NilDocument(), htmlInsteadOfActivityPub("https://xxx.azyobuzi.net/contexts/1")))
 
 	// RULE: This is why the classifier gates on err != nil and NOT on derp.IsClientError.
-	// The HTML failure carries 500, so a client-error gate would have silenced none of it.
-	require.Equal(t, http.StatusInternalServerError, derp.ErrorCode(htmlInsteadOfActivityPub("https://xxx.azyobuzi.net/contexts/1")))
+	// The HTML failure carries 502, so a client-error gate would have silenced none of it.
+	require.Equal(t, http.StatusBadGateway, derp.ErrorCode(htmlInsteadOfActivityPub("https://xxx.azyobuzi.net/contexts/1")))
 
 	// Every other class of failure is skipped too
 	require.Equal(t, contextOutcomeSkip, classifyOutcome(t, streams.NilDocument(), derp.NotFound("test", "No such context")))
@@ -111,14 +111,14 @@ func TestClassifyContext_RateLimited(t *testing.T) {
 	require.Equal(t, contextOutcomeRateLimited, outcome)
 	require.Equal(t, 120*time.Second, retryAfter.Truncate(time.Second))
 
-	// A 429 with no Retry-After still requeues, on derp's own one-hour default
+	// A 429 with no Retry-After still requeues, on derp's own one-minute default
 	outcome, retryAfter = classifyContext(streams.NilDocument(), tooManyRequests(""))
 	require.Equal(t, contextOutcomeRateLimited, outcome)
-	require.Equal(t, time.Hour, retryAfter)
+	require.Equal(t, time.Minute, retryAfter)
 
 	// RULE: The duration survives the derp.Wrap that the client stack applies on the way up.
 	// An unwrapped-only read would turn every rate limit into a permanent skip, and an
-	// unwrapped-only duration would throttle every host to the one-hour default.
+	// unwrapped-only duration would throttle every host to the one-minute default.
 	wrapped := derp.Wrap(tooManyRequests("30"), "test", "Loading context collection", "https://example.social/ctx/1")
 	outcome, retryAfter = classifyContext(streams.NilDocument(), wrapped)
 	require.Equal(t, contextOutcomeRateLimited, outcome)

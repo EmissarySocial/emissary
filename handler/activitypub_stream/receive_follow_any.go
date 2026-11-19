@@ -56,10 +56,11 @@ func init() {
 			return derp.Wrap(err, location, "Loading actor", context.stream)
 		}
 
-		// Send the "Accept" as a post-commit queue task (F3): the signed delivery happens after this
-		// transaction commits and is independently retryable.
+		// Send the "Accept" to the requester through the delivery pipeline, after this transaction commits
 		acceptID := followerService.ActivityPubID(&follower)
-		context.factory.Outbox().SendAccept(context.session, actor.ActorID(), acceptID, activity)
+		if err := context.factory.Outbox2().SendAccept(context.session, actor.ActorID(), acceptID, activity); err != nil {
+			return derp.Wrap(err, location, "Sending Accept")
+		}
 
 		// Voila!
 		return nil

@@ -96,8 +96,8 @@ func TestRequeue_WrappedTooManyRequests(t *testing.T) {
 // answers an ActivityPub request with 200 and an HTML body
 func htmlInsteadOfActivityPub(url string) error {
 
-	// This mirrors remote.Transaction.decodeResponseBody's ContentTypeHTML branch.  The
-	// WithInternalError option is what makes the result a 500 even though the response was 200.
+	// This mirrors remote.Transaction.undecodableResponse, as decodeResponseBody calls it for HTML.
+	// The WithBadGateway option is what makes the result a 502 even though the response was 200.
 	response := &http.Response{
 		StatusCode: http.StatusOK,
 		Status:     "200 OK",
@@ -107,11 +107,14 @@ func htmlInsteadOfActivityPub(url string) error {
 
 	request, _ := http.NewRequest(http.MethodGet, url, nil)
 
+	httpError := derp.NewHTTPError(request, response)
+	httpError.Message = "Server answered text/html, which cannot be decoded into the requested result"
+
 	return derp.Wrap(
-		derp.NewHTTPError(request, response),
+		httpError,
 		"remote.Transaction.decodeResponseBody",
-		"HTML must be read into an io.Writer, *string, or *byte[]",
-		derp.WithInternalError(),
+		httpError.Message,
+		derp.WithBadGateway(),
 	)
 }
 

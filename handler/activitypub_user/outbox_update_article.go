@@ -1,8 +1,6 @@
 package activitypub_user
 
 import (
-	"net/http"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -57,5 +55,5 @@ func outbox_UpdateArticle(context Context, activity streams.Document) error {
 	}
 
 	// Send response to caller
-	return context.context.NoContent(http.StatusAccepted)
+	return respondCreated(context, "")
 }

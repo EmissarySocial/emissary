@@ -584,7 +584,9 @@
 				"description (textarea, schema.String)",
 				"iconUrl (upload, schema.String)",
 				"imageUrl (upload, schema.String)",
-				"label (text, schema.String)"
+				"label (text, schema.String)",
+				"themeData.colorway (select, schema.String)",
+				"themeData.navigation (select, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
@@ -592,7 +594,9 @@
 						"description": "string",
 						"iconUrl": "string",
 						"imageUrl": "string",
-						"label": "string"
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
 					}
 				},
 				"empty": {
@@ -600,7 +604,9 @@
 						"description": "string",
 						"iconUrl": "string",
 						"imageUrl": "string",
-						"label": "string"
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
 					}
 				},
 				"hostile": {
@@ -612,19 +618,26 @@
 						"description": "string",
 						"iconUrl": "string",
 						"imageUrl": "string",
-						"label": "string"
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
 					}
 				},
 				"typical": {
 					"changes": {
 						"description": "string Sample description",
-						"label": "string Sample label"
+						"label": "string Sample label",
+						"themeData": "removed",
+						"themeData.colorway": "string stone",
+						"themeData.navigation": "string always"
 					},
 					"types": {
 						"description": "string",
 						"iconUrl": "string",
 						"imageUrl": "string",
-						"label": "string"
+						"label": "string",
+						"themeData.colorway": "string",
+						"themeData.navigation": "string"
 					}
 				}
 			}
@@ -880,8 +893,8 @@
 				"hostile": {
 					"changes": {
 						"data": "removed",
-						"data.sso_active": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"data.sso_secret": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+						"data.sso_active": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)",
+						"data.sso_secret": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)"
 					},
 					"types": {
 						"data.sso_active": "string",
@@ -922,8 +935,8 @@
 				"hostile": {
 					"changes": {
 						"data": "removed",
-						"data.sso_active": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"data.sso_secret": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+						"data.sso_active": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)",
+						"data.sso_secret": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)"
 					},
 					"types": {
 						"data.sso_active": "string",
@@ -964,8 +977,8 @@
 				"hostile": {
 					"changes": {
 						"data": "removed",
-						"data.sso_active": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"data.sso_secret": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+						"data.sso_active": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)",
+						"data.sso_secret": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)"
 					},
 					"types": {
 						"data.sso_active": "string",
@@ -2851,6 +2864,7 @@
 				"isBridgeBluesky (toggle, schema.Boolean)",
 				"isIndexable (toggle, schema.Boolean)",
 				"isOwner (toggle, schema.Boolean)",
+				"isPrimary (toggle, schema.Boolean)",
 				"isPublic (toggle, schema.Boolean)",
 				"outboxTemplate (select, schema.String)",
 				"username (text, schema.String)"
@@ -2865,6 +2879,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -2879,6 +2894,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -2898,6 +2914,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -2914,6 +2931,7 @@
 						"isBridgeBluesky": "bool true",
 						"isIndexable": "bool true",
 						"isOwner": "bool true",
+						"isPrimary": "bool true",
 						"isPublic": "bool true",
 						"outboxTemplate": "string Sample outboxTemplate",
 						"username": "string visitor_name"
@@ -2926,6 +2944,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3001,6 +3020,7 @@
 				"isBridgeBluesky (toggle, schema.Boolean)",
 				"isIndexable (toggle, schema.Boolean)",
 				"isOwner (toggle, schema.Boolean)",
+				"isPrimary (toggle, schema.Boolean)",
 				"isPublic (toggle, schema.Boolean)",
 				"outboxTemplate (select, schema.String)",
 				"username (text, schema.String)"
@@ -3015,6 +3035,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3029,6 +3050,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3048,6 +3070,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3064,6 +3087,7 @@
 						"isBridgeBluesky": "bool true",
 						"isIndexable": "bool true",
 						"isOwner": "bool true",
+						"isPrimary": "bool true",
 						"isPublic": "bool true",
 						"outboxTemplate": "string Sample outboxTemplate",
 						"username": "string visitor_name"
@@ -3076,6 +3100,7 @@
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
+						"isPrimary": "bool",
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
@@ -3652,7 +3677,7 @@
 						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
 						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (8154 bytes, sha256 f35be94a9c79)"
 					},
 					"types": {
 						"data.tags": "string",
@@ -4573,12 +4598,14 @@
 				}
 			}
 		},
-		"template:qwerty-article/properties/0:as-modal.SubSteps/0:edit": {
+		"template:qwerty-article/properties/0:as-modal.SubSteps/1:if.Otherwise/0:edit": {
 			"fields": [
-				"data.bannerDescription (textarea, schema.Any)",
-				"data.bannerUrl (upload, schema.Any)",
-				"data.iconDescription (textarea, schema.Any)",
-				"data.tags (text, schema.Any)",
+				"content.format (select, schema.String)",
+				"data.bannerDescription (textarea, schema.String)",
+				"data.bannerUrl (upload, schema.String)",
+				"data.iconDescription (textarea, schema.String)",
+				"data.showSummary (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
 				"iconUrl (upload, schema.String)",
 				"isFeatured (toggle, schema.Boolean)",
 				"name (text, schema.String)",
@@ -4587,17 +4614,13 @@
 			],
 			"scenarios": {
 				"absent": {
-					"changes": {
-						"data.bannerDescription": "null",
-						"data.bannerUrl": "null",
-						"data.iconDescription": "null",
-						"data.tags": "null"
-					},
 					"types": {
-						"data.bannerDescription": "[]string",
-						"data.bannerUrl": "[]string",
-						"data.iconDescription": "[]string",
-						"data.tags": "[]string",
+						"content.format": "string",
+						"data.bannerDescription": "unreadable",
+						"data.bannerUrl": "unreadable",
+						"data.iconDescription": "unreadable",
+						"data.showSummary": "unreadable",
+						"data.tags": "unreadable",
 						"iconUrl": "string",
 						"isFeatured": "bool",
 						"name": "string",
@@ -4606,17 +4629,13 @@
 					}
 				},
 				"empty": {
-					"changes": {
-						"data.bannerDescription[0]": "string ",
-						"data.bannerUrl[0]": "string ",
-						"data.iconDescription[0]": "string ",
-						"data.tags[0]": "string "
-					},
 					"types": {
-						"data.bannerDescription": "[]string",
-						"data.bannerUrl": "[]string",
-						"data.iconDescription": "[]string",
-						"data.tags": "[]string",
+						"content.format": "string",
+						"data.bannerDescription": "unreadable",
+						"data.bannerUrl": "unreadable",
+						"data.iconDescription": "unreadable",
+						"data.showSummary": "unreadable",
+						"data.tags": "unreadable",
 						"iconUrl": "string",
 						"isFeatured": "bool",
 						"name": "string",
@@ -4626,19 +4645,20 @@
 				},
 				"hostile": {
 					"changes": {
-						"data.bannerDescription[0]": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
-						"data.bannerUrl[0]": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
-						"data.iconDescription[0]": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
-						"data.tags[0]": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
+						"data.bannerDescription": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)",
+						"data.iconDescription": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)",
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"token": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
 					},
 					"types": {
-						"data.bannerDescription": "[]string",
-						"data.bannerUrl": "[]string",
-						"data.iconDescription": "[]string",
-						"data.tags": "[]string",
+						"content.format": "string",
+						"data.bannerDescription": "string",
+						"data.bannerUrl": "unreadable",
+						"data.iconDescription": "string",
+						"data.showSummary": "unreadable",
+						"data.tags": "string",
 						"iconUrl": "string",
 						"isFeatured": "bool",
 						"name": "string",
@@ -4648,10 +4668,12 @@
 				},
 				"typical": {
 					"changes": {
-						"data.bannerDescription[0]": "string Sample data.bannerDescription",
-						"data.bannerUrl[0]": "string Sample data.bannerUrl",
-						"data.iconDescription[0]": "string Sample data.iconDescription",
-						"data.tags[0]": "string Sample data.tags",
+						"content.format": "string HTML",
+						"data.bannerDescription": "string Sample data.bannerDescription",
+						"data.bannerUrl": "string https://example.com/data-bannerUrl",
+						"data.iconDescription": "string Sample data.iconDescription",
+						"data.showSummary": "bool true",
+						"data.tags": "string Sample data.tags",
 						"iconUrl": "string https://example.com/iconUrl",
 						"isFeatured": "bool true",
 						"label": "string Sample name",
@@ -4659,12 +4681,106 @@
 						"token": "string Sample token"
 					},
 					"types": {
-						"data.bannerDescription": "[]string",
-						"data.bannerUrl": "[]string",
-						"data.iconDescription": "[]string",
-						"data.tags": "[]string",
+						"content.format": "string",
+						"data.bannerDescription": "string",
+						"data.bannerUrl": "string",
+						"data.iconDescription": "string",
+						"data.showSummary": "bool",
+						"data.tags": "string",
 						"iconUrl": "string",
 						"isFeatured": "bool",
+						"name": "string",
+						"summary": "string",
+						"token": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-article/properties/0:as-modal.SubSteps/1:if.Then/0:edit": {
+			"fields": [
+				"content.format (select, schema.String)",
+				"data.bannerDescription (textarea, schema.String)",
+				"data.bannerUrl (upload, schema.String)",
+				"data.iconDescription (textarea, schema.String)",
+				"data.showSummary (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"name (text, schema.String)",
+				"summary (textarea, schema.String)",
+				"token (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.format": "string",
+						"data.bannerDescription": "unreadable",
+						"data.bannerUrl": "unreadable",
+						"data.iconDescription": "unreadable",
+						"data.showSummary": "unreadable",
+						"data.tags": "unreadable",
+						"iconUrl": "string",
+						"name": "string",
+						"summary": "string",
+						"token": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.format": "string",
+						"data.bannerDescription": "unreadable",
+						"data.bannerUrl": "unreadable",
+						"data.iconDescription": "unreadable",
+						"data.showSummary": "unreadable",
+						"data.tags": "unreadable",
+						"iconUrl": "string",
+						"name": "string",
+						"summary": "string",
+						"token": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.bannerDescription": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)",
+						"data.iconDescription": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)",
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
+						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
+						"token": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					},
+					"types": {
+						"content.format": "string",
+						"data.bannerDescription": "string",
+						"data.bannerUrl": "unreadable",
+						"data.iconDescription": "string",
+						"data.showSummary": "unreadable",
+						"data.tags": "string",
+						"iconUrl": "string",
+						"name": "string",
+						"summary": "string",
+						"token": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"data.bannerDescription": "string Sample data.bannerDescription",
+						"data.bannerUrl": "string https://example.com/data-bannerUrl",
+						"data.iconDescription": "string Sample data.iconDescription",
+						"data.showSummary": "bool true",
+						"data.tags": "string Sample data.tags",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample name",
+						"summary": "string Sample summary",
+						"token": "string Sample token"
+					},
+					"types": {
+						"content.format": "string",
+						"data.bannerDescription": "string",
+						"data.bannerUrl": "string",
+						"data.iconDescription": "string",
+						"data.showSummary": "bool",
+						"data.tags": "string",
+						"iconUrl": "string",
 						"name": "string",
 						"summary": "string",
 						"token": "string"
@@ -4674,42 +4790,22 @@
 		},
 		"template:qwerty-collection/create/1:as-modal.SubSteps/0:if.Otherwise/0:edit": {
 			"fields": [
-				"data.layout (radio-button-group, schema.String)",
-				"data.zoom (select, schema.Integer)",
-				"location (place, schema.Object)",
-				"location.formatted (place.formatted, schema.String)",
-				"location.latitude (place.latitude, schema.Number)",
-				"location.longitude (place.longitude, schema.Number)"
+				"data.layout (radio-button-group, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
 					"types": {
-						"data.layout": "unreadable",
-						"data.zoom": "unreadable",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
+						"data.layout": "unreadable"
 					}
 				},
 				"empty": {
 					"types": {
-						"data.layout": "unreadable",
-						"data.zoom": "unreadable",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
+						"data.layout": "unreadable"
 					}
 				},
 				"hostile": {
 					"types": {
-						"data.layout": "unreadable",
-						"data.zoom": "unreadable",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
+						"data.layout": "unreadable"
 					}
 				},
 				"typical": {
@@ -4717,54 +4813,29 @@
 						"data.layout": "string column-1"
 					},
 					"types": {
-						"data.layout": "string",
-						"data.zoom": "unreadable",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
+						"data.layout": "string"
 					}
 				}
 			}
 		},
 		"template:qwerty-collection/create/1:as-modal.SubSteps/0:if.Then/0:edit": {
 			"fields": [
-				"data.layout (radio-button-group, schema.String)",
-				"data.zoom (select, schema.Integer)",
-				"location (place, schema.Object)",
-				"location.formatted (place.formatted, schema.String)",
-				"location.latitude (place.latitude, schema.Number)",
-				"location.longitude (place.longitude, schema.Number)"
+				"data.layout (radio-button-group, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
 					"types": {
-						"data.layout": "unreadable",
-						"data.zoom": "unreadable",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
+						"data.layout": "unreadable"
 					}
 				},
 				"empty": {
 					"types": {
-						"data.layout": "unreadable",
-						"data.zoom": "unreadable",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
+						"data.layout": "unreadable"
 					}
 				},
 				"hostile": {
 					"types": {
-						"data.layout": "unreadable",
-						"data.zoom": "unreadable",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
+						"data.layout": "unreadable"
 					}
 				},
 				"typical": {
@@ -4772,307 +4843,260 @@
 						"data.layout": "string column-1"
 					},
 					"types": {
-						"data.layout": "string",
-						"data.zoom": "unreadable",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
+						"data.layout": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-collection/map-view/0:edit": {
-			"fields": [
-				"data.zoom (hidden, schema.Integer)",
-				"location.latitude (hidden, schema.Number)",
-				"location.longitude (hidden, schema.Number)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"data.zoom": "unreadable",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
-					}
-				},
-				"empty": {
-					"types": {
-						"data.zoom": "unreadable",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
-					}
-				},
-				"hostile": {
-					"types": {
-						"data.zoom": "unreadable",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
-					}
-				},
-				"typical": {
-					"changes": {
-						"data.zoom": "int32 7",
-						"location.latitude": "float64 3.5",
-						"location.longitude": "float64 3.5"
-					},
-					"types": {
-						"data.zoom": "int",
-						"location.latitude": "float64",
-						"location.longitude": "float64"
-					}
-				}
-			}
-		},
-		"template:qwerty-collection/settings/0:if.Then/0:as-modal.SubSteps/0:edit": {
+		"template:qwerty-collection/settings-articles/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
-				"label (text, schema.String)",
-				"summary (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"allowReplies": "bool",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"allowReplies": "bool",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"allowReplies": "bool",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"label": "string Sample label",
-						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"allowReplies": "bool",
-						"label": "string",
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:edit": {
-			"fields": [
-				"allowReplies (toggle, schema.Boolean)",
+				"data.hardWraps (toggle, schema.Boolean)",
 				"data.layout (radio-button-group, schema.String)",
+				"data.sortType (select, schema.String)",
+				"data.tags (list, schema.Array)",
 				"label (text, schema.String)",
 				"summary (textarea, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
 						"data.layout": "unreadable",
+						"data.sortType": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"empty": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
 						"data.layout": "unreadable",
+						"data.sortType": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"data.tags[0]": "string x",
+						"data.tags[1]": "string not-an-objectid",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
 						"data.layout": "unreadable",
+						"data.sortType": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"typical": {
 					"changes": {
+						"data.hardWraps": "bool true",
 						"data.layout": "string column-1",
+						"data.sortType": "string publishDate",
+						"data.tags[0]": "string Sample data.tags.0",
+						"data.tags[1]": "string Sample data.tags.1",
 						"label": "string Sample label",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "bool",
 						"data.layout": "string",
+						"data.sortType": "string",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:edit": {
-			"fields": [
-				"allowReplies (toggle, schema.Boolean)",
-				"data.timelineOrder (radio-button-group, schema.String)",
-				"label (text, schema.String)",
-				"summary (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"allowReplies": "bool",
-						"data.timelineOrder": "unreadable",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"allowReplies": "bool",
-						"data.timelineOrder": "unreadable",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"allowReplies": "bool",
-						"data.timelineOrder": "unreadable",
-						"label": "string",
-						"summary": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"label": "string Sample label",
-						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"allowReplies": "bool",
-						"data.timelineOrder": "unreadable",
-						"label": "string",
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-calendar/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
 				"data.calendarView (radio-button-group, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (list, schema.Array)",
 				"label (text, schema.String)",
 				"summary (textarea, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
 						"allowReplies": "bool",
 						"data.calendarView": "unreadable",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"empty": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
 						"allowReplies": "bool",
 						"data.calendarView": "unreadable",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"data.tags[0]": "string x",
+						"data.tags[1]": "string not-an-objectid",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"allowReplies": "bool",
 						"data.calendarView": "unreadable",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"typical": {
 					"changes": {
+						"data.hardWraps": "bool true",
+						"data.tags[0]": "string Sample data.tags.0",
+						"data.tags[1]": "string Sample data.tags.1",
 						"label": "string Sample label",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
 						"data.calendarView": "unreadable",
+						"data.hardWraps": "bool",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-map/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (list, schema.Array)",
+				"data.zoom (select, schema.Integer)",
 				"label (text, schema.String)",
+				"location (place, schema.Object)",
+				"location.formatted (place.formatted, schema.String)",
+				"location.latitude (place.latitude, schema.Number)",
+				"location.longitude (place.longitude, schema.Number)",
 				"summary (textarea, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
+						"data.zoom": "unreadable",
 						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
 						"summary": "string"
 					}
 				},
 				"empty": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
+						"data.zoom": "unreadable",
 						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
+						"data.tags[0]": "string x",
+						"data.tags[1]": "string not-an-objectid",
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
 					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
+						"data.zoom": "unreadable",
 						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
 						"summary": "string"
 					}
 				},
 				"typical": {
 					"changes": {
+						"data.hardWraps": "bool true",
+						"data.tags[0]": "string Sample data.tags.0",
+						"data.tags[1]": "string Sample data.tags.1",
+						"data.zoom": "int32 7",
 						"label": "string Sample label",
+						"location.formatted": "string 1 Main Street, Portland, OR",
+						"location.latitude": "float64 45.5231",
+						"location.longitude": "float64 -122.6765",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "bool",
+						"data.tags": "*sliceof.String",
+						"data.zoom": "int",
 						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
 						"summary": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Otherwise/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-notes/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
+				"data.hardWraps (toggle, schema.Boolean)",
 				"label (text, schema.String)",
 				"summary (textarea, schema.String)"
 			],
@@ -5080,6 +5104,7 @@
 				"absent": {
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
@@ -5087,625 +5112,228 @@
 				"empty": {
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"typical": {
 					"changes": {
+						"data.hardWraps": "bool true",
 						"label": "string Sample label",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
+						"data.hardWraps": "bool",
 						"label": "string",
 						"summary": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-collection/settings/1:as-modal.SubSteps/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-photos/1:edit": {
 			"fields": [
 				"allowReplies (toggle, schema.Boolean)",
-				"data.episodeOrder (select, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.sortType (select, schema.String)",
+				"data.tags (list, schema.Array)",
 				"label (text, schema.String)",
 				"summary (textarea, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
 						"allowReplies": "bool",
-						"data.episodeOrder": "unreadable",
+						"data.hardWraps": "unreadable",
+						"data.sortType": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"empty": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
 						"allowReplies": "bool",
-						"data.episodeOrder": "unreadable",
+						"data.hardWraps": "unreadable",
+						"data.sortType": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"data.tags[0]": "string x",
+						"data.tags[1]": "string not-an-objectid",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"allowReplies": "bool",
-						"data.episodeOrder": "unreadable",
+						"data.hardWraps": "unreadable",
+						"data.sortType": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				},
 				"typical": {
 					"changes": {
+						"data.hardWraps": "bool true",
+						"data.sortType": "string publishDate",
+						"data.tags[0]": "string Sample data.tags.0",
+						"data.tags[1]": "string Sample data.tags.1",
 						"label": "string Sample label",
 						"replyPolicy": "string everyone",
-						"summary": "string Sample summary"
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
 						"allowReplies": "bool",
-						"data.episodeOrder": "unreadable",
+						"data.hardWraps": "bool",
+						"data.sortType": "string",
+						"data.tags": "*sliceof.String",
 						"label": "string",
 						"summary": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-entry/create/0:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:edit": {
+		"template:qwerty-collection/settings-podcast/1:edit": {
 			"fields": [
-				"content.raw (textarea, schema.String)",
-				"data.tags (text, schema.String)",
-				"endDate (datetime, schema.String)",
-				"iconUrl (upload, schema.String)",
+				"allowReplies (toggle, schema.Boolean)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.sortDirection (select, schema.String)",
 				"label (text, schema.String)",
-				"location (place, schema.Object)",
-				"location.formatted (place.formatted, schema.String)",
-				"location.latitude (place.latitude, schema.Number)",
-				"location.longitude (place.longitude, schema.Number)",
-				"startDate (datetime, schema.String)",
 				"summary (textarea, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
 					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"endDate": "string",
-						"iconUrl": "string",
+						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.sortDirection": "unreadable",
 						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
 						"summary": "string"
 					}
 				},
 				"empty": {
 					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"endDate": "string",
-						"iconUrl": "string",
+						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.sortDirection": "unreadable",
 						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"endDate": "string",
-						"iconUrl": "string",
+						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.sortDirection": "unreadable",
 						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
 						"summary": "string"
 					}
 				},
 				"typical": {
 					"changes": {
-						"content.raw": "string Sample content.raw",
-						"data.tags": "string Sample data.tags",
-						"iconUrl": "string https://example.com/iconUrl",
+						"data.hardWraps": "bool true",
+						"data.sortDirection": "string desc",
 						"label": "string Sample label",
-						"location.formatted": "string 1 Main Street, Portland, OR",
-						"location.latitude": "float64 45.5231",
-						"location.longitude": "float64 -122.6765",
-						"summary": "string Sample summary"
+						"replyPolicy": "string everyone",
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"endDate": "string",
-						"iconUrl": "string",
+						"allowReplies": "bool",
+						"data.hardWraps": "bool",
+						"data.sortDirection": "string",
 						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
 						"summary": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-entry/create/0:as-modal.SubSteps/0:if.Otherwise/0:if.Then/0:edit": {
+		"template:qwerty-collection/settings-timeline/1:edit": {
 			"fields": [
-				"content.raw (textarea, schema.String)",
-				"data.tags (text, schema.String)",
-				"endDate (date, schema.String)",
-				"iconUrl (upload, schema.String)",
+				"allowReplies (toggle, schema.Boolean)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (list, schema.Array)",
 				"label (text, schema.String)",
-				"location (place, schema.Object)",
-				"location.formatted (place.formatted, schema.String)",
-				"location.latitude (place.latitude, schema.Number)",
-				"location.longitude (place.longitude, schema.Number)",
-				"startDate (date, schema.String)",
 				"summary (textarea, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"endDate": "string",
-						"iconUrl": "string",
+						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
 						"summary": "string"
 					}
 				},
 				"empty": {
+					"changes": {
+						"data.tags": "array []"
+					},
 					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"endDate": "string",
-						"iconUrl": "string",
+						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
 						"summary": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+						"data.tags[0]": "string x",
+						"data.tags[1]": "string not-an-objectid",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"endDate": "string",
-						"iconUrl": "string",
+						"allowReplies": "bool",
+						"data.hardWraps": "unreadable",
+						"data.tags": "*sliceof.String",
 						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
 						"summary": "string"
 					}
 				},
 				"typical": {
 					"changes": {
-						"content.raw": "string Sample content.raw",
-						"data.tags": "string Sample data.tags",
-						"iconUrl": "string https://example.com/iconUrl",
+						"data.hardWraps": "bool true",
+						"data.tags[0]": "string Sample data.tags.0",
+						"data.tags[1]": "string Sample data.tags.1",
 						"label": "string Sample label",
-						"location.formatted": "string 1 Main Street, Portland, OR",
-						"location.latitude": "float64 45.5231",
-						"location.longitude": "float64 -122.6765",
-						"summary": "string Sample summary"
+						"replyPolicy": "string everyone",
+						"summary": "string # Sample\n\n*summary*"
 					},
 					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"endDate": "string",
-						"iconUrl": "string",
+						"allowReplies": "bool",
+						"data.hardWraps": "bool",
+						"data.tags": "*sliceof.String",
 						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-entry/create/0:as-modal.SubSteps/0:if.Then/0:edit": {
-			"fields": [
-				"content.raw (textarea, schema.String)",
-				"data.tags (text, schema.String)",
-				"iconUrl (upload, schema.String)",
-				"label (text, schema.String)",
-				"location (place, schema.Object)",
-				"location.formatted (place.formatted, schema.String)",
-				"location.latitude (place.latitude, schema.Number)",
-				"location.longitude (place.longitude, schema.Number)",
-				"summary (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"summary": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"summary": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"summary": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"content.raw": "string Sample content.raw",
-						"data.tags": "string Sample data.tags",
-						"iconUrl": "string https://example.com/iconUrl",
-						"label": "string Sample label",
-						"location.formatted": "string 1 Main Street, Portland, OR",
-						"location.latitude": "float64 45.5231",
-						"location.longitude": "float64 -122.6765",
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-entry/edit/0:as-modal.SubSteps/2:if.Otherwise/0:if.Otherwise/0:edit": {
-			"fields": [
-				"content.raw (textarea, schema.String)",
-				"data.tags (text, schema.String)",
-				"endDate (datetime, schema.String)",
-				"iconUrl (upload, schema.String)",
-				"label (text, schema.String)",
-				"location (place, schema.Object)",
-				"location.formatted (place.formatted, schema.String)",
-				"location.latitude (place.latitude, schema.Number)",
-				"location.longitude (place.longitude, schema.Number)",
-				"startDate (datetime, schema.String)",
-				"summary (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"endDate": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"endDate": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"endDate": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"content.raw": "string Sample content.raw",
-						"data.tags": "string Sample data.tags",
-						"iconUrl": "string https://example.com/iconUrl",
-						"label": "string Sample label",
-						"location.formatted": "string 1 Main Street, Portland, OR",
-						"location.latitude": "float64 45.5231",
-						"location.longitude": "float64 -122.6765",
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"endDate": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-entry/edit/0:as-modal.SubSteps/2:if.Otherwise/0:if.Then/0:edit": {
-			"fields": [
-				"content.raw (textarea, schema.String)",
-				"data.tags (text, schema.String)",
-				"endDate (date, schema.String)",
-				"iconUrl (upload, schema.String)",
-				"label (text, schema.String)",
-				"location (place, schema.Object)",
-				"location.formatted (place.formatted, schema.String)",
-				"location.latitude (place.latitude, schema.Number)",
-				"location.longitude (place.longitude, schema.Number)",
-				"startDate (date, schema.String)",
-				"summary (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"endDate": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"endDate": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"endDate": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"content.raw": "string Sample content.raw",
-						"data.tags": "string Sample data.tags",
-						"iconUrl": "string https://example.com/iconUrl",
-						"label": "string Sample label",
-						"location.formatted": "string 1 Main Street, Portland, OR",
-						"location.latitude": "float64 45.5231",
-						"location.longitude": "float64 -122.6765",
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"endDate": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"startDate": "string",
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-entry/edit/0:as-modal.SubSteps/2:if.Then/0:edit": {
-			"fields": [
-				"content.raw (textarea, schema.String)",
-				"data.tags (text, schema.String)",
-				"iconUrl (upload, schema.String)",
-				"label (text, schema.String)",
-				"location (place, schema.Object)",
-				"location.formatted (place.formatted, schema.String)",
-				"location.latitude (place.latitude, schema.Number)",
-				"location.longitude (place.longitude, schema.Number)",
-				"summary (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"summary": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"content.raw": "string",
-						"data.tags": "unreadable",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"summary": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"summary": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
-						"summary": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"content.raw": "string Sample content.raw",
-						"data.tags": "string Sample data.tags",
-						"iconUrl": "string https://example.com/iconUrl",
-						"label": "string Sample label",
-						"location.formatted": "string 1 Main Street, Portland, OR",
-						"location.latitude": "float64 45.5231",
-						"location.longitude": "float64 -122.6765",
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"content.raw": "string",
-						"data.tags": "string",
-						"iconUrl": "string",
-						"label": "string",
-						"location": "*geo.Address",
-						"location.formatted": "string",
-						"location.latitude": "float64",
-						"location.longitude": "float64",
 						"summary": "string"
 					}
 				}
@@ -5715,6 +5343,7 @@
 			"fields": [
 				"content.raw (textarea, schema.String)",
 				"data.audioUrl (upload, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
 				"iconUrl (upload, schema.String)",
 				"label (text, schema.String)"
 			],
@@ -5723,6 +5352,7 @@
 					"types": {
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
+						"data.hardWraps": "unreadable",
 						"iconUrl": "string",
 						"label": "string"
 					}
@@ -5731,32 +5361,35 @@
 					"types": {
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
+						"data.hardWraps": "unreadable",
 						"iconUrl": "string",
 						"label": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
+						"data.hardWraps": "unreadable",
 						"iconUrl": "string",
 						"label": "string"
 					}
 				},
 				"typical": {
 					"changes": {
-						"content.raw": "string Sample content.raw",
+						"content.raw": "string # Sample\n\n*content.raw*",
 						"data.audioUrl": "string https://example.com/data-audioUrl",
+						"data.hardWraps": "bool true",
 						"iconUrl": "string https://example.com/iconUrl",
 						"label": "string Sample label"
 					},
 					"types": {
 						"content.raw": "string",
 						"data.audioUrl": "string",
+						"data.hardWraps": "bool",
 						"iconUrl": "string",
 						"label": "string"
 					}
@@ -5767,50 +5400,256 @@
 			"fields": [
 				"content.raw (textarea, schema.String)",
 				"data.audioUrl (upload, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
 				"iconUrl (upload, schema.String)",
-				"label (text, schema.String)"
+				"label (text, schema.String)",
+				"publishDateTime (datetime, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
 					"types": {
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
+						"data.hardWraps": "unreadable",
 						"iconUrl": "string",
-						"label": "string"
+						"label": "string",
+						"publishDateTime": "string"
 					}
 				},
 				"empty": {
 					"types": {
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
+						"data.hardWraps": "unreadable",
 						"iconUrl": "string",
-						"label": "string"
+						"label": "string",
+						"publishDateTime": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"content.raw": "string",
 						"data.audioUrl": "unreadable",
+						"data.hardWraps": "unreadable",
 						"iconUrl": "string",
-						"label": "string"
+						"label": "string",
+						"publishDateTime": "string"
 					}
 				},
 				"typical": {
 					"changes": {
-						"content.raw": "string Sample content.raw",
+						"content.raw": "string # Sample\n\n*content.raw*",
 						"data.audioUrl": "string https://example.com/data-audioUrl",
+						"data.hardWraps": "bool true",
 						"iconUrl": "string https://example.com/iconUrl",
 						"label": "string Sample label"
 					},
 					"types": {
 						"content.raw": "string",
 						"data.audioUrl": "string",
+						"data.hardWraps": "bool",
 						"iconUrl": "string",
-						"label": "string"
+						"label": "string",
+						"publishDateTime": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-event/create/0:as-modal.SubSteps/0:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"endDate (datetime, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"label (text, schema.String)",
+				"location (place, schema.Object)",
+				"location.formatted (place.formatted, schema.String)",
+				"location.latitude (place.latitude, schema.Number)",
+				"location.longitude (place.longitude, schema.Number)",
+				"startDate (datetime, schema.String)",
+				"summary (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample label",
+						"location.formatted": "string 1 Main Street, Portland, OR",
+						"location.latitude": "float64 45.5231",
+						"location.longitude": "float64 -122.6765",
+						"summary": "string # Sample\n\n*summary*"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-event/edit/0:as-modal.SubSteps/2:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"endDate (datetime, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"label (text, schema.String)",
+				"location (place, schema.Object)",
+				"location.formatted (place.formatted, schema.String)",
+				"location.latitude (place.latitude, schema.Number)",
+				"location.longitude (place.longitude, schema.Number)",
+				"startDate (datetime, schema.String)",
+				"summary (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample label",
+						"location.formatted": "string 1 Main Street, Portland, OR",
+						"location.latitude": "float64 45.5231",
+						"location.longitude": "float64 -122.6765",
+						"summary": "string # Sample\n\n*summary*"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
 					}
 				}
 			}
@@ -5857,98 +5696,39 @@
 		},
 		"template:qwerty-outbox/edit-status/0:as-modal.SubSteps/0:edit": {
 			"fields": [
+				"data.hardWraps (toggle, schema.String)",
 				"statusMessage (textarea, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
 					"types": {
+						"data.hardWraps": "unreadable",
 						"statusMessage": "string"
 					}
 				},
 				"empty": {
 					"types": {
+						"data.hardWraps": "unreadable",
 						"statusMessage": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (8154 bytes, sha256 f35be94a9c79)"
 					},
 					"types": {
-						"statusMessage": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"statusMessage": "string Sample statusMessage"
-					},
-					"types": {
-						"statusMessage": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-outbox/edit/0:as-modal.SubSteps/0:edit": {
-			"fields": [
-				"data.tags (text, schema.String)",
-				"displayName (text, schema.String)",
-				"iconUrl (upload, schema.String)",
-				"imageUrl (upload, schema.String)",
-				"location (text, schema.String)",
-				"statusMessage (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"data.tags": "unreadable",
-						"displayName": "string",
-						"iconUrl": "string",
-						"imageUrl": "string",
-						"location": "string",
-						"statusMessage": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"data.tags": "unreadable",
-						"displayName": "string",
-						"iconUrl": "string",
-						"imageUrl": "string",
-						"location": "string",
-						"statusMessage": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"data": "removed",
-						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
-						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
-					},
-					"types": {
-						"data.tags": "string",
-						"displayName": "string",
-						"iconUrl": "string",
-						"imageUrl": "string",
-						"location": "string",
+						"data.hardWraps": "unreadable",
 						"statusMessage": "string"
 					}
 				},
 				"typical": {
 					"changes": {
 						"data": "removed",
-						"data.tags": "string Sample data.tags",
-						"displayName": "string Sample displayName",
-						"location": "string Sample location",
+						"data.hardWraps": "string true",
 						"statusMessage": "string Sample statusMessage"
 					},
 					"types": {
-						"data.tags": "string",
-						"displayName": "string",
-						"iconUrl": "string",
-						"imageUrl": "string",
-						"location": "string",
+						"data.hardWraps": "string",
 						"statusMessage": "string"
 					}
 				}
@@ -5992,6 +5772,7 @@
 		},
 		"template:qwerty-outbox/settings-general-form/0:edit": {
 			"fields": [
+				"data.hardWraps (toggle, schema.String)",
 				"data.tags (text, schema.String)",
 				"displayName (text, schema.String)",
 				"emailAddress (text, schema.String)",
@@ -6002,6 +5783,7 @@
 			"scenarios": {
 				"absent": {
 					"types": {
+						"data.hardWraps": "unreadable",
 						"data.tags": "unreadable",
 						"displayName": "string",
 						"emailAddress": "string",
@@ -6012,6 +5794,7 @@
 				},
 				"empty": {
 					"types": {
+						"data.hardWraps": "unreadable",
 						"data.tags": "unreadable",
 						"displayName": "string",
 						"emailAddress": "string",
@@ -6026,9 +5809,10 @@
 						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
 						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (8154 bytes, sha256 f35be94a9c79)"
 					},
 					"types": {
+						"data.hardWraps": "unreadable",
 						"data.tags": "string",
 						"displayName": "string",
 						"emailAddress": "string",
@@ -6040,6 +5824,7 @@
 				"typical": {
 					"changes": {
 						"data": "removed",
+						"data.hardWraps": "string true",
 						"data.tags": "string Sample data.tags",
 						"displayName": "string Sample displayName",
 						"emailAddress": "string visitor@example.com",
@@ -6048,6 +5833,7 @@
 						"username": "string visitor_name"
 					},
 					"types": {
+						"data.hardWraps": "string",
 						"data.tags": "string",
 						"displayName": "string",
 						"emailAddress": "string",
@@ -6710,7 +6496,38 @@
 				}
 			}
 		},
-		"template:qwerty-outbox/wizard-1/0:edit": {
+		"template:qwerty-outbox/settings-stylesheet-form/0:edit": {
+			"fields": [
+				"data.stylesheet (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"typical": {
+					"changes": {
+						"data": "removed",
+						"data.stylesheet": "string Sample data.stylesheet"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/wizard-1/0:if.Otherwise/0:edit": {
 			"fields": [
 				"displayName (text, schema.String)",
 				"iconUrl (upload, schema.String)",
@@ -6755,56 +6572,55 @@
 				}
 			}
 		},
-		"template:qwerty-photo/create/0:as-modal.SubSteps/0:edit": {
+		"template:qwerty-outbox/wizard-1/0:if.Then/0:edit": {
 			"fields": [
-				"content.raw (textarea, schema.String)",
+				"displayName (text, schema.String)",
 				"iconUrl (upload, schema.String)",
-				"label (text, schema.String)"
+				"username (text, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
 					"types": {
-						"content.raw": "string",
+						"displayName": "string",
 						"iconUrl": "string",
-						"label": "string"
+						"username": "string"
 					}
 				},
 				"empty": {
 					"types": {
-						"content.raw": "string",
+						"displayName": "string",
 						"iconUrl": "string",
-						"label": "string"
+						"username": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx"
 					},
 					"types": {
-						"content.raw": "string",
+						"displayName": "string",
 						"iconUrl": "string",
-						"label": "string"
+						"username": "string"
 					}
 				},
 				"typical": {
 					"changes": {
-						"content.raw": "string Sample content.raw",
-						"iconUrl": "string https://example.com/iconUrl",
-						"label": "string Sample label"
+						"displayName": "string Sample displayName",
+						"username": "string visitor_name"
 					},
 					"types": {
-						"content.raw": "string",
+						"displayName": "string",
 						"iconUrl": "string",
-						"label": "string"
+						"username": "string"
 					}
 				}
 			}
 		},
-		"template:qwerty-photo/edit/0:as-modal.SubSteps/1:edit": {
+		"template:qwerty-photo/create/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"content.raw (textarea, schema.String)",
-				"iconUrl (upload, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
 				"isFeatured (toggle, schema.Boolean)",
 				"label (text, schema.String)"
 			],
@@ -6812,7 +6628,8 @@
 				"absent": {
 					"types": {
 						"content.raw": "string",
-						"iconUrl": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
 						"isFeatured": "bool",
 						"label": "string"
 					}
@@ -6820,35 +6637,521 @@
 				"empty": {
 					"types": {
 						"content.raw": "string",
-						"iconUrl": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
 						"isFeatured": "bool",
 						"label": "string"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"content.raw": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"content.raw": "string",
-						"iconUrl": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
 						"isFeatured": "bool",
 						"label": "string"
 					}
 				},
 				"typical": {
 					"changes": {
-						"content.raw": "string Sample content.raw",
-						"iconUrl": "string https://example.com/iconUrl",
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
 						"isFeatured": "bool true",
 						"label": "string Sample label"
 					},
 					"types": {
 						"content.raw": "string",
-						"iconUrl": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
 						"isFeatured": "bool",
 						"label": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-photo/edit/0:as-modal.SubSteps/1:if.Otherwise/0:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"isFeatured (toggle, schema.Boolean)",
+				"label (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"isFeatured": "bool",
+						"label": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"isFeatured": "bool",
+						"label": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
+						"isFeatured": "bool",
+						"label": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
+						"isFeatured": "bool true",
+						"label": "string Sample label"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
+						"isFeatured": "bool",
+						"label": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-photo/edit/0:as-modal.SubSteps/1:if.Then/0:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"label (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"label": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"label": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
+						"label": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
+						"label": "string Sample label"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
+						"label": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-placemark/create/0:as-modal.SubSteps/0:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"label (text, schema.String)",
+				"location (place, schema.Object)",
+				"location.formatted (place.formatted, schema.String)",
+				"location.latitude (place.latitude, schema.Number)",
+				"location.longitude (place.longitude, schema.Number)",
+				"summary (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"summary": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"summary": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"summary": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample label",
+						"location.formatted": "string 1 Main Street, Portland, OR",
+						"location.latitude": "float64 45.5231",
+						"location.longitude": "float64 -122.6765",
+						"summary": "string # Sample\n\n*summary*"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"summary": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-placemark/edit/0:as-modal.SubSteps/2:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"label (text, schema.String)",
+				"location (place, schema.Object)",
+				"location.formatted (place.formatted, schema.String)",
+				"location.latitude (place.latitude, schema.Number)",
+				"location.longitude (place.longitude, schema.Number)",
+				"summary (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"summary": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"summary": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"summary": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample label",
+						"location.formatted": "string 1 Main Street, Portland, OR",
+						"location.latitude": "float64 45.5231",
+						"location.longitude": "float64 -122.6765",
+						"summary": "string # Sample\n\n*summary*"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"summary": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-timeline-entry/create/0:as-modal.SubSteps/0:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"endDate (date, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"label (text, schema.String)",
+				"location (place, schema.Object)",
+				"location.formatted (place.formatted, schema.String)",
+				"location.latitude (place.latitude, schema.Number)",
+				"location.longitude (place.longitude, schema.Number)",
+				"startDate (date, schema.String)",
+				"summary (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample label",
+						"location.formatted": "string 1 Main Street, Portland, OR",
+						"location.latitude": "float64 45.5231",
+						"location.longitude": "float64 -122.6765",
+						"summary": "string # Sample\n\n*summary*"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-timeline-entry/edit/0:as-modal.SubSteps/2:edit": {
+			"fields": [
+				"content.raw (textarea, schema.String)",
+				"data.hardWraps (toggle, schema.Boolean)",
+				"data.tags (html-remote, schema.String)",
+				"endDate (date, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"label (text, schema.String)",
+				"location (place, schema.Object)",
+				"location.formatted (place.formatted, schema.String)",
+				"location.latitude (place.latitude, schema.Number)",
+				"location.longitude (place.longitude, schema.Number)",
+				"startDate (date, schema.String)",
+				"summary (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "unreadable",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
+						"location.formatted": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "unreadable",
+						"data.tags": "string",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content.raw": "string # Sample\n\n*content.raw*",
+						"data.hardWraps": "bool true",
+						"data.tags": "string Sample data.tags",
+						"iconUrl": "string https://example.com/iconUrl",
+						"label": "string Sample label",
+						"location.formatted": "string 1 Main Street, Portland, OR",
+						"location.latitude": "float64 45.5231",
+						"location.longitude": "float64 -122.6765",
+						"summary": "string # Sample\n\n*summary*"
+					},
+					"types": {
+						"content.raw": "string",
+						"data.hardWraps": "bool",
+						"data.tags": "string",
+						"endDate": "string",
+						"iconUrl": "string",
+						"label": "string",
+						"location": "*geo.Address",
+						"location.formatted": "string",
+						"location.latitude": "float64",
+						"location.longitude": "float64",
+						"startDate": "string",
+						"summary": "string"
 					}
 				}
 			}
@@ -7152,7 +7455,7 @@
 					"changes": {
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
 						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (8154 bytes, sha256 f35be94a9c79)"
 					},
 					"types": {
 						"displayName": "string",
@@ -7833,7 +8136,7 @@
 						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
 						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (8154 bytes, sha256 f35be94a9c79)"
 					},
 					"types": {
 						"data.tags": "string",
@@ -8517,11 +8820,56 @@
 				}
 			}
 		},
-		"template:user-outbox/wizard-1/0:edit": {
+		"template:user-outbox/wizard-1/0:if.Otherwise/0:edit": {
 			"fields": [
 				"displayName (text, schema.String)",
 				"emailAddress (text, schema.String)",
 				"new_password (password, not in schema)",
+				"username (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx"
+					},
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"displayName": "string Sample displayName",
+						"emailAddress": "string visitor@example.com",
+						"username": "string visitor_name"
+					},
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/wizard-1/0:if.Then/0:edit": {
+			"fields": [
+				"displayName (text, schema.String)",
+				"emailAddress (text, schema.String)",
 				"username (text, schema.String)"
 			],
 			"scenarios": {
@@ -9308,7 +9656,6 @@
 				},
 				"typical": {
 					"changes": {
-						"isBridgeBluesky": "bool true",
 						"isIndexable": "bool true",
 						"isPublic": "bool true"
 					},
@@ -9737,28 +10084,28 @@
 		"template:qwerty-article/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-article/delete-banner/1:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-article/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
-		"template:qwerty-article/edit-content/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:qwerty-article/edit-content/0:switch.Cases[HTML]/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:qwerty-article/edit-content/0:switch.Cases[MARKDOWN]/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:qwerty-article/edit-content/0:switch.Default/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
 		"template:qwerty-article/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-article/properties/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-article/properties/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-article/properties/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-article/properties/0:as-modal.SubSteps/4:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-article/upload-banner/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-article/upload-image/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-collection/add/1:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
+		"template:qwerty-collection/add/1:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
+		"template:qwerty-collection/add/1:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
+		"template:qwerty-collection/add/1:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-collection/add/1:if.Otherwise/0:if.Otherwise/0:if.Then/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-collection/add/1:if.Otherwise/0:if.Then/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-collection/add/1:if.Then/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
-		"template:qwerty-collection/sharing/0:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
-		"template:qwerty-collection/sharing/0:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
-		"template:qwerty-collection/sharing/0:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
-		"template:qwerty-collection/sharing/0:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
-		"template:qwerty-collection/sharing/0:as-modal.SubSteps/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
-		"template:qwerty-collection/sharing/0:as-modal.SubSteps/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
-		"template:qwerty-collection/sort/0:sort": "not pinned: POST keys are database record IDs",
-		"template:qwerty-entry/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-entry/create/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-entry/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
-		"template:qwerty-entry/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-entry/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-collection/settings-about/5:with-parent.SubSteps": "not pinned: the sub-builder's template belongs to a related Stream, known only at runtime",
+		"template:qwerty-collection/sharing/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
+		"template:qwerty-collection/sharing/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
+		"template:qwerty-collection/sharing/1:as-modal.SubSteps/0:if.Otherwise/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
+		"template:qwerty-collection/sharing/1:as-modal.SubSteps/0:if.Otherwise/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
+		"template:qwerty-collection/sharing/1:as-modal.SubSteps/0:if.Then/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
+		"template:qwerty-collection/sort/0:if.Otherwise/0:sort": "not pinned: POST keys are database record IDs",
+		"template:qwerty-collection/sort/0:if.Then/0:sort": "not pinned: POST keys are database record IDs",
 		"template:qwerty-episode/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-episode/create/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-episode/create/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
@@ -9766,17 +10113,18 @@
 		"template:qwerty-episode/edit/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-episode/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-episode/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-event/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-event/create/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-event/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:qwerty-event/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-event/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-outbox/add-collection/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
-		"template:qwerty-outbox/add-note/2:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
+		"template:qwerty-outbox/add-note/2:as-modal.SubSteps/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-outbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-outbox/delete-background/1:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-outbox/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-outbox/delete-image/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-outbox/edit-banner/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-outbox/edit/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-outbox/edit/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-outbox/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-outbox/edit/0:as-modal.SubSteps/5:set-password": "not pinned: hashes and stores a password through the User service",
 		"template:qwerty-outbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-outbox/settings-collections-form/0:sort": "not pinned: POST keys are database record IDs",
 		"template:qwerty-outbox/settings-icon-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
@@ -9789,18 +10137,25 @@
 		"template:qwerty-outbox/wizard-1/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-outbox/wizard-1/3:set-password": "not pinned: hashes and stores a password through the User service",
 		"template:qwerty-photo/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-photo/create/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-photo/create/0:as-modal.SubSteps/2:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
-		"template:qwerty-photo/edit/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:qwerty-photo/edit/0:as-modal.SubSteps/3:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:qwerty-photo/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-photo/photos/0:edit-attachments": "not pinned: stores, deletes, and sorts attachments through the Attachment service",
+		"template:qwerty-photo/photos/1:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
+		"template:qwerty-placemark/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-placemark/create/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-placemark/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:qwerty-placemark/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-placemark/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-replies/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-replies/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-timeline-entry/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-timeline-entry/create/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-timeline-entry/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:qwerty-timeline-entry/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-timeline-entry/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:redirect/sharing/0:as-modal.SubSteps/0:set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
 		"template:user-inbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-inbox/folder-sort/0:with-folder.SubSteps@with-folder/0:sort": "not pinned: POST keys are database record IDs",
 		"template:user-inbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:user-inbox/message-set-response/0:with-message.SubSteps@with-message/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-inbox/reply/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:user-notifications/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-notifications/like-button/0:set-response": "not pinned: writes a Response record through service.Response",

@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/turbine/queue"
 )
 
@@ -30,7 +31,7 @@ func PreProcessor(task *queue.Task) error {
 	// Outbox-Publish is the follower fan-out (F2). It is cheap (DB reads + enqueue, no HTTP),
 	// so it runs promptly post-commit — preserving the old synchronous fan-out timing — while the
 	// per-recipient Outbox:SendToSingleRecipient deliveries it enqueues stay background (256 below).
-	case "Outbox-Publish":
+	case "Outbox-Publish", delivery.TaskFanOut:
 		task.Priority = 16
 
 	case service.TaskSendDeleteQuoteAuthorization:
@@ -93,6 +94,10 @@ func PreProcessor(task *queue.Task) error {
 	case "Outbox:SendToSingleRecipient":
 		task.Priority = 256
 
+	// RULE: Deliveries run below user-facing work, so that a large fan-out cannot delay it
+	case delivery.TaskSend, service.TaskOutbox2Email:
+		task.Priority = 256
+
 	case "syndication.create", "syndication.update", "syndication.delete":
 		task.Priority = 256
 
@@ -140,7 +145,13 @@ func PreProcessor(task *queue.Task) error {
 	case "PurgeDomeLog":
 		task.Priority = 1024
 
+	case TaskProbeDormantHosts:
+		task.Priority = 1024
+
 	case "PurgeNotifications":
+		task.Priority = 1024
+
+	case "PurgeStagedUploads":
 		task.Priority = 1024
 
 	case "RecycleDomain":

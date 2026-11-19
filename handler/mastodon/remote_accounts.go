@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/toot"
@@ -127,7 +128,7 @@ func loadIfLink(client streams.Client, document streams.Document) (streams.Docum
 		return document, true
 	}
 
-	loaded, err := client.Load(document.ID())
+	loaded, err := client.Load(document.ID(), ascache.WithStaleAllowed())
 	return loaded, err == nil
 }
 

@@ -121,17 +121,27 @@ func (c *subStore) HardDelete(criteria exp.Expression) error {
 	return nil
 }
 
-// matchesSub reports whether a record satisfies an equality criteria on endpoint/userId/_id.
+// matchesSub reports whether a record satisfies an equality criteria on endpoint/userId/oauthUserTokenId/_id,
+// or a not-equal criteria on endpoint.
 func matchesSub(criteria exp.Expression, record *model.PushSubscription) bool {
 
 	// Any unsupported field or operator conservatively counts as "no match".
 	return criteria.Match(func(predicate exp.Predicate) bool {
+
+		if (predicate.Operator == exp.OperatorNotEqual) && (predicate.Field == "endpoint") {
+			value, ok := predicate.Value.(string)
+			return ok && record.Endpoint != value
+		}
 
 		if predicate.Operator != exp.OperatorEqual {
 			return false
 		}
 
 		switch predicate.Field {
+
+		case "oauthUserTokenId":
+			value, ok := predicate.Value.(primitive.ObjectID)
+			return ok && record.OAuthUserTokenID == value
 
 		case "endpoint":
 			value, ok := predicate.Value.(string)
@@ -206,7 +216,7 @@ func TestPushSubscription_Upsert_RefusesAnotherUsersEndpoint(t *testing.T) {
 
 	store.seed(victim, endpoint)
 
-	err := service.Upsert(session, attacker, endpoint, "attacker-p256dh", "attacker-auth", "attacker-agent")
+	err := service.Upsert(session, attacker, endpoint, "attacker-p256dh", "attacker-auth", "attacker-agent", model.PushSubscriptionFormatWeb, primitive.NilObjectID)
 
 	require.NotNil(t, err, "claiming another User's endpoint must be refused")
 	require.Equal(t, http.StatusConflict, derp.ErrorCode(err), "must be Conflict: the browser re-registers on Conflict, but must leave a Forbidden endpoint alone")
@@ -230,7 +240,7 @@ func TestPushSubscription_Upsert_InsertsNewEndpoint(t *testing.T) {
 
 	userID := primitive.NewObjectID()
 
-	require.Nil(t, service.Upsert(session, userID, "https://push.example.test/new", "p", "a", "agent"))
+	require.Nil(t, service.Upsert(session, userID, "https://push.example.test/new", "p", "a", "agent", model.PushSubscriptionFormatWeb, primitive.NilObjectID))
 
 	require.Len(t, store.records, 1)
 	require.Equal(t, userID, store.records[0].UserID)
@@ -251,7 +261,7 @@ func TestPushSubscription_Upsert_SameUserRefreshesKeys(t *testing.T) {
 
 	seeded := store.seed(userID, endpoint)
 
-	require.Nil(t, service.Upsert(session, userID, endpoint, "fresh-p256dh", "fresh-auth", "fresh-agent"))
+	require.Nil(t, service.Upsert(session, userID, endpoint, "fresh-p256dh", "fresh-auth", "fresh-agent", model.PushSubscriptionFormatWeb, primitive.NilObjectID))
 
 	require.Len(t, store.records, 1, "must update in place, not insert a second row")
 	require.Equal(t, seeded.PushSubscriptionID, store.records[0].PushSubscriptionID)
@@ -277,7 +287,7 @@ func TestPushSubscription_Upsert_RaceWithSameUserFolds(t *testing.T) {
 	winner := store.seed(userID, endpoint)
 	store.duplicateKeyOnce = true
 
-	require.Nil(t, service.Upsert(session, userID, endpoint, "fresh-p256dh", "fresh-auth", "agent"))
+	require.Nil(t, service.Upsert(session, userID, endpoint, "fresh-p256dh", "fresh-auth", "agent", model.PushSubscriptionFormatWeb, primitive.NilObjectID))
 
 	require.Len(t, store.records, 1)
 	require.Equal(t, winner.PushSubscriptionID, store.records[0].PushSubscriptionID)
@@ -301,7 +311,7 @@ func TestPushSubscription_Upsert_RaceWithOtherUserConflicts(t *testing.T) {
 	store.duplicateKeyOnce = true
 	seeded := store.seed(victim, endpoint)
 
-	err := service.Upsert(session, attacker, endpoint, "attacker-p256dh", "attacker-auth", "agent")
+	err := service.Upsert(session, attacker, endpoint, "attacker-p256dh", "attacker-auth", "agent", model.PushSubscriptionFormatWeb, primitive.NilObjectID)
 
 	require.NotNil(t, err)
 	require.Equal(t, http.StatusConflict, derp.ErrorCode(err))
@@ -310,4 +320,92 @@ func TestPushSubscription_Upsert_RaceWithOtherUserConflicts(t *testing.T) {
 	require.Equal(t, victim, store.records[0].UserID, "the race winner must keep their subscription")
 	require.Equal(t, seeded.PushSubscriptionID, store.records[0].PushSubscriptionID)
 	require.Equal(t, "seed-p256dh", store.records[0].P256DH)
+}
+
+/******************************************
+ * Mastodon subscriptions: one per OAuth grant
+ ******************************************/
+
+// TestPushSubscription_DeleteByOAuthUserToken_LeavesOtherApps confirms one app unsubscribing
+// leaves the User's other apps and browsers subscribed
+func TestPushSubscription_DeleteByOAuthUserToken_LeavesOtherApps(t *testing.T) {
+
+	store := &subStore{}
+	service, session := newSubService(store)
+
+	userID := primitive.NewObjectID()
+	iceCubes := primitive.NewObjectID()
+	officialApp := primitive.NewObjectID()
+
+	require.Nil(t, service.ReplaceForOAuthUserToken(session, userID, iceCubes, "https://relay.example.test/ice", "p", "a"))
+	require.Nil(t, service.ReplaceForOAuthUserToken(session, userID, officialApp, "https://relay.example.test/official", "p", "a"))
+	require.Nil(t, service.Upsert(session, userID, "https://push.example.test/browser", "p", "a", "agent", model.PushSubscriptionFormatWeb, primitive.NilObjectID))
+	require.Len(t, store.records, 3)
+
+	require.Nil(t, service.DeleteByOAuthUserToken(session, userID, officialApp, "test"))
+
+	require.Len(t, store.records, 2)
+	require.Equal(t, "https://relay.example.test/ice", store.records[0].Endpoint)
+	require.Equal(t, "https://push.example.test/browser", store.records[1].Endpoint)
+}
+
+// TestPushSubscription_ReplaceForOAuthUserToken_ReplacesOldEndpoint confirms a grant that subscribes
+// again with a new endpoint keeps only the new one, as in Mastodon
+func TestPushSubscription_ReplaceForOAuthUserToken_ReplacesOldEndpoint(t *testing.T) {
+
+	store := &subStore{}
+	service, session := newSubService(store)
+
+	userID := primitive.NewObjectID()
+	grantID := primitive.NewObjectID()
+
+	require.Nil(t, service.ReplaceForOAuthUserToken(session, userID, grantID, "https://relay.example.test/old", "p", "a"))
+	require.Nil(t, service.ReplaceForOAuthUserToken(session, userID, grantID, "https://relay.example.test/new", "p2", "a2"))
+
+	require.Len(t, store.records, 1)
+	require.Equal(t, "https://relay.example.test/new", store.records[0].Endpoint)
+	require.Equal(t, grantID, store.records[0].OAuthUserTokenID)
+	require.True(t, store.records[0].IsMobile())
+
+	sub := model.NewPushSubscription()
+	require.Nil(t, service.LoadByOAuthUserToken(session, userID, grantID, &sub))
+	require.Equal(t, "https://relay.example.test/new", sub.Endpoint)
+}
+
+// TestPushSubscription_ReplaceForOAuthUserToken_AdoptsEndpointFromOldGrant confirms an app that
+// signs in again (a new grant) takes over its device's endpoint instead of conflicting with itself
+func TestPushSubscription_ReplaceForOAuthUserToken_AdoptsEndpointFromOldGrant(t *testing.T) {
+
+	store := &subStore{}
+	service, session := newSubService(store)
+
+	userID := primitive.NewObjectID()
+	oldGrant := primitive.NewObjectID()
+	newGrant := primitive.NewObjectID()
+	const endpoint = "https://relay.example.test/device"
+
+	require.Nil(t, service.ReplaceForOAuthUserToken(session, userID, oldGrant, endpoint, "p", "a"))
+	require.Nil(t, service.ReplaceForOAuthUserToken(session, userID, newGrant, endpoint, "p2", "a2"))
+
+	require.Len(t, store.records, 1)
+	require.Equal(t, newGrant, store.records[0].OAuthUserTokenID)
+}
+
+// TestPushSubscription_GrantScoping_RefusesEmptyGrant confirms an empty grant is refused rather
+// than matching every browser subscription the User has
+func TestPushSubscription_GrantScoping_RefusesEmptyGrant(t *testing.T) {
+
+	store := &subStore{}
+	service, session := newSubService(store)
+
+	userID := primitive.NewObjectID()
+	require.Nil(t, service.Upsert(session, userID, "https://push.example.test/browser", "p", "a", "agent", model.PushSubscriptionFormatWeb, primitive.NilObjectID))
+
+	require.NotNil(t, service.DeleteByOAuthUserToken(session, userID, primitive.NilObjectID, "test"))
+	require.NotNil(t, service.ReplaceForOAuthUserToken(session, userID, primitive.NilObjectID, "https://relay.example.test/x", "p", "a"))
+
+	sub := model.NewPushSubscription()
+	require.NotNil(t, service.LoadByOAuthUserToken(session, userID, primitive.NilObjectID, &sub))
+
+	require.Len(t, store.records, 1, "the browser subscription must be untouched")
 }

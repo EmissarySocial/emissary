@@ -91,6 +91,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "edit":
 		return NewEditModelObject(stepInfo, funcMap)
 
+	case "edit-attachments":
+		return NewEditAttachments(stepInfo)
+
 	case "edit-connection":
 		return NewEditConnection(stepInfo)
 
@@ -143,7 +146,7 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 		return NewMarkNotificationsRead(stepInfo)
 
 	case "process-content":
-		return NewProcessContent(stepInfo)
+		return NewProcessContent(stepInfo, funcMap)
 
 	case "process-tags":
 		return NewProcessTags(stepInfo)
@@ -162,6 +165,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 
 	case "remove-event":
 		return NewRemoveEvent(stepInfo)
+
+	case "require":
+		return NewRequire(stepInfo, funcMap)
 
 	case "require-password":
 		return NewRequirePassword(stepInfo, funcMap)
@@ -229,9 +235,6 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "sort":
 		return NewSort(stepInfo)
 
-	case "sort-attachments":
-		return NewSortAttachments(stepInfo)
-
 	case "sort-widgets":
 		return NewSortWidgets(stepInfo)
 
@@ -243,6 +246,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 
 	case "startup-save-task":
 		return NewStartupSaveTask(stepInfo)
+
+	case "switch":
+		return NewSwitch(stepInfo, funcMap)
 
 	case "trigger-event":
 		return NewTriggerEvent(stepInfo, funcMap)

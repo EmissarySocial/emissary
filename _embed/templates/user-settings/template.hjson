@@ -150,7 +150,7 @@
 			roles:["self"]
 			steps:[
 				{do:"with-rule", steps:[
-				{do:"as-modal", steps:[
+				{do:"as-modal", options:["class:medium"], steps:[
 					{do:"view-html"}
 					{do:"edit", form:{
 						type:layout-vertical
@@ -408,7 +408,7 @@
 			roles: ["self"]
 			steps:[
 				{do:"with-follower", steps: [
-					{do:"as-modal", steps:[
+					{do:"as-modal", options:["class:medium"], steps:[
 						{do:"view-html"}
 					]}
 				]}
@@ -459,7 +459,7 @@
 		following-edit:{
 			roles:["self"]
 			steps: [
-				{do:"as-modal", steps:[
+				{do:"as-modal", options:["class:medium"], steps:[
 					{do:"with-following", steps:[
 						{do:"view-html", file:"following-edit"}
 						// A BLOCKED Following is read-only: no form on GET, no save on POST (D6, R11)

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -28,6 +29,7 @@ import (
 type userCollection struct {
 	record    model.User
 	found     bool
+	loads     int   // Number of Load calls, so a test can assert the collection was never consulted
 	loadError error // When set, every Load fails with this error
 }
 
@@ -51,6 +53,8 @@ func (c *userCollection) Iterator(exp.Expression, ...option.Option) (data.Iterat
 
 // Load copies the stored User into the target when the criteria match.
 func (c *userCollection) Load(criteria exp.Expression, target data.Object, options ...option.Option) error {
+
+	c.loads++
 
 	if c.loadError != nil {
 		return c.loadError
@@ -170,4 +174,21 @@ func TestUser_WebFinger_NonPublic(t *testing.T) {
 
 	require.NotNil(t, err)
 	require.True(t, derp.IsNotFound(err))
+}
+
+// TestUser_WebFinger_AnnounceIntent confirms that a profile publishes its Announce intent, so CamperJS can share in one click.
+func TestUser_WebFinger_AnnounceIntent(t *testing.T) {
+
+	user := model.NewUser()
+	user.UserID = primitive.NewObjectID()
+	user.Username = "qashare"
+	user.IsPublic = true
+
+	service, session := newWebFingerTestService(user)
+
+	resource, err := service.WebFinger(session, "qashare")
+	require.Nil(t, err)
+
+	link := resource.FindLink(camper.IntentTypeAnnounce)
+	require.Equal(t, "https://example.com/@me/intent/announce?object={object}&on-success={on-success}&on-cancel={on-cancel}", link.Template)
 }

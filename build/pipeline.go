@@ -65,3 +65,55 @@ func (pipeline Pipeline) Post(factory Factory, builder Builder, buffer io.Writer
 func (pipeline Pipeline) IsEmpty() bool {
 	return len(pipeline) == 0
 }
+
+// Includes reports whether this Pipeline, or one nested in its steps, runs the named action through include
+func (pipeline Pipeline) Includes(actionID string) bool {
+
+	for _, current := range pipeline {
+
+		if include, ok := current.(step.Include); ok && include.Action == actionID {
+			return true
+		}
+
+		for _, nested := range nestedPipelines(current) {
+			if nested.Includes(actionID) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// EditsAttachments reports whether this Pipeline, or one nested in its steps, holds an edit-attachments step for the field
+func (pipeline Pipeline) EditsAttachments(fieldname string) bool {
+
+	for _, current := range pipeline {
+
+		if own, ok := current.(step.EditAttachments); ok && own.Fieldname == fieldname {
+			return true
+		}
+
+		for _, nested := range nestedPipelines(current) {
+			if nested.EditsAttachments(fieldname) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// nestedPipelines returns every Pipeline a step holds, which is how a step's own branches and
+// sub-steps are reached without naming each step type
+func nestedPipelines(current step.Step) []Pipeline {
+
+	nested := step.Nested(current)
+	result := make([]Pipeline, len(nested))
+
+	for index, steps := range nested {
+		result[index] = steps
+	}
+
+	return result
+}

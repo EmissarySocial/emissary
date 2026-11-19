@@ -76,6 +76,8 @@ type factoryCore struct {
 	funcMap   template.FuncMap                     // functions available to every template
 	domains   *xsync.Map[string, *service.Factory] // registry of domain factories, keyed by hostname
 	httpCache httpcache.HTTPCache                  // shared cache for outbound HTTP requests
+
+	blockedHosts blockedHostCache // this server's short-lived copy of the hosts that Floodgate has blocked
 }
 
 /******************************************

@@ -55,6 +55,7 @@ type Stream struct {
 	locatorService        *Locator
 	notificationService   *Notification
 	outboxService         *Outbox
+	outbox2Service        *Outbox2
 	permissionService     *Permission
 	searchResultService   *SearchResult
 	searchTagService      *SearchTag
@@ -98,6 +99,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.locatorService = factory.Locator()
 	service.notificationService = factory.Notification()
 	service.outboxService = factory.Outbox()
+	service.outbox2Service = factory.Outbox2()
 	service.permissionService = factory.Permission()
 	service.ruleService = factory.Rule()
 	service.searchResultService = factory.SearchResult()
@@ -520,7 +522,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// RULE: Every Stream must be associated with a Template
 	if stream.TemplateID == "" {
-		return derp.BadRequest(location, "Stream cannot be saved without a TemplateID", stream)
+		return derp.BadRequest(location, "Stream cannot be saved without a TemplateID", "StreamID: "+stream.StreamID.Hex())
 	}
 
 	// Load the template used by this Stream
@@ -570,11 +572,16 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	rewrites, err := template.Schema.Normalize(stream)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
+		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", "StreamID: "+stream.StreamID.Hex())
 	}
 
 	if len(rewrites) > 0 {
 		log.Debug().Strs("rewrites", rewrites).Str("streamId", stream.StreamID.Hex()).Msg("Stream values normalized during save")
+	}
+
+	// RULE: A changed token must be available, checked AFTER Normalize because the schema truncates it (see AGENTS.md)
+	if err := service.validateChangedToken(session, stream, wasNew); err != nil {
+		return derp.Wrap(err, location, "Validating token", stream.StreamID)
 	}
 
 	// RULE: calculate Parent IDs
@@ -585,7 +592,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// Try to save the Stream to the database
 	if err := service.collection(session).Save(stream, note); err != nil {
-		return derp.Wrap(err, location, "Saving Stream", stream, note)
+		return derp.Wrap(err, location, "Saving Stream", "StreamID: "+stream.StreamID.Hex())
 	}
 
 	// Stamp the new sharing on every child, after the parent is saved so that each child reads it
@@ -646,7 +653,7 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 
 	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259)
 	if err := service.federateDelete(session, stream); err != nil {
-		derp.Report(derp.Wrap(err, location, "Federating Delete", stream))
+		derp.Report(derp.Wrap(err, location, "Federating Delete", stream.StreamID))
 	}
 
 	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
@@ -690,6 +697,11 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	// RULE: Delete Outbox Messages
 	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
 		derp.Report(derp.Wrap(err, location, "Deleting outbox messages", stream, note))
+	}
+
+	// RULE: Delete this Stream's Outbox2 activities
+	if err := service.outbox2Service.DeleteByActor(session, model.ActorTypeStream, stream.StreamID); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting Outbox2 activities", stream.StreamID, note))
 	}
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
@@ -1036,6 +1048,11 @@ func (service *Stream) ValidateToken(session data.Session, streamID primitive.Ob
 		return derp.BadRequest(location, "Token must be at least 3 characters", token)
 	}
 
+	// RULE: Token must not be one of the server's own routes, which the router matches first (see AGENTS.md)
+	if isReservedStreamToken(token) {
+		return derp.BadRequest(location, "This token is reserved by the server", token)
+	}
+
 	// Find any Stream this token already names. LoadByToken also matches StreamIDs, so a
 	// token that spells another Stream's id counts as taken.
 	other := model.NewStream()
@@ -1065,6 +1082,48 @@ func (service *Stream) ValidateToken(session data.Session, streamID primitive.Ob
 
 	// The token is all yours
 	return nil
+}
+
+// validateChangedToken applies ValidateToken to a Stream's token when it differs from the stored copy.
+// The default token, which is the Stream's own ID, is never checked.
+func (service *Stream) validateChangedToken(session data.Session, stream *model.Stream, wasNew bool) error {
+
+	const location = "service.Stream.validateChangedToken"
+
+	// No other Stream can hold this Stream's ID
+	if stream.Token == stream.StreamID.Hex() {
+		return nil
+	}
+
+	// RULE: An unchanged token is not re-checked, so a token saved before these rules still saves
+	if !wasNew {
+
+		saved := model.NewStream()
+		err := service.Load(session, exp.Equal("_id", stream.StreamID), &saved, option.Fields("token"))
+
+		if (err != nil) && !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Loading saved Stream", stream.StreamID)
+		}
+
+		if (err == nil) && (saved.Token == stream.Token) {
+			return nil
+		}
+	}
+
+	return service.ValidateToken(session, stream.StreamID, stream.Token)
+}
+
+// reservedStreamTokens lists the first path segments of the server's own routes, which no Stream token may use
+var reservedStreamTokens = []string{"admin", "api", "nodeinfo", "oauth", "poco", "register", "signin", "signout", "startup"}
+
+// ReservedStreamTokens returns the first path segments of the server's own routes, which no Stream token may use
+func ReservedStreamTokens() []string {
+	return slices.Clone(reservedStreamTokens)
+}
+
+// isReservedStreamToken returns TRUE if the token is one of the server's own routes, in any letter case
+func isReservedStreamToken(token string) bool {
+	return slices.Contains(reservedStreamTokens, strings.ToLower(token))
 }
 
 // LoadByID returns a single `Stream` that matches the provided streamID

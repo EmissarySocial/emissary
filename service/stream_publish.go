@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /******************************************
@@ -24,7 +25,8 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 
 	const location = "service.Stream.Publish"
 
-	wasPublished := stream.IsPublished()
+	// Read before the Stream is changed and saved below, which would make every Stream look published
+	wasPublished := stream.IsPublished() // nolint:scopeguard (must be read before the Stream changes)
 
 	// RULE: IF this stream is not yet published, then set the publish date
 	if (stream.PublishDate > time.Now().Unix()) || (stream.StateID != stateID) {
@@ -48,7 +50,7 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 
 	// Publish to user/stream outboxes
 	if outbox {
-		if err := service.publish_outbox(session, user, stream, wasPublished); err != nil {
+		if err := service.publish_outbox(session, user, stream); err != nil {
 			return derp.Wrap(err, location, "Publishing to outbox", stream)
 		}
 	}
@@ -77,36 +79,25 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 }
 
 // publish_outbox sends a Create (or Update) activity for the Stream to its author's Outbox
-func (service *Stream) publish_outbox(session data.Session, user *model.User, stream *model.Stream, wasPublished bool) error {
+func (service *Stream) publish_outbox(session data.Session, user *model.User, stream *model.Stream) error {
 
 	const location = "service.Stream.publish_outbox"
 
-	// Create the Activity to send to the User's Outbox.  @mentions were already extracted and
+	// Build the object, addressed to everyone who receives it. @mentions were already extracted and
 	// resolved by Stream.Save (CalculateMentions), so the object arrives fully tagged.
-	object := service.JSONLD(session, stream)
-
-	// RULE: A reply must reach the AUTHOR of the post it replies to, so they receive it (and a Reply
-	// notification) even when they do not follow the replier — the common case for replies. We add
-	// that author to the reply's `cc`, which the to/cc copy below carries onto the Create/Update
-	// wrapper; Outbox.Publish then delivers to every addressee on top of the follower fan-out. This
-	// mirrors how an Announce cc's the reacted-to author (see service.Response.reactionAudience).
-	if authorURL := service.inReplyToAuthorURL(stream); authorURL != "" {
-		if cc, _ := object[vocab.PropertyCC].([]string); !slices.Contains(cc, authorURL) {
-			object[vocab.PropertyCC] = append(cc, authorURL)
-		}
-	}
+	object := service.addressedJSONLD(session, stream)
 
 	// Save the object to the ActivityStream cache
 	if err := service.activityService.Save(streams.NewDocument(object)); err != nil {
 		return derp.Wrap(err, location, "Saving object to ActivityStream cache", object)
 	}
 
-	// If this has not been published yet, then `Create` activity. Otherwise, `Update`
-	activityType := iif(
-		wasPublished,
-		vocab.ActivityTypeUpdate,
-		vocab.ActivityTypeCreate,
-	)
+	// Send a Create the first time, and an Update after that
+	activityType, err := service.outboxActivityType(session, user.UserID, stream.URL)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Choosing the activity type", stream.URL)
+	}
 
 	// Create the Activity to send to Followers.
 	//
@@ -122,13 +113,8 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 		vocab.PropertyPublished: datetime.Now(),
 	}
 
-	if to, ok := object[vocab.PropertyTo]; ok {
-		activity[vocab.PropertyTo] = to
-	}
-
-	if cc, ok := object[vocab.PropertyCC]; ok {
-		activity[vocab.PropertyCC] = cc
-	}
+	// The activity reaches exactly the audience its object names
+	copyAddressing(activity, object)
 
 	// Publish to the User's outbox
 	if err := service.publish_outbox_user(session, user, stream, activity); err != nil {
@@ -141,6 +127,44 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 	}
 
 	return nil
+}
+
+// addressedJSONLD returns the Stream's JSON-LD with the author of the post it replies to added to `cc`
+func (service *Stream) addressedJSONLD(session data.Session, stream *model.Stream) mapof.Any {
+
+	object := service.JSONLD(session, stream)
+
+	// RULE: A reply must reach the AUTHOR of the post it replies to, so they receive it (and a Reply
+	// notification) even when they do not follow the replier. JSONLD leaves this out because finding
+	// the author can mean a fetch, and JSONLD also serves every page view.
+	if authorURL := service.inReplyToAuthorURL(stream); authorURL != "" {
+		if cc := object.GetSliceOfString(vocab.PropertyCC); !slices.Contains(cc, authorURL) {
+			object[vocab.PropertyCC] = append(cc, authorURL)
+		}
+	}
+
+	return object
+}
+
+// outboxActivityType returns Update when the author's outbox already publishes the object, and Create otherwise
+func (service *Stream) outboxActivityType(session data.Session, authorID primitive.ObjectID, objectURL string) (string, error) {
+
+	const location = "service.Stream.outboxActivityType"
+
+	// RULE: An object's first arrival in the author's outbox is a Create, and every later one is an
+	// Update (FUNKWHALE §1.5). Asking the outbox, not the Stream, also covers a Stream that was
+	// published without being sent, and one whose Create was removed when it was unpublished.
+	federated, err := service.isFederated(session, authorID, objectURL)
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Checking the author's outbox", objectURL)
+	}
+
+	if federated {
+		return vocab.ActivityTypeUpdate, nil
+	}
+
+	return vocab.ActivityTypeCreate, nil
 }
 
 // publish_outbox_user publishes this stream to the User's outbox
@@ -165,8 +189,8 @@ func (service *Stream) publish_outbox_user(session data.Session, user *model.Use
 
 	document := streams.NewDocument(activity)
 
-	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
-		return derp.Wrap(err, location, "Publishing activity to user's outbox", activity)
+	if _, err := service.outbox2Service.Publish(session, model.ActorTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
+		return derp.Wrap(err, location, "Publishing activity to user's outbox", "streamId: "+stream.StreamID.Hex())
 	}
 
 	// Done.
@@ -197,18 +221,23 @@ func (service *Stream) publish_outbox_stream(session data.Session, stream *model
 
 	// Make a new "Announce/Boost" activity so that our encryption keys are correct.
 	announce := mapof.Any{
-		vocab.AtContext:      vocab.ContextTypeActivityStreams,
-		vocab.PropertyType:   vocab.ActivityTypeAnnounce,
-		vocab.PropertyActor:  service.ActivityPubURL(stream.ParentID),
-		vocab.PropertyObject: activity,
+		vocab.AtContext:         vocab.ContextTypeActivityStreams,
+		vocab.PropertyType:      vocab.ActivityTypeAnnounce,
+		vocab.PropertyActor:     service.ActivityPubURL(stream.ParentID),
+		vocab.PropertyObject:    activity,
+		vocab.PropertyPublished: datetime.Now(),
 	}
+
+	// RULE: The parent announces to the Stream's audience, as the parent sees it. A Stream names no
+	// circles, so a circle-only child is announced to no one.
+	copyAddressing(announce, service.parentAudience(stream))
 
 	document := streams.NewDocument(announce)
 
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
-	if err := service.outboxService.Publish(session, model.FollowerTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
-		return derp.Wrap(err, location, "Publishing activity to parent Stream outbox", activity)
+	if _, err := service.outbox2Service.Publish(session, model.ActorTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
+		return derp.Wrap(err, location, "Publishing activity to parent Stream outbox", "streamId: "+stream.StreamID.Hex())
 	}
 
 	// Done.
@@ -239,4 +268,10 @@ func (service *Stream) inReplyToAuthorURL(stream *model.Stream) string {
 	}
 
 	return parent.AttributedTo().ID()
+}
+
+// parentAudience returns the addressing of an activity that a Stream's parent sends about it
+func (service *Stream) parentAudience(stream *model.Stream) mapof.Any {
+	to, cc := service.Addressing(stream, model.ActorTypeStream, stream.ParentID)
+	return mapof.Any{vocab.PropertyTo: to, vocab.PropertyCC: cc}
 }

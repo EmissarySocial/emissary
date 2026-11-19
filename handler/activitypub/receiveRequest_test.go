@@ -1,10 +1,13 @@
 package activitypub
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
@@ -34,6 +37,11 @@ func (f *fakeKeyFinder) RefreshPublicKey(keyID string) (string, error) {
 	return "", derp.NotFound("test", "no key for this test")
 }
 
+// RequestHostname names no host, so the verifier reads the request's own
+func (f *fakeKeyFinder) RequestHostname(*http.Request) string {
+	return ""
+}
+
 // signedRequest builds a POST inbox request carrying the given JSON body and a parseable HTTP
 // Signature that names the given keyID.
 func signedRequest(keyID string, body string) *http.Request {
@@ -46,6 +54,12 @@ func signedRequest(keyID string, body string) *http.Request {
 	// The header list must cover the verifier's required fields, or sigs.Verify rejects the request
 	// before it ever consults the key finder -- which would make these tests pass for the wrong reason.
 	result.Header.Set("Signature", `keyId="`+keyID+`",headers="(request-target) host date digest",signature="AAAA"`)
+
+	// The verifier also refuses a request with no Date, or a body with no Digest, before it looks for
+	// a key. Both must be present and correct for the same reason as the header list above.
+	digest := sha256.Sum256([]byte(body))
+	result.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
+	result.Header.Set("Digest", "SHA-256="+base64.StdEncoding.EncodeToString(digest[:]))
 
 	return result
 }
@@ -106,7 +120,7 @@ func TestInboxValidators_ChainShape(t *testing.T) {
 	// All four inbox families (user, stream, domain, search) receive through the one funnel, so the two
 	// tests above hold for each of them by construction. This one pins the chain the funnel installs.
 	keyFinder := &fakeKeyFinder{}
-	config := router.NewReceiveConfig(InboxValidators(keyFinder, &fakeChecker{}, nil, primitive.NilObjectID))
+	config := router.NewReceiveConfig(InboxValidators(httptest.NewRequest(http.MethodPost, "http://localhost/inbox", nil), keyFinder, &fakeChecker{}, nil, primitive.NilObjectID))
 
 	require.Len(t, config.Validators, 3)
 	require.IsType(t, RuleValidator{}, config.Validators[0])

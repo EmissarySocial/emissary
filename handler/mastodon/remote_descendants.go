@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
 	"github.com/benpate/hannibal/collections"
@@ -91,7 +92,7 @@ func conversationCandidates(client streams.Client, post streams.Document) []stri
 		return nil
 	}
 
-	collection, err := client.Load(address)
+	collection, err := client.Load(address, ascache.WithStaleAllowed())
 
 	if err != nil {
 		return nil
@@ -144,7 +145,7 @@ func replyCandidates(client streams.Client, post streams.Document) []string {
 			result = append(result, id)
 
 			if current.depth < threadReplyDepth {
-				if child, err := client.Load(id); err == nil {
+				if child, err := client.Load(id, ascache.WithStaleAllowed()); err == nil {
 					queue = append(queue, level{child, current.depth + 1})
 				}
 			}
@@ -173,7 +174,7 @@ func loadThreadDocuments(client streams.Client, urls []string) map[string]stream
 			defer waitGroup.Done()
 			defer func() { <-slots }()
 
-			if document, err := client.Load(url); err == nil {
+			if document, err := client.Load(url, ascache.WithStaleAllowed()); err == nil {
 				documents[index] = document
 				loaded[index] = true
 			}

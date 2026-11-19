@@ -197,12 +197,18 @@ func (service *Domain) WebFinger() digit.Resource {
 		Alias(service.ActorID()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActorID()).
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActorID()).
+		Link(camper.IntentTypeAnnounce, "", service.AnnounceIntentURL()).
 		Link(camper.IntentTypeCreate, "", service.CreateIntentURL()).
 		Link(camper.IntentTypeDislike, "", service.DislikeIntentURL()).
 		Link(camper.IntentTypeFollow, "", service.FollowIntentURL()).
 		Link(camper.IntentTypeLike, "", service.LikeIntentURL())
 
 	return result
+}
+
+// AnnounceIntentURL returns the Activity Intent template for sharing an object on this Domain
+func (service *Domain) AnnounceIntentURL() string {
+	return service.host + "/@me/intent/announce?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
 // CreateIntentURL returns the Activity Intent template for composing a post on this Domain

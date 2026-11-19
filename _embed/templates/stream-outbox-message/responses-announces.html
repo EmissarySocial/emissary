@@ -8,20 +8,19 @@
 	<hr class="margin-bottom-sm"/>
 
 	<div class="flex-row flex-align-center flex-wrap">
-		<div class="flex-grow-1">
-			<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable">
+		{{- template "note-actions" . -}}
+		<!-- The buttons lead and the pill tabs sit at the right, as under a Qwertylicious photo, episode, or place -->
+		<div role="tablist" class="pills margin-bottom-none flex-grow-1 align-right">
+			<span role="tab" hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" aria-selected="false">
 				{{- .ReplyCount }} {{pluralize .ReplyCount "Reply" "Replies" -}}
 			</span>
-			&middot;
-			<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
+			<span role="tab" hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" aria-selected="false">
 				{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
 			</span>
-			&middot;
-			<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable bold">
-				{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
+			<span role="tab" hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" aria-selected="true">
+				{{- .ShareCount }} {{pluralize .ShareCount "Boost" "Boosts" -}}
 			</span>
 		</div>
-		{{- template "note-actions" . -}}
 	</div>
 
 	<hr class="margin-top-sm"/>
@@ -63,7 +62,7 @@
 				<a href="{{$announce.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="clickable tooltip-container text-nocolor">
 
 					<div class="tooltip align-left">
-						<div class="bold margin-vertical-xs">Shared by {{$announce.Actor.Name}}</div>
+						<div class="bold margin-vertical-xs">Boosted by {{$announce.Actor.Name}}</div>
 						<div class="text-gray margin-vertical-xs">on {{$announce.Published | shortDate}}</div>
 					</div>
 

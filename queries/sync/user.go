@@ -51,5 +51,18 @@ func User(ctx context.Context, database *mongo.Database) error {
 					"deleteDate": 0,
 				}),
 		},
+
+		// idx_User_Primary allows one live primary user per domain, whichever server writes it
+		"idx_User_Primary": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "isPrimary", Value: 1},
+			},
+			Options: options.Index().
+				SetUnique(true).
+				SetPartialFilterExpression(bson.M{
+					"isPrimary":  true,
+					"deleteDate": 0,
+				}),
+		},
 	})
 }

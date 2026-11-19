@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -28,12 +29,14 @@ func newUserDeleteTestService() (User, <-chan struct{}) {
 
 	return User{
 		annotationService:     &Annotation{},
+		domainService:         &Domain{},
 		folderService:         &Folder{},
 		followerService:       &Follower{},
 		followingService:      &Following{},
 		keyService:            &EncryptionKey{},
 		newsFeedService:       &NewsFeed{},
 		outboxService:         &Outbox{},
+		outbox2Service:        &Outbox2{},
 		responseService:       &Response{},
 		ruleService:           &Rule{},
 		searchResultService:   &SearchResult{},
@@ -88,4 +91,38 @@ func TestUserDelete_DeletesOnlyTheOwnersAnnotations(t *testing.T) {
 
 	require.Zero(t, count(owner.UserID))
 	require.Equal(t, int64(1), count(otherUserID))
+}
+
+// TestUserDelete_ClearsOutbox2BeforeStreams verifies that deleting a User removes their Outbox2 activities
+// before their Streams, so that no Stream sends its own Delete to the followers of a vanishing User
+func TestUserDelete_ClearsOutbox2BeforeStreams(t *testing.T) {
+
+	test := newStreamDeleteTest(t)
+	service, webhookCalled := newUserDeleteTestService()
+	service.streamService = &test.service
+
+	owner := model.NewUser()
+	owner.UserID = primitive.NewObjectID()
+	owner.Username = "owner"
+	owner.ProfileURL = "https://example.test/@owner"
+	require.NoError(t, test.session.Collection("User").Save(&owner, "test setup"))
+
+	otherUserID := primitive.NewObjectID()
+	test.saveOutbox2Activity(t, model.ActorTypeUser, otherUserID, "https://example.test/notes/1", vocab.ActivityTypeCreate)
+
+	stream := test.saveStream(t, owner.UserID, owner.UserID, true)
+	test.saveOutbox2Activity(t, model.ActorTypeUser, owner.UserID, stream.URL, vocab.ActivityTypeCreate)
+
+	require.NoError(t, service.Delete(test.session, &owner, "test"))
+
+	// Wait for the user:delete webhook, so its goroutine does not outlive the test
+	select {
+	case <-webhookCalled:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Delete never sent the user:delete webhook")
+	}
+
+	require.Zero(t, test.deletesSent(t), "deleting a User sends no Delete for each of their Streams")
+	require.Zero(t, test.countOutbox2(t, model.ActorTypeUser, owner.UserID))
+	require.Equal(t, int64(1), test.countOutbox2(t, model.ActorTypeUser, otherUserID))
 }

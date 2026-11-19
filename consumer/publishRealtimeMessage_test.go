@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -43,6 +44,20 @@ func TestMessageForTopic(t *testing.T) {
 	test(realtime.TopicInboxActivity_DirectMessage, "", "payload")
 	test(realtime.TopicInboxActivity_DirectMessage_MLS, "", "payload")
 	test(realtime.TopicNotification, "", "notification")
+
+	// The home-timeline topic has its own event name, so browser listeners ignore it
+	test(realtime.TopicNewsItem, "news-item", "news item")
+	test(realtime.TopicDirectMessageSent, "direct-message-sent", "direct message sent")
+}
+
+// TestParseRecordID verifies the optional record ID is read when valid and zero otherwise
+func TestParseRecordID(t *testing.T) {
+
+	recordID := primitive.NewObjectID()
+
+	require.Equal(t, recordID, parseRecordID(mapof.Any{"recordId": recordID.Hex()}))
+	require.Equal(t, primitive.NilObjectID, parseRecordID(mapof.Any{}))
+	require.Equal(t, primitive.NilObjectID, parseRecordID(mapof.Any{"recordId": "not-an-id"}))
 }
 
 // TestMessageForTopic_Unrecognized verifies that a filter-only or unknown topic errors instead of publishing

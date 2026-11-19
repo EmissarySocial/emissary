@@ -34,6 +34,9 @@ func PublishRealtimeMessage(factory *service.Factory, args mapof.Any) queue.Resu
 		return queue.Failure(derp.Wrap(err, location, "Invalid 'topic' argument", args))
 	}
 
+	// The changed record's ID is optional: only server-side subscribers use it
+	message.RecordID = parseRecordID(args)
+
 	// Deliver directly to this process's broker (synchronous, mutex-safe)
 	factory.RealtimeBroker().Send(message)
 	return queue.Success()
@@ -73,9 +76,27 @@ func messageForTopic(topic int, objectID primitive.ObjectID, data string) (realt
 	case realtime.TopicNotification:
 		return realtime.NewMessage_Notification(objectID), nil
 
+	case realtime.TopicDirectMessageSent:
+		return realtime.NewMessage_DirectMessageSent(objectID), nil
+
+	case realtime.TopicNewsItem:
+		return realtime.NewMessage_NewsItem(objectID), nil
+
 	case realtime.TopicStreamSourceUpdated:
 		return realtime.NewMessage_StreamSourceUpdated(objectID), nil
 	}
 
 	return realtime.Message{}, derp.Internal("consumer.messageForTopic", "Unrecognized realtime topic", topic)
+}
+
+// parseRecordID returns the task's optional "recordId" argument, or a zero ID when it is missing or invalid
+func parseRecordID(args mapof.Any) primitive.ObjectID {
+
+	recordID, err := primitive.ObjectIDFromHex(args.GetString("recordId"))
+
+	if err != nil {
+		return primitive.NilObjectID
+	}
+
+	return recordID
 }

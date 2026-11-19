@@ -1,0 +1,47 @@
+{{- $themeID := .QueryParam "themeId" -}}
+{{- $currentID := (.Theme .ThemeID).ThemeID -}}
+
+<!-- RULE: Only an installed theme other than the current one can be confirmed; the theme-switch action checks the same (see AGENTS.md) -->
+{{- $isAvailable := false -}}
+{{- if ne $themeID $currentID -}}
+	{{- range .Themes -}}
+		{{- if eq .ThemeID $themeID -}}
+			{{- $isAvailable = true -}}
+		{{- end -}}
+	{{- end -}}
+{{- end -}}
+
+<div class="margin-bottom-lg">
+	<a href="#" hx-get="/admin/domain/themes" class="text-gray">&larr; Choose Theme</a>
+</div>
+
+{{- if $isAvailable -}}
+
+	{{- $next := .Theme $themeID -}}
+
+	<h1 id="modal-title">{{icon "palette"}} {{$next.Label}}</h1>
+
+	<!-- A theme that ships no splash image shows none -->
+	<img src="/.themes/{{$next.ThemeID}}/resources/startup/splash.png" alt="" class="width-100% margin-bottom" onerror="this.hidden=true">
+
+	<div class="margin-bottom-lg">{{$next.Description}}</div>
+
+	<div>
+		<!-- theme-switch reloads the page, or answers a refusal with this view, which then explains it -->
+		<button hx-post="/admin/domain/theme-switch?themeId={{$themeID}}" hx-target="#modal-window" hx-swap="innerHTML" class="primary">Change Theme</button>
+		<button script="on click trigger closeModal">Cancel</button>
+	</div>
+
+{{- else -}}
+
+	<h1 id="modal-title">Theme Not Available</h1>
+
+	<div class="margin-bottom-lg">
+		That theme is already in use, or is not installed on this server.
+	</div>
+
+	<div>
+		<button script="on click trigger closeModal">Cancel</button>
+	</div>
+
+{{- end -}}

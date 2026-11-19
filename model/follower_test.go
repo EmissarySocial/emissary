@@ -89,3 +89,24 @@ func TestFollowerSchema_AcceptsAnEmailFollower(t *testing.T) {
 
 	require.NoError(t, err)
 }
+
+// TestFollower_IsActive verifies that only an ACTIVE Follower counts as active
+func TestFollower_IsActive(t *testing.T) {
+
+	// BUG-207 item 2: PENDING email Followers received every post without confirming
+	for stateID, want := range map[string]bool{
+		FollowerStateActive:        true,
+		FollowerStatePending:       false,
+		FollowerStateImportPending: false,
+		FollowerStateBlocked:       false,
+		FollowerStateDeleted:       false,
+		"":                         false,
+	} {
+		follower := NewFollower()
+		follower.StateID = stateID
+		require.Equal(t, want, follower.IsActive(), "stateId %q", stateID)
+	}
+
+	// A new Follower starts PENDING
+	require.False(t, NewFollower().IsActive())
+}

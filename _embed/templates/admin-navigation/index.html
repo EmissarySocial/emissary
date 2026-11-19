@@ -1,25 +1,10 @@
-{{- $theme := .Theme .ThemeID -}}
-
-
-
 	{{- /* menubar opens .app and .app-content; this page's closing </div> closes .app-content */ -}}
 	{{template "menubar" .}}
 
 	<div class="flex-row width-100%">
-		<div class="width-33% card padding-sm padding-horizontal clickable" hx-get="/admin/domain/themes">
-
-			<div class="text-sm text-gray">Website Theme</div>
-			<div class="text-lg bold">{{$theme.Label}}</div>
-			<div class="text-sm margin-bottom">{{$theme.Description}}</div>
-
-			<div class="pos-absolute-top-right">
-				<button class="text-xs">Edit</button>
-			</div>
-
-		</div>
-		<div class="width-33% card padding-sm padding-horizontal clickable" role="button"
+		<div class="width-1-3 card padding-sm padding-horizontal clickable" role="button"
 			hx-get="/admin/domain/defaults">
-			<div class="text-sm text-gray margin-bottom">Start Pages</div>
+			<div class="text-sm text-gray margin-bottom">{{icon "home"}} Start Pages</div>
 			<div class="bold margin-bottom-xs"><i class="bi bi-question-circle text-gray"></i>
 				{{.DefaultPage_Anonymous}}</div>
 			<div class="bold margin-bottom-xs"><i class="bi bi-person-circle text-gray"></i>
@@ -30,7 +15,9 @@
 				<button class="text-xs">Edit</button>
 			</div>
 		</div>
-		<div class="width-33% card padding flex-center clickable" hx-get="/admin/navigation/add">
+		<div class="width-1-3 card padding flex-center">
+		</div>
+		<div class="width-1-3 card padding flex-center clickable" hx-get="/admin/navigation/add">
 			<button class="primary">{{icon "add"}} Add a Page</button>
 		</div>
 	</div>

@@ -31,7 +31,7 @@
 			role="button"
 			class="message turboclick" 
 			style="max-width:640px;"
-			hx-get="/@me/newsfeed/message?messageId={{.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+			hx-get="/@me/newsfeed/browse?url={{$message.URL | urlquery}}"
 			hx-push-url="false"
 			tabIndex="0">
 

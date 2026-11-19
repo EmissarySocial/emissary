@@ -55,6 +55,7 @@ type User struct {
 	FollowingCount       int                        `json:"followingCount"       bson:"followingCount"`       // Number of actors that this user is following
 	RuleCount            int                        `json:"ruleCount"            bson:"ruleCount"`            // Number of rules (blocks) that this user has implemented
 	IsOwner              bool                       `json:"isOwner"              bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
+	IsPrimary            bool                       `json:"isPrimary"            bson:"isPrimary"`            // If TRUE, then this owner is the one person the domain vouches for (IndieAuth).
 	IsPublic             bool                       `json:"isPublic"             bson:"isPublic"`             // If TRUE, then this user's profile is publicly visible
 	IsBridgeBluesky      delta.Bool                 `json:"isBridgeBluesky"      bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
 	IsIndexable          bool                       `json:"isIndexable"          bson:"isIndexable"`          // If TRUE, then this user's profile can be indexed by search engines.
@@ -124,7 +125,42 @@ func (user User) Summary() UserSummary {
 		EmailAddress: user.EmailAddress,
 		IconID:       user.IconID,
 		ProfileURL:   user.ProfileURL,
+		IsPrimary:    user.IsPrimary,
 	}
+}
+
+// IndieAuthMe returns the profile URL that IndieAuth vouches for on this User's behalf, or an
+// empty string when the domain vouches for nobody
+func (user User) IndieAuthMe() string {
+
+	// RULE: Only the domain's primary user gets a `me`
+	if !user.RepresentsDomain() {
+		return ""
+	}
+
+	// RULE: A client must fetch `me` to confirm it, and a non-public profile answers 404 (IndieAuth §5.4)
+	if !user.IsPublic {
+		return ""
+	}
+
+	return user.ProfileURL
+}
+
+// RepresentsDomain returns TRUE if this User is the domain's primary user: an owner,
+// flagged primary, whose record is not deleted
+func (user User) RepresentsDomain() bool {
+
+	// RULE: Only an owner can be the primary user
+	if !user.IsOwner {
+		return false
+	}
+
+	// RULE: A deleted User represents nobody
+	if user.IsDeleted() {
+		return false
+	}
+
+	return user.IsPrimary
 }
 
 /******************************************
@@ -273,7 +309,6 @@ func (user User) GetJSONLD() mapof.Any {
 		// vocab.ContextTypeSocialWebMLS,
 	}
 
-	exportURL := user.ActivityPubURL() + "/export"
 	serverURL := uri.Host(user.ProfileURL)
 
 	result := mapof.Any{
@@ -306,28 +341,6 @@ func (user User) GetJSONLD() mapof.Any {
 			vocab.EndpointStartMigration:     serverURL + "/@" + user.UserID.Hex() + "/export/start",
 			vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
 			vocab.EndpointProxyURL:           serverURL + "/.proxy",
-		},
-
-		vocab.PropertyMigration: mapof.String{
-			"outbox":                   exportURL + "/outbox",
-			"content":                  exportURL + "/content",
-			"following":                exportURL + "/following",
-			"blocked":                  exportURL + "/blocked",
-			"emissary:annotation":      exportURL + "/emissary-annotation",
-			"emissary:circle":          exportURL + "/emissary-circle",
-			"emissary:conversation":    exportURL + "/emissary-conversation",
-			"emissary:folder":          exportURL + "/emissary-folder",
-			"emissary:follower":        exportURL + "/emissary-follower",
-			"emissary:following":       exportURL + "/emissary-following",
-			"emissary:newsItem":        exportURL + "/emissary-newsItem",
-			"emissary:merchantAccount": exportURL + "/emissary-merchantAccount",
-			"emissary:outboxMessage":   exportURL + "/emissary-outboxMessage",
-			"emissary:privilege":       exportURL + "/emissary-privilege",
-			"emissary:product":         exportURL + "/emissary-product",
-			"emissary:response":        exportURL + "/emissary-response",
-			"emissary:rule":            exportURL + "/emissary-rule",
-			"emissary:stream":          exportURL + "/emissary-stream",
-			"emissary:user":            exportURL + "/emissary-user",
 		},
 	}
 
@@ -385,6 +398,26 @@ func (user User) GetJSONLD() mapof.Any {
 // ActivityPubURL returns the canonical ActivityPub actor ID for this User (their profile URL)
 func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
+}
+
+// MigrationJSONLD returns the `migration` property of this User's actor document: the URL of
+// every collection that an account export serves
+func (user User) MigrationJSONLD() mapof.String {
+
+	exportURL := user.ActivityPubURL() + "/export"
+
+	result := mapof.String{
+		"outbox":    exportURL + "/outbox",
+		"content":   exportURL + "/content",
+		"following": exportURL + "/following",
+		"blocked":   exportURL + "/blocked",
+	}
+
+	for _, collection := range MigrationCollections() {
+		result[collection.Key] = exportURL + "/" + collection.Path
+	}
+
+	return result
 }
 
 // CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor
@@ -618,6 +651,24 @@ func (user User) tootFields() []object.AccountField {
 			Name:  link.Name,
 			Value: `<a href="` + address + `" rel="me nofollow noopener" translate="no">` + address + `</a>`,
 		})
+	}
+
+	return result
+}
+
+// TootSourceFields returns this User's profile links as the plain-text fields a Mastodon client
+// edits and sends back: the label and the address, without the link markup. Skips the same links tootFields does.
+func (user User) TootSourceFields() []object.AccountField {
+
+	result := make([]object.AccountField, 0, len(user.Links))
+
+	for _, link := range user.Links {
+
+		if link.Name == "" || link.ProfileURL == "" {
+			continue
+		}
+
+		result = append(result, object.AccountField{Name: link.Name, Value: link.ProfileURL})
 	}
 
 	return result

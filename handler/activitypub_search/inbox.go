@@ -40,6 +40,9 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Receiving ActivityPub request")
 	}
 
+	// A request that passed validation proves that its host is running again
+	factory.ReviveHost(activity.ActorID())
+
 	// Route the activity to the appropriate handler
 	if err := inboxRouter.Handle(context, activity); err != nil {
 		return derp.Wrap(err, location, "Handling ActivityPub request")

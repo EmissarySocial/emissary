@@ -1,6 +1,8 @@
 package activitypub
 
 import (
+	"encoding/json"
+	"math"
 	"testing"
 
 	"github.com/benpate/hannibal/vocab"
@@ -44,6 +46,32 @@ func TestCollection_StripsExistingQuery(t *testing.T) {
 	result := Collection("https://x.social/@bob/pub/outbox?publishDate=123")
 
 	require.Equal(t, "https://x.social/@bob/pub/outbox?publishDate=9223372036854775807", result.First)
+}
+
+// TestPagedCollection verifies that a counted collection carries its size and links its first and last pages
+func TestPagedCollection(t *testing.T) {
+
+	result := PagedCollection("https://x.social/@bob/pub/outbox", 61, 1234)
+
+	require.Equal(t, "https://x.social/@bob/pub/outbox", result.GetString(vocab.PropertyID))
+	require.Equal(t, vocab.CoreTypeOrderedCollection, result.GetString(vocab.PropertyType))
+	require.Equal(t, int64(61), result.GetInt64(vocab.PropertyTotalItems))
+	require.Equal(t, "https://x.social/@bob/pub/outbox?publishDate=9223372036854775807", result.GetString(vocab.PropertyFirst))
+	require.Equal(t, "https://x.social/@bob/pub/outbox?publishDate=1234", result.GetString(vocab.PropertyLast))
+}
+
+// TestPagedCollection_Empty verifies that an empty collection still writes totalItems, which Funkwhale
+// requires, and that its last page is its first
+func TestPagedCollection_Empty(t *testing.T) {
+
+	result := PagedCollection("https://x.social/@bob/pub/outbox?publishDate=123", 0, math.MaxInt64)
+
+	encoded, err := json.Marshal(result)
+	require.NoError(t, err)
+	require.Contains(t, string(encoded), `"totalItems":0`)
+	require.Contains(t, string(encoded), `"@context":"https://www.w3.org/ns/activitystreams"`)
+	require.Equal(t, result.GetString(vocab.PropertyFirst), result.GetString(vocab.PropertyLast))
+	require.Equal(t, "https://x.social/@bob/pub/outbox?publishDate=9223372036854775807", result.GetString(vocab.PropertyLast))
 }
 
 // TestCollectionPage verifies that every identifiable item is rendered into the page

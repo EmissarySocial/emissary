@@ -9,7 +9,8 @@
 				<th>Date</th>
 			</tr>
 		</thead>
-		<tbody script="install sortContainer">
+		<!-- RULE: only someone who can sort may drag rows, because only they get the form below that saves the order -->
+		<tbody script="{{if .UserCan `sort`}}install sortContainer{{end}}">
 			{{- if .UserCan "add-child" -}}
 				<tr hx-get="/{{.StreamID}}/add-child" role="button">
 					<td colspan="4" class="link bold">{{icon "add"}} Add Item</td>
@@ -38,12 +39,6 @@
 	</div>
 
 	{{- if .UserCan "sort" -}}
-		<!-- onload drives the sortContainer behavior above: htmx loads this ASYNCHRONOUSLY when
-		     the page arrives via a swap, so the behavior installs before Sortable exists. -->
-		<script
-			src="/.themes/global/resources/sortable-1.15.7/Sortable.min.js"
-			onload="window.dispatchEvent(new Event('sortableReady'))"></script>
-
 		<form
 			hx-post="/{{.StreamID}}/sort" 
 			hx-push-url="false" 

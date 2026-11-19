@@ -1,0 +1,409 @@
+package service
+
+import (
+	"context"
+	"math"
+	"slices"
+	"testing"
+
+	"github.com/EmissarySocial/emissary/model"
+	querysync "github.com/EmissarySocial/emissary/queries/sync"
+	"github.com/benpate/data"
+	mongodb "github.com/benpate/data-mongo"
+	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// These tests run the Outbox2 queries against a real MongoDB with the production indexes, because
+// what they guard is the filter each query sends. They skip when no database is reachable.
+
+// outbox2QueryTest holds an Outbox2 service and the session its rows are written through
+type outbox2QueryTest struct {
+	service *Outbox2
+	session data.Session
+}
+
+// newOutbox2QueryTest returns an Outbox2 service over a throwaway database that carries the Outbox2 indexes
+func newOutbox2QueryTest(t *testing.T) outbox2QueryTest {
+
+	t.Helper()
+
+	database := newDomainTestDatabase(t)
+	require.NoError(t, querysync.OutboxItem(context.Background(), database))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	session, err := mongodb.NewServer(database).Session(ctx)
+	require.NoError(t, err)
+
+	return outbox2QueryTest{service: &Outbox2{}, session: session}
+}
+
+// save writes one OutboxItem directly, with a fixed createDate so that paging is deterministic
+func (test outbox2QueryTest) save(t *testing.T, actorType string, actorID primitive.ObjectID, createDate int64, permissions model.Permissions, mutate func(*model.OutboxItem)) model.OutboxItem {
+
+	t.Helper()
+
+	item := model.NewOutboxItem()
+	item.ActorType = actorType
+	item.ActorID = actorID
+	item.URL = "https://example.test/@" + actorID.Hex() + "/pub/outbox/" + item.ActivityID.Hex()
+	item.Permissions = permissions
+	item.CreateDate = createDate
+
+	if mutate != nil {
+		mutate(&item)
+	}
+
+	require.NoError(t, test.session.Collection("OutboxItem").Save(&item, "test"))
+	return item
+}
+
+// activityIDs returns the IDs of the provided items, in order
+func activityIDs(items []model.OutboxItem) []primitive.ObjectID {
+
+	result := make([]primitive.ObjectID, 0, len(items))
+
+	for _, item := range items {
+		result = append(result, item.ActivityID)
+	}
+
+	return result
+}
+
+// TestOutbox2_QueryByParentAndDate verifies paging, ordering, actor scoping and the permission filter
+func TestOutbox2_QueryByParentAndDate(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	groupID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	public1 := test.save(t, model.ActorTypeUser, userID, 100, anonymous, nil)
+	public2 := test.save(t, model.ActorTypeUser, userID, 200, anonymous, nil)
+	public3 := test.save(t, model.ActorTypeUser, userID, 300, anonymous, nil)
+	members := test.save(t, model.ActorTypeUser, userID, 250, model.Permissions{groupID}, nil)
+	unreadable := test.save(t, model.ActorTypeUser, userID, 260, model.NewPermissions(), nil)
+
+	// Rows that must never appear: another actor, the same ID as a Stream, and a soft-deleted row
+	test.save(t, model.ActorTypeUser, primitive.NewObjectID(), 150, anonymous, nil)
+	test.save(t, model.ActorTypeStream, userID, 150, anonymous, nil)
+	test.save(t, model.ActorTypeUser, userID, 150, anonymous, func(item *model.OutboxItem) { item.DeleteDate = 999 })
+
+	query := func(permissions model.Permissions, maxDate int64, maxRows int) []primitive.ObjectID {
+		result, err := test.service.QueryByParentAndDate(test.session, model.ActorTypeUser, userID, permissions, maxDate, maxRows)
+		require.NoError(t, err)
+		return activityIDs(result)
+	}
+
+	// An anonymous caller sees only public items, newest first
+	require.Equal(t, []primitive.ObjectID{public3.ActivityID, public2.ActivityID, public1.ActivityID}, query(anonymous, 1000, 60))
+
+	// A group member also sees the group's item, in date order
+	require.Equal(t,
+		[]primitive.ObjectID{public3.ActivityID, members.ActivityID, public2.ActivityID, public1.ActivityID},
+		query(append(model.NewAnonymousPermissions(), groupID), 1000, 60))
+
+	// maxDate is exclusive, and maxRows caps the page
+	require.Equal(t, []primitive.ObjectID{public2.ActivityID, public1.ActivityID}, query(anonymous, 300, 60))
+	require.Equal(t, []primitive.ObjectID{public3.ActivityID}, query(anonymous, 1000, 1))
+
+	// RULE: a caller with no permissions sees nothing, and an item with no permissions is seen by no one
+	require.Empty(t, query(model.NewPermissions(), 1000, 60))
+	require.Empty(t, query(nil, 1000, 60))
+	require.NotContains(t, query(append(model.NewAnonymousPermissions(), model.MagicGroupIDAuthenticated, groupID), 1000, 60), unreadable.ActivityID)
+}
+
+// TestOutbox2_CountByParent verifies that the count applies the same scoping and permission filter as the page
+func TestOutbox2_CountByParent(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	groupID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	test.save(t, model.ActorTypeUser, userID, 100, anonymous, nil)
+	test.save(t, model.ActorTypeUser, userID, 200, anonymous, nil)
+	test.save(t, model.ActorTypeUser, userID, 300, model.Permissions{groupID}, nil)
+	test.save(t, model.ActorTypeUser, userID, 400, model.NewPermissions(), nil)
+	test.save(t, model.ActorTypeUser, userID, 500, anonymous, func(item *model.OutboxItem) { item.DeleteDate = 999 })
+	test.save(t, model.ActorTypeStream, userID, 600, anonymous, nil)
+
+	count := func(permissions model.Permissions) int64 {
+		result, err := test.service.CountByParent(test.session, model.ActorTypeUser, userID, permissions)
+		require.NoError(t, err)
+		return result
+	}
+
+	require.Equal(t, int64(2), count(anonymous))
+	require.Equal(t, int64(3), count(append(model.NewAnonymousPermissions(), groupID)))
+	require.Zero(t, count(model.NewPermissions()))
+	require.Zero(t, count(nil))
+}
+
+// TestOutbox2_PagingSummary verifies the count and the last-page cursor, which must name the page that
+// following `next` from the first page ends on, for every page size and permission set
+func TestOutbox2_PagingSummary(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	groupID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+	members := model.Permissions{model.MagicGroupIDAnonymous, groupID}
+
+	summary := func(permissions model.Permissions, pageSize int) (int64, int64) {
+		totalItems, lastPageDate, err := test.service.PagingSummary(test.session, model.ActorTypeUser, userID, permissions, pageSize)
+		require.NoError(t, err)
+		return totalItems, lastPageDate
+	}
+
+	// An empty outbox has nothing on its first page, and that page is also its last
+	totalItems, lastPageDate := summary(anonymous, 3)
+	require.Zero(t, totalItems)
+	require.Equal(t, int64(math.MaxInt64), lastPageDate)
+
+	// Seven public items, two for group members, one no one may read, and rows from other outboxes
+	for createDate := int64(10); createDate <= 70; createDate += 10 {
+		test.save(t, model.ActorTypeUser, userID, createDate, anonymous, nil)
+	}
+
+	test.save(t, model.ActorTypeUser, userID, 15, model.Permissions{groupID}, nil)
+	test.save(t, model.ActorTypeUser, userID, 25, model.Permissions{groupID}, nil)
+	test.save(t, model.ActorTypeUser, userID, 5, model.NewPermissions(), nil)
+	test.save(t, model.ActorTypeUser, userID, 1, anonymous, func(item *model.OutboxItem) { item.DeleteDate = 999 })
+	test.save(t, model.ActorTypeUser, primitive.NewObjectID(), 2, anonymous, nil)
+	test.save(t, model.ActorTypeStream, userID, 3, anonymous, nil)
+
+	// Spot checks: the last page of seven in threes holds only the oldest item
+	totalItems, lastPageDate = summary(anonymous, 3)
+	require.Equal(t, int64(7), totalItems)
+	require.Equal(t, int64(20), lastPageDate)
+
+	// Members count nine, and their last page is full
+	totalItems, lastPageDate = summary(members, 3)
+	require.Equal(t, int64(9), totalItems)
+	require.Equal(t, int64(25), lastPageDate)
+
+	// walk follows `next` from the first page, as CollectionPage writes it, and returns the cursor of the last page reached
+	walk := func(permissions model.Permissions, pageSize int) int64 {
+
+		for cursor := int64(math.MaxInt64); ; {
+			page, err := test.service.QueryByParentAndDate(test.session, model.ActorTypeUser, userID, permissions, cursor, pageSize)
+			require.NoError(t, err)
+
+			if len(page) < pageSize {
+				return cursor
+			}
+
+			next := page[len(page)-1].CreateDate
+
+			// A full last page links to an empty one, which is not the last page
+			following, err := test.service.QueryByParentAndDate(test.session, model.ActorTypeUser, userID, permissions, next, pageSize)
+			require.NoError(t, err)
+
+			if len(following) == 0 {
+				return cursor
+			}
+
+			cursor = next
+		}
+	}
+
+	for name, permissions := range map[string]model.Permissions{"anonymous": anonymous, "members": members} {
+		for pageSize := 1; pageSize <= 10; pageSize++ {
+			_, lastPageDate := summary(permissions, pageSize)
+			require.Equal(t, walk(permissions, pageSize), lastPageDate, "%s, pageSize: %d", name, pageSize)
+		}
+	}
+
+	// RULE: a caller with no permissions sees an empty outbox, without querying for its oldest items
+	totalItems, lastPageDate = summary(model.NewPermissions(), 3)
+	require.Zero(t, totalItems)
+	require.Equal(t, int64(math.MaxInt64), lastPageDate)
+
+	// RULE: a page must hold at least one item
+	for _, pageSize := range []int{0, -1} {
+		_, _, err := test.service.PagingSummary(test.session, model.ActorTypeUser, userID, anonymous, pageSize)
+		require.Error(t, err)
+		require.True(t, derp.IsInternalServerError(err))
+	}
+}
+
+// TestOutbox2_RangeByObjectID verifies that only the actor's own items for that object are returned
+func TestOutbox2_RangeByObjectID(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	objectID := "https://example.test/notes/1"
+	anonymous := model.NewAnonymousPermissions()
+	withObject := func(objectID string, activityType string) func(*model.OutboxItem) {
+		return func(item *model.OutboxItem) {
+			item.ObjectID = objectID
+			item.ActivityType = activityType
+		}
+	}
+
+	create := test.save(t, model.ActorTypeUser, userID, 100, anonymous, withObject(objectID, "Create"))
+	update := test.save(t, model.ActorTypeUser, userID, 200, model.NewPermissions(), withObject(objectID, "Update"))
+	test.save(t, model.ActorTypeUser, userID, 300, anonymous, withObject("https://example.test/notes/2", "Create"))
+	test.save(t, model.ActorTypeUser, primitive.NewObjectID(), 400, anonymous, withObject(objectID, "Announce"))
+	test.save(t, model.ActorTypeStream, userID, 500, anonymous, withObject(objectID, "Create"))
+	test.save(t, model.ActorTypeUser, userID, 600, anonymous, func(item *model.OutboxItem) {
+		withObject(objectID, "Delete")(item)
+		item.DeleteDate = 999
+	})
+
+	items, err := test.service.RangeByObjectID(test.session, model.ActorTypeUser, userID, objectID)
+	require.NoError(t, err)
+
+	// Lookups for internal use ignore permissions, so the unreadable Update is still found
+	require.ElementsMatch(t, []primitive.ObjectID{create.ActivityID, update.ActivityID}, activityIDs(slices.Collect(items)))
+
+	// An unknown object finds nothing
+	items, err = test.service.RangeByObjectID(test.session, model.ActorTypeUser, userID, "https://example.test/notes/missing")
+	require.NoError(t, err)
+	require.Empty(t, slices.Collect(items))
+}
+
+// TestOutbox2_RangeByActivityURL verifies that the lookup matches the url field, within the actor's own outbox
+func TestOutbox2_RangeByActivityURL(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	otherID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	like := test.save(t, model.ActorTypeUser, userID, 100, anonymous, nil)
+	test.save(t, model.ActorTypeUser, userID, 200, anonymous, nil)
+	other := test.save(t, model.ActorTypeUser, otherID, 300, anonymous, nil)
+
+	items, err := test.service.RangeByActivityURL(test.session, model.ActorTypeUser, userID, like.URL)
+	require.NoError(t, err)
+	require.Equal(t, []primitive.ObjectID{like.ActivityID}, activityIDs(slices.Collect(items)))
+
+	// Another actor's activity URL is not in this outbox
+	items, err = test.service.RangeByActivityURL(test.session, model.ActorTypeUser, userID, other.URL)
+	require.NoError(t, err)
+	require.Empty(t, slices.Collect(items))
+}
+
+// TestOutbox2_RemoveByObjectID verifies that the removal is scoped to one actor and one object,
+// and that an empty object removes nothing
+func TestOutbox2_RemoveByObjectID(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	otherID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	const object = "https://example.test/notes/1"
+
+	withObject := func(objectID string) func(*model.OutboxItem) {
+		return func(item *model.OutboxItem) { item.ObjectID = objectID }
+	}
+
+	test.save(t, model.ActorTypeUser, userID, 1, anonymous, withObject(object))
+	test.save(t, model.ActorTypeUser, userID, 2, anonymous, withObject(object))
+	test.save(t, model.ActorTypeUser, userID, 3, anonymous, withObject("https://example.test/notes/2"))
+	test.save(t, model.ActorTypeUser, userID, 4, anonymous, withObject(""))
+	test.save(t, model.ActorTypeUser, otherID, 5, anonymous, withObject(object))
+	test.save(t, model.ActorTypeStream, userID, 6, anonymous, withObject(object))
+
+	// An empty object matches the row that has none, and must not remove it
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeUser, userID, ""))
+	require.Equal(t, int64(6), countOutbox2(t, test.session))
+
+	// Both of this actor's rows for the object go, and nothing else
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeUser, userID, object))
+	require.Equal(t, int64(4), countOutbox2(t, test.session))
+
+	remaining, err := test.service.HasObject(test.session, model.ActorTypeUser, userID, object)
+	require.NoError(t, err)
+	require.False(t, remaining)
+
+	// A second run finds nothing and succeeds
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeUser, userID, object))
+	require.Equal(t, int64(4), countOutbox2(t, test.session))
+}
+
+// TestOutbox2_removeByActivityURL verifies that the removal is scoped to one actor and one URL,
+// and that an empty URL removes nothing
+func TestOutbox2_removeByActivityURL(t *testing.T) {
+
+	test := newOutbox2QueryTest(t)
+
+	userID := primitive.NewObjectID()
+	otherID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	like := test.save(t, model.ActorTypeUser, userID, 1, anonymous, nil)
+	test.save(t, model.ActorTypeUser, userID, 2, anonymous, nil)
+	test.save(t, model.ActorTypeUser, otherID, 3, anonymous, nil)
+
+	require.NoError(t, test.service.removeByActivityURL(test.session, model.ActorTypeUser, userID, ""))
+	require.Equal(t, int64(3), countOutbox2(t, test.session))
+
+	// Another actor cannot remove this activity by naming its URL
+	require.NoError(t, test.service.removeByActivityURL(test.session, model.ActorTypeUser, otherID, like.URL))
+	require.Equal(t, int64(3), countOutbox2(t, test.session))
+
+	require.NoError(t, test.service.removeByActivityURL(test.session, model.ActorTypeUser, userID, like.URL))
+	require.Equal(t, int64(2), countOutbox2(t, test.session))
+}
+
+// TestOutbox2_RemoveByObjectID_Announced verifies that removing an object also removes this actor's
+// Announces of a Create or Update of it, whether the activity embeds the object or names it by URL
+func TestOutbox2_RemoveByObjectID_Announced(t *testing.T) {
+
+	// OUTBOX2-OMNIBUS §7.8 O15: the parent Stream's Announce names the child's Create, not the child
+	test := newOutbox2QueryTest(t)
+
+	parentID := primitive.NewObjectID()
+	anonymous := model.NewAnonymousPermissions()
+
+	const child = "https://example.test/child"
+
+	// announcing returns a mutation that makes a row an activity of the given type, whose object is
+	// an activity on the given object
+	announcing := func(activityType string, object any) func(*model.OutboxItem) {
+		return func(item *model.OutboxItem) {
+			activityURL := "https://example.test/@author/pub/outbox/" + primitive.NewObjectID().Hex()
+			item.ActivityType = activityType
+			item.ObjectID = activityURL
+			item.Activity = mapof.Any{
+				vocab.PropertyType:   activityType,
+				vocab.PropertyActor:  "https://example.test/" + parentID.Hex(),
+				vocab.PropertyObject: mapof.Any{vocab.PropertyID: activityURL, vocab.PropertyType: vocab.ActivityTypeCreate, vocab.PropertyObject: object},
+			}
+		}
+	}
+
+	embedded := test.save(t, model.ActorTypeStream, parentID, 1, anonymous, announcing(vocab.ActivityTypeAnnounce, mapof.Any{vocab.PropertyID: child}))
+	byURL := test.save(t, model.ActorTypeStream, parentID, 2, anonymous, announcing(vocab.ActivityTypeAnnounce, child))
+
+	// Rows that must stay: another child, an activity that is not an Announce, and another actor's Announce
+	other := test.save(t, model.ActorTypeStream, parentID, 3, anonymous, announcing(vocab.ActivityTypeAnnounce, mapof.Any{vocab.PropertyID: "https://example.test/other"}))
+	notAnnounce := test.save(t, model.ActorTypeStream, parentID, 4, anonymous, announcing(vocab.ActivityTypeAdd, mapof.Any{vocab.PropertyID: child}))
+	elsewhere := test.save(t, model.ActorTypeStream, primitive.NewObjectID(), 5, anonymous, announcing(vocab.ActivityTypeAnnounce, mapof.Any{vocab.PropertyID: child}))
+
+	items, err := test.service.RangeByObjectID(test.session, model.ActorTypeStream, parentID, child)
+	require.NoError(t, err)
+	require.ElementsMatch(t, []primitive.ObjectID{embedded.ActivityID, byURL.ActivityID}, activityIDs(slices.Collect(items)))
+
+	require.NoError(t, test.service.RemoveByObjectID(test.session, model.ActorTypeStream, parentID, child))
+
+	remaining, err := test.service.Query(test.session, exp.All())
+	require.NoError(t, err)
+	require.ElementsMatch(t, []primitive.ObjectID{other.ActivityID, notAnnounce.ActivityID, elsewhere.ActivityID}, activityIDs(remaining))
+}

@@ -15,6 +15,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/EmissarySocial/emissary/tools/customcss"
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/groupie"
 	"github.com/EmissarySocial/emissary/tools/markdown"
@@ -33,6 +34,11 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 	// converter, instead of rosetta's unsanitized one.
 	result["markdown"] = func(value any) template.HTML {
 		return template.HTML(markdown.ToHTML(convert.String(value))) // #nosec G203 -- markdown.ToHTML sanitizes its output
+	}
+
+	// markdownHardWraps converts as "markdown" does, and also renders every line break as a <br>
+	result["markdownHardWraps"] = func(value any) template.HTML {
+		return template.HTML(markdown.ToHTMLHardWraps(convert.String(value))) // #nosec G203 -- markdown.ToHTMLHardWraps sanitizes its output
 	}
 
 	// toTime reads a time, including an Emissary DateTime or a "2006-01-02" string, for templates to format
@@ -71,6 +77,9 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		return template.HTML(wrapped) // #nosec G203 -- both halves are escaped above; only the <b> wrapper is markup
 	}
+
+	// customCSS returns a stylesheet that a person wrote, ready for a <style> element, or nothing
+	result["customCSS"] = customCSS
 
 	result["collection"] = func(max int, collection streams.Document) (sliceof.Object[streams.Document], error) {
 
@@ -130,6 +139,27 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 	}
 
 	return result
+}
+
+// customCSS returns a stylesheet that customcss.Validate accepts, marked as trusted CSS, or
+// an empty value when the stylesheet is missing, is not text, or breaks any of its rules
+func customCSS(value any) template.CSS {
+
+	// A template passes whatever the record holds, which is nil until a stylesheet is saved
+	stylesheet := convert.String(value)
+
+	if stylesheet == "" {
+		return ""
+	}
+
+	// RULE: This returns template.CSS, which html/template does not escape, so refuse any
+	// stylesheet that could close its <style> element, reach past the block that wraps it,
+	// or load another website's files. A refused stylesheet is left off the page entirely.
+	if err := customcss.Validate(stylesheet); err != nil {
+		return ""
+	}
+
+	return template.CSS(stylesheet) // #nosec G203 -- customcss.Validate refuses "</", unbalanced blocks, and other websites' files
 }
 
 // toTime reads a time from a datetime.DateTime (which convert.Time does not recognize) or from

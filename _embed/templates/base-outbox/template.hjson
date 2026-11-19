@@ -1,5 +1,6 @@
-## Base-Outbox template defines the Profile tabs that the settings
-## shell at /@me/settings/general loads from the user's own outbox.
+## Base-Outbox template defines what every outbox shares: the Profile
+## tabs that the settings shell at /@me/settings/general loads from the
+## user's own outbox, and the Follow modal with its email signup pages.
 ## Every outbox template lists it in `extends`.
 
 {
@@ -17,10 +18,14 @@
 
 	actions: {
 
+		// The settings page's first tab: whichever tab ?tab= names, or General
 		settings-general: {
 			roles:["self"]
 			steps:[
-				{do:"view-html"}
+				{do:"switch", expression:"{{.QueryParam `tab`}}", cases:{
+					images: {do:"view-html", file:"settings-images"}
+					links: {do:"view-html", file:"settings-links"}
+				}, default:{do:"view-html"}}
 			]
 		}
 
@@ -36,7 +41,7 @@
 							{type:"text", path:"displayName", label:"Name", description:"Displayed wherever someone sees your profile. (PUBLIC)"}
 							{type:"text", path:"username", label:"Username", description:"How others will identify you online. (PUBLIC)", options:{autocomplete:"off", validator:"/.validate/user/username"}}
 							{type:"text", path:"emailAddress", label:"Email Address", description:"Used to sign in and support your account. Not shared. (PRIVATE)"}
-							{type:"textarea", path:"statusMessage", label:"About Me", description:"Displayed on your profile page. Markdown is allowed. (PUBLIC)", options:{rows:4, showLimit:true}}
+							{type:"textarea", path:"statusMessage", label:"About Me", description:"Displayed on your profile page. Markdown is allowed. (PUBLIC)", options:{rows:12, showLimit:true}}
 							{type:"text", path:"location", label:"Location", description:"City, State, or whatever you want. (PUBLIC)"}
 							{type:"text", path:"data.tags", label:"Hashtags", description:"Enter #Hashtags separated by spaces.  (PUBLIC)"}
 						]
@@ -115,6 +120,69 @@
 					]
 				}}
 				{do:"save", comment:"Links updated by me"}
+			]
+		}
+
+		follow: {
+			roles:["anonymous"]
+			steps: [
+				{do:"as-modal", background:"profile", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		follow-activitypub: {
+			roles:["anonymous"]
+			steps: [
+				{do:"as-modal", background:"profile", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		follow-email: {
+			roles:["anonymous"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		follow-email-sent: {
+			roles:["anonymous"]
+			steps: [
+				{do:"view-html"}
+			]
+		},
+
+		follower-confirm: {
+			roles:["anonymous"]
+			steps:[
+				{do:"with-follower", steps:[
+					{do:"set-data", values:{"stateId":"ACTIVE"}}
+					{do:"save", method:"get", comment:"Email confirmed by user"}
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		// RULE: "anonymous" is correct here, and the SECRET is what authorizes the request.
+		// This action exists to be reached from a link in an email, by a recipient who is not
+		// signed in and never will be -- "self" rejected every one of them with a 403 before
+		// with-follower could look at their credentials at all.  with-follower refuses to load
+		// anything without a matching followerId+secret pair, refuses outright when no
+		// followerId is supplied, and Follower.LoadBySecret loads EMAIL-method records only --
+		// so opening the role does not open the action, and no other kind of Follower can be
+		// deleted through it.
+		follower-unsubscribe: {
+			roles:["anonymous"]
+			steps: [
+				{do:"with-follower", steps:[
+					{do:"view-html", file:"follower-unsubscribe"}
+					{do:"delete", method:"post", comment:"Unsubscribed from email notifications"}
+					{do:"inline-success", message:"Done.  You have been unsubscribed from email notifications."}
+				]}
 			]
 		}
 	}

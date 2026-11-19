@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto"
 	"iter"
+	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -35,6 +36,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// activityStreamFailureWindow is how long a URL that failed with a server or network error is not refetched
+const activityStreamFailureWindow = 5 * time.Minute
+
 // ActivityStream implements the Hannibal HTTP client interface, and provides a cache for ActivityStream documents.
 type ActivityStream struct {
 	getCommonDatabase func() data.Server // read LIVE on every use (never captured): a config reload can reconnect the common database, and a captured handle would fail every call with "client is disconnected"
@@ -42,9 +46,11 @@ type ActivityStream struct {
 	ruleService       *Rule
 	carpool           *clients.Carpool
 	hostname          string
+	requestHostname   func(*http.Request) string // The server factory's reading of the host a request was sent to
 	queue             *queue.Queue
 	version           string
 	newSession        func(time.Duration) (data.Session, context.CancelFunc, error)
+	failures          *ascache.FailureMemo
 }
 
 /******************************************
@@ -53,7 +59,9 @@ type ActivityStream struct {
 
 // NewActivityStream creates a new ActivityStream service
 func NewActivityStream() ActivityStream {
-	return ActivityStream{}
+	return ActivityStream{
+		failures: ascache.NewFailureMemo(activityStreamFailureWindow),
+	}
 }
 
 // Refresh updates links to additional services that may not have been initialized when this service was created.
@@ -67,6 +75,7 @@ func (service *ActivityStream) Refresh(factory *Factory) {
 	service.ruleService = factory.Rule()
 	service.carpool = factory.Carpool()
 	service.hostname = factory.Hostname()
+	service.requestHostname = factory.RequestHostname
 	service.version = factory.Version()
 	service.queue = factory.Queue()
 	service.newSession = factory.Session
@@ -117,11 +126,13 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	// the ActivityPub client to load documents from private IP addresses.
 	allowPrivateIPs := service.AllowPrivateIPs()
 
-	// Try ActivityPub documents directly
+	// Try ActivityPub documents directly, reading at most 1 MB of each, which is Mastodon's own limit.
+	// Every caller of this stack inherits the cap, the anonymous /.proxy included.
 	activityPubClient := activitypub.New(
 		activitypub.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 		activitypub.WithUserAgent(userAgent),
 		activitypub.WithAllowPrivateIPs(allowPrivateIPs),
+		activitypub.WithMaxResponseSize(streams.MaxResponseSize),
 	)
 
 	// Replace 410 Gone errors with "Tombstone" documents
@@ -165,6 +176,7 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 		actorID,
 		service.hostname,
 		ascache.WithIgnoreHeaders(),
+		ascache.WithFailureMemo(service.failures),
 	)
 
 	// Share concurrent Loads of one URL with every other stack in this process that signs as the same actor

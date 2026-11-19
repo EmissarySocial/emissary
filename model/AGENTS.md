@@ -56,7 +56,9 @@ Three things to keep. Go's GCM **panics** rather than errors on a wrong-length n
 
 The absence of a `json` tag is not a decision — it is the default, and the default is "export it". `GET /@:userId/export/:collection/:recordId` marshals model objects straight to JSON, and because `model.User` carried only `bson` tags, that route emitted `User.Password` (the hash) and `User.PasswordReset` (a live account-takeover code). The route requires an OAuth grant — `WithOAuthUser` rejects a plain session — so a third-party app authorized for portability was the *only* caller, and it received both. They now carry `json:"-"`. **Any new secret-bearing field on a model needs an explicit `json:"-"`**, and any new route that marshals a model wholesale needs to be checked against this.
 
-The mirror-image rule is that **not every secret-shaped field is one to suppress**. The export's consumer is the server a User is migrating TO, which needs their records whole: `Following.Secret` and `MerchantAccount.Plaintext` travel on purpose, and `MerchantAccount.ExportDocument` goes further and decrypts the vault into an explicit map. Decide by asking whether the destination server needs the value, not by the field's name. `service/export_credentials_test.go` pins both directions, so a new `json:"-"` on an allowed field fails there rather than silently breaking a migration.
+The mirror-image rule is that **not every secret-shaped field is one to suppress**. The export's consumer is the server a User is migrating TO, which needs their records whole: `Following.Secret` and `MerchantAccount.Plaintext` travel on purpose. Decide by asking whether the destination server needs the value and whether it is the User's to take, not by the field's name. `service/export_credentials_test.go` pins both directions, so a new `json:"-"` on an allowed field fails there rather than silently breaking a migration.
+
+The `MerchantAccount` vault fails the second question, so it never travels. `handler.GetStripeConnect` copies the domain's Stripe Connect platform key into every merchant's vault as `restrictedKey`, and that key belongs to the operator: with it and a `Stripe-Account` header, the holder can act on every other merchant's connected account. `MerchantAccount.ExportDocument` therefore builds an explicit map with no `Vault` entry, and `service/merchantAccount_export_test.go` pins that against a sealed vault (BUG-303, Defect D). The per-merchant copy itself is still stored; nothing reads it from anywhere but the server.
 
 ## `model.DetectContentType` may use the filename to disambiguate, never to promote
 
@@ -98,6 +100,14 @@ A required field whose enum holds one value reads like something the schema hand
 `StreamSchema` declared `widgets` as an Object of token lists for long after `Stream.Widgets` became a `set.Slice[StreamWidget]`. rosetta v0.45.0 let it pass. From v0.46.0 an Object over a list is refused, and because `service.Stream.Save` normalizes the whole Stream, every Stream save failed, including Streams with no widgets. `widgets` is now an Array of `StreamWidgetSchema()`.
 
 A property declared in a schema is only as good as its accessors. rosetta skips a declared property that the getter cannot read, with no error, so a new property and its `GetStringOK`/`SetString` (or `GetPointer`) cases go in together. `SetString` must return TRUE for every write it makes; `streamWidgetId` once wrote the ID and returned FALSE, so `schema.Set` reported a failure that had actually succeeded. `TestStreamSchema_WidgetsAreNormalized` proves that a Stream's Normalize reaches every widget, and `TestStreamWidget_SetString` that every write is reported.
+
+## `publishDateTime` must stay a lossless view of `PublishDate`
+
+It is a virtual string over `Stream.PublishDate` (Unix seconds), so a `datetime` widget can edit a publish date. It reads as RFC 3339 in UTC, which is the zone `longDate` and `shortDate` display in. It writes a posted time back as Unix seconds. An edit form posts the field back on every save, so three rules keep that round trip from moving the date:
+
+- **A time in the same minute keeps the stored seconds.** The widget posts whole minutes, so without this rule every save would truncate the date.
+- **A blank leaves the date alone.** An unpublished Stream reads blank, and clearing the field must never unpublish.
+- **The field reads and writes nothing past year 9999.** RFC 3339 cannot write such a year, and the `math.MaxInt64` "unscheduled" sentinel is far beyond it. `FuzzStream_PublishDateTime` found this edge.
 
 ## Every `schema.Array` that a request can write into needs a `MaxLength`
 

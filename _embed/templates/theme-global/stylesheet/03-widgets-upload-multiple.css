@@ -1,0 +1,213 @@
+/******************************************
+ * UPLOAD MULTIPLE
+ *
+ * The upload-multiple form widget: a bordered
+ * zone holding a grid of square tiles, each a
+ * preview that drags, with an X over it that
+ * comes with the mouse, and a plus tile after
+ * them that adds one file.
+ * Its behavior is javascript/upload-multiple.js
+ ******************************************/
+
+/* The zone is the grid, so the plus after the tile row flows in after the last tile (see AGENTS.md); it is positioned so an empty status line is kept inside it, and it keeps a tile's height while its contents load, so the form does not jump */
+.upload-multiple {
+	position: relative;
+	display: grid;
+	min-height: calc(var(--rhythm) * 18);
+	grid-template-columns: repeat(auto-fill, minmax(calc(var(--rhythm) * 14), 1fr));
+	gap: var(--rhythm);
+	border: 1px solid var(--gray30);
+	border-radius: var(--border-radius);
+	padding: calc(var(--rhythm) * 2);
+	background-color: var(--gray05);
+	transition: border-color var(--motion-fast), background-color var(--motion-fast);
+}
+
+/* Lit only while files are dragged over it, never for a tile's own drag */
+.upload-multiple.highlight {
+	border-color: var(--focus-color);
+	background-color: var(--blue10);
+}
+
+/* On its own, in a read-only view, the row is the grid */
+.upload-multiple-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(calc(var(--rhythm) * 14), 1fr));
+	gap: var(--rhythm);
+}
+
+/* Inside the zone the row has no box of its own, and its tiles join the zone's grid */
+.upload-multiple > .upload-multiple-tiles {
+	display: contents;
+}
+
+.upload-multiple-tile {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1;
+	overflow: hidden;
+	border-radius: var(--border-radius);
+	background-color: var(--gray10);
+}
+
+/* A placed tile is its own handle: the whole preview drags, so a long press on a phone must not select it or open its image menu */
+.upload-multiple-tile[data-value] {
+	cursor: grab;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+}
+
+/* The tile takes focus for the arrow keys, and its ring sits inside its clipped corners */
+.upload-multiple-tile:focus-visible {
+	outline: 2px solid var(--focus-color);
+	outline-offset: -2px;
+}
+
+/* The plus is a tile the size of a preview, and the only thing that opens the picker */
+.upload-multiple-add {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1;
+	margin: 0;
+	padding: 0;
+	border: 2px dashed var(--gray40);
+	border-radius: var(--border-radius);
+	background-color: transparent;
+	color: var(--gray60);
+	font-size: calc(var(--rhythm) * 4);
+	line-height: 1;
+	transition: border-color var(--motion-fast), color var(--motion-fast), background-color var(--motion-fast);
+}
+
+.upload-multiple-add:hover,
+.upload-multiple-add:focus,
+.upload-multiple.highlight > .upload-multiple-add {
+	border-color: var(--focus-color);
+	background-color: var(--gray10);
+	color: var(--link-color);
+}
+
+/* At the maximum the script hides the plus, and its display rule above would otherwise win over `hidden` */
+.upload-multiple-add[hidden] {
+	display: none;
+}
+
+.upload-multiple-preview {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.upload-multiple-icon {
+	font-size: calc(var(--rhythm) * 4);
+	color: var(--gray60);
+}
+
+.upload-multiple-filename {
+	max-width: 100%;
+	padding: 0 var(--rhythm);
+	font-size: 0.75rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* The X is a black circle with a white glyph; it sits on a photo, so it uses the fixed --black and --white in both schemes (Ben, 2026-11-04) */
+.upload-multiple-tile > .upload-multiple-remove {
+	position: absolute;
+	top: var(--rhythm);
+	right: var(--rhythm);
+	width: calc(var(--rhythm) * 3.5);
+	height: calc(var(--rhythm) * 3.5);
+	margin: 0;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	cursor: pointer;
+
+	/* RULE: No theme's button rules may repaint the X, and qwerty-theme's hover outranks any class selector (see AGENTS.md) */
+	background-color: var(--black) !important;
+	color: var(--white) !important;
+}
+
+/* A black circle cannot darken, so hover and keyboard focus ring it in white, which shows on any photo */
+.upload-multiple-tile > .upload-multiple-remove:not([disabled]):hover,
+.upload-multiple-tile > .upload-multiple-remove:focus-visible {
+	box-shadow: 0 0 0 2px var(--white);
+}
+
+/* The glyph fills the circle and centers itself, because the theme's buttons align their contents left and Bootstrap Icons nudge a glyph below its line */
+.upload-multiple-tile > .upload-multiple-remove > i {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* RULE: The X is .hover-show, so it never sets display, and keyboard focus inside the tile shows it too (see AGENTS.md) */
+.upload-multiple-tile:focus-within > .upload-multiple-remove {
+	display: initial;
+}
+
+/* At the minimum the server would refuse the delete, so the X says so first */
+.upload-multiple-tile > .upload-multiple-remove[disabled] {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+/* A tile whose request is in flight */
+.upload-multiple-tile.upload-multiple-busy {
+	opacity: 0.5;
+}
+
+/* A file being sent dims behind its bar */
+.upload-multiple-pending > .upload-multiple-preview,
+.upload-multiple-pending > .upload-multiple-icon {
+	opacity: 0.45;
+}
+
+/* The bar runs across the middle of the tile: a dark track with a light edge, and a fill that grows with the bytes sent */
+.upload-multiple-progress {
+	position: absolute;
+	left: 15%;
+	right: 15%;
+	top: 50%;
+	height: calc(var(--rhythm) * 1.5);
+	margin-top: calc(var(--rhythm) * -0.75);
+	border-radius: var(--rhythm);
+	background-color: rgba(0, 0, 0, 0.5);
+	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+	overflow: hidden;
+}
+
+.upload-multiple-progress > div {
+	width: 0;
+	height: 100%;
+	border-radius: var(--rhythm);
+	background-color: var(--white);
+	transition: width var(--motion-fast);
+}
+
+/* The status line sits under the tiles, across the whole zone, only while it has something to say */
+.upload-multiple-status {
+	grid-column: 1 / -1;
+	font-size: 0.875rem;
+	text-align: center;
+	color: var(--gray70);
+}
+
+/* RULE: An empty status line leaves the grid, so it adds no row and no gap under the tiles, but stays in the page so its live region still announces (see AGENTS.md) */
+.upload-multiple-status:empty {
+	position: absolute;
+}
+
+.upload-multiple-status.warning {
+	color: var(--red60);
+}

@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/toot"
+	"github.com/labstack/echo/v4"
 )
 
 // Mastodon wires every Emissary handler into the toot API, which serves the Mastodon-compatible REST endpoints
@@ -14,29 +15,32 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		Authorize: mastodon.Authorizer(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/accounts/
-		PostAccount:                    mastodon.PostAccount(serverFactory),
-		GetAccount_VerifyCredentials:   mastodon.GetAccount_VerifyCredentials(serverFactory),
-		PatchAccount_UpdateCredentials: mastodon.PatchAccount_UpdateCredentials(serverFactory),
-		GetAccounts:                    mastodon.GetAccounts(serverFactory),
-		GetAccount:                     mastodon.GetAccount(serverFactory),
-		GetAccount_Statuses:            mastodon.GetAccount_Statuses(serverFactory),
-		GetAccount_Followers:           mastodon.GetAccount_Followers(serverFactory),
-		GetAccount_Following:           mastodon.GetAccount_Following(serverFactory),
-		GetAccount_FeaturedTags:        mastodon.GetAccount_FeaturedTags(serverFactory),
-		GetAccount_Endorsements:        mastodon.GetAccount_Endorsements(serverFactory),
-		PostAccount_Follow:             mastodon.PostAccount_Follow(serverFactory),
-		PostAccount_Unfollow:           mastodon.PostAccount_Unfollow(serverFactory),
-		PostAccount_Block:              mastodon.PostAccount_Block(serverFactory),
-		PostAccount_Unblock:            mastodon.PostAccount_Unblock(serverFactory),
-		PostAccount_Mute:               mastodon.PostAccount_Mute(serverFactory),
-		PostAccount_Unmute:             mastodon.PostAccount_Unmute(serverFactory),
-		PostAccount_Pin:                mastodon.PostAccount_Pin(serverFactory),
-		PostAccount_Unpin:              mastodon.PostAccount_Unpin(serverFactory),
-		PostAccount_Note:               mastodon.PostAccount_Note(serverFactory),
-		GetAccount_Relationships:       mastodon.GetAccount_Relationships(serverFactory),
-		GetAccount_FamiliarFollowers:   mastodon.GetAccount_FamiliarFollowers(serverFactory),
-		GetAccount_Search:              mastodon.GetAccount_Search(serverFactory),
-		GetAccount_Lookup:              mastodon.GetAccount_Lookup(serverFactory),
+		PostAccount:                     mastodon.PostAccount(serverFactory),
+		GetAccount_VerifyCredentials:    mastodon.GetAccount_VerifyCredentials(serverFactory),
+		PatchAccount_UpdateCredentials:  mastodon.PatchAccount_UpdateCredentials(serverFactory),
+		GetAccounts:                     mastodon.GetAccounts(serverFactory),
+		GetAccount:                      mastodon.GetAccount(serverFactory),
+		GetAccount_Statuses:             mastodon.GetAccount_Statuses(serverFactory),
+		GetAccount_Lists:                mastodon.GetAccount_Lists(serverFactory),
+		PostAccount_RemoveFromFollowers: mastodon.PostAccount_RemoveFromFollowers(serverFactory),
+		GetAccount_Collections:          mastodon.GetAccount_Collections(serverFactory),
+		GetAccount_Followers:            mastodon.GetAccount_Followers(serverFactory),
+		GetAccount_Following:            mastodon.GetAccount_Following(serverFactory),
+		GetAccount_FeaturedTags:         mastodon.GetAccount_FeaturedTags(serverFactory),
+		GetAccount_Endorsements:         mastodon.GetAccount_Endorsements(serverFactory),
+		PostAccount_Follow:              mastodon.PostAccount_Follow(serverFactory),
+		PostAccount_Unfollow:            mastodon.PostAccount_Unfollow(serverFactory),
+		PostAccount_Block:               mastodon.PostAccount_Block(serverFactory),
+		PostAccount_Unblock:             mastodon.PostAccount_Unblock(serverFactory),
+		PostAccount_Mute:                mastodon.PostAccount_Mute(serverFactory),
+		PostAccount_Unmute:              mastodon.PostAccount_Unmute(serverFactory),
+		PostAccount_Pin:                 mastodon.PostAccount_Pin(serverFactory),
+		PostAccount_Unpin:               mastodon.PostAccount_Unpin(serverFactory),
+		PostAccount_Note:                mastodon.PostAccount_Note(serverFactory),
+		GetAccount_Relationships:        mastodon.GetAccount_Relationships(serverFactory),
+		GetAccount_FamiliarFollowers:    mastodon.GetAccount_FamiliarFollowers(serverFactory),
+		GetAccount_Search:               mastodon.GetAccount_Search(serverFactory),
+		GetAccount_Lookup:               mastodon.GetAccount_Lookup(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/announcements/
 		GetAnnouncements:            mastodon.GetAnnouncements(serverFactory),
@@ -146,12 +150,17 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		GetMutes: mastodon.GetMutes(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/notifications/
-		GetNotifications:             mastodon.GetNotifications(serverFactory),
-		GetNotification:              mastodon.GetNotification(serverFactory),
-		PostNotifications_Clear:      mastodon.PostNotifications_Clear(serverFactory),
-		PostNotification_Dismiss:     mastodon.PostNotification_Dismiss(serverFactory),
-		GetNotifications_UnreadCount: mastodon.GetNotifications_UnreadCount(serverFactory),
-		GetNotificationPolicy:        mastodon.GetNotificationPolicy(serverFactory),
+		GetNotifications:                 mastodon.GetNotifications(serverFactory),
+		GetNotification:                  mastodon.GetNotification(serverFactory),
+		GetNotificationRequests:          mastodon.GetNotificationRequests(serverFactory),
+		PostNotificationRequest_Accept:   mastodon.PostNotificationRequest_Accept(serverFactory),
+		PostNotificationRequest_Dismiss:  mastodon.PostNotificationRequest_Dismiss(serverFactory),
+		PostNotificationRequests_Accept:  mastodon.PostNotificationRequests_Accept(serverFactory),
+		PostNotificationRequests_Dismiss: mastodon.PostNotificationRequests_Dismiss(serverFactory),
+		PostNotifications_Clear:          mastodon.PostNotifications_Clear(serverFactory),
+		PostNotification_Dismiss:         mastodon.PostNotification_Dismiss(serverFactory),
+		GetNotifications_UnreadCount:     mastodon.GetNotifications_UnreadCount(serverFactory),
+		GetNotificationPolicy:            mastodon.GetNotificationPolicy(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/oauth/
 		// GetOAuth_Authorize: mastodon.GetOAuth_Authorize(serverFactory),
@@ -232,4 +241,14 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		GetTrends_Statuses: mastodon.GetTrends_Statuses(serverFactory),
 		GetTrends_Links:    mastodon.GetTrends_Links(serverFactory),
 	}
+}
+
+// MastodonStreaming returns the Mastodon streaming websocket handler (not in toot)
+func MastodonStreaming(serverFactory *server.Factory) echo.HandlerFunc {
+	return mastodon.GetStreaming(serverFactory)
+}
+
+// MastodonTrendsTags returns the Mastodon trending-tags handler, which lists featured tags (not in toot)
+func MastodonTrendsTags(serverFactory *server.Factory) echo.HandlerFunc {
+	return mastodon.GetTrends_Tags(serverFactory)
 }

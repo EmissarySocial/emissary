@@ -18,7 +18,7 @@ Turbine reports a task's error exactly once, when the task fails: a `queue.Failu
 
 **`derp.Wrap(nil, …)` is NOT nil, and `derp.IsNil` does not catch it.** It builds an `Error` whose `Code` is `ErrorCode(nil)`, which is `0`, carrying no details and no wrapped value — so a `derp.Report` reached on a success path files a record with nothing in it to identify. `CrawlContext` did that 301 times in seven days (BUG-150) because it tested `context.IsCollection()` before it tested `err`. Settle `err != nil` first, and use `derp.WrapIF` anywhere the error may legitimately be nil. Status code `0` in the error log means this and nothing else.
 
-**A remote answering HTML to an ActivityPub request is a 500, not a 4xx.** `remote.Transaction.decodeResponseBody` wraps that case with `derp.WithInternalError()`, and `derp.Wrap` applies its options *after* computing the inner code, so the option wins. This is the largest single error class `CrawlContext` produced, and `derp.IsClientError` matches none of it — the same trap as the dead-domain rule below, arriving from the opposite direction.
+**A remote answering HTML to an ActivityPub request is a 502, not a 4xx.** `remote.Transaction.decodeResponseBody` hands a 2xx it has no decoder for (HTML, plain text, or an unrecognized type) to `undecodableResponse`, which wraps it with `derp.WithBadGateway()`. `derp.Wrap` applies its options *after* computing the inner code, so the 502 wins over the 200 underneath, and `remote.IsUndecodableResponse` recognizes the result. A JSON or XML body that fails to parse is still a 500. Before remote v0.27.0 the HTML case was a 500 too, so older error-log records carry that code. This is the largest single error class `CrawlContext` produced, and `derp.IsClientError` matches none of it — the same trap as the dead-domain rule below, arriving from the opposite direction.
 
 ## Polling has two clocks, and they own different questions
 
@@ -89,6 +89,14 @@ A missing case in `PreProcessor` is silent: the name falls through, `Priority` k
 ## Outbound delivery filters through the sending actor's rules
 
 `WithSender` in [wrappers.go](wrappers.go) binds the send locator with `BoundToSender(args["actor"])` so recipient resolution respects the sender's block rules, and constructs the hannibal sender with `AllowPrivateIPs` from the server factory — FALSE in production, true only for local/dev federation on a private network. Both `Outbox:SendTo*` task names come from `hannibal/sender` constants; use the constants, not string literals.
+
+## Delivery tasks run outside a transaction, and are routed by the sending actor
+
+`Delivery:FanOut` and `Delivery:Send` are hannibal's delivery pipeline, and `Outbox2-Email` is its email recipient. [delivery.go](delivery.go) runs all three through `WithFactory` and a plain session, deliberately **not** `WithSession`: a send makes an HTTP request, a fan-out over a large follower list can outlast MongoDB's 60-second limit on a transaction, and none of them writes to the domain database. The pipeline is built once per task by `Outbox2.Pipeline`, bound to the actor in the task's `actor` argument, because its lookups run on that task's session.
+
+A send task carries no `hostname`, so `getHostnameFromArgs` finds its domain from the `actor` URL. Keep that argument's name. A fan-out is priority 16, so that it runs promptly after its commit; sends and emails are 256, so that a large fan-out cannot delay user-facing work. Hannibal sets the retry count and the one-day backoff cap on each send task when it queues it.
+
+The legacy `Outbox:SendToAllRecipients`, `Outbox:SendToSingleRecipient` and `Outbox-Publish` tasks are still registered. Search results, an account's `Move`, the identity verification message, and the legacy outbox still queue them. Accepts, Rejects, Follows, Undos of a Follow, and a Stream's rebroadcasts go through `Outbox2.Send` and the pipeline.
 
 ## The lifecycle hooks run for EVERY task, so each one checks the task name first
 

@@ -696,8 +696,7 @@ func TestMinimalTheme_SheetMarksCurrentSection(t *testing.T) {
 }
 
 // TestMinimalTheme_NavigationToggle_HidesTheMenuToo verifies that showNavigation:false takes the
-// mobile menu with it.  The control is fixed to the corner of the SCREEN, so a menu left behind
-// by a Domain that switched the navigation off would be the only thing on the page.
+// mobile menu with it for an anonymous visitor, who has no links of their own to put in it.
 func TestMinimalTheme_NavigationToggle_HidesTheMenuToo(t *testing.T) {
 
 	document := parseMinimalNavigation(t, newMinimalNavigationBuilder(t, mapof.Any{"showNavigation": false}))
@@ -708,6 +707,127 @@ func TestMinimalTheme_NavigationToggle_HidesTheMenuToo(t *testing.T) {
 	require.Empty(t, navFind(document, func(node *html.Node) bool {
 		return navHasClass(node, "nav-menu")
 	}))
+}
+
+// minimalSignedInLinks lists the floating menu's links, which the sheet repeats below 640px
+var minimalSignedInLinks = []string{"/@me", "/@me/newsfeed", "/@me/conversations", "/@me/notifications/replies", "/@me/settings"}
+
+// TestMinimalTheme_SheetCarriesSignedInLinks verifies that the sheet repeats every floating-menu
+// link, under the same rules as the section links, because the floating menu is hidden below 640px
+func TestMinimalTheme_SheetCarriesSignedInLinks(t *testing.T) {
+
+	context := newMinimalNavigationBuilder(t, mapof.NewAny())
+	context.IsAuthenticated = true
+	context.IsOwner = true
+
+	document := parseMinimalNavigation(t, context)
+	panel := navFindOne(t, document, "menu sheet", navHasID("nav-menu-panel"))
+
+	for _, href := range append(minimalSignedInLinks, "/admin/domain") {
+
+		link := navFindOne(t, panel, "sheet copy of "+href, func(node *html.Node) bool {
+			return node.Data == "a" && navAttribute(node, "href") == href
+		})
+
+		require.Empty(t, navAttribute(link, "id"), href)
+		require.False(t, navHasClass(link, "nav-item"), href)
+		require.True(t, navHasClass(link, "turboclick"), href)
+
+		require.Len(t, navFind(document, func(node *html.Node) bool {
+			return node.Data == "a" && navAttribute(node, "href") == href
+		}), 2, "%s must render once in the floating menu and once in the sheet", href)
+	}
+
+	// Server is for the owner only, in both menus
+	context.IsOwner = false
+
+	require.Empty(t, navFind(parseMinimalNavigation(t, context), func(node *html.Node) bool {
+		return navAttribute(node, "href") == "/admin/domain"
+	}))
+}
+
+// TestMinimalTheme_SheetMarksCurrentUserSection verifies that the signed-in links are marked
+// server-side from the same NavigationID values that SelectNav uses for the floating menu
+func TestMinimalTheme_SheetMarksCurrentUserSection(t *testing.T) {
+
+	for navigationID, expected := range map[string]string{
+		"outbox":        "/@me",
+		"inbox":         "/@me/newsfeed",
+		"conversations": "/@me/conversations",
+		"notifications": "/@me/notifications/replies",
+		"settings":      "/@me/settings",
+		"admin":         "/admin/domain",
+	} {
+		context := newMinimalNavigationBuilder(t, mapof.NewAny())
+		context.IsAuthenticated = true
+		context.IsOwner = true
+		context.NavigationID = navigationID
+
+		panel := navFindOne(t, parseMinimalNavigation(t, context), "menu sheet", navHasID("nav-menu-panel"))
+
+		selected := navFind(panel, func(node *html.Node) bool {
+			return node.Data == "a" && navHasClass(node, "selected")
+		})
+
+		require.Len(t, selected, 1, navigationID)
+		require.Equal(t, expected, navAttribute(selected[0], "href"), navigationID)
+		require.Equal(t, "page", navAttribute(selected[0], "aria-current"), navigationID)
+	}
+}
+
+// TestMinimalTheme_MenuKeepsSignedInLinksWithoutTheBar verifies that showNavigation:false keeps the
+// menu for anyone with links of their own, because the floating menu is hidden below 640px
+func TestMinimalTheme_MenuKeepsSignedInLinksWithoutTheBar(t *testing.T) {
+
+	for name, test := range map[string]struct {
+		setup func(*minimalNavigationBuilder)
+		href  string
+	}{
+		"authenticated": {func(b *minimalNavigationBuilder) { b.IsAuthenticated = true }, "/@me"},
+		"identity":      {func(b *minimalNavigationBuilder) { b.IsIdentity = true }, "/@guest"},
+	} {
+		context := newMinimalNavigationBuilder(t, mapof.Any{"showNavigation": false})
+		test.setup(&context)
+
+		document := parseMinimalNavigation(t, context)
+		require.Empty(t, navFind(document, navIsTag("nav")), name)
+
+		panel := navFindOne(t, document, "menu sheet", navHasID("nav-menu-panel"))
+
+		navFindOne(t, panel, name+" link inside the sheet", func(node *html.Node) bool {
+			return node.Data == "a" && navAttribute(node, "href") == test.href
+		})
+
+		require.Empty(t, navFind(panel, func(node *html.Node) bool {
+			return navAttribute(node, "href") == "/about"
+		}), "the hidden bar's sections must stay out of the sheet: %s", name)
+	}
+}
+
+// TestMinimalTheme_SheetBadgeHasNoID verifies that the unread badge keeps one id, inside the floating
+// menu, because the badge endpoint swaps it by id and the sheet's dots only mirror it through CSS
+func TestMinimalTheme_SheetBadgeHasNoID(t *testing.T) {
+
+	context := newMinimalNavigationBuilder(t, mapof.NewAny())
+	context.IsAuthenticated = true
+
+	document := parseMinimalNavigation(t, context)
+
+	badge := navFindOne(t, document, "the SSE badge", navHasID("nav-notifications-badge"))
+	require.True(t, navHasAncestor(badge, func(node *html.Node) bool {
+		return navHasClass(node, "floating-menu")
+	}))
+
+	dots := navFind(document, func(node *html.Node) bool {
+		return navHasClass(node, "nav-menu-badge")
+	})
+
+	require.Len(t, dots, 2, "one dot on the menu button and one on the sheet's Notifications row")
+
+	for _, dot := range dots {
+		require.Empty(t, navAttribute(dot, "id"))
+		require.Equal(t, "true", navAttribute(dot, "aria-hidden"))
+	}
 }
 
 // TestMinimalTheme_StartupCollapsesLikeAnyOtherState verifies that the STARTUP branch reaches

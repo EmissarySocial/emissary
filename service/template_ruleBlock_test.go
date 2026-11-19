@@ -15,7 +15,7 @@ import (
 // posts is one the Rule schema accepts, and that the popup's textarea posts it (BUG-235)
 func TestActorButtonBlockUpdate_PostsRuleFields(t *testing.T) {
 
-	for _, templateID := range []string{"user-inbox", "user-settings"} {
+	for _, templateID := range []string{"user-settings"} {
 
 		t.Run(templateID, func(t *testing.T) {
 

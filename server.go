@@ -276,7 +276,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// CSRF protection: reject state-changing requests from other web origins.
 	// This backstops the SameSite=Lax cookie policy, which is enforced only by the browser.
-	e.Use(mw.CrossOriginProtection())
+	// The two OAuth endpoints stay open to browser-based clients, and read no cookie.
+	e.Use(mw.CrossOriginProtection("POST /oauth/token", "POST /oauth/revoke"))
 
 	// Restore Steranko in the future
 	// e.Use(steranko.Middleware(factory))
@@ -308,6 +309,19 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/security.txt", handler.TBD)
 	e.GET("/poco", handler.TBD) // Friendica polls this route
 	e.HEAD("/poco", handler.TBD)
+	// Not in toot: an empty list, since translation is off
+	e.GET("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
+	e.HEAD("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
+	// Not in toot: Ice Cubes' Explore tab reads these. Trending tags are the admins' featured tags
+	e.GET("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
+	e.HEAD("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
+	e.GET("/api/v1/suggestions", handler.GetEmptyList)
+	e.HEAD("/api/v1/suggestions", handler.GetEmptyList)
+	// Not in toot: Mastodon's streaming API, over a websocket
+	e.GET("/api/v1/streaming", handler.MastodonStreaming(factory))
+	e.HEAD("/api/v1/streaming", handler.MastodonStreaming(factory))
+	e.GET("/api/v1/streaming/health", handler.GetStreamingHealth)
+	e.HEAD("/api/v1/streaming/health", handler.GetStreamingHealth)
 	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
 	e.HEAD("/api/**", handler.APINotFound)
 	e.POST("/api/**", handler.APINotFound) // Every method, because Dome scores the 405 Echo would send
@@ -344,8 +358,8 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
 	e.HEAD("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
-	e.GET("/.echo", handler.GetEcho(factory))
-	e.HEAD("/.echo", handler.GetEcho(factory))
+	e.GET("/.echo", handler.WithOwner(factory, handler.GetEcho))
+	e.HEAD("/.echo", handler.WithOwner(factory, handler.GetEcho))
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
 	e.GET("/.geocode/network", handler.WithFactory(factory, handler.GetGeocodeNetwork))
 	e.HEAD("/.geocode/network", refuseHead) // GET only: each request calls a paid IP-geolocation provider
@@ -368,7 +382,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/.ostatus/discover", handler.WithFactory(factory, handler.PostOStatusDiscover))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	e.HEAD("/.ostatus/tunnel", handler.GetFollowingTunnel)
-	e.POST("/.proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
+	e.POST("/.proxy", handler.WithFactory(factory, handler.PostProxyURL))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.HEAD("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
@@ -585,6 +599,9 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 
+	e.GET("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.GetIntent_Announce))
+	e.HEAD("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.GetIntent_Announce))
+	e.POST("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.PostIntent_Announce))
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.HEAD("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))
@@ -710,6 +727,8 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.HEAD("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
+	e.GET("/@:userId/pub/circles/:circleId", handler.WithUser(factory, ap_user.GetCircle))
+	e.HEAD("/@:userId/pub/circles/:circleId", handler.WithUser(factory, ap_user.GetCircle))
 	e.GET("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
 	e.HEAD("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
@@ -740,7 +759,6 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.HEAD("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
-	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 
 	// Removed these routes for now...
 	// e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
@@ -789,7 +807,10 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// OAuth Server
 	e.GET("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
 	e.HEAD("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
-	e.POST("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.PostOAuthAuthorization))
+	e.POST("/oauth/authorize", handler.RouteOAuthAuthorization(
+		handler.WithFactory(factory, handler.PostOAuthAuthorizationRedemption),
+		handler.WithAuthenticatedUser(factory, handler.PostOAuthAuthorization),
+	))
 	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
@@ -968,6 +989,12 @@ func errorHandler(err error, ctx echo.Context) {
 
 	const location = "server.errorHandler"
 
+	// RULE: An error can reach this handler more than once (a middleware that handles errors passes
+	// it on too). Once a response has been sent, a second body would corrupt it, so stop here.
+	if ctx.Response().Committed {
+		return
+	}
+
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
@@ -1013,7 +1040,7 @@ func errorHandler(err error, ctx echo.Context) {
 		// needs the real 401 and a JSON body to know its bearer token expired and refresh it; a 303
 		// to the HTML /signin page is something it cannot parse, and its decoder fails on the HTML.
 		if strings.HasPrefix(request.URL.Path, "/api/") {
-			_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": derp.Message(err)})
+			_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": apiErrorMessage(err)})
 			return
 		}
 
@@ -1050,6 +1077,13 @@ func errorHandler(err error, ctx echo.Context) {
 		)
 	}
 
+	// RULE: Mastodon clients show the "error" text of a JSON body, and fall back to a generic
+	// failure for anything else, so every JSON API error answers in that shape
+	if strings.HasPrefix(request.URL.Path, "/api/") {
+		_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": apiErrorMessage(err)})
+		return
+	}
+
 	// If this is a local request, then show developers a full error dump
 	// X-Forwarded-Host is not needed here because this is for development only.
 	if uri.IsLocalHostname(request.Host) {
@@ -1064,6 +1098,17 @@ func errorHandler(err error, ctx echo.Context) {
 
 	// Fall through to general error handler that only returns the error code and message
 	_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+}
+
+// apiErrorMessage returns the text an API client is shown for an error: the original message for a
+// 4xx, and a generic one for a server failure, whose details stay in the error log
+func apiErrorMessage(err error) string {
+
+	if derp.ErrorCode(err) >= http.StatusInternalServerError {
+		return http.StatusText(http.StatusInternalServerError)
+	}
+
+	return derp.RootMessage(err)
 }
 
 // handleActivityPubError displays a simple JSON error message for ActivityPub requests

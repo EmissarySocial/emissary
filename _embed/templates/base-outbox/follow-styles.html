@@ -1,0 +1,49 @@
+<!-- follow-styles draws CamperJS's saved-account rows; every Follow view that lists accounts includes it, because each modal replaces the last -->
+<style>
+	.camper-account {
+		background-color: var(--gray10);
+		border-radius: var(--rhythm);
+		padding:calc(var(--rhythm) * 2);
+		display:flex;
+		gap: var(--rhythm);
+		margin-bottom: var(--rhythm);
+		cursor: pointer;
+
+		&:hover {
+			background-color: var(--gray20);
+		}
+
+		.camper-account-icon {
+			width:32px;
+			height:32px;
+			border-radius:16px;
+		}
+
+		.camper-account-info {
+			display:flex;
+			flex-direction:column;
+			justify-content:center;
+			flex-grow:1;
+			color:var(--text-color);
+
+			.camper-account-name {
+				font-weight:bold;
+				font-size:calc(var(--rhythm) * 2.75);
+				line-height: calc(var(--rhythm) * 4);
+				margin:0;
+			}
+
+			.camper-account-username {
+				font-size:calc(var(--rhythm) * 1.75);
+				line-height: calc(var(--rhythm) * 2.5);
+				margin:0;
+				opacity:0.66;
+			}
+		}
+
+		.camper-account-remove-button {
+			background-color: var(--gray05);
+			font-size: calc(var(--rhythm) * 3/2);
+		}
+	}
+</style>

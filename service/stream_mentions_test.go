@@ -290,9 +290,8 @@ func TestStream_JSONLD_NoTags(t *testing.T) {
 	require.NotContains(t, document, vocab.PropertyCC)
 }
 
-// TestStream_JSONLD_CCIsPlainStringSlice pins the concrete type of `cc`. service.Stream.publish_outbox
-// type-asserts it as []string when appending the in-reply-to author; a named slice type would fail
-// that assertion silently and drop the reply author from delivery.
+// TestStream_JSONLD_CCIsPlainStringSlice pins the concrete type of `cc` as a plain []string, so code
+// that appends to it, as addressedJSONLD does with a reply's author, gets the slice it expects.
 func TestStream_JSONLD_CCIsPlainStringSlice(t *testing.T) {
 	streamService := newMentionStreamService()
 	stream := newTagStream("Hey @sarah@mastodon.social")
@@ -307,7 +306,7 @@ func TestStream_JSONLD_CCIsPlainStringSlice(t *testing.T) {
 	cc, ok := document[vocab.PropertyCC].([]string)
 	require.True(t, ok, "cc must be a plain []string")
 
-	// Reproduce exactly what publish_outbox does with it
+	// Append to it, as addressedJSONLD does
 	cc = append(cc, "https://example.com/@author")
 	require.Equal(t, []string{"https://mastodon.social/users/sarah", "https://example.com/@author"}, cc)
 }

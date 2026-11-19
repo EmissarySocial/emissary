@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/toot/object"
@@ -48,7 +49,7 @@ func GetStatus_Context(serverFactory *server.Factory) func(model.Authorization, 
 
 			if postURL := resolveStatusURL(factory, session, auth, t.ID); webURL(postURL) {
 
-				if post, err := client.Load(postURL); err == nil {
+				if post, err := client.Load(postURL, ascache.WithStaleAllowed()); err == nil {
 					result.Ancestors = remoteAncestorsOf(client, factory, session, auth, post.InReplyTo().ID())
 					result.Descendants = remoteDescendantsOf(client, factory, session, auth, post)
 				}

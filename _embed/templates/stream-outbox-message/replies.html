@@ -1,9 +1,10 @@
+<!-- replies: the first page of replies, each drawn in this one request, so the list arrives at its final height -->
 {{- $root := . -}}
-{{- $afterDate := .QueryParam "after" -}}
-{{- $replies := .ReplyLinksAfter $afterDate 12 -}}
+{{- $replies := .ReplyLinksAfter (.QueryParam "after") 12 -}}
 
 <div class="table">
-	{{- range $index, $reply := $replies -}}
-		<div hx-get="/{{$root.StreamID}}/reply?id={{$reply.URI}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" style="height:100px;"></div>
+	{{- range $replies -}}
+		{{- template "reply-row" (array $root .URI) -}}
 	{{- end -}}
 </div>
+{{- template "reply-script" -}}

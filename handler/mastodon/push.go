@@ -7,12 +7,9 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
-	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	"github.com/benpate/exp"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // https://docs.joinmastodon.org/methods/push/#create
@@ -38,7 +35,7 @@ func PostPushSubscription(serverFactory *server.Factory) func(model.Authorizatio
 
 		endpoint := t.Subscription.Endpoint
 
-		if err := factory.PushSubscription().Upsert(session, auth.UserID, endpoint, t.Subscription.Keys.P256dh, t.Subscription.Keys.Auth, ""); err != nil {
+		if err := factory.PushSubscription().ReplaceForOAuthUserToken(session, auth.UserID, auth.OAuthUserTokenID, endpoint, t.Subscription.Keys.P256dh, t.Subscription.Keys.Auth); err != nil {
 			return object.WebPushSubscription{}, derp.Wrap(err, location, "Saving subscription")
 		}
 
@@ -70,9 +67,9 @@ func GetPushSubscription(serverFactory *server.Factory) func(model.Authorization
 
 		defer cancel()
 
-		sub, err := loadNewestPushSubscription(factory, session, auth.UserID)
+		sub := model.NewPushSubscription()
 
-		if err != nil {
+		if err := factory.PushSubscription().LoadByOAuthUserToken(session, auth.UserID, auth.OAuthUserTokenID, &sub); err != nil {
 			return object.WebPushSubscription{}, derp.Wrap(err, location, "Loading subscription")
 		}
 
@@ -83,21 +80,42 @@ func GetPushSubscription(serverFactory *server.Factory) func(model.Authorization
 }
 
 // https://docs.joinmastodon.org/methods/push/#update
-//
-// Emissary has no field to persist per-type alert preferences, so this refuses rather than
-// claim a change that can't take effect.
 func PutPushSubscription(serverFactory *server.Factory) func(model.Authorization, txn.PutPushSubscription) (object.WebPushSubscription, error) {
 
+	const location = "handler.mastodon.PutPushSubscription"
+
 	return func(auth model.Authorization, t txn.PutPushSubscription) (object.WebPushSubscription, error) {
-		return object.WebPushSubscription{}, derp.NotImplemented("handler.mastodon.PutPushSubscription")
+
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return object.WebPushSubscription{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.WebPushSubscription{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		sub := model.NewPushSubscription()
+
+		if err := factory.PushSubscription().LoadByOAuthUserToken(session, auth.UserID, auth.OAuthUserTokenID, &sub); err != nil {
+			return object.WebPushSubscription{}, derp.Wrap(err, location, "Loading subscription")
+		}
+
+		// RULE: alerts aren't stored (see PostPushSubscription), so echo the requested ones back
+		return pushSubscriptionToot(factory, session, sub.Endpoint, updatedAlerts(t)), nil
 	}
 }
 
+// DeletePushSubscription removes the calling app's push subscription
 // https://docs.joinmastodon.org/methods/push/#delete
-//
-// RULE: Mastodon scopes a subscription to the token that created it, but model.PushSubscription
-// tracks no grant ID, so this removes every subscription the User has.
 func DeletePushSubscription(serverFactory *server.Factory) func(model.Authorization, txn.DeletePushSubscription) (struct{}, error) {
+
+	// RULE: As in Mastodon, this removes only the calling app's subscription, never the User's others.
 
 	const location = "handler.mastodon.DeletePushSubscription"
 
@@ -117,30 +135,12 @@ func DeletePushSubscription(serverFactory *server.Factory) func(model.Authorizat
 
 		defer cancel()
 
-		if err := factory.PushSubscription().DeleteByUserID(session, auth.UserID, "Deleted via Mastodon API"); err != nil {
+		if err := factory.PushSubscription().DeleteByOAuthUserToken(session, auth.UserID, auth.OAuthUserTokenID, "Deleted via Mastodon API"); err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Deleting subscription")
 		}
 
 		return struct{}{}, nil
 	}
-}
-
-// loadNewestPushSubscription returns the most recently created PushSubscription for a User.
-func loadNewestPushSubscription(factory *service.Factory, session data.Session, userID primitive.ObjectID) (model.PushSubscription, error) {
-
-	const location = "handler.mastodon.loadNewestPushSubscription"
-
-	subs, err := factory.PushSubscription().Query(session, exp.Equal("userId", userID), option.SortDesc("createDate"), option.MaxRows(1))
-
-	if err != nil {
-		return model.PushSubscription{}, derp.Wrap(err, location, "Querying subscriptions")
-	}
-
-	if len(subs) == 0 {
-		return model.PushSubscription{}, derp.NotFound(location, "No push subscription for this User")
-	}
-
-	return subs[0], nil
 }
 
 // pushSubscriptionToot builds the Mastodon API response for one PushSubscription.
@@ -161,6 +161,28 @@ func pushSubscriptionToot(factory *service.Factory, session data.Session, endpoi
 
 // requestedAlerts copies a PostPushSubscription's requested alert flags into the response shape.
 func requestedAlerts(t txn.PostPushSubscription) object.WebPushSubscriptionAlerts {
+
+	// Read through the transaction, so this never restates toot's anonymous struct and its tags
+	alerts := t.Data.Alerts
+
+	return object.WebPushSubscriptionAlerts{
+		Mention:       alerts.Mention,
+		Quote:         alerts.Quote,
+		Status:        alerts.Status,
+		Reblog:        alerts.Reblog,
+		Follow:        alerts.Follow,
+		FollowRequest: alerts.FollowRequest,
+		Favourite:     alerts.Favourite,
+		Poll:          alerts.Poll,
+		Update:        alerts.Update,
+		QuotedUpdate:  alerts.QuotedUpdate,
+		AdminSignUp:   alerts.AdminSignUp,
+		AdminReport:   alerts.AdminReport,
+	}
+}
+
+// updatedAlerts copies a PutPushSubscription's requested alert flags into the response shape.
+func updatedAlerts(t txn.PutPushSubscription) object.WebPushSubscriptionAlerts {
 
 	// Read through the transaction, so this never restates toot's anonymous struct and its tags
 	alerts := t.Data.Alerts

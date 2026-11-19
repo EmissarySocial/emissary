@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/toot/object"
@@ -33,7 +34,7 @@ func TestFetchRemoteReactors_ReadsAndRebuildsTheOtherServersList(t *testing.T) {
 	defer server.Close()
 
 	host := strings.TrimPrefix(server.URL, "http://")
-	accounts := fetchRemoteReactors(server.URL+"/users/davep/statuses/116811463127343333", "my.example", "favourited_by", 40, true)
+	accounts := fetchRemoteReactorsLive(server.URL+"/users/davep/statuses/116811463127343333", "my.example", "favourited_by", 40, true)
 
 	require.Equal(t, "/api/v1/statuses/116811463127343333/favourited_by?limit=40", requested)
 	require.Len(t, accounts, 2, "an account that lives here, and one with no usable profile, are left out")
@@ -57,11 +58,11 @@ func TestFetchRemoteReactors_YieldsNothingWhenTheServerCannotHelp(t *testing.T) 
 	}))
 	defer server.Close()
 
-	require.Empty(t, fetchRemoteReactors(server.URL+"/users/x/statuses/1", "my.example", "favourited_by", 40, true))
+	require.Empty(t, fetchRemoteReactorsLive(server.URL+"/users/x/statuses/1", "my.example", "favourited_by", 40, true))
 
 	host := strings.TrimPrefix(server.URL, "http://")
-	require.Empty(t, fetchRemoteReactors(server.URL+"/users/x/statuses/1", host, "favourited_by", 40, true), "a post on this server is never asked about")
-	require.Empty(t, fetchRemoteReactors("not a url", "my.example", "favourited_by", 40, true))
+	require.Empty(t, fetchRemoteReactorsLive(server.URL+"/users/x/statuses/1", host, "favourited_by", 40, true), "a post on this server is never asked about")
+	require.Empty(t, fetchRemoteReactorsLive("not a url", "my.example", "favourited_by", 40, true))
 }
 
 // TestMergeReactors_SkipsAnyoneListedTwice confirms the same person is not shown twice, ignoring case.
@@ -74,4 +75,41 @@ func TestMergeReactors_SkipsAnyoneListedTwice(t *testing.T) {
 
 	require.Len(t, merged, 2)
 	require.Equal(t, "gina@fosstodon.org", merged[1].Acct)
+}
+
+// TestFetchRemoteReactors_ReusesRecentAnswers confirms a post's server is asked once per window, per domain
+func TestFetchRemoteReactors_ReusesRecentAnswers(t *testing.T) {
+
+	requests := 0
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests++
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(reactorJSON))
+	}))
+	defer server.Close()
+
+	postURL := server.URL + "/users/davep/statuses/116811463127343333"
+
+	first := fetchRemoteReactors(postURL, "my.example", "favourited_by", 40, true)
+	second := fetchRemoteReactors(postURL, "my.example", "favourited_by", 40, true)
+
+	require.Equal(t, 1, requests, "the second open reuses the first answer")
+	require.Equal(t, first, second)
+
+	fetchRemoteReactors(postURL, "my.example", "reblogged_by", 40, true)
+	fetchRemoteReactors(postURL, "other.example", "favourited_by", 40, true)
+	require.Equal(t, 3, requests, "another list, or another domain, asks again")
+}
+
+// TestReactorMemo_Expires confirms an answer is forgotten once its window passes
+func TestReactorMemo_Expires(t *testing.T) {
+
+	memo := newReactorMemo(time.Millisecond)
+	memo.set("key", []object.Account{{Acct: "a@b.example"}})
+
+	time.Sleep(5 * time.Millisecond)
+
+	_, found := memo.get("key")
+	require.False(t, found)
 }

@@ -7,11 +7,28 @@ import "time"
 // https://swicg.github.io/activitypub-data-portability/lola#Authorization
 const OAuthUserTokenScopeActivityPubPortability = "activitypub_account_portability" // #nosec G101 -- this is the NAME of an OAuth scope, not a credential
 
+// OAuthUserTokenScopeProfile is the IndieAuth scope that releases the User's name, profile URL, and photo
+const OAuthUserTokenScopeProfile = "profile"
+
+// OAuthUserTokenScopeEmail is the IndieAuth scope that releases the User's email address, alongside the profile
+const OAuthUserTokenScopeEmail = "email"
+
+// OAuthRedirectURIOutOfBand is the redirect_uri that shows the code or token on the page, for the User to copy
+// into the client, instead of redirecting (https://docs.joinmastodon.org/methods/apps/#form-data-parameters)
+const OAuthRedirectURIOutOfBand = "urn:ietf:wg:oauth:2.0:oob"
+
+// oauthUserTokenDataRedirectURI is the OAuthUserToken.Data key that records the redirect_uri a code was issued to
+const oauthUserTokenDataRedirectURI = "redirect_uri"
+
 // OAuth token lifecycle durations (see emissary-specs/OAUTH-REFRESH-TOKENS.md).
 const (
 	// OAuthAccessTokenLifetime is how long an issued access-token JWT is valid.
 	// The client refreshes before this elapses. Not configurable by design.
 	OAuthAccessTokenLifetime = 1 * time.Hour
+
+	// OAuthMastodonAppTokenLifetime is how long an access token issued to a Mastodon app is valid,
+	// where zero means it never expires
+	OAuthMastodonAppTokenLifetime time.Duration = 0
 
 	// OAuthRefreshGracePeriod is the window after a rotation during which the
 	// immediately-prior refresh secret is still tolerated (absorbs a client that

@@ -89,7 +89,6 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	// The `tag` array carries every kind of tag and is assigned exactly ONCE, so all of them
 	// must be collected before it is written.
 	tags := make([]mapof.String, 0, len(stream.Tags))
-	mentioned := make([]string, 0, len(stream.Tags))
 
 	for _, tag := range stream.Tags {
 
@@ -107,24 +106,12 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 
 			if tag.IsResolved() {
 				tags = append(tags, tag.JSONLD(service.host, template.TagURL))
-				mentioned = append(mentioned, tag.Href)
 			}
 		}
 	}
 
 	if len(tags) > 0 {
 		result[vocab.PropertyTag] = tags
-	}
-
-	// RULE: A mentioned actor must also be ADDRESSED. Mastodon resolves mentions from the `tag`
-	// array, but delivery is driven by addressing -- without this, a mentioned account that does
-	// not already follow the author never receives the post at all. Outbox.Publish delivers to
-	// every addressee on top of the follower fan-out (see publishRecipients).
-	//
-	// This is a plain []string because service.Stream.publish_outbox type-asserts it as one when
-	// it appends the in-reply-to author; a named slice type would silently fail that assertion.
-	if len(mentioned) > 0 {
-		result[vocab.PropertyCC] = mentioned
 	}
 
 	if stream.Location.NotZero() {
@@ -134,13 +121,16 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	// Who may reply and quote, as GoToSocial's interactionPolicy (REPLY-CONTROLS §1.3)
 	result[vocab.PropertyInteractionPolicy] = stream.InteractionPolicyJSONLD()
 
-	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
-	// putting as:public in the To field means that this mesage is public, and "listed"
-	// putting as:public in the Cc field means that this message is public, but "unlisted"
-	// and leaving as:public out entirely means that this message is "private" -- for whatever that's worth...
+	// Address the object to everyone its author sends it to. Mastodon reads Public in `to` as a
+	// listed post (https://docs.joinmastodon.org/spec/activitypub/).
+	to, cc := service.audience(stream)
 
-	if stream.DefaultAllowAnonymous() {
-		result[vocab.PropertyTo] = []string{vocab.NamespacePublic}
+	if len(to) > 0 {
+		result[vocab.PropertyTo] = to
+	}
+
+	if len(cc) > 0 {
+		result[vocab.PropertyCC] = cc
 	}
 
 	// Custom behaviors for different stream types

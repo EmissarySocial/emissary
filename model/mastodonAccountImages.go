@@ -3,7 +3,7 @@ package model
 import "github.com/benpate/toot/object"
 
 // MastodonDefaultAvatarPath is where this server serves the image used for an account with no avatar
-const MastodonDefaultAvatarPath = "/.themes/global/resources/emissary/default-avatar.png"
+const MastodonDefaultAvatarPath = "/.themes/global/resources/emissary/default-avatar.png?v=2" // theme files are cached for 30 days, so bump "v" when the image changes
 
 // MastodonDefaultHeaderPath is where this server serves the image used for an account with no header
 const MastodonDefaultHeaderPath = "/.themes/global/resources/emissary/default-header.png"

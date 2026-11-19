@@ -39,5 +39,5 @@ func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, ses
 	// The count is denormalized onto the User record, and deliberately includes every follower
 	// method (ActivityPub and Email alike) -- it answers "how many people receive this actor's
 	// posts," not "how many ActivityPub records exist."
-	return collection.ServeSummary(ctx, user.ActivityPubFollowersURL(), int64(user.FollowerCount))
+	return collection.ServeSummary(ctx.Response(), ctx.Request(), user.ActivityPubFollowersURL(), int64(user.FollowerCount))
 }

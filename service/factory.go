@@ -20,6 +20,7 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
+	"github.com/benpate/floodgate"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/icon"
@@ -94,6 +95,7 @@ type Factory struct {
 	bookmarkService         Bookmark
 	responseService         Response
 	webPushService          WebPush
+	mobilePushService       MobilePush
 	ruleService             Rule
 	ruleSuppressionService  RuleSuppression
 	searchDomainService     SearchDomain
@@ -183,6 +185,7 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.pushSubscriptionService = NewPushSubscription()
 	factory.bookmarkService = NewBookmark()
 	factory.webPushService = NewWebPush()
+	factory.mobilePushService = NewMobilePush()
 	factory.collectionItemService = NewCollectionItem()
 	factory.responseService = NewResponse()
 	factory.realtimeBroker = realtime.NewBroker(factory.SSEUpdateChannel())
@@ -266,6 +269,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.pushSubscriptionService.Refresh(factory)
 	factory.bookmarkService.Refresh(factory)
 	factory.webPushService.Refresh(factory)
+	factory.mobilePushService.Refresh(factory)
 	factory.collectionItemService.Refresh(factory)
 	factory.realtimeBroker.Refresh()
 	factory.responseService.Refresh(factory)
@@ -420,6 +424,11 @@ func (factory *Factory) ID() string {
 // Host returns the domain name AND protocol (probably HTTPS) => e.g. "https://example.com"
 func (factory *Factory) Host() string {
 	return uri.GuessProtocolForHostname(factory.config.Hostname) + factory.config.Hostname + factory.port
+}
+
+// RequestHostname returns the public hostname that a request was sent to, as the server factory reads it
+func (factory *Factory) RequestHostname(request *http.Request) string {
+	return factory.serverFactory.Hostname(request)
 }
 
 // Hostname returns the domain name only (without a protocol) => e.g. "example.com"
@@ -952,6 +961,11 @@ func (factory *Factory) WebPush() *WebPush {
 	return &factory.webPushService
 }
 
+// MobilePush returns a fully populated MobilePush service
+func (factory *Factory) MobilePush() *MobilePush {
+	return &factory.mobilePushService
+}
+
 // RSS returns a fully populated RSS service
 func (factory *Factory) RSS() *RSS {
 	return NewRSS(factory.Stream(), factory.Host())
@@ -960,6 +974,16 @@ func (factory *Factory) RSS() *RSS {
 /******************************************
  * Helper Utilities
  ******************************************/
+
+// Floodgate returns the circuit breaker for outbound deliveries, which every domain on the server shares
+func (factory *Factory) Floodgate() floodgate.Gate {
+	return factory.serverFactory.Floodgate()
+}
+
+// ReviveHost tells Floodgate that the host of an Actor URL has just sent a request that passed validation
+func (factory *Factory) ReviveHost(actorURL string) {
+	factory.serverFactory.ReviveHost(actorURL)
+}
 
 // ImportableLocator returns an ImportableLocator for this domain
 func (factory *Factory) ImportableLocator() ImportableLocator {
@@ -1013,8 +1037,12 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 		case "emissary:merchantAccount":
 			return factory.MerchantAccount(), nil
 
+		case "emissary:outboxItem":
+			return factory.Outbox2(), nil
+
+		// A legacy export is converted, so that every imported activity lands in Outbox2
 		case "emissary:outboxMessage":
-			return factory.Outbox(), nil
+			return factory.Outbox2().LegacyImporter(), nil
 
 		case "emissary:privilege":
 			return factory.Privilege(), nil

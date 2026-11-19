@@ -427,3 +427,35 @@ func TestResponse_SetResponse_RejectsUnresolvableTarget(t *testing.T) {
 	require.True(t, loaderCalled)
 	require.Zero(t, store.queryCount, "a rejected target must not reach the conflict query")
 }
+
+// TestResponse_ReactionAudience verifies that each reaction names exactly who receives it, because
+// delivery reads addressing alone
+func TestResponse_ReactionAudience(t *testing.T) {
+
+	const authorURL = "https://remote.example/@author"
+
+	service := Response{}
+	user := model.NewUser()
+	user.ProfileURL = "https://example.com/@sarah"
+
+	// test addresses one reaction and checks its `to` and `cc`
+	test := func(name string, responseType string, author string, expectedTo []string, expectedCC []string) {
+		t.Run(name, func(t *testing.T) {
+
+			response := model.NewResponse()
+			response.Type = responseType
+			activity := mapof.Any{}
+
+			service.reactionAudience(&user, &response, activity, author)
+
+			require.Equal(t, expectedTo, activity.GetSliceOfString(vocab.PropertyTo))
+			require.Equal(t, expectedCC, activity.GetSliceOfString(vocab.PropertyCC))
+		})
+	}
+
+	test("a Like reaches its author alone", vocab.ActivityTypeLike, authorURL, []string{authorURL}, []string{})
+	test("a Dislike reaches its author alone", vocab.ActivityTypeDislike, authorURL, []string{authorURL}, []string{})
+	test("a Like with no author reaches no one", vocab.ActivityTypeLike, "", []string{}, []string{})
+	test("an Announce is public, and reaches followers and the author", vocab.ActivityTypeAnnounce, authorURL, []string{vocab.NamespacePublic}, []string{"https://example.com/@sarah/pub/followers", authorURL})
+	test("an Announce with no author still reaches followers", vocab.ActivityTypeAnnounce, "", []string{vocab.NamespacePublic}, []string{"https://example.com/@sarah/pub/followers"})
+}

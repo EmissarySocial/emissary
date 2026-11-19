@@ -67,6 +67,7 @@
 				{do:"set-query-param", url:"{{.Permalink}}"}
 				{
 					do: "as-modal"
+					options: ["class:medium"]
 					background-url: "/@{{.ParentID}}?tab=notes"
 					background: "page"
 					replace-url: "/{{.StreamID}}"

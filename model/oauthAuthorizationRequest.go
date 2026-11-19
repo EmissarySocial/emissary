@@ -19,15 +19,17 @@ import (
 // GET /oauth/authorize
 // Returns: Authorization code
 type OAuthAuthorizationRequest struct {
-	ResponseType        string `json:"responseType"        query:"response_type"         form:"response_type"`
-	ClientID            string `json:"clientId"            query:"client_id"             form:"client_id"`
-	RedirectURI         string `json:"redirectUri"         query:"redirect_uri"          form:"redirect_uri"`
-	Scope               string `json:"scope"               query:"scope"                 form:"scope"`
-	State               string `json:"state"               query:"state"                 form:"state"`
-	CodeChallenge       string `json:"codeChallenge"       query:"code_challenge"        form:"code_challenge"`
-	CodeChallengeMethod string `json:"codeChallengeMethod" query:"code_challenge_method" form:"code_challenge_method"`
-	ForceLogin          bool   `json:"forceLogin"          query:"force_login"           form:"force_login"`
-	Language            string `json:"language"            query:"language"              form:"language"`
+	ResponseType        string `json:"responseType"        query:"response_type"         form:"response_type"`         // Grant requested: "code" or "token"; anything else is read as "code"
+	ClientID            string `json:"clientId"            query:"client_id"             form:"client_id"`             // The client: a registered ObjectID, or a URL for IndieAuth and CIMD clients
+	RedirectURI         string `json:"redirectUri"         query:"redirect_uri"          form:"redirect_uri"`          // Where the User is sent with the answer
+	Scope               string `json:"scope"               query:"scope"                 form:"scope"`                 // Requested scopes, read with ParseOAuthScopes
+	State               string `json:"state"               query:"state"                 form:"state"`                 // Opaque client value, returned unchanged with the answer
+	CodeChallenge       string `json:"codeChallenge"       query:"code_challenge"        form:"code_challenge"`        // PKCE challenge (RFC 7636)
+	CodeChallengeMethod string `json:"codeChallengeMethod" query:"code_challenge_method" form:"code_challenge_method"` // PKCE method: "S256" or "plain"
+	ForceLogin          bool   `json:"forceLogin"          query:"force_login"           form:"force_login"`           // Mastodon parameter, accepted and not used
+	Language            string `json:"language"            query:"language"              form:"language"`              // Mastodon parameter, accepted and not used
+	Me                  string `json:"me"                  query:"me"                    form:"-"`                     // IndieAuth §5.2 hint, shown on the consent page and never posted back
+	Decision            string `json:"-"                   query:"-"                     form:"decision"`              // The User's answer on the consent form
 }
 
 // NewOAuthAuthorizationRequest returns a fully initialized, empty OAuthAuthorizationRequest
@@ -37,7 +39,18 @@ func NewOAuthAuthorizationRequest() OAuthAuthorizationRequest {
 
 // Scopes returns the requested OAuth scopes, split into individual values
 func (req OAuthAuthorizationRequest) Scopes() []string {
-	return strings.Split(req.Scope, " ")
+	return ParseOAuthScopes(req.Scope)
+}
+
+// IsDenied returns TRUE if the User refused this request on the consent form
+func (req OAuthAuthorizationRequest) IsDenied() bool {
+	return req.Decision == OAuthAuthorizationDecisionDeny
+}
+
+// hasScope returns TRUE if the request names at least one scope
+func (req OAuthAuthorizationRequest) hasScope() bool {
+
+	return len(req.Scopes()) > 0
 }
 
 // Validate confirms that a request is valid based on the settings in the OAuthClient.
@@ -46,26 +59,23 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 
 	const location = "model.OAuthAuthorizationRequest.Validate"
 
-	if len(client.RedirectURIs) == 0 {
-		return derp.Internal(location, "Application must have at least one redirect_uri")
+	// RULE: A missing redirect_uri defaults only for a registered client that lists one
+	if err := req.defaultRedirectURI(client); err != nil {
+		return err
 	}
 
-	// RULE: If missing, use default value for RedirectURI
-	if req.RedirectURI == "" {
-		req.RedirectURI = client.RedirectURIs[0]
-	}
-
-	// RULE: Verify that redirect URI is valid
-	if !slice.Contains(client.RedirectURIs, req.RedirectURI) {
+	// RULE: The redirect_uri must be one the client lists, or on a URL client's own origin
+	if !client.AllowsRedirectURI(req.RedirectURI) {
 		return derp.BadRequest(location, "Invalid redirect_uri", "provided: "+req.RedirectURI, "allowed: "+strings.Join(client.RedirectURIs, ","))
 	}
 
-	// RULE: If missing, use default value for Scope
-	if req.Scope == "" {
+	// RULE: A registered client that names no scope gets every scope it registered.  A URL client
+	// that names none asks only who the User is (IndieAuth §5.2), so its scope stays empty.
+	if (req.Scope == "") && (client.ClientURL == "") {
 		req.Scope = strings.Join(client.Scopes, " ")
 	}
 
-	// RULE: Verify that scope is valid
+	// RULE: Verify that scope is valid.  A request that names no scope asks for nothing, so there is nothing to refuse
 	if client.Scopes.NotEmpty() {
 		for _, scope := range req.Scopes() {
 			if !slice.Contains(client.Scopes, scope) {
@@ -82,6 +92,11 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 		req.ResponseType = "code"
 	}
 
+	// RULE: The implicit grant returns an access token, so a request that names no scope has nothing to return
+	if (req.ResponseType == "token") && !req.hasScope() {
+		return derp.BadRequest(location, "A scope is required when response_type is 'token'")
+	}
+
 	// RULE: PKCE (RFC 7636). Normalize and validate the challenge method.
 	if err := req.validatePKCE(); err != nil {
 		return err
@@ -96,6 +111,30 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 	}
 
 	// Success
+	return nil
+}
+
+// defaultRedirectURI fills in a missing redirect_uri with the first one a registered client lists,
+// and refuses a missing one from a URL client, or from a client that lists none
+func (req *OAuthAuthorizationRequest) defaultRedirectURI(client OAuthClient) error {
+
+	const location = "model.OAuthAuthorizationRequest.defaultRedirectURI"
+
+	if req.RedirectURI != "" {
+		return nil
+	}
+
+	// RULE: A URL client must name its redirect_uri, because nothing is registered for it (IndieAuth §5.2)
+	if client.ClientURL != "" {
+		return derp.BadRequest(location, "redirect_uri is required")
+	}
+
+	// RULE: A client that lists no redirect_uri has nothing to default to
+	if len(client.RedirectURIs) == 0 {
+		return derp.BadRequest(location, "redirect_uri is required, because this client lists none")
+	}
+
+	req.RedirectURI = client.RedirectURIs[0]
 	return nil
 }
 
