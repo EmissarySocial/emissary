@@ -824,16 +824,17 @@
 				{do:"view-html", file:"notifications-push"}
 				{
 					do:"edit",
-					options:["endpoint:/@me/settings/notifications-form", "cancel-button:hide"]
+					options:["endpoint:/@me/settings/notifications-form", "cancel-button:hide", "next-label:My Notifications &rarr;", "next:/@me/notifications/replies"]
 					form:{
 						type:layout-vertical
 						children:[
 							{type:"check-button-group", path:"notificationChannels", options:{provider:"notification-channels"}}
+							{type:"heading", label:"Notification Emails", description:"Send an email update when you have unread notifications older than..."}
+							{type:"radio-button-group", path:"notificationEmailHours", label:"", options:{provider:"notification-email-hours"}}
 							{type:"heading", label:"Device Options", description:"These settings are not synchronized with your server."}
 							{type:"toggle", id:"push-device-toggle", options:{true-text:"Push Notifications (ENABLED)", false-text:"Push Notifications (DISABLED)"}}
 						]
 					}
-					options:["cancel-button:hide", "next-label:My Notifications &rarr;", "next:/@me/notifications/replies"]
 				}
 				{do:"save"}
 				{do:"inline-save-button"}

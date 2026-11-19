@@ -517,6 +517,48 @@ check "5l rejected: authorization withdrawn" "GET = HTTP $status" test "$status"
 count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q1")
 check "5m rejected: notification removed" "$count QUOTE notification(s) for Q1" test "$count" == "0"
 
+echo
+echo "== 7. The unread notifications email"
+
+# selected_hours prints the span that Alice's notification settings form draws as selected
+selected_hours() {
+	curl -s -m 30 -b "$JAR_A" -H 'HX-Request: true' "$A/@me/settings/notifications-form" |
+		grep -oE '<(option|input)[^>]*value="?[0-9]+"?[^>]*(selected|checked)' | grep -oE 'value="?[0-9]+' | grep -oE '[0-9]+' | head -1 || true
+}
+
+location=$(curl -s -m 30 -o /dev/null -w '%{http_code} %{redirect_url}' "$A/@me/notifications/all" || true)
+check "7a a signed-out reader is sent to sign in, and back to the All tab" "$location" \
+	test "$location" == "303 $A/signin?next=%2F%40me%2Fnotifications%2Fall"
+
+hours=$(selected_hours)
+check "7b the setting defaults to 24 hours" "form selects '$hours'" test "$hours" == "24"
+
+# RULE: this is the last step that reads Alice's settings, because the post names no channels
+code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' \
+	--data-urlencode "notificationEmailHours=6" "$A/@me/settings/notifications-form" || true)
+hours=$(selected_hours)
+check "7c the setting saves" "HTTP $code, form selects '$hours'" test "$hours" == "6"
+
+# The Save button posts wherever the drawn form says, so read the form and post as a browser would
+# RULE: read the page, not the form's own action, whose URL is the fallback when the endpoint is lost
+form=$(curl -s -m 30 -b "$JAR_A" "$A/@me/settings/notifications" || true)
+endpoint=$(grep -oE 'hx-post="/@me/settings/[^"]*"' <<<"$form" | head -1 | cut -d'"' -f2)
+check "7d the form posts to its own action" "hx-post is '$endpoint'" test "$endpoint" == "/@me/settings/notifications-form"
+
+# Every span, posted with every channel as a browser posts them, must save and redraw the button
+unsaved=""
+for span in 1 6 12 24 48 0; do
+	answer=$(curl -s -m 30 -i -b "$JAR_A" -H 'HX-Request: true' \
+		--data-urlencode "notificationChannels=DIRECT_MESSAGE" --data-urlencode "notificationChannels=REPLY" \
+		--data-urlencode "notificationChannels=MENTION_FOLLOWING" --data-urlencode "notificationChannels=MENTION_NOT_FOLLOWING" \
+		--data-urlencode "notificationChannels=FOLLOW" --data-urlencode "notificationChannels=REACTION" \
+		--data-urlencode "notificationEmailHours=$span" --data-urlencode "null=" "$A$endpoint" || true)
+	retarget=$(grep -i '^hx-retarget:' <<<"$answer" | tr -d '\r' | cut -d' ' -f2)
+	hours=$(selected_hours)
+	[[ "$retarget/$hours" == "#inline-save-button/$span" ]] || unsaved="$unsaved $span(retarget '$retarget', form selects '$hours')"
+done
+check "7e the Save button is redrawn after every save" "failures:${unsaved:- none}" test -z "$unsaved"
+
 #############################################
 # Summary
 #############################################
