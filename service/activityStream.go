@@ -260,6 +260,11 @@ func ruleUserID(actorType string, actorID primitive.ObjectID) primitive.ObjectID
 
 // Save adds a single document to the ActivityStream cache
 func (service *ActivityStream) Save(document streams.Document) error {
+
+	// RULE: A saved document never passes through the normalizer, which sits below the cache and
+	// runs only on a fetch, so its metadata is written here (BUG-383)
+	asnormalizer.Stamp(&document)
+
 	return service.AppClient().Save(document)
 }
 

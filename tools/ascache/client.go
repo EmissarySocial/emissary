@@ -17,6 +17,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -434,12 +435,22 @@ func (client *Client) countRelatedDocuments(document streams.Document) {
 // asDocument converts a Document into a fully-populated streams.Document
 func (client *Client) asDocument(value Value) streams.Document {
 
-	return streams.NewDocument(
+	result := streams.NewDocument(
 		value.Object,
 		streams.WithClient(client.rootClient),
 		streams.WithMetadata(value.Metadata),
 		streams.WithHTTPHeader(value.HTTPHeader),
 	)
+
+	// RULE: A row saved before BUG-383 has no hashed ID, and a page that names its elements by
+	// that ID would give every such document the same name. The ID alone decides it, so fill it in.
+	if result.Metadata.HashedID == "" {
+		if documentID := result.ID(); documentID != "" {
+			result.Metadata.HashedID = asnormalizer.HashedID(documentID)
+		}
+	}
+
+	return result
 }
 
 // asCachedDocument converts a Value into a streams.Document that is STAMPED as having come from the

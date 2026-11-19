@@ -467,6 +467,12 @@ for page in all replies quotes shares likes followers "header?type=ALL" "sidebar
 done
 check "6g every tab page renders" "failures:${broken:- none}" test -z "$broken"
 
+# The thread view of Bob's reply must select the reply's own card, which needs a hashed ID on a saved post (BUG-383)
+html=$(curl -s -m 30 -b "$JAR_A" -H 'HX-Request: true' "$A/@me/newsfeed/browse?url=$R1" || true)
+selected=$(grep -oE 'set selectedNode to #id_[a-z0-9]*' <<<"$html" | head -1 | sed 's/.*#//')
+matches=$(grep -oE "id=\"$selected\"" <<<"$html" | wc -l | tr -d ' ')
+check "6h a reply opens on its own card" "selected '$selected', which names $matches card(s)" test "$selected/$matches" != "id_/$matches" -a "$matches" == "1"
+
 html=$(alice_fragment replies-list)
 check "6f the other rows stay unread" "replies-list still holds an unread row" grep -q 'notification[^"]*unread' <<<"$html"
 

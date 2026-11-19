@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
+
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
@@ -584,4 +586,30 @@ func TestClient_Load_StaleAllowedServesExpiredCopy(t *testing.T) {
 	_, err = client.Load("https://remote.example/@alice")
 	require.NoError(t, err)
 	require.Equal(t, 2, origin.calls, "a normal read still refuses the expired copy")
+}
+
+// TestClient_asDocument_FillsMissingHashedID pins that a row cached without a hashed ID is read
+// with one, and that a row which has one keeps it (BUG-383)
+func TestClient_asDocument_FillsMissingHashedID(t *testing.T) {
+
+	client := &Client{}
+
+	first := NewValue()
+	first.Object = map[string]any{"id": "https://example.com/notes/1", "type": "Note"}
+
+	second := NewValue()
+	second.Object = map[string]any{"id": "https://example.com/notes/2", "type": "Note"}
+
+	firstID := client.asDocument(first).Metadata.HashedID
+	secondID := client.asDocument(second).Metadata.HashedID
+
+	require.Equal(t, asnormalizer.HashedID("https://example.com/notes/1"), firstID)
+	require.NotEqual(t, firstID, secondID, "two rows without a hashed ID must not share one")
+
+	// A stored value wins
+	first.Metadata.HashedID = "stored"
+	require.Equal(t, "stored", client.asDocument(first).Metadata.HashedID)
+
+	// A row with no ID gets nothing, and does not panic
+	require.Empty(t, client.asDocument(NewValue()).Metadata.HashedID)
 }
