@@ -5,8 +5,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net"
@@ -18,9 +21,11 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/ascache"
+	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -36,6 +41,9 @@ func main() {
 	if len(os.Args) < 2 {
 		fail("usage: rchelper <command> [args...]")
 	}
+
+	// hannibal traces every signature it makes, which would bury run.sh's own output
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	command, args := os.Args[1], os.Args[2:]
 
@@ -75,6 +83,18 @@ func main() {
 	case "diagnose-cache":
 		need(args, 3)
 		diagnoseCache(args[0], args[1], args[2])
+	case "quote-request":
+		need(args, 5)
+		quoteRequest(args[0], args[1], args[2], args[3], args[4])
+	case "accept-result":
+		need(args, 2)
+		acceptResult(args[0], args[1])
+	case "count-inbox":
+		need(args, 2)
+		countInbox(args[0], args[1])
+	case "check-authorization":
+		need(args, 4)
+		checkAuthorization(args[0], args[1], args[2], args[3])
 	default:
 		fail("unknown command: " + command)
 	}
@@ -287,6 +307,41 @@ func waitQueueIdle(database string, timeout time.Duration) {
 	fail("timed out waiting for the queue in " + database + " to drain")
 }
 
+// acceptResult prints the result of the Accept that answered the request, as stored in the requester's Inbox
+func acceptResult(database string, requestID string) {
+
+	requirePrefix(database)
+	client, ctx := connect()
+	defer client.Disconnect(ctx) //nolint:errcheck
+
+	var result struct {
+		RawActivity mapof.Any `bson:"rawActivity"`
+	}
+
+	filter := bson.M{"activityType": vocab.ActivityTypeAccept, "objectId": requestID}
+	if err := client.Database(database).Collection("Inbox").FindOne(ctx, filter).Decode(&result); err != nil {
+		fail("loading the Accept of " + requestID + ": " + err.Error())
+	}
+
+	fmt.Println(result.RawActivity.GetString(vocab.PropertyResult))
+}
+
+// countInbox prints how many activities in the domain's Inbox name the object, which proves an absence
+func countInbox(database string, objectURL string) {
+
+	requirePrefix(database)
+	client, ctx := connect()
+	defer client.Disconnect(ctx) //nolint:errcheck
+
+	count, err := client.Database(database).Collection("Inbox").CountDocuments(ctx, bson.M{"objectId": objectURL})
+
+	if err != nil {
+		fail("counting Inbox activities: " + err.Error())
+	}
+
+	fmt.Println(count)
+}
+
 /******************************************
  * ActivityPub helpers
  ******************************************/
@@ -440,6 +495,124 @@ func canReplyResult(document streams.Document, actorID string) string {
 	default:
 		return "Denied"
 	}
+}
+
+// quoteRequest signs a FEP-044f QuoteRequest with the actor's own key, read from the actor's database, and
+// POSTs it to the quoted note's author.  The quote post is inlined, as Mastodon does, and attributed to
+// attributedTo.  It prints the HTTP status of the delivery.
+func quoteRequest(database string, actorID string, noteURL string, quoteID string, attributedTo string) {
+
+	requirePrefix(database)
+	client, ctx := connect()
+	defer client.Disconnect(ctx) //nolint:errcheck
+
+	// Load the actor's private key.  Each domain here has one User, so it has one User key
+	var key struct {
+		PrivatePEM string `bson:"privatePEM"`
+	}
+
+	if err := client.Database(database).Collection("EncryptionKey").FindOne(ctx, bson.M{"parentType": "User", "deleteDate": 0}).Decode(&key); err != nil {
+		fail("loading the actor's key: " + err.Error())
+	}
+
+	block, _ := pem.Decode([]byte(key.PrivatePEM))
+	if block == nil {
+		fail("decoding the actor's key")
+	}
+
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		fail("parsing the actor's key: " + err.Error())
+	}
+
+	// Find the key's public ID, and the inbox of the note's author
+	keyID := streams.NewDocument(getJSON(actorID)).PublicKey().ID()
+	authorID := streams.NewDocument(getJSON(noteURL)).AttributedTo().ID()
+	inboxURL := streams.NewDocument(getJSON(authorID)).Inbox().ID()
+
+	if (keyID == "") || (inboxURL == "") {
+		fail("finding the key ID of " + actorID + " or the inbox of " + authorID)
+	}
+
+	// Build the QuoteRequest, with the quote post inlined
+	body, err := json.Marshal(mapof.Any{
+		vocab.AtContext:      []any{vocab.NamespaceActivityStreams, vocab.ContextTypeQuotePosts},
+		vocab.PropertyID:     quoteID + "#quote_request",
+		vocab.PropertyType:   vocab.ActivityTypeQuoteRequest,
+		vocab.PropertyActor:  actorID,
+		vocab.PropertyObject: noteURL,
+		vocab.PropertyInstrument: mapof.Any{
+			vocab.PropertyID:           quoteID,
+			vocab.PropertyType:         vocab.ObjectTypeNote,
+			vocab.PropertyAttributedTo: attributedTo,
+			vocab.PropertyContent:      "<p>Quoting " + noteURL + "</p>",
+			vocab.PropertyQuote:        noteURL,
+			vocab.PropertyTo:           []string{publicIRI},
+		},
+	})
+
+	if err != nil {
+		fail("encoding the QuoteRequest: " + err.Error())
+	}
+
+	// Sign and deliver it
+	request, err := http.NewRequest(http.MethodPost, inboxURL, bytes.NewReader(body))
+	if err != nil {
+		fail("building the request: " + err.Error())
+	}
+
+	request.Header.Set("Content-Type", "application/activity+json")
+	request.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
+
+	if err := sigs.Sign(request, keyID, privateKey); err != nil {
+		fail("signing the QuoteRequest: " + err.Error())
+	}
+
+	response, err := (&http.Client{Timeout: 30 * time.Second}).Do(request)
+	if err != nil {
+		fail("POST " + inboxURL + ": " + err.Error())
+	}
+
+	defer response.Body.Close()
+	_, _ = io.Copy(io.Discard, response.Body)
+
+	fmt.Println(response.StatusCode)
+}
+
+// checkAuthorization verifies a QuoteAuthorization the way Mastodon's verify_quote_service.rb does, and
+// prints the evidence either way
+func checkAuthorization(url string, noteURL string, quoteID string, authorID string) {
+
+	document := getJSON(url)
+	problems := make([]string, 0)
+
+	expected := map[string]string{
+		vocab.PropertyID:                url,
+		vocab.PropertyType:              vocab.ObjectTypeQuoteAuthorization,
+		vocab.PropertyAttributedTo:      authorID,
+		vocab.PropertyInteractingObject: quoteID,
+		vocab.PropertyInteractionTarget: noteURL,
+	}
+
+	for property, value := range expected {
+		if got, _ := document[property].(string); got != value {
+			problems = append(problems, property+" is \""+got+"\", want \""+value+"\"")
+		}
+	}
+
+	// The @context must declare the type and the gts: terms
+	contextJSON, _ := json.Marshal(document["@context"])
+	for _, term := range []string{`"QuoteAuthorization":"https://w3id.org/fep/044f#QuoteAuthorization"`, `"interactingObject":{"@id":"gts:interactingObject"`, `"interactionTarget":{"@id":"gts:interactionTarget"`} {
+		if !strings.Contains(string(contextJSON), term) {
+			problems = append(problems, "@context lacks "+term)
+		}
+	}
+
+	if len(problems) > 0 {
+		fail(strings.Join(problems, "; "))
+	}
+
+	fmt.Println("interactingObject=" + quoteID + ", interactionTarget=" + noteURL + ", attributedTo=" + authorID + ", terms declared")
 }
 
 /******************************************

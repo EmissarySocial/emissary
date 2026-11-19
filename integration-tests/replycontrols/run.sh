@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end test of Emissary's reply controls (emissary-specs REPLY-CONTROLS).  See README.md.
+# End-to-end test of Emissary's reply controls (emissary-specs REPLY-CONTROLS) and quote approvals (FEP-044f).  See README.md.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -242,6 +242,30 @@ composer_state() {
 	else echo "neither"; fi
 }
 
+# starts_with VALUE PREFIX succeeds when VALUE begins with PREFIX
+starts_with() { [[ "$1" == "$2"* ]]; }
+
+# is_2xx CODE succeeds for any HTTP success status
+is_2xx() { [[ "$1" =~ ^2[0-9][0-9]$ ]]; }
+
+# http_status URL prints the HTTP status of an ActivityPub GET
+http_status() {
+	curl -s -m 10 -o /dev/null -w '%{http_code}' -H 'Accept: application/activity+json' "$1" || true
+}
+
+# quote_as_bob QUOTE_ID ATTRIBUTED_TO URL delivers a QuoteRequest signed with Bob's key, and prints the HTTP status
+quote_as_bob() {
+	"$HELPER" quote-request "$DB_B" "$BOB_ID" "$3" "$1" "$2"
+}
+
+# reject_quote_query prints the query string of the first Reject button on Alice's Messages & Replies list
+reject_quote_query() {
+	local html
+	html=$(curl -s -m 30 -b "$JAR_A" -H 'HX-Request: true' "$A/@me/notifications/replies-list" || true)
+	grep -q 'quoted your post' <<<"$html" || return 0
+	grep -oE 'reject-quote\?collectionItemId=[0-9a-f]{24}' <<<"$html" | head -1 | cut -d'?' -f2
+}
+
 #############################################
 # Seed
 #############################################
@@ -368,6 +392,74 @@ composer=$(composer_state "$S1_URL")
 diag=$("$HELPER" diagnose-cache "$DB_COMMON" "$S1_URL" "$BOB_ID" 2>&1 || true)
 check "4e reopened: Reply button shown" "button=$button; canReply for Bob: $diag" test "$button" == "shown"
 check "4f reopened: composer offered" "composer=$composer" test "$composer" == "form"
+
+#############################################
+# 5. Quote posts (FEP-044f)
+#############################################
+
+echo
+echo "== 5. Quotes of S1 (open), each QuoteRequest signed with Bob's own key"
+
+# Q1 is a real post on Bob's server, because a rejection looks up the quoting actor from the quote post itself
+Q1="$(reply_as_bob "$S1_URL" "<p>Quote post $RUN_ID</p>")"
+log "Q1 = $Q1"
+code=$(quote_as_bob "$Q1" "$BOB_ID" "$S1_URL")
+check "5a open: QuoteRequest received" "HTTP $code" test "$code" == "200"
+
+"$HELPER" wait-inbox "$DB_B" "$Q1#quote_request" 30 || die "the Accept of $Q1 never reached Bob's inbox"
+"$HELPER" wait-queue-idle "$DB_COMMON" 30 || die "the queue did not drain after $Q1"
+STAMP=$("$HELPER" accept-result "$DB_B" "$Q1#quote_request")
+check "5b open: Accept names an authorization" "result = $STAMP" starts_with "$STAMP" "$S1_URL/pub/quoteAuthorization/"
+
+if out=$("$HELPER" check-authorization "$STAMP" "$S1_URL" "$Q1" "$ALICE_ID" 2>&1); then pass "5c open: QuoteAuthorization verifies" "$out"
+else fail "5c open: QuoteAuthorization verifies" "$out"; fi
+
+count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q1")
+check "5d open: author notified" "$count QUOTE notification(s) for Q1" test "$count" == "1"
+
+REJECT_QUERY=$(reject_quote_query)
+check "5e open: Reject button drawn" "query = '$REJECT_QUERY'" test -n "$REJECT_QUERY"
+
+Q_FORGED="$B/quotes/$RUN_ID-forged"
+code=$(quote_as_bob "$Q_FORGED" "$B/@someone-else" "$S1_URL")
+count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q_FORGED")
+check "5f forged: someone else's post refused" "HTTP $code, $count QUOTE notification(s)" test "$code/$count" == "422/0"
+
+echo
+echo "== 5. Quotes CLOSED on S1"
+
+set_policy "$S1" nobody "<p>$NOTE_TEXT</p>"
+
+status=$(http_status "$STAMP")
+check "5g closed: authorization withdrawn" "GET = HTTP $status" test "$status" == "404"
+
+Q2="$B/quotes/$RUN_ID-2"
+code=$(quote_as_bob "$Q2" "$BOB_ID" "$S1_URL")
+"$HELPER" wait-queue-idle "$DB_COMMON" 30 || die "the queue did not drain after $Q2"
+answers=$("$HELPER" count-inbox "$DB_B" "$Q2#quote_request")
+count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q2")
+check "5h closed: refused silently" "HTTP $code, $answers answer(s) to Bob, $count QUOTE notification(s)" test "$code/$answers/$count" == "200/0/0"
+
+set_policy "$S1" everyone "<p>$NOTE_TEXT</p>"
+
+status=$(http_status "$STAMP")
+check "5i reopened: authorization served again" "GET = HTTP $status" test "$status" == "200"
+
+echo
+echo "== 5. Alice rejects Q1 from its notification"
+
+code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' -X POST \
+	"$A/@me/notifications/reject-quote?$REJECT_QUERY" || true)
+check "5j rejected: action succeeds" "HTTP $code" is_2xx "$code"
+
+if "$HELPER" wait-inbox "$DB_B" "$STAMP" 30; then pass "5k rejected: Delete reached Bob" "Bob's inbox holds a Delete of $STAMP"
+else fail "5k rejected: Delete reached Bob" "no Delete of $STAMP in Bob's inbox"; fi
+
+status=$(http_status "$STAMP")
+check "5l rejected: authorization withdrawn" "GET = HTTP $status" test "$status" == "404"
+
+count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q1")
+check "5m rejected: notification removed" "$count QUOTE notification(s) for Q1" test "$count" == "0"
 
 #############################################
 # Summary
