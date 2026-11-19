@@ -1108,6 +1108,9 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 	case *model.Circle:
 		return factory.Circle()
 
+	case *model.CollectionItem:
+		return factory.CollectionItem()
+
 	case *model.Folder:
 		return factory.Folder()
 

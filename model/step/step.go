@@ -280,6 +280,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "with-circle":
 		return NewWithCircle(stepInfo, funcMap)
 
+	case "with-collection-item":
+		return NewWithCollectionItem(stepInfo, funcMap)
+
 	case "with-draft":
 		return NewWithDraft(stepInfo, funcMap)
 

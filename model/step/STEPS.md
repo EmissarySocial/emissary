@@ -1980,6 +1980,35 @@ Switches to the Circle named by the request and runs `steps` against its Builder
 
 ---
 
+## with-collection-item
+
+Switches to one CollectionItem that the signed-in User owns, and runs `steps` against its Builder. The `collectionItemId` query parameter names the item. An item owned by anyone else, or of any other collection type, is reported as not found. On `POST`, an item that is already gone is passed on empty, so that deleting it twice still succeeds.
+
+Deleting a `Quotes` item rejects that quote: it revokes the FEP-044f `QuoteAuthorization`, removes the author's QUOTE notification, and queues a `Delete` of the authorization for the quoting actor and the author's followers. No other collection type has delete side effects yet.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| type | **Required.** The one collection type this step works on, such as `Quotes` |
+| steps | **Required.** Sub-pipeline run against the CollectionItem Builder |
+
+<br>
+
+**Example**
+
+```hjson
+{
+	do: "with-collection-item"
+	type: "Quotes"
+	steps: [
+		{do: "delete", method: "post"}
+	]
+}
+```
+
+---
+
 ## with-draft
 
 Switches to the current Stream's draft and runs `steps` against its Builder. Requires the `Stream` model. This is the only `with-*` step that propagates its sub-steps' state requirements, since a draft shares its Stream's state machine.
