@@ -131,6 +131,18 @@
 			]
 		}
 
+		// Rejects one quote of the User's posts, by deleting the CollectionItem (?collectionItemId=) that approves it
+		reject-quote: {
+			roles:["self"]
+			steps:[
+				{do:"with-collection-item", type:"Quotes", steps:[
+					{do:"delete", method:"post"}
+				]}
+				{do:"trigger-event", event:"refreshSidebar"}
+				{do:"trigger-event", event:"refreshPage"}
+			]
+		}
+
 		// Header fragment (title / mobile tabs, "Mark All Read", with unread counts),
 		// re-fetched on refreshSidebar.
 		header: {

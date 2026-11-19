@@ -194,6 +194,27 @@ func (w Notifications) LabelNotifications(notifications sliceof.Object[model.Not
 	return notifications
 }
 
+// QuoteItemID returns the ID of the CollectionItem that approves the quote a QUOTE Notification
+// announces, or an empty string when that quote is no longer approved.
+func (w Notifications) QuoteItemID(notification model.Notification) string {
+
+	const location = "build.Notifications.QuoteItemID"
+
+	collectionItem := model.NewCollectionItem()
+
+	if err := w.factory().Locator().CollectionItem(w.session(), notification.StreamID, model.CollectionTypeQuotes, notification.ObjectURL, &collectionItem); err != nil {
+
+		// A quote that was rejected, or whose Stream is gone, has no item, which is not a failure
+		if !derp.IsNotFound(err) {
+			derp.Report(derp.Wrap(err, location, "Locating quote", notification.NotificationID))
+		}
+
+		return ""
+	}
+
+	return collectionItem.CollectionItemID.Hex()
+}
+
 // UnreadNotificationCount returns the number of unread Notifications in the provided
 // notifications-page section (using the same type expansion as the section filter).  Errors are
 // reported and render as zero — a count badge must never fail the page.
@@ -216,8 +237,8 @@ func (w Notifications) UnreadNotificationCount(notificationType string) int64 {
 // notificationTabTypes expands the notifications-page "type" query param into the list of
 // notification types that section displays.  Grouped sections cast wide nets: MENTION includes
 // replies and direct messages (the classification ladder is DIRECT > REPLY > MENTION, so without
-// the expansion those would be invisible — there is no Replies section and no Messages section),
-// and LIKE includes dislikes (too rare for a section of their own).  ANNOUNCE passes through
+// the expansion those would be invisible — there is no Replies section and no Messages section)
+// and quotes, and LIKE includes dislikes (too rare for a section of their own).  ANNOUNCE passes through
 // unexpanded as the "Shares" section.  An empty section name returns nil, meaning "all types".
 //
 // This helper (and notificationTypeFilter below) is package-level because both the Notifications
@@ -230,7 +251,7 @@ func notificationTabTypes(notificationType string) []string {
 		return nil
 
 	case model.NotificationTypeMention:
-		return []string{model.NotificationTypeMention, model.NotificationTypeReply, model.NotificationTypeDirect}
+		return []string{model.NotificationTypeMention, model.NotificationTypeReply, model.NotificationTypeDirect, model.NotificationTypeQuote}
 
 	case model.NotificationTypeLike:
 		return []string{model.NotificationTypeLike, model.NotificationTypeDislike}
