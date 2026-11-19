@@ -82,6 +82,16 @@ A missing case in `PreProcessor` is silent: the name falls through, `Priority` k
 
 [purgeNotifications.go](purgeNotifications.go) ages out read and unread notifications alike at 90 days (deliberate — do not "fix" unread being purged) and then trims each User to `notificationCapPerUser` (2000) as a flood backstop, deleting read rows before unread. The cap is enforced here, in the daily task, and NOT in the notification hot path — that placement is a decision (see `emissary-specs/NOTIFICATION-FLOOD-CONTROL.md`), not an oversight. `PurgeOverCap` treats a non-positive cap as disabled so a misconfiguration cannot wipe the collection.
 
+## `SendNotificationEmails` runs outside a transaction, and never returns one User's failure
+
+[sendNotificationEmails.go](sendNotificationEmails.go) runs once an hour for each Domain and emails every User who is owed a list of unread notifications (emissary-specs NOTIFICATION-IMPROVEMENTS §1.7). Three rules hold it together:
+
+- **No transaction.** It is registered with `WithFactory` and opens a plain session. Inside `WithSession`, one failed User would roll back every claim made in the run while the emails already sent stay sent, and every one of those Users would be mailed again an hour later. A transaction would also turn a lost claim into a write conflict, which reruns the whole handler.
+- **The claim comes before the send.** `Notification.EmailUnread` moves the User's watermark with one conditional update, and sends only if that update matched. Two servers running the task at the same moment therefore send one email between them. A failed send moves the watermark back.
+- **One User's failure is reported, and the task still succeeds.** Returning the error would retry the Domain. The error names the User by ID, never by email address.
+
+A Domain with no SMTP connection is skipped before anything is claimed, so its Users get their email once it is configured.
+
 ## Import fetches are origin-gated — the rule lives in service/AGENTS.md
 
 [importStartup.go](importStartup.go) skips cross-origin documents at item creation and [importItems.go](importItems.go) re-checks `uri.NotSameOrigin` at the fetch sink so the user's source-scoped OAuth Bearer token can never travel off-origin. The full reasoning (and the service-side gates) is in [../service/AGENTS.md](../service/AGENTS.md) — keep both check sites; the duplication is belt-and-suspenders, not redundancy.

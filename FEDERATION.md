@@ -262,11 +262,17 @@ Actors publish `discoverable`, which is always true, and `indexable`, which foll
 
 ### GoToSocial's `interactionPolicy`
 
-Each Stream publishes `canReply.automaticApproval`: Public, or only its author when replies are closed. Emissary never publishes `manualApproval`, because it does not answer a `ReplyRequest`. It also reads other servers' policies, and hides its reply button where a policy refuses the user.
+Each Stream publishes `canReply.automaticApproval` and `canQuote.automaticApproval`: Public, or only its author when replies are closed. Whoever may reply may also quote. Emissary never publishes `manualApproval`, because it does not answer a `ReplyRequest`. It also reads other servers' policies, and hides its reply button where a policy refuses the user.
 
 ### Quote posts
 
-Emissary reads `quoteUrl`, `quoteUri`, `_misskey_quote`, and [FEP-e232](https://w3id.org/fep/e232) `Link` tags whose `rel` names a quote, but only to hide posts that quote an account the user has blocked or muted.
+**Being quoted:** Emissary answers a [FEP-044f](https://w3id.org/fep/044f) `QuoteRequest` for any public Stream that accepts replies. The quote post must be written by the signed actor, live on that actor's origin, and quote the Stream. Emissary then sends an `Accept` whose `result` is a `QuoteAuthorization` served at `/:stream/pub/quoteAuthorization/:id`, and notifies the author. Every refusal is silent: no `Reject` is sent.
+
+**Revoking:** The author can reject a quote from their notifications. Emissary then sends a `Delete` of the `QuoteAuthorization` to the quoting actor and the author's followers, and the authorization URL answers 404. Closing replies on a Stream makes every one of its authorizations answer 404 until replies reopen.
+
+**Not yet:** Emissary does not publish quote posts of its own, and does not verify the authorization of a quote that it receives.
+
+**Reading:** Emissary reads `quoteUrl`, `quoteUri`, `_misskey_quote`, and [FEP-e232](https://w3id.org/fep/e232) `Link` tags whose `rel` names a quote, but only to hide posts that quote an account the user has blocked or muted.
 
 ### The `emissary:` namespace
 
@@ -355,6 +361,10 @@ This document 🥸
 #### [FEP-1b12: Group Federation](https://w3id.org/fep/1b12)
 
 Stream rebroadcasting is available to templates as Content Actors.
+
+#### [FEP-044f: Consent-respecting quote posts](https://w3id.org/fep/044f)
+
+Emissary approves and revokes quotes of its own posts. It does not publish quotes or verify the ones it receives.
 
 #### [FEP-e232: Object Links](https://w3id.org/fep/e232)
 

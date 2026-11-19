@@ -158,6 +158,9 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case service.TaskSendDeleteQuoteAuthorization:
 		return WithSession(consumer.serverFactory, args, SendDeleteQuoteAuthorization)
 
+	case "SendNotificationEmails":
+		return WithFactory(consumer.serverFactory, args, SendNotificationEmails)
+
 	case "SendSearchResult":
 		return WithSession(consumer.serverFactory, args, SendSearchResult)
 

@@ -154,6 +154,9 @@ func PreProcessor(task *queue.Task) error {
 	case "PurgeStagedUploads":
 		task.Priority = 1024
 
+	case "SendNotificationEmails":
+		task.Priority = 1024
+
 	case "RecycleDomain":
 		task.Priority = 1024
 	}

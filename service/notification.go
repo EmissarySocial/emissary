@@ -24,6 +24,7 @@ type Notification struct {
 	ruleService      *Rule
 	streamService    *Stream
 	userService      *User
+	emailService     notificationEmailer
 	queue            *queue.Queue
 	host             string
 }
@@ -43,6 +44,7 @@ func (service *Notification) Refresh(factory *Factory) {
 	service.ruleService = factory.Rule()
 	service.streamService = factory.Stream()
 	service.userService = factory.User()
+	service.emailService = factory.Email()
 	service.queue = factory.Queue()
 	service.host = factory.Host()
 }

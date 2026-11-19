@@ -15,7 +15,7 @@
 			{{- icon "bell" -}}
 		{{- end }}
 	</span>
-	<span>All</span>
+	<span>All Notifications</span>
 	{{- if gt $allCount 0 -}}
 		<span class="menu-count">{{if gt $allCount 99}}99+{{else}}{{$allCount}}{{end}}</span>
 	{{- end -}}
@@ -29,7 +29,7 @@
 			{{- icon "chat" -}}
 		{{- end }}
 	</span>
-	<span>Messages &amp; Replies</span>
+	<span>Mentions</span>
 	{{- if gt $mentionCount 0 -}}
 		<span class="menu-count">{{if gt $mentionCount 99}}99+{{else}}{{$mentionCount}}{{end}}</span>
 	{{- end -}}
@@ -91,7 +91,7 @@
 	{{- end -}}
 </a>
 
-<div class="margin-vertical"></div>
+<div class="margin-vertical-lg"><hr></div>
 
 <a href="/@me/settings/notifications" class="turboclick menu-item ellipsis">
 	<span>{{icon "settings"}}</span>

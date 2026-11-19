@@ -1,0 +1,7 @@
+{
+    emailId: user-notifications
+    emailRole: user-notifications
+    model: User
+    to: "{{.Email}}"
+    subject: "{{.CountLabel}} on {{.Domain_Name}}"
+}

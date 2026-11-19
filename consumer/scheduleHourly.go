@@ -17,6 +17,9 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 	// Hourly tasks for each domain
 	for factory := range serverFactory.RangeDomains() {
 
+		// Email the Users who have left notifications unread for longer than they chose
+		q.NewTask("SendNotificationEmails", mapof.Any{"hostname": factory.Hostname()})
+
 		// Schedule "PollFollowing-Index" tasks every four hours, starting at 1am.
 		if isHour(4, 1) {
 			q.NewTask("PollFollowing-Index", mapof.Any{"hostname": factory.Hostname()})
