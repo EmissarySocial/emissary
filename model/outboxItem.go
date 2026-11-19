@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal"
-	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -91,7 +91,8 @@ func (item OutboxItem) IsVisibleTo(permissions Permissions, actorURL string) boo
 		return false
 	}
 
-	if actorURL == item.Activity.GetString(vocab.PropertyActor) {
+	// The actor is read as a reference, so an activity that embeds its actor still admits its publisher
+	if actorURL == streams.NewDocument(item.Activity).ActorID() {
 		return true
 	}
 
@@ -106,11 +107,10 @@ func (item *OutboxItem) CalcRecipients() {
 
 	recipients := mapof.NewBool()
 
-	// Collect named recipients from all properties (ignore duplicates)
-	for _, property := range []string{vocab.PropertyTo, vocab.PropertyCC, vocab.PropertyBTo, vocab.PropertyBCC} {
-		for _, recipient := range item.Activity.GetSliceOfString(property) {
-			recipients[recipient] = true
-		}
+	// Collect named recipients from all properties (ignore duplicates). A recipient written as an
+	// object counts by its id, and one with no id names no one.
+	for _, recipient := range streams.NewDocument(item.Activity).Recipients() {
+		recipients[recipient] = true
 	}
 
 	// Set the value back into the Activity

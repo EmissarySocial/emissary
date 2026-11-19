@@ -456,6 +456,6 @@ func TestResponse_ReactionAudience(t *testing.T) {
 	test("a Like reaches its author alone", vocab.ActivityTypeLike, authorURL, []string{authorURL}, []string{})
 	test("a Dislike reaches its author alone", vocab.ActivityTypeDislike, authorURL, []string{authorURL}, []string{})
 	test("a Like with no author reaches no one", vocab.ActivityTypeLike, "", []string{}, []string{})
-	test("an Announce is public, and reaches followers and the author", vocab.ActivityTypeAnnounce, authorURL, []string{vocab.NamespacePublic}, []string{"https://example.com/@sarah/pub/followers", authorURL})
-	test("an Announce with no author still reaches followers", vocab.ActivityTypeAnnounce, "", []string{vocab.NamespacePublic}, []string{"https://example.com/@sarah/pub/followers"})
+	test("an Announce is public, and reaches followers and the author", vocab.ActivityTypeAnnounce, authorURL, []string{vocab.NamespaceActivityStreamsPublic}, []string{"https://example.com/@sarah/pub/followers", authorURL})
+	test("an Announce with no author still reaches followers", vocab.ActivityTypeAnnounce, "", []string{vocab.NamespaceActivityStreamsPublic}, []string{"https://example.com/@sarah/pub/followers"})
 }

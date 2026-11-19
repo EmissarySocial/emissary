@@ -162,7 +162,7 @@ func (service *Outbox2) PublishAnnounce(session data.Session, actorType string, 
 		vocab.PropertyActor:     actorURL,
 		vocab.PropertyObject:    object.Map(),
 		vocab.PropertyPublished: datetime.Now(),
-		vocab.PropertyTo:        []string{vocab.NamespacePublic},
+		vocab.PropertyTo:        []string{vocab.NamespaceActivityStreamsPublic},
 		vocab.PropertyCC:        []string{service.locator.FollowersURL(actorType, actorID)},
 	})
 
@@ -213,7 +213,7 @@ func addFollowersToPublic(addressing mapof.Any, followersURL string) {
 	recipients := make([]string, 0)
 
 	for _, name := range addressingProperties {
-		recipients = append(recipients, addressing.GetSliceOfString(name)...)
+		recipients = append(recipients, addressIDs(addressing, name)...)
 	}
 
 	// RULE: Followers learn of a Delete only when the original was theirs to see. Adding them to
@@ -226,7 +226,7 @@ func addFollowersToPublic(addressing mapof.Any, followersURL string) {
 		return
 	}
 
-	addressing[vocab.PropertyCC] = append(addressing.GetSliceOfString(vocab.PropertyCC), followersURL)
+	addressing[vocab.PropertyCC] = append(addressIDs(addressing, vocab.PropertyCC), followersURL)
 }
 
 // copyAddressing copies each addressing property that the source holds onto the target
@@ -234,12 +234,29 @@ func copyAddressing(target mapof.Any, source mapof.Any) {
 
 	for _, name := range addressingProperties {
 
-		recipients := source.GetSliceOfString(name)
+		recipients := addressIDs(source, name)
 
 		if len(recipients) == 0 {
 			continue
 		}
 
-		target[name] = slices.Clone(recipients)
+		target[name] = recipients
 	}
+}
+
+// addressIDs returns the recipients that one addressing property names, in a new slice, with Public
+// written as the full IRI. A recipient written as an object counts by its id; one with no id names no one.
+func addressIDs(activity mapof.Any, name string) []string {
+
+	recipients := streams.NewDocument(activity).Get(name).IDs()
+
+	// RULE: Public goes out as the full IRI, the only spelling every receiver reads as public. Rows
+	// stored before OUTBOX2-OMNIBUS O6 say "Public", and a Delete or Undo copies its addressing from them.
+	for index, recipient := range recipients {
+		if isPublicURI(recipient) {
+			recipients[index] = vocab.NamespaceActivityStreamsPublic
+		}
+	}
+
+	return recipients
 }

@@ -21,7 +21,7 @@ func (service *Stream) Addressing(stream *model.Stream, actorType string, actorI
 	// RULE: A public Stream names Public, and copies the sender's followers so that they receive it
 	if stream.DefaultAllow.IsAnonymous() {
 
-		to = append(to, vocab.NamespacePublic)
+		to = append(to, vocab.NamespaceActivityStreamsPublic)
 
 		// RULE: An actor with no ID has no followers to name, as a Stream with no author does not
 		if actorID.IsZero() {

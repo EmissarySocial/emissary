@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
+	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -229,6 +230,29 @@ func TestOutbox2_Import_Refuses(t *testing.T) {
 	require.Zero(t, countOutbox2(t, test.session))
 }
 
+// TestOutbox2_Import_RefusesMissingActivity verifies that a document with no activity is refused
+// as a bad request, and stores nothing
+func TestOutbox2_Import_RefusesMissingActivity(t *testing.T) {
+
+	// O17: JSON `null` left the activity a nil map, and saveImported panicked writing its new id.
+	// turbine recovers a panic, and a panicking task reaches no hook, so the import item recorded nothing.
+	test := newOutbox2ImportTest(t)
+
+	for name, document := range map[string]string{
+		"null":    `{"actorType":"User","activity":null}`,
+		"empty":   `{"actorType":"User","activity":{}}`,
+		"missing": `{"actorType":"User"}`,
+	} {
+		importItem := model.NewImportItem()
+
+		err := test.service.Import(test.session, nil, &importItem, &test.user, []byte(document))
+		require.Error(t, err, name)
+		require.True(t, derp.IsBadRequest(err), name)
+	}
+
+	require.Zero(t, countOutbox2(t, test.session))
+}
+
 // TestOutbox2_UndoImport verifies that undoing removes the imported activity, only from its
 // importer's outbox, and that undoing twice succeeds
 func TestOutbox2_UndoImport(t *testing.T) {
@@ -300,7 +324,7 @@ func TestOutbox2_LegacyImporter(t *testing.T) {
 		require.Equal(t, vocab.ActivityTypeCreate, item.ActivityType)
 		require.Equal(t, localObject, item.ObjectID)
 		require.Equal(t, test.actor(), item.Activity.GetString(vocab.PropertyActor))
-		require.Equal(t, []string{vocab.NamespacePublic}, item.Activity.GetSliceOfString(vocab.PropertyTo))
+		require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, item.Activity.GetSliceOfString(vocab.PropertyTo))
 		require.Equal(t, model.NewAnonymousPermissions(), item.Permissions)
 		require.Equal(t, int64(1_500_000_000_000), item.CreateDate, "an export with no date takes the Stream's publish date")
 		require.Empty(t, test.tasks.Drain())

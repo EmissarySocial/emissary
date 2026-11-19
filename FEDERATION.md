@@ -184,6 +184,14 @@ An `inbox` on a different host from its actor receives nothing.
 
 Recipients named in `bto` and `bcc` receive the activity, but both properties are removed from every copy, at every level.
 
+#### Public addressing
+
+Emissary names the public audience as `https://www.w3.org/ns/activitystreams#Public`, the only spelling that every server reads as public. Activities stored before 2026-11-19 may name it as `Public`, and a `Delete` or `Undo` of one names it in full. Emissary reads all three spellings in what it receives.
+
+#### Activities posted by a client
+
+An activity posted to a User's outbox that names no one in `to`, `cc`, `bto`, or `bcc` is refused with `400 Bad Request`. Emissary handles some types itself and does not refuse them: a `Create` or `Update` of a `Note` or `Article`, a `Create` of an `OrderedCollection`, and a `Create`, `Update`, `Delete`, `Add`, or `Remove` of a `KeyPackage`.
+
 #### Rate limits
 
 A `429` reschedules the delivery after its `Retry-After`, or after one minute when it has none, and waits at most an hour. It does not count as a failure, but a delivery that is still rate limited after seven days is dropped.

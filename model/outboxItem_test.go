@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"strconv"
 	"testing"
 
@@ -190,4 +191,119 @@ func TestOutboxItem_IsVisibleTo(t *testing.T) {
 	// An item with no actor and no recipients never matches an empty viewer
 	empty := NewOutboxItem()
 	require.False(t, empty.IsVisibleTo(anonymous, ""))
+}
+
+// TestOutboxItem_IsVisibleTo_EmbeddedActor verifies that an activity which embeds its actor as an
+// object still admits its publisher, and nobody else by that route
+func TestOutboxItem_IsVisibleTo_EmbeddedActor(t *testing.T) {
+
+	// O8: the actor was read with GetString, which returns "" for an object, so the publisher of
+	// a private activity that embedded its actor could not read it back
+	const author = "https://example.com/@author"
+
+	item := NewOutboxItem()
+	item.Activity = mapof.Any{
+		vocab.PropertyActor: mapof.Any{vocab.PropertyID: author, vocab.PropertyType: vocab.ActorTypePerson},
+		vocab.PropertyTo:    []string{"https://remote.example/@recipient"},
+	}
+	item.CalcRecipients()
+
+	require.True(t, item.IsVisibleTo(NewAnonymousPermissions(), author))
+	require.False(t, item.IsVisibleTo(NewAnonymousPermissions(), "https://remote.example/@stranger"))
+
+	// An embedded actor with no id names no one, so it admits no one
+	item.Activity[vocab.PropertyActor] = mapof.Any{vocab.PropertyType: vocab.ActorTypePerson}
+	require.False(t, item.IsVisibleTo(NewAnonymousPermissions(), author))
+}
+
+// TestOutboxItem_CalcRecipients verifies that every addressing property is read, that a recipient
+// written as an object counts by its id, and that nothing empty or repeated is stored
+func TestOutboxItem_CalcRecipients(t *testing.T) {
+
+	// test checks the recipients calculated for one activity
+	test := func(name string, activity mapof.Any, expected ...string) {
+		t.Run(name, func(t *testing.T) {
+			item := NewOutboxItem()
+			item.Activity = activity
+			item.CalcRecipients()
+			require.ElementsMatch(t, expected, []string(item.Recipients))
+		})
+	}
+
+	test("strings in every property",
+		mapof.Any{"to": []any{"https://a.example/1"}, "cc": "https://a.example/2", "bto": []string{"https://a.example/3"}, "bcc": []any{"https://a.example/4"}},
+		"https://a.example/1", "https://a.example/2", "https://a.example/3", "https://a.example/4")
+
+	// O3: a recipient written as an object was stored as an empty string, so it could not read
+	// the activity back
+	test("objects count by their id",
+		mapof.Any{"to": []any{mapof.Any{"id": "https://a.example/1", "type": "Person"}, "https://a.example/2"}, "cc": map[string]any{"id": "https://a.example/3"}},
+		"https://a.example/1", "https://a.example/2", "https://a.example/3")
+
+	test("an object with no id names no one",
+		mapof.Any{"to": []any{mapof.Any{"type": "Person"}, "https://a.example/1"}},
+		"https://a.example/1")
+
+	test("repeats are stored once",
+		mapof.Any{"to": []any{"https://a.example/1", mapof.Any{"id": "https://a.example/1"}}, "bcc": "https://a.example/1"},
+		"https://a.example/1")
+
+	test("an activity with no addressing has no recipients", mapof.Any{"type": "Create"})
+	test("a nil activity has no recipients", nil)
+	test("other properties are not addressing", mapof.Any{"audience": "https://a.example/1", "actor": "https://a.example/2"})
+}
+
+// TestOutboxItem_CalcRecipients_ObjectRecipientReads verifies that a recipient written as an object
+// can read the activity back
+func TestOutboxItem_CalcRecipients_ObjectRecipientReads(t *testing.T) {
+
+	item := NewOutboxItem()
+	item.Activity = mapof.Any{
+		vocab.PropertyActor: "https://example.com/@author",
+		vocab.PropertyTo:    []any{mapof.Any{vocab.PropertyID: "https://remote.example/@recipient"}},
+	}
+	item.CalcRecipients()
+
+	require.True(t, item.IsVisibleTo(NewAnonymousPermissions(), "https://remote.example/@recipient"))
+	require.False(t, item.IsVisibleTo(NewAnonymousPermissions(), ""))
+}
+
+// FuzzOutboxItem_CalcRecipients verifies that any JSON activity calculates recipients without
+// panicking, stores no empty recipient and no repeat, and answers visibility without panicking
+func FuzzOutboxItem_CalcRecipients(f *testing.F) {
+
+	f.Add(`{"actor":"https://example.com/@a","to":["https://b.example/1"],"cc":"https://b.example/2"}`, "https://b.example/1")
+	f.Add(`{"actor":{"id":"https://example.com/@a"},"to":[{"id":"https://b.example/1"},{"type":"Person"}]}`, "https://example.com/@a")
+	f.Add(`{"to":[[["nested"]]],"bcc":{"id":{"id":"x"}},"bto":null}`, "x")
+	f.Add(`{"to":[1,true,null,{}],"cc":[""]}`, "")
+	f.Add(`null`, "")
+
+	f.Fuzz(func(t *testing.T, document string, viewer string) {
+
+		activity := mapof.NewAny()
+
+		if err := json.Unmarshal([]byte(document), &activity); err != nil {
+			return
+		}
+
+		item := NewOutboxItem()
+		item.Activity = activity
+		item.CalcRecipients()
+
+		seen := map[string]bool{}
+
+		for _, recipient := range item.Recipients {
+			require.NotEmpty(t, recipient)
+			require.False(t, seen[recipient], "repeated recipient %q", recipient)
+			seen[recipient] = true
+		}
+
+		// Any viewer is answered without panicking
+		_ = item.IsVisibleTo(NewPermissions(), viewer)
+
+		// RULE: An unsigned viewer never matches anything but permissions
+		if viewer == "" {
+			require.False(t, item.IsVisibleTo(NewPermissions(), viewer))
+		}
+	})
 }

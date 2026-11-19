@@ -596,7 +596,7 @@ func (service *Response) reactionAudience(user *model.User, response *model.Resp
 	// RULE: An Announce is a public broadcast, which also reaches the author
 	if response.Type == vocab.ActivityTypeAnnounce {
 
-		activity[vocab.PropertyTo] = []string{vocab.NamespacePublic}
+		activity[vocab.PropertyTo] = []string{vocab.NamespaceActivityStreamsPublic}
 
 		cc := []string{user.ActivityPubFollowersURL()}
 		if authorURL != "" {
