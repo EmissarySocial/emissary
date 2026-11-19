@@ -1,51 +1,47 @@
-{{- /* Header row shared by the four notification section pages: the section's title and a
-       per-type "Mark All Read" button.  On desktop the section links live in the sidebar
-       (menu.html); on mobile — where the sidebar is hidden — this header
-       renders them as tabs instead.  Rendered inline by each section page (which bakes its
-       ?type= into the request), and re-fetched (via the header action, with
-       an explicit ?type=) on refreshSidebar so the counts stay current when notifications
-       arrive over SSE or are marked read. */ -}}
+<!-- The header of every notification page: "Mark All Read", and the tabs on mobile. It draws no title. Re-fetched on refreshSidebar. See AGENTS.md. -->
 {{- $isMobile := .IsMobile -}}
 {{- $type := first (.QueryParam "type") "MENTION" -}}
+{{- $allCount := .UnreadNotificationCount "ALL" -}}
 {{- $mentionCount := .UnreadNotificationCount "MENTION" -}}
+{{- $quoteCount := .UnreadNotificationCount "QUOTE" -}}
 {{- $announceCount := .UnreadNotificationCount "ANNOUNCE" -}}
 {{- $likeCount := .UnreadNotificationCount "LIKE" -}}
 {{- $followCount := .UnreadNotificationCount "FOLLOW" -}}
 
 {{- $currentCount := $mentionCount -}}
-{{- $currentLabel := "Messages & Replies" -}}
+{{- if eq $type "ALL" -}}
+	{{- $currentCount = $allCount -}}
+{{- end -}}
+{{- if eq $type "QUOTE" -}}
+	{{- $currentCount = $quoteCount -}}
+{{- end -}}
 {{- if eq $type "ANNOUNCE" -}}
 	{{- $currentCount = $announceCount -}}
-	{{- $currentLabel = "Boosts" -}}
 {{- end -}}
 {{- if eq $type "LIKE" -}}
 	{{- $currentCount = $likeCount -}}
-	{{- $currentLabel = "Likes" -}}
 {{- end -}}
 {{- if eq $type "FOLLOW" -}}
 	{{- $currentCount = $followCount -}}
-	{{- $currentLabel = "Followers" -}}
 {{- end -}}
 
-{{- /* An empty section shows its list's welcome (replies-list.html and the others), which names the section itself,
-       so on desktop this header draws nothing until the section has a notification.  On mobile it stays: it holds
-       the section tabs.  The header is re-fetched on every new notification, so the title returns on its own. */ -}}
-{{- $showHeader := true -}}
-{{- if not $isMobile -}}
-	{{- $showHeader = .Notifications.Top1.Slice.NotEmpty -}}
+<!-- RULE: The sidebar names the tab on desktop, so this header draws nothing there unless something is unread -->
+{{- $showHeader := gt $currentCount 0 -}}
+{{- if $isMobile -}}
+	{{- $showHeader = true -}}
 {{- end -}}
 
 {{- if $showHeader -}}
 <div class="flex-row">
 	{{- if $isMobile -}}
 		<div role="tablist" class="underlined margin-bottom" hx-boost="true" hx-target="main" hx-push-url="true">
+			<a href="/@me/notifications/all" role="tab" class="tab {{if eq $type `ALL`}}selected{{end}}">All{{if gt $allCount 0}} <span class="tab-count">{{if gt $allCount 99}}99+{{else}}{{$allCount}}{{end}}</span>{{end}}</a>
 			<a href="/@me/notifications/replies" role="tab" class="tab {{if eq $type `MENTION`}}selected{{end}}">Messages &amp; Replies{{if gt $mentionCount 0}} <span class="tab-count">{{if gt $mentionCount 99}}99+{{else}}{{$mentionCount}}{{end}}</span>{{end}}</a>
+			<a href="/@me/notifications/quotes" role="tab" class="tab {{if eq $type `QUOTE`}}selected{{end}}">Quotes{{if gt $quoteCount 0}} <span class="tab-count">{{if gt $quoteCount 99}}99+{{else}}{{$quoteCount}}{{end}}</span>{{end}}</a>
 			<a href="/@me/notifications/shares" role="tab" class="tab {{if eq $type `ANNOUNCE`}}selected{{end}}">Boosts{{if gt $announceCount 0}} <span class="tab-count">{{if gt $announceCount 99}}99+{{else}}{{$announceCount}}{{end}}</span>{{end}}</a>
 			<a href="/@me/notifications/likes" role="tab" class="tab {{if eq $type `LIKE`}}selected{{end}}">Likes{{if gt $likeCount 0}} <span class="tab-count">{{if gt $likeCount 99}}99+{{else}}{{$likeCount}}{{end}}</span>{{end}}</a>
 			<a href="/@me/notifications/followers" role="tab" class="tab {{if eq $type `FOLLOW`}}selected{{end}}">Followers{{if gt $followCount 0}} <span class="tab-count">{{if gt $followCount 99}}99+{{else}}{{$followCount}}{{end}}</span>{{end}}</a>
 		</div>
-	{{- else -}}
-		<h1 class="text-xl bold margin-none">{{$currentLabel}}</h1>
 	{{- end -}}
 	<div class="flex-grow"></div>
 	<div>

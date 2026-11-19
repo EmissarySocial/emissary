@@ -1,0 +1,33 @@
+<!-- The "Quotes" notification list (QUOTE). The quotes-list action sets ?type=, and ?createDate= drives the infinite scroll. -->
+{{- $notifications := .LabelNotifications .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
+{{- $createDate := .QueryParam "createDate" -}}
+
+{{- if $notifications.NotEmpty -}}
+
+	{{- range $notification := $notifications -}}
+		{{- template "row" $notification -}}
+	{{- end -}}
+
+	<!-- Infinite scroll: load older notifications when the sentinel is revealed -->
+	{{- $last := $notifications.Last -}}
+	<div
+		hx-get="/@me/notifications/quotes-list?createDate=LT:{{$last.CreateDate}}"
+		hx-trigger="intersect once"
+		hx-target="this"
+		hx-swap="outerHTML"
+		hx-push-url="false">
+		<div class="text-sm text-gray"><span class="spin">{{icon "loading"}}</span> Loading...</div>
+	</div>
+
+{{- else if eq "" $createDate -}}
+
+	<!-- No notifications of this kind yet: a welcome, styled and placed as user-inbox/newsfeed-welcome-inbox.html -->
+	<div class="align-center margin-vertical-xl">
+		<div class="text-light-gray" style="font-size:96px;">{{icon "chat-quote"}}</div>
+		<div class="text-2xl margin-none">Quotes</div>
+		<div class="margin-vertical max-width-512 margin-horizontal-auto">
+			When someone quotes one of your posts, you'll see it here. Select a quote to see the post, or to reject it.
+		</div>
+	</div>
+
+{{- end -}}

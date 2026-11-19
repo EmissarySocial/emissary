@@ -315,6 +315,29 @@ func (service *Notification) MarkAllRead(session data.Session, userID primitive.
 	return nil
 }
 
+// MarkRead sets the readDate on one unread Notification owned by the provided User. A Notification
+// that is already read, deleted, or owned by someone else is left alone, which is not an error.
+func (service *Notification) MarkRead(session data.Session, userID primitive.ObjectID, notificationID primitive.ObjectID, readDate int64) error {
+
+	const location = "service.Notification.MarkRead"
+
+	// RULE: The UserID is part of the criteria, so that nobody can mark another User's Notification
+	criteria := exp.Equal("_id", notificationID).
+		AndEqual("userId", userID).
+		AndEqual("readDate", int64(math.MaxInt64)).
+		AndEqual("deleteDate", 0)
+
+	// RULE: One conditional update, never a load and a save, which would overwrite a concurrent change
+	update := bson.M{"$set": bson.M{"readDate": readDate}}
+
+	if err := queries.RawUpdate(session.Context(), service.collection(session), criteria, update); err != nil {
+		return derp.Wrap(err, location, "Marking notification read", notificationID)
+	}
+
+	// Read, receipt
+	return nil
+}
+
 /******************************************
  * Maintenance
  ******************************************/

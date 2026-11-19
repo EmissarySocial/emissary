@@ -17,8 +17,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Notifications is a builder for the @me/notifications pages (Replies, Shares, Likes,
-// Followers).  It builds the authenticated User object, and its only data method is
+// Notifications is a builder for the @me/notifications pages (All, Replies, Quotes, Shares,
+// Likes, Followers).  It builds the authenticated User object, and its only data method is
 // Notifications() (plus the UnreadNotificationCount badge helper) — the newsfeed/folder
 // machinery lives on the Inbox builder, not here.
 type Notifications struct {
@@ -194,6 +194,28 @@ func (w Notifications) LabelNotifications(notifications sliceof.Object[model.Not
 	return notifications
 }
 
+// Notification returns the Notification named by the "notificationId" query parameter, which
+// must belong to the signed-in User
+func (w Notifications) Notification() (model.Notification, error) {
+
+	const location = "build.Notifications.Notification"
+
+	result := model.NewNotification()
+
+	notificationID, err := primitive.ObjectIDFromHex(w.QueryParam("notificationId"))
+
+	if err != nil {
+		return result, derp.BadRequest(location, "NotificationID must be a valid hex string")
+	}
+
+	// RULE: LoadByID is scoped to the signed-in User, so another User's Notification is NotFound
+	if err := w._factory.Notification().LoadByID(w._session, w.AuthenticatedID(), notificationID, &result); err != nil {
+		return result, derp.Wrap(err, location, "Loading Notification", notificationID)
+	}
+
+	return result, nil
+}
+
 // QuoteItemID returns the ID of the CollectionItem that approves the quote a QUOTE Notification
 // announces, or an empty string when that quote is no longer approved.
 func (w Notifications) QuoteItemID(notification model.Notification) string {
@@ -234,29 +256,25 @@ func (w Notifications) UnreadNotificationCount(notificationType string) int64 {
 	return count
 }
 
-// notificationTabTypes expands the notifications-page "type" query param into the list of
-// notification types that section displays.  Grouped sections cast wide nets: MENTION includes
-// replies and direct messages (the classification ladder is DIRECT > REPLY > MENTION, so without
-// the expansion those would be invisible — there is no Replies section and no Messages section)
-// and quotes, and LIKE includes dislikes (too rare for a section of their own).  ANNOUNCE passes through
-// unexpanded as the "Boosts" section (the route keeps the name "shares").  An empty section name returns nil, meaning "all types".
-//
-// This helper (and notificationTypeFilter below) is package-level because both the Notifications
-// builder and the mark-notifications-read / with-notification steps expand `type` the same way.
+// notificationTabTypes expands the notifications-page "type" query param into the notification
+// types that tab lists. A nil result means every type, which is the All tab and an empty param.
 func notificationTabTypes(notificationType string) []string {
 
 	switch notificationType {
 
-	case "":
+	case "", notificationTabAll:
 		return nil
 
+	// RULE: Messages & Replies holds direct messages and replies too, which have no tab of their own
 	case model.NotificationTypeMention:
-		return []string{model.NotificationTypeMention, model.NotificationTypeReply, model.NotificationTypeDirect, model.NotificationTypeQuote}
+		return []string{model.NotificationTypeMention, model.NotificationTypeReply, model.NotificationTypeDirect}
 
+	// RULE: Likes holds dislikes too, which are too rare for a tab of their own
 	case model.NotificationTypeLike:
 		return []string{model.NotificationTypeLike, model.NotificationTypeDislike}
 	}
 
+	// Quotes (QUOTE), Boosts (ANNOUNCE) and Followers (FOLLOW) each list their own type
 	return []string{notificationType}
 }
 

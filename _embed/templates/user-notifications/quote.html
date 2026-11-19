@@ -1,0 +1,48 @@
+<!-- The modal for one quote of the User's post: who quoted, the quoting post, and Reject. See AGENTS.md. -->
+{{- $notification := .Notification -}}
+{{- $actor := $notification.Actor -}}
+{{- $quoteitemid := .QuoteItemID $notification -}}
+{{- $document := .ActivityStream $notification.ObjectURL -}}
+
+<h1>{{icon "chat-quote"}} Quoted Post</h1>
+
+<!-- Who quoted -->
+<div class="flex-row flex-align-center margin-bottom">
+	<div class="width-48">
+		{{- if $actor.HasIconURL -}}
+			<img src="{{$actor.IconURL}}" alt="" class="circle width-48" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+			<span hidden><div class="circle width-48 flex-center bg-gray-90">{{icon "person"}}</div></span>
+		{{- else -}}
+			<div class="circle width-48 flex-center bg-gray-90">{{icon "person"}}</div>
+		{{- end -}}
+	</div>
+	<div>
+		<div class="bold">{{- if ne "" $actor.Name -}}{{$actor.Name}}{{- else -}}{{$actor.UsernameOrID}}{{- end -}}</div>
+		<div class="text-sm text-gray">quoted your post &middot; {{$notification.CreateDate | tinyDate}}</div>
+	</div>
+</div>
+
+<!-- RULE: The quoting post is another server's HTML, so it is printed only through the sanitizer -->
+<div class="card padding margin-bottom">
+	{{- if $document.HasContent -}}
+		<div class="content">{{- $document.Content | htmlMinimal -}}</div>
+	{{- else if ne "" $notification.ObjectSummary -}}
+		<div>{{$notification.ObjectSummary}}</div>
+	{{- else -}}
+		<div class="text-gray">This post could not be loaded.</div>
+	{{- end -}}
+	<div class="margin-top text-sm">
+		<a href="{{$notification.ObjectURL}}" target="_blank" rel="noopener noreferrer">{{icon "link-outbound"}} Open the original post</a>
+	</div>
+</div>
+
+<!-- RULE: Reject names the CollectionItem that approves the quote, and is left out once that item is gone -->
+{{- if ne "" $quoteitemid}}
+	<div class="text-sm text-gray margin-bottom">
+		Rejecting removes your post from this quote. Some servers, including Mastodon, cannot show it again afterwards, so this cannot be undone.
+	</div>
+	<button type="button" hx-post="/@me/notifications/reject-quote?collectionItemId={{$quoteitemid}}" hx-swap="none" hx-push-url="false" hx-confirm="Reject this quote? This cannot be undone.">Reject Quote</button>
+{{- else}}
+	<div class="text-sm text-gray margin-bottom">This quote is no longer approved.</div>
+{{- end}}
+<button type="button" script="on click trigger closeModal">Close</button>

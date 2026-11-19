@@ -1,0 +1,127 @@
+<!-- One notification row, shared by every list. The dot (".") is a labeled Notification. See AGENTS.md. -->
+{{- $notification := . -}}
+{{- $actor := $notification.Actor -}}
+{{- $type := $notification.Type -}}
+{{- $id := $notification.NotificationID.Hex -}}
+
+<!-- RULE: Values read inside a tag are hoisted into all-lowercase variables, because the minifier lowercases template code there -->
+{{- $ishidden := $notification.Labels.IsHidden -}}
+{{- $isconversation := $notification.IsConversation -}}
+{{- $isunread := $notification.NotRead -}}
+{{- $isquote := eq $type "QUOTE" -}}
+{{- $isreaction := eq $type "FOLLOW" "LIKE" "DISLIKE" "ANNOUNCE" -}}
+{{- $isinert := and $ishidden $isreaction -}}
+
+<!-- RULE: A private message, and the User's own post that was liked or boosted, open by a real navigation -->
+{{- $href := "" -}}
+{{- if $isconversation -}}
+	{{- $href = "/@me/conversations" -}}
+{{- else if eq $type "LIKE" "DISLIKE" "ANNOUNCE" -}}
+	{{- $href = $notification.ObjectURL -}}
+{{- end -}}
+{{- $islink := ne "" $href -}}
+
+<!-- Every other row opens in place: a new follower's profile, the quote modal, or the remote post -->
+{{- $target := printf "/@me/newsfeed/browse?url=%s" $notification.ObjectURL -}}
+{{- $pushurl := "true" -}}
+{{- if eq $type "FOLLOW" -}}
+	{{- $target = printf "/@me/newsfeed/browse?url=%s" $actor.ProfileURL -}}
+{{- else if $isquote -}}
+	{{- $target = printf "/@me/notifications/quote?notificationId=%s" $id -}}
+	{{- $pushurl = "false" -}}
+{{- else if $ishidden -}}
+	{{- $target = printf "/@me/newsfeed/browse?url=%s&reveal=true" $notification.ObjectURL -}}
+{{- end -}}
+
+{{- if $isinert -}}
+
+	<!-- RULE: A reaction from an actor that the viewer's rules hide is anonymous, and opens nothing -->
+	<div class="notification flex-row flex-align-center padding-vertical text-sm {{if $isunread}}unread{{end}}">
+		<span class="notification-dot text-red" style="width:12px;">&#9679;</span>
+		<div class="flex-grow">
+			{{- template "label-chips" $notification.Labels.Hidden -}}
+		</div>
+		<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
+	</div>
+
+{{- else -}}
+
+	<!-- RULE: A private message opens the Conversations app, never the public browse view -->
+	<a
+		{{- if $islink}}
+		href="{{$href}}"
+		role="link"
+		{{- else}}
+		role="button"
+		hx-get="{{$target}}"
+		hx-push-url="{{$pushurl}}"
+		{{- end}}
+		{{- if $isunread}}
+		script="on click remove .unread from me then fetch '/@me/notifications/read-one?notificationId={{$id}}' with method:'POST', keepalive:true then send refreshSidebar to window"
+		{{- end}}
+		class="text-nocolor notification flex-row flex-align-center padding-vertical hover-trigger {{if $isunread}}unread{{end}}">
+
+		<!-- Unread dot, which the stylesheet hides once the row loses its "unread" class -->
+		<span class="notification-dot text-red" style="width:12px;">&#9679;</span>
+
+		{{- if $ishidden -}}
+
+			<!-- The actor is hidden by the viewer's rules, and stays anonymous until the row is selected -->
+			<div class="flex-grow text-sm">
+				{{- template "label-chips" $notification.Labels.Hidden -}}
+				<span class="text-light-gray margin-left">Select to show</span>
+			</div>
+
+		{{- else -}}
+
+			<!-- Actor avatar. An image that fails to load gives way to the placeholder beside it (see AGENTS.md). -->
+			<div class="width-32">
+				{{- if $actor.HasIconURL -}}
+					<img src="{{$actor.IconURL}}" alt="" class="circle width-32" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+					<span hidden><div class="circle width-32 flex-center bg-gray-90">{{icon "person"}}</div></span>
+				{{- else -}}
+					<div class="circle width-32 flex-center bg-gray-90">{{icon "person"}}</div>
+				{{- end -}}
+			</div>
+
+			<!-- Who acted, what they did, and a summary of the post -->
+			<div class="flex-grow ellipsis-block">
+				<div class="text-gray text-sm">
+					<span class="bold">
+						{{- if ne "" $actor.Name -}}{{$actor.Name}}{{- else -}}{{$actor.UsernameOrID}}{{- end -}}
+					</span>
+					{{- if eq $type "DIRECT" }}
+						<span>sent you a message</span>
+					{{- else if eq $type "REPLY" }}
+						<span>replied to you</span>
+					{{- else if eq $type "QUOTE" }}
+						<span>quoted your post</span>
+					{{- else if eq $type "ANNOUNCE" }}
+						<span>shared your post</span>
+					{{- else if eq $type "LIKE" }}
+						<span>liked your post</span>
+					{{- else if eq $type "DISLIKE" }}
+						<span>disliked your post</span>
+					{{- else if eq $type "FOLLOW" }}
+						<span>followed you</span>
+					{{- else }}
+						<span>mentioned you</span>
+					{{- end }}
+					{{- template "label-chips" $notification.Labels.Annotations -}}
+				</div>
+
+				<!-- RULE: An MLS message has no summary on the server, so the row names the state instead -->
+				{{- if $notification.IsEncrypted -}}
+					<div class="ellipsis text-gray">{{icon "lock"}} Encrypted message</div>
+				{{- else if ne "" $notification.ObjectSummary -}}
+					<div class="ellipsis">{{$notification.ObjectSummary}}</div>
+				{{- end -}}
+			</div>
+
+		{{- end -}}
+
+		<!-- Relative time -->
+		<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
+	</a>
+
+{{- end -}}

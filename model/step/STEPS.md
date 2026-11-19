@@ -830,7 +830,10 @@ Marks every unread item in the folder named by the `folderId` query parameter as
 
 ## mark-notifications-read
 
-Marks all of the current User's notifications as read.
+Marks the current User's notifications as read, on a POST. A GET does nothing. It reads two query parameters:
+
+- `notificationId` marks that one notification, and nothing else. A notification that is already read, purged, or owned by someone else is left alone.
+- `type` marks every notification in that tab (`MENTION`, `QUOTE`, `ANNOUNCE`, `LIKE`, `FOLLOW`), when no `notificationId` is given. `ALL`, or no `type`, marks every notification.
 
 **Attributes**
 

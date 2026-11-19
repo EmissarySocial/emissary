@@ -258,12 +258,29 @@ quote_as_bob() {
 	"$HELPER" quote-request "$DB_B" "$BOB_ID" "$3" "$1" "$2"
 }
 
-# reject_quote_query prints the query string of the first Reject button on Alice's Messages & Replies list
+# alice_fragment ACTION prints one of Alice's notification fragments, as htmx requests it
+alice_fragment() {
+	curl -s -m 30 -b "$JAR_A" -H 'HX-Request: true' "$A/@me/notifications/$1" || true
+}
+
+# quote_modal_query prints the query string of the first quote row on Alice's Quotes list
+quote_modal_query() {
+	alice_fragment quotes-list | grep -oE 'quote\?notificationId=[0-9a-f]{24}' | head -1 | cut -d'?' -f2 || true
+}
+
+# reject_quote_query MODAL_QUERY prints the query string of the Reject button in a quote's modal
 reject_quote_query() {
+	[[ -n "$1" ]] || return 0
+	alice_fragment "quote?$1" | grep -oE 'reject-quote\?collectionItemId=[0-9a-f]{24}' | head -1 | cut -d'?' -f2 || true
+}
+
+# row_state LIST prints "unread", "read", or "missing" for the quote row on one of Alice's lists
+row_state() {
 	local html
-	html=$(curl -s -m 30 -b "$JAR_A" -H 'HX-Request: true' "$A/@me/notifications/replies-list" || true)
-	grep -q 'quoted your post' <<<"$html" || return 0
-	grep -oE 'reject-quote\?collectionItemId=[0-9a-f]{24}' <<<"$html" | head -1 | cut -d'?' -f2
+	html=$(alice_fragment "$1" | tr '\n' ' ' | grep -oE '<a[^>]*>' | grep 'quote?notificationId=' | head -1 || true)
+	if [[ -z "$html" ]]; then echo "missing"
+	elif grep -q 'unread' <<<"$html"; then echo "unread"
+	else echo "read"; fi
 }
 
 #############################################
@@ -417,8 +434,41 @@ else fail "5c open: QuoteAuthorization verifies" "$out"; fi
 count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q1")
 check "5d open: author notified" "$count QUOTE notification(s) for Q1" test "$count" == "1"
 
-REJECT_QUERY=$(reject_quote_query)
-check "5e open: Reject button drawn" "query = '$REJECT_QUERY'" test -n "$REJECT_QUERY"
+MODAL_QUERY=$(quote_modal_query)
+check "5e open: quote listed under Quotes" "row opens quote?$MODAL_QUERY" test -n "$MODAL_QUERY"
+
+REJECT_QUERY=$(reject_quote_query "$MODAL_QUERY")
+check "5e open: Reject button in the modal" "query = '$REJECT_QUERY'" test -n "$REJECT_QUERY"
+
+echo
+echo "== 6. Notification tabs, and marking one row read"
+
+state=$(row_state all-list)
+check "6a All lists the quote" "quote row on all-list is $state" test "$state" == "unread"
+
+html=$(alice_fragment all-list)
+check "6b All lists the reply too" "all-list holds 'replied to you'" grep -q 'replied to you' <<<"$html"
+
+state=$(row_state replies-list)
+check "6c Messages & Replies leaves quotes out" "quote row on replies-list is $state" test "$state" == "missing"
+
+code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' "$A/@me/notifications/read-one?$MODAL_QUERY" || true)
+state=$(row_state quotes-list)
+check "6d a GET marks nothing read" "HTTP $code, row is $state" test "$state" == "unread"
+
+code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' -X POST "$A/@me/notifications/read-one?$MODAL_QUERY" || true)
+state=$(row_state quotes-list)
+check "6e a POST marks that row read" "HTTP $code, row is $state" test "$code/$state" == "200/read"
+
+broken=""
+for page in all replies quotes shares likes followers "header?type=ALL" "sidebar?type=QUOTE"; do
+	code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' "$A/@me/notifications/$page" || true)
+	[[ "$code" == "200" ]] || broken="$broken $page=$code"
+done
+check "6g every tab page renders" "failures:${broken:- none}" test -z "$broken"
+
+html=$(alice_fragment replies-list)
+check "6f the other rows stay unread" "replies-list still holds an unread row" grep -q 'notification[^"]*unread' <<<"$html"
 
 Q_FORGED="$B/quotes/$RUN_ID-forged"
 code=$(quote_as_bob "$Q_FORGED" "$B/@someone-else" "$S1_URL")

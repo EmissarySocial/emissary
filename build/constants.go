@@ -14,3 +14,6 @@ const feedMaxItems = 60
 
 // maxTreeDepth is the most ancestors NextAfterParent climbs before giving up
 const maxTreeDepth = 32
+
+// notificationTabAll is the "type" query param of the All tab, which lists every notification type
+const notificationTabAll = "ALL"
