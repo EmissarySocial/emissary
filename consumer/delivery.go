@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/rosetta/mapof"
@@ -37,11 +38,26 @@ func Delivery(serverFactory ServerFactory, task queue.Task) queue.Result {
 
 // Outbox2Email emails one activity to one recipient
 func Outbox2Email(factory *service.Factory, args mapof.Any) queue.Result {
+	return outbox2Email(factory.Server(), factory.Outbox2(), args)
+}
+
+// sessionOpener opens a database session, as a domain's database server does
+type sessionOpener interface {
+	Session(ctx context.Context) (data.Session, error)
+}
+
+// emailSender emails one activity to one address on behalf of a local actor, as Outbox2 does
+type emailSender interface {
+	SendEmail(session data.Session, actorURL string, address string, activity mapof.Any) error
+}
+
+// outbox2Email runs one Outbox2-Email task against the provided database and sender
+func outbox2Email(server sessionOpener, sender emailSender, args mapof.Any) queue.Result {
 
 	const location = "consumer.Outbox2Email"
 
 	// RULE: A plain session, deliberately NOT a transaction, because sending email is a network call
-	session, err := factory.Server().Session(context.Background())
+	session, err := server.Session(context.Background())
 
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Opening database session"))
@@ -49,7 +65,7 @@ func Outbox2Email(factory *service.Factory, args mapof.Any) queue.Result {
 
 	defer session.Close()
 
-	if err := factory.Outbox2().SendEmail(session, args.GetString("actor"), args.GetString("address"), args.GetMap("activity")); err != nil {
+	if err := sender.SendEmail(session, args.GetString("actor"), args.GetString("address"), args.GetMap("activity")); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Sending email", "activityId: "+args.GetString("activityId")))
 	}
 

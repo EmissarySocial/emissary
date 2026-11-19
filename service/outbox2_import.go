@@ -136,7 +136,7 @@ func outboxItemFromMessage(message *model.OutboxMessage) model.OutboxItem {
 
 	// The legacy outbox served `to: Public` for any message that everyone could read
 	if message.Permissions.IsAnonymous() {
-		item.Activity[vocab.PropertyTo] = []string{vocab.NamespacePublic}
+		item.Activity[vocab.PropertyTo] = []string{vocab.NamespaceActivityStreamsPublic}
 	}
 
 	return item
@@ -147,6 +147,12 @@ func outboxItemFromMessage(message *model.OutboxMessage) model.OutboxItem {
 func (service *Outbox2) saveImported(session data.Session, importItem *model.ImportItem, user *model.User, item *model.OutboxItem) error {
 
 	const location = "service.Outbox2.saveImported"
+
+	// RULE: An outbox row is an activity, so a document without one is refused. JSON `null`
+	// decodes to a nil map, and writing the new id below into a nil map panics.
+	if len(item.Activity) == 0 {
+		return derp.BadRequest(location, "Imported document has no activity", "activityId: "+item.ActivityID.Hex())
+	}
 
 	// Record where the activity came from, and give it a new identity here
 	importItem.RemoteID = item.ActivityID
@@ -250,7 +256,7 @@ func replaceActorInAddressing(activity mapof.Any, remoteActorURL string, localAc
 
 	for _, name := range addressingProperties {
 
-		recipients := activity.GetSliceOfString(name)
+		recipients := addressIDs(activity, name)
 
 		if len(recipients) == 0 {
 			continue

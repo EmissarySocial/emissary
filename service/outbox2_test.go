@@ -11,6 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/data"
 	mockdb "github.com/benpate/data-mock"
 	"github.com/benpate/data/option"
@@ -431,7 +432,7 @@ func (emailer *recordingEmailer) IsConfigured() bool {
 }
 
 // SendFollowerActivity records the Follower's address and the activity, and sends nothing
-func (emailer *recordingEmailer) SendFollowerActivity(follower *model.Follower, activity mapof.Any) error {
+func (emailer *recordingEmailer) SendFollowerActivity(_ data.Session, follower *model.Follower, activity mapof.Any) error {
 	emailer.sent = append(emailer.sent, follower.Actor.EmailAddress)
 	emailer.activities = append(emailer.activities, activity)
 	return nil
@@ -857,4 +858,76 @@ func TestLastPageSize(t *testing.T) {
 	test(math.MinInt64, 60, 0)
 	test(10, 0, 0)
 	test(10, -60, 0)
+}
+
+// TestOutbox2_ErrorsCarryNoActivity verifies that every error Outbox2 writes about an activity names
+// it by its id, and never carries the activity, whose content and blind recipients are private
+func TestOutbox2_ErrorsCarryNoActivity(t *testing.T) {
+
+	// O1 and O13: these errors attached the whole activity or OutboxItem, blind recipients
+	// included, and the mongo reporter stores every detail in ErrorLog
+	userID := primitive.NewObjectID()
+	actorURL := "https://example.com/@" + userID.Hex()
+
+	// requireNoActivity checks one error for the activity's content and its blind recipient
+	requireNoActivity := func(t *testing.T, err error) {
+		t.Helper()
+		require.Error(t, err)
+		secretcheck.RequireAbsent(t, err, "the private message body")
+		secretcheck.RequireAbsent(t, err, "hidden-recipient")
+	}
+
+	// newActivity returns a direct message from the provided actor
+	newActivity := func(actor string) mapof.Any {
+		return mapof.Any{
+			vocab.PropertyType:  vocab.ActivityTypeCreate,
+			vocab.PropertyActor: actor,
+			vocab.PropertyTo:    []string{"https://remote.example/@recipient"},
+			vocab.PropertyBCC:   []string{"https://remote.example/@hidden-recipient"},
+			vocab.PropertyObject: mapof.Any{
+				vocab.PropertyType:    vocab.ObjectTypeNote,
+				vocab.PropertyContent: "the private message body",
+			},
+		}
+	}
+
+	// newItem returns the direct message as an outbox stores it
+	newItem := func() model.OutboxItem {
+		item := model.NewOutboxItem()
+		item.ActorType = model.ActorTypeUser
+		item.ActorID = userID
+		item.Activity = newActivity(actorURL)
+		item.CalcRecipients()
+		return item
+	}
+
+	outbox2, session, _ := newOutbox2PublishTest(t)
+
+	t.Run("an actor that is not a User", func(t *testing.T) {
+		_, err := outbox2.PutUserActivity(session, userID, streams.NewDocument(newActivity("https://remote.example/@mallory")))
+		requireNoActivity(t, err)
+	})
+
+	t.Run("an actor that is another User", func(t *testing.T) {
+		_, err := outbox2.PutUserActivity(session, userID, streams.NewDocument(newActivity("https://example.com/@"+primitive.NewObjectID().Hex())))
+		requireNoActivity(t, err)
+	})
+
+	t.Run("a failed delete", func(t *testing.T) {
+		item := newItem()
+		requireNoActivity(t, outbox2.Delete(brokenSession{}, &item, "test"))
+	})
+
+	t.Run("a failed delete of an actor's outbox", func(t *testing.T) {
+
+		capture := captureReports(t)
+		item := newItem()
+		session := brokenSession{records: map[string][]data.Object{"OutboxItem": {&item}}}
+
+		require.NoError(t, outbox2.DeleteByActor(session, model.ActorTypeUser, userID))
+
+		reports := capture.reported()
+		require.Len(t, reports, 1)
+		requireNoActivity(t, reports[0])
+	})
 }

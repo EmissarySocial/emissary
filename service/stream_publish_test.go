@@ -52,7 +52,7 @@ func TestStream_JSONLD_Audience(t *testing.T) {
 		stream := newAudienceStream(authorID, model.NewAnonymousPermissions(), nil)
 		document := streamService.JSONLD(emptyTagSession{}, &stream)
 
-		require.Equal(t, []string{vocab.NamespacePublic}, document.GetSliceOfString(vocab.PropertyTo))
+		require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, document.GetSliceOfString(vocab.PropertyTo))
 		require.Equal(t, []string{authorFollowers, mention}, document.GetSliceOfString(vocab.PropertyCC))
 	})
 
@@ -104,7 +104,7 @@ func TestStream_ParentAudience(t *testing.T) {
 
 	public := newAudienceStream(primitive.NewObjectID(), model.NewAnonymousPermissions(), nil)
 	audience := streamService.parentAudience(&public)
-	require.Equal(t, []string{vocab.NamespacePublic}, audience.GetSliceOfString(vocab.PropertyTo))
+	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, audience.GetSliceOfString(vocab.PropertyTo))
 	require.Equal(t, []string{"https://example.com/" + public.ParentID.Hex() + "/pub/followers"}, audience.GetSliceOfString(vocab.PropertyCC))
 
 	circleOnly := newAudienceStream(primitive.NewObjectID(), model.Permissions{circleID}, id.Slice{circleID})

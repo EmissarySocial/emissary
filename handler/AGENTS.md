@@ -57,6 +57,10 @@ Both outbox collections and both single-activity GETs read `service.Outbox2` and
 - **`PagedCollection` returns a map, not `streams.OrderedCollection`,** whose `omitempty` drops a zero `totalItems`; Funkwhale refuses a collection without it.
 - **A public activity is served without parsing the signature.** Any other activity needs a signer that `OutboxItem.IsVisibleTo` admits, and a hidden one answers 404, never 403, so a stranger cannot learn that it exists.
 
+## A C2S activity that names no one is refused, and only by the outbox wildcard
+
+`outbox_Wildcard` ([activitypub_user/outbox_wildcard.go](activitypub_user/outbox_wildcard.go)) answers 400 when an activity names no recipient in `to`, `cc`, `bto` or `bcc`, the only properties delivery reads. A Mastodon-shaped Like, Follow, Undo, Accept, Block or Move carries none, and was stored and delivered to no one while the client was told it had worked (OUTBOX2-OMNIBUS O2, Ben 2026-11-19). The check belongs in the wildcard and not in `Outbox2.PutUserActivity`: the KeyPackage and Article handlers call that after writing their own record, and a refusal there would roll back the write, because the whole POST is one transaction. Filling in recipients for the client was rejected for now; routing each type to the service that already handles it (Following, `Response.SetResponse`, Rule) is the long-term answer, and is planned with BUG-380. `TestOutboxWildcard_RefusesUnaddressedActivity` and `FuzzRequireRecipients` pin it.
+
 ## Every caller-supplied or remote URL is guarded before it reaches an href or redirect
 
 - `uri.IsSafeRedirectURL` is the gate for link targets: `getIntent_Continue` ([intent_continue.go](intent_continue.go)) replaces an unsafe URL with `/@me` BEFORE both the displayed text and the href, so the page always shows the URL it links to; `safeIntentURL` ([intent_header.go](intent_header.go)) returns `""` for unsafe values so the html builder omits the attribute entirely. Remote actor profile/icon URLs count as untrusted — a fetched actor can serve `javascript:` URLs.

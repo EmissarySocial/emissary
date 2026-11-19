@@ -17,10 +17,16 @@ import (
 	"github.com/benpate/uri"
 )
 
+// parentActorLoader returns the User or Stream that a Follower follows
+type parentActorLoader interface {
+	LoadParentActor(session data.Session, follower *model.Follower) (model.PersonLink, error)
+}
+
 // DomainEmail sends the transactional emails that a single Domain generates
 type DomainEmail struct {
 	serverEmail   *ServerEmail
 	domainService *Domain
+	parentActors  parentActorLoader
 	smtp          config.SMTPConnection
 	owner         config.Owner
 	label         string
@@ -41,6 +47,7 @@ func NewDomainEmail() DomainEmail {
 func (service *DomainEmail) Refresh(factory *Factory) {
 	service.serverEmail = factory.ServerEmail()
 	service.domainService = factory.Domain()
+	service.parentActors = factory.Follower()
 	service.smtp = factory.config.SMTPConnection
 	service.owner = factory.config.Owner
 	service.label = factory.config.Label
@@ -261,46 +268,41 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 			"Secret":     follower.Data.GetString("secret"),
 		},
 	); err != nil {
-		return derp.Wrap(err, location, "Sending follow confirmation email to user", follower.Actor.EmailAddress)
+		return derp.Wrap(err, location, "Sending follow confirmation email", "followerId: "+follower.FollowerID.Hex())
 	}
 
 	return nil
 }
 
-// SendFollowerActivity emails an activity to a Follower who subscribed by email
-func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activity mapof.Any) error {
+// SendFollowerActivity emails the post that an activity brings to a Follower who subscribed by
+// email. An activity that brings no post to read sends nothing.
+func (service *DomainEmail) SendFollowerActivity(session data.Session, follower *model.Follower, activity mapof.Any) error {
 
 	const location = "service.DomainEmail.SendFollowerActivity"
 
-	readOnlyDomain := service.domainService.Cached()
+	// RULE: Only a post is emailed. A Delete, an Undo, a Block, or a post with neither a name nor
+	// content would otherwise arrive as a blank "New Activity" message.
+	post, isPost := followerPost(activity)
 
-	// Send the activity email
-	if err := service.sendModel(
-		"follower-activity",
-		"Follower",
-		mapof.Any{
-
-			// Parent info available to the template
-			"ParentLink": follower.ParentURL(readOnlyDomain.Host()),
-
-			// Follower info available to the template
-			"FollowerID": follower.FollowerID.Hex(),
-			"Name":       follower.Actor.Name,
-			"Email":      follower.Actor.EmailAddress,
-			"Secret":     follower.Data.GetString("secret"),
-
-			// Activity info available to the template
-			"Activity": activity,
-			"Object":   followerEmailObject(activity),
-
-			// Unsubscribe links available to the template (D18: two forms, two consumers)
-			"Unsubscribe":             follower.UnsubscribeLink(readOnlyDomain.Host()),
-			"UnsubscribeWithBrackets": follower.UnsubscribeLinkWithBrackets(readOnlyDomain.Host()),
-		},
-	); err != nil {
-		return derp.Wrap(err, location, "Sending follower email to user", follower.Actor.EmailAddress)
+	if !isPost {
+		return nil
 	}
 
+	// The email says who published the post
+	actor, err := service.parentActors.LoadParentActor(session, follower)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading the actor that the Follower follows", "followerId: "+follower.FollowerID.Hex())
+	}
+
+	readOnlyDomain := service.domainService.Cached()
+	values := followerActivityValues(readOnlyDomain.Host(), follower, actor, post)
+
+	if err := service.sendModel("follower-activity", "Follower", values); err != nil {
+		return derp.Wrap(err, location, "Sending follower email", "followerId: "+follower.FollowerID.Hex())
+	}
+
+	// You've got mail
 	return nil
 }
 
@@ -412,6 +414,75 @@ func unreadNotificationsLabel(count int64) string {
 	}
 
 	return strconv.FormatInt(count, 10) + " unread notifications"
+}
+
+// followerEmailPost is the post that a follower's email shows, as plain strings that the template
+// can always read
+type followerEmailPost struct {
+	Title       string
+	ContentHTML string
+	URL         string
+}
+
+// followerPost returns the post that a follower's email shows for an activity, and FALSE when the
+// activity brings no post to read
+func followerPost(activity mapof.Any) (followerEmailPost, bool) {
+
+	// RULE: Only these activity types bring a post to read. A Delete, an Undo, an Accept,
+	// a Follow, or a Like has nothing to put in the email.
+	switch streams.NewDocument(activity).Type() {
+	case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate, vocab.ActivityTypeAnnounce:
+	default:
+		return followerEmailPost{}, false
+	}
+
+	object := streams.NewDocument(followerEmailObject(activity))
+
+	// RULE: A profile is not a post, so an Update of an actor is not emailed
+	if object.IsActor() {
+		return followerEmailPost{}, false
+	}
+
+	// The link names the post by its id, because an Audio Stream's `url` is its media file
+	post := followerEmailPost{
+		Title:       object.Name(),
+		ContentHTML: object.Content(),
+		URL:         object.ID(),
+	}
+
+	// RULE: A post with neither a name nor content has nothing to show
+	if (post.Title == "") && (post.ContentHTML == "") {
+		return followerEmailPost{}, false
+	}
+
+	return post, true
+}
+
+// followerActivityValues returns every value that the follower-activity email reads, each of
+// which is always present
+func followerActivityValues(host string, follower *model.Follower, actor model.PersonLink, post followerEmailPost) mapof.Any {
+
+	return mapof.Any{
+
+		// Parent info available to the template
+		"ParentLink": follower.ParentURL(host),
+		"Actor":      actor,
+
+		// Follower info available to the template
+		"FollowerID": follower.FollowerID.Hex(),
+		"Name":       follower.Actor.Name,
+		"Email":      follower.Actor.EmailAddress,
+		"Secret":     follower.Data.GetString("secret"),
+
+		// Post info available to the template
+		"Title":       post.Title,
+		"ContentHTML": post.ContentHTML,
+		"URL":         post.URL,
+
+		// Unsubscribe links available to the template (D18: two forms, two consumers)
+		"Unsubscribe":             follower.UnsubscribeLink(host),
+		"UnsubscribeWithBrackets": follower.UnsubscribeLinkWithBrackets(host),
+	}
 }
 
 // followerEmailObject returns the post that a follower's email shows for an activity: its embedded

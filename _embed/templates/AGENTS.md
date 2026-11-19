@@ -101,6 +101,10 @@ A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an uploa
 
 `put` parses a string as HTML, so `select` and `selectGroup` once built each choice with ``put `<option value="${option.value}">${option.label}</option>` ``, and a lookup label could run an `onerror` handler while a value could end its attribute. Both now `make an Option from option.label, option.value` and `add()` it, which sets the label and value as text. Any behavior that writes data into the page must do the same: `make` the element and `set` its properties or `textContent`. `colorpicker._hs` still interpolates its stored value into markup, which is safe only because every colorpicker path today has `Format: "color"`.
 
+## An email body reads values that Go always supplies, never a federated map
+
+`html/template` prints a missing key as an empty string, but passing one to a typed helper such as `htmlMinimal` stops the render. `email-follower-activity` once read `.Activity.object.content` and piped it into `htmlMinimal`, so every post without a body failed to send, for every subscriber, and nothing retried it (BUG-372). The sender now builds every value as a string or struct that is always present, and the body wraps each optional part in `{{with}}`. Do the same in any new email body: decide in Go what the message shows, and render a test of the shipped body for each shape the sender can supply.
+
 ## Only four template directories are parsed by any test — add yours to the list
 
 `TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.

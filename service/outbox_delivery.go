@@ -31,7 +31,7 @@ import (
 // followerEmailer sends an outbox activity to one email Follower
 type followerEmailer interface {
 	IsConfigured() bool
-	SendFollowerActivity(follower *model.Follower, activity mapof.Any) error
+	SendFollowerActivity(session data.Session, follower *model.Follower, activity mapof.Any) error
 }
 
 // followerDelivery sends one activity to each recipient that passes the outbound rules
@@ -131,11 +131,11 @@ func (delivery followerDelivery) deliver(session data.Session, actorType string,
 			}
 
 			if canSendEmail {
-				delivery.sendEmail(&follower, payload)
+				delivery.sendEmail(session, &follower, payload)
 			}
 
 		default:
-			derp.Report(derp.Internal(location, "Unknown Follower Method.  This should never happen", follower))
+			derp.Report(derp.Internal(location, "Unknown Follower Method.  This should never happen", "followerId: "+follower.FollowerID.Hex()))
 		}
 	}
 
@@ -170,12 +170,12 @@ func (delivery followerDelivery) deliverActivityPub(session data.Session, actorU
 }
 
 // sendEmail sends an email notification of the activity to a single "email" Follower
-func (delivery followerDelivery) sendEmail(follower *model.Follower, activity mapof.Any) {
+func (delivery followerDelivery) sendEmail(session data.Session, follower *model.Follower, activity mapof.Any) {
 
 	const location = "service.followerDelivery.sendEmail"
 
-	if err := delivery.domainEmail.SendFollowerActivity(follower, activity); err != nil {
-		derp.Report(derp.Wrap(err, location, "Sending email", follower))
+	if err := delivery.domainEmail.SendFollowerActivity(session, follower, activity); err != nil {
+		derp.Report(derp.Wrap(err, location, "Sending email", "followerId: "+follower.FollowerID.Hex()))
 	}
 }
 

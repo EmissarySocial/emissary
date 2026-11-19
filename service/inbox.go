@@ -146,12 +146,12 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 
 	// Validate the record using the schema
 	if _, err := service.Schema().Validate(inboxActivity); err != nil {
-		return derp.Wrap(err, location, "InboxActivity is invalid", inboxActivity)
+		return derp.Wrap(err, location, "InboxActivity is invalid", "inboxActivityId: "+inboxActivity.InboxActivityID.Hex())
 	}
 
 	// Check to see if this is a new record
 	if err := service.createOrUpdate(session, inboxActivity, note); err != nil {
-		return derp.Wrap(err, location, "Saving Inbox activity", inboxActivity, note)
+		return derp.Wrap(err, location, "Saving Inbox activity", "inboxActivityId: "+inboxActivity.InboxActivityID.Hex(), note)
 	}
 
 	// Removing this because it breaks with messages coming from Bonfire
@@ -175,12 +175,12 @@ func (service *Inbox) createOrUpdate(session data.Session, inboxActivity *model.
 		inboxActivity.InboxActivityID = previousValue.InboxActivityID
 		inboxActivity.CreateDate = previousValue.CreateDate
 	} else if !derp.IsNotFound(err) {
-		return derp.Wrap(err, location, "Loading previous InboxActivity", inboxActivity)
+		return derp.Wrap(err, location, "Loading previous InboxActivity", "inboxActivityId: "+inboxActivity.InboxActivityID.Hex())
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(inboxActivity, note); err != nil {
-		return derp.Wrap(err, location, "Saving Inbox activity", inboxActivity, note)
+		return derp.Wrap(err, location, "Saving Inbox activity", "inboxActivityId: "+inboxActivity.InboxActivityID.Hex(), note)
 	}
 
 	return nil
@@ -221,7 +221,7 @@ func (service *Inbox) Delete(session data.Session, inboxActivity *model.InboxAct
 	criteria := exp.Equal("_id", inboxActivity.InboxActivityID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Deleting Inbox activity", inboxActivity, note)
+		return derp.Wrap(err, location, "Deleting Inbox activity", "inboxActivityId: "+inboxActivity.InboxActivityID.Hex(), note)
 	}
 
 	return nil

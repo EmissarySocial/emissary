@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -208,7 +209,7 @@ func TestOutbox2_DeleteActivity_PublicAddsFollowers(t *testing.T) {
 		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, object, permissions, nil))
 
 		deleted := test.only(t, vocab.ActivityTypeDelete)
-		require.Equal(t, []string{vocab.NamespacePublic}, deleted.Activity.GetSliceOfString(vocab.PropertyTo))
+		require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, deleted.Activity.GetSliceOfString(vocab.PropertyTo))
 		require.Equal(t, []string{mentioned, test.followers()}, deleted.Activity.GetSliceOfString(vocab.PropertyCC))
 	})
 
@@ -227,7 +228,7 @@ func TestOutbox2_DeleteActivity_PublicAddsFollowers(t *testing.T) {
 
 		deleted := test.only(t, vocab.ActivityTypeDelete)
 		require.Equal(t, []string{test.followers()}, deleted.Activity.GetSliceOfString(vocab.PropertyTo))
-		require.Equal(t, []string{vocab.NamespacePublic}, deleted.Activity.GetSliceOfString(vocab.PropertyCC))
+		require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, deleted.Activity.GetSliceOfString(vocab.PropertyCC))
 	})
 }
 
@@ -279,7 +280,7 @@ func TestOutbox2_DeleteActivity_WithoutOriginal(t *testing.T) {
 		require.NoError(t, test.service.DeleteActivity(test.session, model.ActorTypeUser, test.userID, "https://example.com/notes/5", model.NewAnonymousPermissions(), audience))
 
 		deleted := test.only(t, vocab.ActivityTypeDelete)
-		require.Equal(t, []string{vocab.NamespacePublic}, deleted.Activity.GetSliceOfString(vocab.PropertyTo))
+		require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, deleted.Activity.GetSliceOfString(vocab.PropertyTo))
 		require.Equal(t, []string{test.followers()}, deleted.Activity.GetSliceOfString(vocab.PropertyCC))
 		require.Equal(t, []string{"https://example.com/notes/5"}, test.removals.objectIDs, "the legacy rows are still removed")
 	})
@@ -468,7 +469,7 @@ func TestOutbox2_PublishAnnounce(t *testing.T) {
 
 	activity := tasks[0].Arguments.GetMap("activity")
 	require.Equal(t, activityURL, activity.GetString(vocab.PropertyID))
-	require.Equal(t, []string{vocab.NamespacePublic}, activity.GetSliceOfString(vocab.PropertyTo))
+	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, activity.GetSliceOfString(vocab.PropertyTo))
 	require.Equal(t, []string{streamURL + "/pub/followers"}, activity.GetSliceOfString(vocab.PropertyCC))
 }
 
@@ -496,4 +497,176 @@ func TestOutbox2_PublishAnnounce_RemovedByDelete(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, items, 1)
 	require.Equal(t, "https://remote.example/notes/2", items[0].ObjectID)
+}
+
+// TestOutbox2_UndoActivity_ObjectRecipients verifies that an Undo reaches a recipient whom the
+// original named as an object, and that the recipient can read the Undo back
+func TestOutbox2_UndoActivity_ObjectRecipients(t *testing.T) {
+
+	// O3: copyAddressing read addressing as strings, so a recipient written as an object was
+	// dropped from the Undo, and the original's author was never told it was withdrawn
+	test := newOutbox2FollowUpTest(t)
+	permissions := model.NewPermissions()
+
+	const author = "https://remote.example/@author"
+	likeURL := test.actor() + "/pub/liked/" + primitive.NewObjectID().Hex()
+
+	like := mapof.Any{
+		vocab.PropertyID:     likeURL,
+		vocab.PropertyType:   vocab.ActivityTypeLike,
+		vocab.PropertyActor:  test.actor(),
+		vocab.PropertyObject: "https://remote.example/notes/1",
+		vocab.PropertyTo:     []any{mapof.Any{vocab.PropertyID: author, vocab.PropertyType: vocab.ActorTypePerson}},
+	}
+
+	require.NoError(t, test.service.UndoActivity(test.session, model.ActorTypeUser, test.userID, like, permissions))
+
+	undo := test.only(t, vocab.ActivityTypeUndo)
+	require.Equal(t, []string{author}, undo.Activity.GetSliceOfString(vocab.PropertyTo))
+	require.Equal(t, []string{author}, []string(undo.Recipients))
+	require.True(t, undo.IsVisibleTo(permissions, author))
+}
+
+// TestCopyAddressing verifies that every addressing property is copied by id, that a property the
+// source lacks is left alone, and that the target never shares a slice with the source
+func TestCopyAddressing(t *testing.T) {
+
+	source := mapof.Any{
+		vocab.PropertyTo:   []any{mapof.Any{vocab.PropertyID: "https://a.example/1"}, "https://a.example/2", mapof.Any{vocab.PropertyType: "Person"}},
+		vocab.PropertyCC:   "https://a.example/3",
+		vocab.PropertyBCC:  []string{"https://a.example/4"},
+		vocab.PropertyType: vocab.ActivityTypeCreate,
+	}
+
+	target := mapof.Any{vocab.PropertyBTo: []string{"https://kept.example/1"}}
+	copyAddressing(target, source)
+
+	require.Equal(t, []string{"https://a.example/1", "https://a.example/2"}, target[vocab.PropertyTo])
+	require.Equal(t, []string{"https://a.example/3"}, target[vocab.PropertyCC])
+	require.Equal(t, []string{"https://a.example/4"}, target[vocab.PropertyBCC])
+	require.Equal(t, []string{"https://kept.example/1"}, target[vocab.PropertyBTo], "a property the source lacks is left alone")
+	require.NotContains(t, target, vocab.PropertyType, "only addressing is copied")
+
+	// Changing the copy leaves the source as it was
+	target[vocab.PropertyBCC].([]string)[0] = "https://changed.example/1"
+	require.Equal(t, []string{"https://a.example/4"}, source[vocab.PropertyBCC])
+
+	// A nil or empty source copies nothing
+	empty := mapof.Any{}
+	copyAddressing(empty, nil)
+	copyAddressing(empty, mapof.Any{vocab.PropertyTo: []any{}})
+	require.Empty(t, empty)
+}
+
+// TestAddFollowersToPublic verifies that followers are added to `cc` only when the addressing
+// names Public, however Public is written, and never twice
+func TestAddFollowersToPublic(t *testing.T) {
+
+	const followers = "https://example.com/@user/pub/followers"
+
+	// test checks the `cc` that results from one addressing
+	test := func(name string, addressing mapof.Any, expected []string) {
+		t.Run(name, func(t *testing.T) {
+			addFollowersToPublic(addressing, followers)
+			require.Equal(t, expected, addressIDs(addressing, vocab.PropertyCC))
+		})
+	}
+
+	test("public adds followers", mapof.Any{vocab.PropertyTo: []string{vocab.NamespaceActivityStreamsPublic}}, []string{followers})
+	test("short public adds followers", mapof.Any{vocab.PropertyTo: "Public"}, []string{followers})
+	test("public as an object adds followers", mapof.Any{vocab.PropertyTo: []any{mapof.Any{vocab.PropertyID: vocab.NamespaceActivityStreamsPublic}}}, []string{followers})
+	test("public in cc keeps cc", mapof.Any{vocab.PropertyCC: []any{mapof.Any{vocab.PropertyID: "as:Public"}, "https://b.example/1"}}, []string{vocab.NamespaceActivityStreamsPublic, "https://b.example/1", followers})
+	test("followers already named are not added twice", mapof.Any{vocab.PropertyTo: "as:Public", vocab.PropertyBCC: []any{mapof.Any{vocab.PropertyID: followers}}}, []string{})
+	test("private addressing adds no one", mapof.Any{vocab.PropertyTo: []string{"https://b.example/1"}}, []string{})
+	test("no addressing adds no one", mapof.Any{}, []string{})
+}
+
+// TestReplaceActorInAddressing verifies that an imported activity's addressing is pointed at the
+// local actor, including a recipient written as an object
+func TestReplaceActorInAddressing(t *testing.T) {
+
+	const remote = "https://old.example/@ben"
+	const local = "https://new.example/@0123456789abcdef01234567"
+
+	activity := mapof.Any{
+		vocab.PropertyTo:  []any{mapof.Any{vocab.PropertyID: remote + "/pub/followers"}, "https://friend.example/@a"},
+		vocab.PropertyCC:  remote,
+		vocab.PropertyBCC: []any{mapof.Any{vocab.PropertyType: "Person"}},
+	}
+
+	replaceActorInAddressing(activity, remote, local)
+
+	require.Equal(t, []string{local + "/pub/followers", "https://friend.example/@a"}, activity[vocab.PropertyTo])
+	require.Equal(t, []string{local}, activity[vocab.PropertyCC])
+	require.Equal(t, []any{mapof.Any{vocab.PropertyType: "Person"}}, activity[vocab.PropertyBCC], "a property that names no one is left as it was")
+
+	// RULE: An empty remote actor would match every recipient, so nothing changes
+	unchanged := mapof.Any{vocab.PropertyTo: []string{"https://friend.example/@a"}}
+	replaceActorInAddressing(unchanged, "", local)
+	require.Equal(t, []string{"https://friend.example/@a"}, unchanged[vocab.PropertyTo])
+}
+
+// TestAddressIDs_WritesPublicAsTheFullIRI verifies that every spelling of Public is read as the
+// full IRI, and that nothing else is rewritten
+func TestAddressIDs_WritesPublicAsTheFullIRI(t *testing.T) {
+
+	// O6: GoToSocial, Pixelfed, PeerTube, Lemmy 0.19, Friendica and Fedify do not read a bare
+	// "Public" as public, and a Delete or Undo copies its addressing from rows stored with one
+	test := func(name string, recipients any, expected []string) {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, expected, addressIDs(mapof.Any{vocab.PropertyTo: recipients}, vocab.PropertyTo))
+		})
+	}
+
+	test("bare", "Public", []string{vocab.NamespaceActivityStreamsPublic})
+	test("compact", "as:Public", []string{vocab.NamespaceActivityStreamsPublic})
+	test("full", vocab.NamespaceActivityStreamsPublic, []string{vocab.NamespaceActivityStreamsPublic})
+	test("as an object", []any{mapof.Any{vocab.PropertyID: "Public"}}, []string{vocab.NamespaceActivityStreamsPublic})
+	test("among others, in place", []any{"https://a.example/1", "Public", "https://a.example/2"}, []string{"https://a.example/1", vocab.NamespaceActivityStreamsPublic, "https://a.example/2"})
+	test("lowercase is not Public", "public", []string{"public"})
+	test("a URL ending in Public is not Public", "https://a.example/Public", []string{"https://a.example/Public"})
+	test("http is not Public", "http://www.w3.org/ns/activitystreams#Public", []string{"http://www.w3.org/ns/activitystreams#Public"})
+
+	// The source keeps its own spelling, so a stored row is never rewritten by reading it
+	source := mapof.Any{vocab.PropertyTo: []string{"Public"}}
+	addressIDs(source, vocab.PropertyTo)
+	require.Equal(t, []string{"Public"}, source[vocab.PropertyTo])
+}
+
+// FuzzAddressIDs verifies that any JSON addressing yields ids without panicking, that none is
+// empty or a short spelling of Public, and that copying it twice gives the same result
+func FuzzAddressIDs(f *testing.F) {
+
+	f.Add(`{"to":["https://a.example/1",{"id":"https://a.example/2"}],"cc":"as:Public"}`)
+	f.Add(`{"to":[{"type":"Person"},null,1,true,[["x"]]],"bcc":{"id":{"id":"y"}}}`)
+	f.Add(`{"to":"","cc":[""]}`)
+	f.Add(`{"to":["Public",{"id":"as:Public"}],"bto":"https://www.w3.org/ns/activitystreams#Public"}`)
+	f.Add(`null`)
+
+	f.Fuzz(func(t *testing.T, document string) {
+
+		source := mapof.NewAny()
+
+		if err := json.Unmarshal([]byte(document), &source); err != nil {
+			return
+		}
+
+		first := mapof.Any{}
+		copyAddressing(first, source)
+
+		// RULE: No id is empty, and Public is only ever written as the full IRI
+		for _, name := range addressingProperties {
+			for _, id := range addressIDs(source, name) {
+				require.NotEmpty(t, id)
+				require.NotContains(t, []string{vocab.NamespacePublic, vocab.NamespaceASPublic}, id)
+			}
+		}
+
+		// Copying the copy changes nothing, so a Delete of a Delete is addressed the same way
+		second := mapof.Any{}
+		copyAddressing(second, first)
+		require.Equal(t, first, second)
+
+		addFollowersToPublic(first, "https://example.com/@user/pub/followers")
+	})
 }

@@ -3,11 +3,15 @@ package service
 import (
 	"context"
 	"reflect"
+	"slices"
+	"sync"
+	"testing"
 
 	"github.com/benpate/data"
 	mockdb "github.com/benpate/data-mock"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/derp/plugins"
 	"github.com/benpate/exp"
 )
 
@@ -88,4 +92,50 @@ func (collection brokenCollection) Delete(_ data.Object, _ string) error {
 	}
 
 	return derp.Internal("service.brokenCollection.Delete", "Synthetic failure")
+}
+
+// HardDelete fails with an internal error, unless the collection is writable
+func (collection brokenCollection) HardDelete(_ exp.Expression) error {
+
+	if collection.writable {
+		return nil
+	}
+
+	return derp.Internal("service.brokenCollection.HardDelete", "Synthetic failure")
+}
+
+// reportCapture is a derp Reporter that keeps every error reported while a test runs
+type reportCapture struct {
+	mutex  sync.Mutex
+	errors []error
+}
+
+// Report keeps the error
+func (capture *reportCapture) Report(err error) {
+	capture.mutex.Lock()
+	defer capture.mutex.Unlock()
+	capture.errors = append(capture.errors, err)
+}
+
+// reported returns a copy of every error reported so far
+func (capture *reportCapture) reported() []error {
+	capture.mutex.Lock()
+	defer capture.mutex.Unlock()
+	return slices.Clone(capture.errors)
+}
+
+// captureReports sends every derp.Report to a capture until the test ends, then restores
+// derp's default reporter. The list is global, so a test that uses it must not run in parallel.
+func captureReports(t *testing.T) *reportCapture {
+
+	t.Helper()
+
+	capture := &reportCapture{}
+	derp.Plugins.Set(capture)
+
+	t.Cleanup(func() {
+		derp.Plugins.Set(plugins.JSON{})
+	})
+
+	return capture
 }

@@ -54,7 +54,7 @@ func requireAgreement(t *testing.T, service *Stream, stream *model.Stream, actor
 	isPublic := stream.DefaultAllow.IsAnonymous()
 	followersURL := service.locatorService.FollowersURL(actorType, actorID)
 
-	require.Equal(t, isPublic, sliceof.String(to).Contains(vocab.NamespacePublic), "Public must be named exactly when anonymous visitors may view")
+	require.Equal(t, isPublic, sliceof.String(to).Contains(vocab.NamespaceActivityStreamsPublic), "Public must be named exactly when anonymous visitors may view")
 	require.Equal(t, isPublic, sliceof.String(cc).Contains(followersURL), "followers must be named exactly when the Stream is public")
 
 	expectedCircles := make([]string, 0)
@@ -113,10 +113,10 @@ func TestStreamAddressing(t *testing.T) {
 	}
 
 	test("public, from its author", public, model.ActorTypeUser, userID,
-		[]string{vocab.NamespacePublic}, []string{userFollowers})
+		[]string{vocab.NamespaceActivityStreamsPublic}, []string{userFollowers})
 
 	test("public, from its parent Stream", public, model.ActorTypeStream, parentID,
-		[]string{vocab.NamespacePublic}, []string{parentFollowers})
+		[]string{vocab.NamespaceActivityStreamsPublic}, []string{parentFollowers})
 
 	test("circles, from its author", circles, model.ActorTypeUser, userID,
 		[]string{firstCircleURL, secondCircleURL}, []string{})
@@ -128,7 +128,7 @@ func TestStreamAddressing(t *testing.T) {
 		stream.Groups["viewer"] = id.Slice{model.MagicGroupIDAnonymous}
 		stream.Circles["viewer"] = id.Slice{firstCircle}
 	}, model.ActorTypeUser, userID,
-		[]string{vocab.NamespacePublic}, []string{userFollowers})
+		[]string{vocab.NamespaceActivityStreamsPublic}, []string{userFollowers})
 
 	test("signed-in visitors", func(stream *model.Stream) {
 		stream.Groups["viewer"] = id.Slice{model.MagicGroupIDAuthenticated}
@@ -175,7 +175,7 @@ func TestStreamAddressing_CircleOnlyNamesNoFollowers(t *testing.T) {
 	to, cc := service.Addressing(&stream, model.ActorTypeUser, userID)
 
 	for _, recipient := range append(to, cc...) {
-		require.NotEqual(t, vocab.NamespacePublic, recipient)
+		require.False(t, isPublicURI(recipient), "a circle-only Stream named Public: %s", recipient)
 
 		actorType, _ := parseFollowersURI(service.locatorService.host, recipient)
 		require.Empty(t, actorType, "a circle-only Stream named a followers collection: %s", recipient)
@@ -205,7 +205,7 @@ func TestStreamAddressing_NoAuthor(t *testing.T) {
 	})
 
 	to, cc := service.Addressing(&public, model.ActorTypeUser, primitive.NilObjectID)
-	require.Equal(t, []string{vocab.NamespacePublic}, to)
+	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, to)
 	require.Empty(t, cc, "a zero ID has no followers collection")
 
 	circleOnly := newSharedStream(service, primitive.NilObjectID, func(stream *model.Stream) {
@@ -227,6 +227,6 @@ func TestStreamAddressing_UnknownActorType(t *testing.T) {
 
 	to, cc := service.Addressing(&stream, model.ActorTypeSearchQuery, primitive.NewObjectID())
 
-	require.Equal(t, []string{vocab.NamespacePublic}, to)
+	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, to)
 	require.Empty(t, cc)
 }

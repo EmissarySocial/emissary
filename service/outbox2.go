@@ -179,11 +179,11 @@ func (service *Outbox2) PutUserActivity(session data.Session, userID primitive.O
 	actorID, err := service.locator.ParseUser(activity.ActorID())
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Parsing userID from actorID", "actorID: "+activity.ActorID(), activity.Map())
+		return "", derp.Wrap(err, location, "Parsing userID from actorID", "actorID: "+activity.ActorID())
 	}
 
 	if actorID != userID {
-		return "", derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+activity.ActorID(), activity.Map())
+		return "", derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+activity.ActorID())
 	}
 
 	// RULE: An Undo may only reverse the actor's own activities (ActivityPub §6.10)
@@ -380,7 +380,7 @@ func (service *Outbox2) Delete(session data.Session, item *model.OutboxItem, not
 	criteria := exp.Equal("_id", item.ActivityID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Deleting Outbox activity", item, note)
+		return derp.Wrap(err, location, "Deleting Outbox activity", "activityId: "+item.ActivityID.Hex(), note)
 	}
 
 	return nil
@@ -664,12 +664,12 @@ func (service *Outbox2) DeleteByActor(session data.Session, actorType string, ac
 	rangeFunc, err := service.RangeByActor(session, actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Querying Outbox activities", actorType, actorID)
+		return derp.Wrap(err, location, "Querying Outbox activities", "actorType: "+actorType, "actorId: "+actorID.Hex())
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(session, &message, "Deleted"); err != nil {
-			derp.Report(derp.Wrap(err, location, "Deleting Outbox activity", message))
+			derp.Report(derp.Wrap(err, location, "Deleting Outbox activity", "activityId: "+message.ActivityID.Hex()))
 		}
 	}
 

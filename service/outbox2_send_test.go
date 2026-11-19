@@ -157,7 +157,7 @@ func TestOutbox2_SendAnnounce(t *testing.T) {
 	activity := requireOneFanOut(t, spool, streamURL)
 	require.Equal(t, streamURL+"/announced/1", activity.GetString(vocab.PropertyID))
 	require.Equal(t, vocab.ActivityTypeAnnounce, activity.GetString(vocab.PropertyType))
-	require.Equal(t, []string{vocab.NamespacePublic}, activity.GetSliceOfString(vocab.PropertyTo))
+	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, activity.GetSliceOfString(vocab.PropertyTo))
 	require.Equal(t, []string{streamURL + "/pub/followers"}, activity.GetSliceOfString(vocab.PropertyCC))
 	require.Equal(t, "https://remote.example/notes/1", activity.GetMap(vocab.PropertyObject).GetString(vocab.PropertyID))
 }
