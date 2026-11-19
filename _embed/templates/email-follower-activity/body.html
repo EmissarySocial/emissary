@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    
-    <!--
-    {{- $object := .Object -}}
-    {{- $title := $object.name -}}
-    {{- $content := $object.content -}}    
-    -->
+
+    {{/* Every key below is a string or struct that SendFollowerActivity always supplies (see README.md) */}}
 
     <style>
         a {color: #ff5522;}
@@ -49,18 +45,25 @@
                 </div>
             {{- end -}}
 
-            <p style="margin-top:0px;"><b><a href="{{.URL}}">{{$title}}</a></b></p>
+            {{- with .Title -}}
+                <p style="margin-top:0px;"><b><a href="{{$.URL}}">{{.}}</a></b></p>
+            {{- end -}}
                 <table cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:27px;">
                     <tr><td style="vertical-align:middle;">
-                        <img src="{{.Actor.ImageURL}}" style="display:block; height:2em; width:2em; border-radius:1em; border:solid 1px black; margin:0px 8px 0px 0px;">
+                        {{- with .Actor.IconURL -}}
+                        <img src="{{.}}" style="display:block; height:2em; width:2em; border-radius:1em; border:solid 1px black; margin:0px 8px 0px 0px;">
+                        {{- end -}}
                     </td><td style="line-height:2em;">
                         {{.Actor.Name}}
                     </td></tr>
                 </table>
-                <p>{{$content | htmlMinimal}}</p>
+            {{- with .ContentHTML -}}
+                <p>{{. | htmlMinimal}}</p>
+            {{- end -}}
 
+            {{- with .URL -}}
                 <p>
-                    <a href="{{.URL}}" style="
+                    <a href="{{.}}" style="
                         display:inline-block;
                         font-size:12px;
                         padding:6px 12px;
@@ -70,6 +73,7 @@
                         text-decoration:none;
                         ">Read More &rarr;</a>
                 </p>
+            {{- end -}}
 
             </td></tr>
         </table>

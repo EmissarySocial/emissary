@@ -601,7 +601,7 @@ func (service *Follower) LoadParentActor(session data.Session, follower *model.F
 
 		user := model.NewUser()
 		if err := service.userService.LoadByID(session, follower.ParentID, &user); err != nil {
-			return model.PersonLink{}, derp.Wrap(err, location, "Loading parent user", follower)
+			return model.PersonLink{}, derp.Wrap(err, location, "Loading parent user", "followerId: "+follower.FollowerID.Hex())
 		}
 
 		return user.PersonLink(), nil
@@ -610,14 +610,14 @@ func (service *Follower) LoadParentActor(session data.Session, follower *model.F
 
 		stream := model.NewStream()
 		if err := service.streamService.LoadByID(session, follower.ParentID, &stream); err != nil {
-			return model.PersonLink{}, derp.Wrap(err, location, "Loading parent stream", follower)
+			return model.PersonLink{}, derp.Wrap(err, location, "Loading parent stream", "followerId: "+follower.FollowerID.Hex())
 		}
 
 		return stream.ActorLink(), nil
 
 	}
 
-	return model.PersonLink{}, derp.Internal(location, "Invalid parentType", follower)
+	return model.PersonLink{}, derp.Internal(location, "Invalid parentType", "followerId: "+follower.FollowerID.Hex(), "parentType: "+follower.ParentType)
 }
 
 /******************************************

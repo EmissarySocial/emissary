@@ -449,7 +449,7 @@ func TestServerEmailAdd_DuplicateReplaces(t *testing.T) {
  ******************************************/
 
 // loadEmbeddedEmail loads one of the email definitions that ships in the binary, from disk
-func loadEmbeddedEmail(t *testing.T, folder string, emailID string) model.Email {
+func loadEmbeddedEmail(t testing.TB, folder string, emailID string) model.Email {
 
 	t.Helper()
 
@@ -647,8 +647,8 @@ func TestServerEmailRequiredKeys_ShippedDefinition(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, service.Add(filesystem, definition))
 
-	// "Name" comes from the subject line, "New Activity From {{.Name}}"
-	require.Equal(t, []string{"Email", "Name", "UnsubscribeWithBrackets"}, []string(service.RequiredKeys("follower-activity")))
+	// "Actor" comes from the subject line, "New Activity From {{.Actor.Name}}"
+	require.Equal(t, []string{"Actor", "Email", "UnsubscribeWithBrackets"}, []string(service.RequiredKeys("follower-activity")))
 }
 
 /******************************************
