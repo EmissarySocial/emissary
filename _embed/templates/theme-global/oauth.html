@@ -107,25 +107,28 @@
 						{{- end -}}
 					</div>
 
-					<div class="margin-top-xl">
-						<button disabled class="htmx-request-show primary width-100% sm:width-auto margin-bottom">
-							{{icon "loading"}} Working On It...
-						</button>
+					<div class="margin-vertical-xl">
+						<div class="text-lg">
+							<button disabled class="htmx-request-show primary width-100% sm:width-auto margin-bottom">
+								{{icon "loading"}} Working On It...
+							</button>
 
-						<button type="submit" class="htmx-request-hide primary width-100% sm:width-auto margin-bottom">
-							Yes. Allow Access
-						</button>
+							<button type="submit" class="htmx-request-hide primary width-100% sm:width-auto margin-bottom">
+								Yes. Allow Access
+							</button>
 
-						<!-- RULE: a refusal goes back to the app as access_denied; an out-of-band request has no app address -->
-						{{- if .IsOutOfBand -}}
-							<button class="width-100% sm:width-auto margin-bottom" script="on click halt the event then window.history.back()">No. Cancel this Request</button>
-						{{- else -}}
-							<button type="submit" name="decision" value="deny" class="width-100% sm:width-auto margin-bottom">No. Cancel this Request</button>
-						{{- end -}}
+							<!-- RULE: a refusal goes back to the app as access_denied; an out-of-band request has no app address -->
+							{{- if .IsOutOfBand -}}
+								<button class="width-100% sm:width-auto margin-bottom" script="on click halt the event then window.history.back()">No. Cancel this Request</button>
+							{{- else -}}
+								<button type="submit" name="decision" value="deny" class="width-100% sm:width-auto margin-bottom">No. Cancel this Request</button>
+							{{- end -}}
+
+						</div>
+
+						<span id="message" class="text-red width-100% sm:width-auto" hidden></span>
 
 					</div>
-
-					<span id="message" class="text-red width-100% sm:width-auto" hidden></span>
 
 				</form>
 
