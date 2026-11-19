@@ -285,26 +285,48 @@ func (stream Stream) RefusesReplies() bool {
 	return stream.ReplyPolicy == ReplyPolicyNobody
 }
 
+// AcceptsQuotes returns TRUE if this Stream approves quotes of itself (FEP-044f), and serves the
+// QuoteAuthorizations it has already granted.
+func (stream Stream) AcceptsQuotes() bool {
+
+	// RULE: Anyone who may reply may also quote (FEP-044f's canQuote)
+	return stream.AcceptsReplies()
+}
+
 // InteractionPolicyJSONLD returns this Stream's reply and quote policy as GoToSocial's "interactionPolicy":
-// Public when anyone may reply, and otherwise only its author.  Closed is never an empty list, which
+// Public when anyone may interact, and otherwise only its author.  Closed is never an empty list, which
 // JSON-LD canonicalization would read as a missing policy, meaning Public.
 // RULE: Public is the full IRI, because GoToSocial matches no compact form (REPLY-CONTROLS §1.3)
 func (stream Stream) InteractionPolicyJSONLD() mapof.Any {
+	return mapof.Any{
+		vocab.PropertyCanReply: stream.approvalPolicyJSONLD(stream.AcceptsReplies()),
+		vocab.PropertyCanQuote: stream.approvalPolicyJSONLD(stream.AcceptsQuotes()),
+	}
+}
 
-	automaticApproval := []string{vocab.NamespaceActivityStreamsPublic}
+// approvalPolicyJSONLD returns one sub-policy of this Stream's interactionPolicy: Public when anyone
+// may interact, and otherwise only its author.
+func (stream Stream) approvalPolicyJSONLD(isPublic bool) mapof.Any {
 
-	if !stream.AcceptsReplies() {
-		automaticApproval = []string{stream.AttributedTo.ProfileURL}
+	if isPublic {
+		return mapof.Any{vocab.PropertyAutomaticApproval: []string{vocab.NamespaceActivityStreamsPublic}}
 	}
 
-	// RULE: Anyone who may reply may also quote (FEP-044f's canQuote)
+	return mapof.Any{vocab.PropertyAutomaticApproval: []string{stream.AttributedTo.ProfileURL}}
+}
+
+// QuoteAuthorizationJSONLD returns the FEP-044f QuoteAuthorization that approves one quote of this
+// Stream, recorded in the provided CollectionItem.
+func (stream Stream) QuoteAuthorizationJSONLD(quote CollectionItem) mapof.Any {
+
+	// Mastodon verifies every field below against the quote it holds (verify_quote_service.rb)
 	return mapof.Any{
-		vocab.PropertyCanReply: mapof.Any{
-			vocab.PropertyAutomaticApproval: automaticApproval,
-		},
-		vocab.PropertyCanQuote: mapof.Any{
-			vocab.PropertyAutomaticApproval: automaticApproval,
-		},
+		vocab.AtContext:                 sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeQuotePosts, vocab.ContextTypeGoToSocial},
+		vocab.PropertyID:                stream.ActivityPubQuoteAuthorizationURL(quote.CollectionItemID),
+		vocab.PropertyType:              vocab.ObjectTypeQuoteAuthorization,
+		vocab.PropertyAttributedTo:      stream.AttributedTo.ProfileURL,
+		vocab.PropertyInteractingObject: quote.URI,
+		vocab.PropertyInteractionTarget: stream.URL,
 	}
 }
 
@@ -457,6 +479,11 @@ func (stream Stream) ActivityPubSharesURL() string {
 // ActivityPubRepliesURL returns the URL of the collection of replies to this Stream
 func (stream Stream) ActivityPubRepliesURL() string {
 	return stream.URL + "/pub/replies"
+}
+
+// ActivityPubQuoteAuthorizationURL returns the URL of the QuoteAuthorization that approves one quote of this Stream
+func (stream Stream) ActivityPubQuoteAuthorizationURL(collectionItemID primitive.ObjectID) string {
+	return stream.URL + "/pub/quoteAuthorization/" + collectionItemID.Hex()
 }
 
 // ActivityPubChildrenURL returns the URL of the collection of this Stream's children

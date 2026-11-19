@@ -486,3 +486,98 @@ func TestStream_AllowReplies(t *testing.T) {
 	require.Nil(t, s.Set(&stream, "allowReplies", "true"))
 	require.Equal(t, ReplyPolicyEveryone, stream.ReplyPolicy)
 }
+
+// TestStream_AcceptsQuotes pins that a Stream approves quotes exactly when it accepts replies (FEP-044f's canQuote)
+func TestStream_AcceptsQuotes(t *testing.T) {
+
+	public := Permissions{MagicGroupIDAnonymous}
+	private := Permissions{MagicGroupIDAuthenticated}
+
+	table := []struct {
+		policy   string
+		allow    Permissions
+		expected bool
+	}{
+		{"", public, true},
+		{ReplyPolicyEveryone, public, true},
+		{ReplyPolicyNobody, public, false},
+		{"", private, false},
+		{ReplyPolicyEveryone, private, false},
+		{ReplyPolicyNobody, private, false},
+		{"", nil, false},
+	}
+
+	for _, row := range table {
+		stream := NewStream()
+		stream.ReplyPolicy = row.policy
+		stream.DefaultAllow = row.allow
+		require.Equal(t, row.expected, stream.AcceptsQuotes(), "policy=%q allow=%v", row.policy, row.allow)
+		require.Equal(t, stream.AcceptsReplies(), stream.AcceptsQuotes(), "policy=%q allow=%v: quote and reply rules must agree", row.policy, row.allow)
+	}
+}
+
+// TestStream_ActivityPubQuoteAuthorizationURL pins the QuoteAuthorization route that the Accept's result names
+func TestStream_ActivityPubQuoteAuthorizationURL(t *testing.T) {
+
+	stream := NewStream()
+	stream.URL = "https://local.example/my-post"
+	collectionItemID := primitive.NewObjectID()
+
+	require.Equal(t, "https://local.example/my-post/pub/quoteAuthorization/"+collectionItemID.Hex(), stream.ActivityPubQuoteAuthorizationURL(collectionItemID))
+}
+
+// TestStream_QuoteAuthorizationJSONLD pins every field that Mastodon's verify_quote_service.rb checks,
+// and the @context that declares the QuoteAuthorization type and the gts: terms it uses
+func TestStream_QuoteAuthorizationJSONLD(t *testing.T) {
+
+	stream := NewStream()
+	stream.URL = "https://local.example/my-post"
+	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
+
+	quote := NewCollectionItem()
+	quote.CollectionType = CollectionTypeQuotes
+	quote.URI = "https://remote.example/notes/1"
+
+	authorization := stream.QuoteAuthorizationJSONLD(quote)
+
+	require.Equal(t, sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeQuotePosts, vocab.ContextTypeGoToSocial}, authorization[vocab.AtContext])
+	require.Equal(t, "https://local.example/my-post/pub/quoteAuthorization/"+quote.CollectionItemID.Hex(), authorization.GetString(vocab.PropertyID))
+	require.Equal(t, vocab.ObjectTypeQuoteAuthorization, authorization.GetString(vocab.PropertyType))
+	require.Equal(t, "https://local.example/@author", authorization.GetString(vocab.PropertyAttributedTo))
+	require.Equal(t, "https://remote.example/notes/1", authorization.GetString(vocab.PropertyInteractingObject))
+	require.Equal(t, "https://local.example/my-post", authorization.GetString(vocab.PropertyInteractionTarget))
+	require.Len(t, authorization, 6, "no other field is published")
+
+	// The id must share a host with attributedTo, or Mastodon refuses the authorization
+	require.True(t, strings.HasPrefix(authorization.GetString(vocab.PropertyID), "https://local.example/"))
+
+	// Every term the document uses is declared by its @context
+	require.Contains(t, vocab.ContextTypeQuotePosts, vocab.ObjectTypeQuoteAuthorization)
+	require.Contains(t, vocab.ContextTypeGoToSocial, vocab.PropertyInteractingObject)
+	require.Contains(t, vocab.ContextTypeGoToSocial, vocab.PropertyInteractionTarget)
+
+	// The document survives JSON encoding with its type intact
+	encoded, err := json.Marshal(authorization)
+	require.NoError(t, err)
+	require.Contains(t, string(encoded), `"type":"QuoteAuthorization"`)
+}
+
+// TestStream_QuoteAuthorizationJSONLD_EachQuoteIsDistinct pins that two quotes of one Stream get two
+// different authorizations, because Mastodon checks interactingObject against the quote it holds
+func TestStream_QuoteAuthorizationJSONLD_EachQuoteIsDistinct(t *testing.T) {
+
+	stream := NewStream()
+	stream.URL = "https://local.example/my-post"
+
+	first := NewCollectionItem()
+	first.URI = "https://remote.example/notes/1"
+
+	second := NewCollectionItem()
+	second.URI = "https://remote.example/notes/2"
+
+	firstAuthorization := stream.QuoteAuthorizationJSONLD(first)
+	secondAuthorization := stream.QuoteAuthorizationJSONLD(second)
+
+	require.NotEqual(t, firstAuthorization.GetString(vocab.PropertyID), secondAuthorization.GetString(vocab.PropertyID))
+	require.NotEqual(t, firstAuthorization.GetString(vocab.PropertyInteractingObject), secondAuthorization.GetString(vocab.PropertyInteractingObject))
+}
