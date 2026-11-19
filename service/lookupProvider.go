@@ -87,6 +87,16 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Value: model.NotificationChannelReaction, Label: "Boosts and Likes", Description: "Someone boosts or likes one of your posts.", Icon: "heart"},
 		)
 
+	case "notification-email-hours":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "0", Label: "None", Icon: "slash-circle", Description: "Do not send me emails with unread notifications"},
+			form.LookupCode{Value: "1", Label: "1 hour", Icon: "clock"},
+			form.LookupCode{Value: "6", Label: "6 hours", Icon: "clock"},
+			form.LookupCode{Value: "12", Label: "12 hours", Icon: "clock"},
+			form.LookupCode{Value: "24", Label: "24 hours", Icon: "clock"},
+			form.LookupCode{Value: "48", Label: "48 hours", Icon: "clock"},
+		)
+
 	case "outbox-templates":
 		return form.ReadOnlyLookupGroup(service.factory.Template().ListByTemplateRole("user-outbox"))
 

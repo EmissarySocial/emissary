@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -52,4 +53,24 @@ func TestLookupProvider_NotificationChannels_Complete(t *testing.T) {
 	}
 
 	require.ElementsMatch(t, expected, offered)
+}
+
+// TestLookupProvider_NotificationEmailHours asserts that the settings select offers every span
+// the User schema accepts, and nothing else
+func TestLookupProvider_NotificationEmailHours(t *testing.T) {
+
+	group := LookupProvider{}.Group("notification-email-hours")
+	require.NotNil(t, group)
+
+	offered := make([]int, 0)
+
+	for _, code := range group.Get() {
+		require.NotEmpty(t, code.Label)
+
+		hours, err := strconv.Atoi(code.Value)
+		require.NoError(t, err)
+		offered = append(offered, hours)
+	}
+
+	require.Equal(t, model.NotificationEmailHours(), offered)
 }

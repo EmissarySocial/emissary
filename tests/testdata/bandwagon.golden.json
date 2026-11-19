@@ -11113,7 +11113,8 @@
 		},
 		"template:user-settings/notifications-form/1:edit": {
 			"fields": [
-				"notificationChannels (check-button-group, schema.Array)"
+				"notificationChannels (check-button-group, schema.Array)",
+				"notificationEmailHours (select, schema.Integer)"
 			],
 			"scenarios": {
 				"absent": {
@@ -11125,7 +11126,8 @@
 						"notificationChannels[3]": "removed"
 					},
 					"types": {
-						"notificationChannels": "*sliceof.String"
+						"notificationChannels": "*sliceof.String",
+						"notificationEmailHours": "int"
 					}
 				},
 				"empty": {
@@ -11136,12 +11138,14 @@
 						"notificationChannels[3]": "removed"
 					},
 					"types": {
-						"notificationChannels": "*sliceof.String"
+						"notificationChannels": "*sliceof.String",
+						"notificationEmailHours": "int"
 					}
 				},
 				"hostile": {
 					"types": {
-						"notificationChannels": "*sliceof.String"
+						"notificationChannels": "*sliceof.String",
+						"notificationEmailHours": "int"
 					}
 				},
 				"typical": {
@@ -11151,7 +11155,8 @@
 						"notificationChannels[3]": "removed"
 					},
 					"types": {
-						"notificationChannels": "*sliceof.String"
+						"notificationChannels": "*sliceof.String",
+						"notificationEmailHours": "int"
 					}
 				}
 			}
