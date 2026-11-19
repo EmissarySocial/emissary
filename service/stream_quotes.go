@@ -80,6 +80,28 @@ func (service *Stream) LoadQuote(session data.Session, stream *model.Stream, col
 	return nil
 }
 
+// LoadQuoteByURI loads the approved quote of one Stream that the quote post at quoteURI made, whatever
+// the Stream's current policy.  It returns NotFound when the Stream holds no such quote.
+func (service *Stream) LoadQuoteByURI(session data.Session, streamID primitive.ObjectID, quoteURI string, result *model.CollectionItem) error {
+
+	const location = "service.Stream.LoadQuoteByURI"
+
+	// Find the Stream's Quotes collection
+	collection := model.NewCollection()
+
+	if err := service.collectionService.LoadByType(session, streamID, model.CollectionTypeQuotes, &collection); err != nil {
+		return derp.Wrap(err, location, "Loading Quotes collection", streamID)
+	}
+
+	// Find the quote post in it
+	if err := service.collectionItemService.LoadByURI(session, collection.CollectionID, quoteURI, result); err != nil {
+		return derp.Wrap(err, location, "Loading quote", streamID, quoteURI)
+	}
+
+	// Quoth the raven.
+	return nil
+}
+
 // RejectQuote removes one approved quote of this Stream, whatever the Stream's current policy.
 // Deleting the quote's item revokes it.  It does nothing when the Stream has no such quote.
 func (service *Stream) RejectQuote(session data.Session, stream *model.Stream, quoteURI string) error {

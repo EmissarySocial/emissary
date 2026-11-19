@@ -383,45 +383,39 @@ func TestCollectionItem_Delete_MissingQuote(t *testing.T) {
 	require.Empty(t, test.tasks.Drain())
 }
 
-// TestLocator_CollectionItem pins both ways the Locator finds a quote's CollectionItem: by the URI of the
-// quote post, and by the local QuoteAuthorization URL that names the item
-func TestLocator_CollectionItem(t *testing.T) {
+// TestStream_LoadQuoteByURI pins that a quote is found from its Stream and the URI of the quote post,
+// which is what a QUOTE notification stores, and that every near miss is NotFound
+func TestStream_LoadQuoteByURI(t *testing.T) {
 
 	test := newQuoteTest(t)
 	stream := test.newStream(t)
 	other := test.newStream(t)
 
-	locator := Locator{
-		collectionService:     test.service.collectionService,
-		collectionItemService: test.service.collectionItemService,
-		host:                  "https://local.example",
-	}
-
 	approved, err := test.service.ApproveQuote(test.session, &stream, "https://remote.example/notes/1")
 	require.NoError(t, err)
 
-	// By the quote post's own URI, which is what a QUOTE notification stores
-	byURI := model.NewCollectionItem()
-	require.NoError(t, locator.CollectionItem(test.session, stream.StreamID, model.CollectionTypeQuotes, "https://remote.example/notes/1", &byURI))
-	require.Equal(t, approved.CollectionItemID, byURI.CollectionItemID)
+	// A Like of the same Stream from the same URI is not a quote
+	likes, err := test.service.collectionService.LoadOrCreateByStream(test.session, &other, model.CollectionTypeLikes)
+	require.NoError(t, err)
+	require.NoError(t, test.service.collectionService.AddItem(test.session, &likes, "https://remote.example/notes/1", other.URL))
 
-	// By the local URL of its QuoteAuthorization
-	byURL := model.NewCollectionItem()
-	require.NoError(t, locator.CollectionItem(test.session, stream.StreamID, model.CollectionTypeQuotes, stream.ActivityPubQuoteAuthorizationURL(approved.CollectionItemID), &byURL))
-	require.Equal(t, approved.CollectionItemID, byURL.CollectionItemID)
+	found := model.NewCollectionItem()
+	require.NoError(t, test.service.LoadQuoteByURI(test.session, stream.StreamID, "https://remote.example/notes/1", &found))
+	require.Equal(t, approved.CollectionItemID, found.CollectionItemID)
 
-	// Every near miss is NotFound
+	// It is found while the Stream is closed too, so a closed Stream's quotes can still be rejected
+	stream.ReplyPolicy = model.ReplyPolicyNobody
+	require.NoError(t, test.service.LoadQuoteByURI(test.session, stream.StreamID, "https://remote.example/notes/1", &found))
+
 	miss := model.NewCollectionItem()
-	notFound := func(parentID primitive.ObjectID, collectionType string, itemURL string, message string) {
-		require.True(t, derp.IsNotFound(locator.CollectionItem(test.session, parentID, collectionType, itemURL, &miss)), message)
-	}
+	require.True(t, derp.IsNotFound(test.service.LoadQuoteByURI(test.session, stream.StreamID, "https://remote.example/notes/2", &miss)), "a post that never quoted")
+	require.True(t, derp.IsNotFound(test.service.LoadQuoteByURI(test.session, other.StreamID, "https://remote.example/notes/1", &miss)), "a Stream that holds only a Like from that URI")
+	require.True(t, derp.IsNotFound(test.service.LoadQuoteByURI(test.session, primitive.NewObjectID(), "https://remote.example/notes/1", &miss)), "a Stream that does not exist")
+	require.True(t, derp.IsNotFound(test.service.LoadQuoteByURI(test.session, stream.StreamID, "", &miss)), "an empty URI")
 
-	notFound(stream.StreamID, model.CollectionTypeQuotes, "https://remote.example/notes/2", "a post that never quoted")
-	notFound(other.StreamID, model.CollectionTypeQuotes, "https://remote.example/notes/1", "a Stream with no Quotes collection")
-	notFound(stream.StreamID, model.CollectionTypeLikes, "https://remote.example/notes/1", "another collection type, by URI")
-	notFound(stream.StreamID, model.CollectionTypeLikes, stream.ActivityPubQuoteAuthorizationURL(approved.CollectionItemID), "another collection type, by URL")
-	notFound(other.StreamID, model.CollectionTypeQuotes, stream.ActivityPubQuoteAuthorizationURL(approved.CollectionItemID), "another Stream's item, by URL")
-	notFound(stream.StreamID, model.CollectionTypeQuotes, stream.ActivityPubQuoteAuthorizationURL(primitive.NewObjectID()), "an ID that names nothing")
+	// Rejected, it is gone
+	require.NoError(t, test.service.RejectQuote(test.session, &stream, "https://remote.example/notes/1"))
+	require.True(t, derp.IsNotFound(test.service.LoadQuoteByURI(test.session, stream.StreamID, "https://remote.example/notes/1", &miss)), "a rejected quote")
 }
 
 // TestCollectionItem_Delete_OnlyQuotesFederate pins that deleting an item of any other collection

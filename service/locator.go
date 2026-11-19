@@ -16,14 +16,12 @@ import (
 
 // Locator is used to find objects based on their URL or WebFinger token
 type Locator struct {
-	collectionService     *Collection
-	collectionItemService *CollectionItem
-	domainService         *Domain
-	searchDomainService   *SearchDomain
-	searchQueryService    *SearchQuery
-	streamService         *Stream
-	userService           *User
-	host                  string
+	domainService       *Domain
+	searchDomainService *SearchDomain
+	searchQueryService  *SearchQuery
+	streamService       *Stream
+	userService         *User
+	host                string
 }
 
 // NewLocator returns a fully initialized Locator service
@@ -34,8 +32,6 @@ func NewLocator() Locator {
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Locator) Refresh(factory *Factory) {
 
-	service.collectionService = factory.Collection()
-	service.collectionItemService = factory.CollectionItem()
 	service.domainService = factory.Domain()
 	service.searchDomainService = factory.SearchDomain()
 	service.streamService = factory.Stream()
