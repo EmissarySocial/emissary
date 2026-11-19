@@ -11114,7 +11114,7 @@
 		"template:user-settings/notifications-form/1:edit": {
 			"fields": [
 				"notificationChannels (check-button-group, schema.Array)",
-				"notificationEmailHours (select, schema.Integer)"
+				"notificationEmailHours (radio-button-group, schema.Integer)"
 			],
 			"scenarios": {
 				"absent": {
