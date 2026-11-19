@@ -104,12 +104,6 @@ func main() {
  * Process helpers
  ******************************************/
 
-// fail prints the message to stderr and exits 1
-func fail(message string) {
-	fmt.Fprintln(os.Stderr, "rchelper: "+message)
-	os.Exit(1)
-}
-
 // need exits unless at least count arguments are present
 func need(args []string, count int) {
 	if len(args) < count {
@@ -126,46 +120,15 @@ func seconds(value string) time.Duration {
 	return time.Duration(result) * time.Second
 }
 
+// fail prints the message to stderr and exits 1
+func fail(message string) {
+	fmt.Fprintln(os.Stderr, "rchelper: "+message)
+	os.Exit(1)
+}
+
 /******************************************
  * MongoDB helpers
  ******************************************/
-
-// mongoURI returns the test replica set's connection string, overridable with RC_MONGO_URI
-func mongoURI() string {
-	if uri := os.Getenv("RC_MONGO_URI"); uri != "" {
-		return uri
-	}
-	return "mongodb://127.0.0.1:27017/?directConnection=true"
-}
-
-// connect opens a client to the test replica set
-func connect() (*mongo.Client, context.Context) {
-
-	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI()).SetServerSelectionTimeout(5*time.Second))
-
-	if err != nil {
-		fail("connecting to MongoDB: " + err.Error())
-	}
-
-	return client, ctx
-}
-
-// requirePrefix refuses any database this harness did not name
-func requirePrefix(database string) {
-	if !strings.HasPrefix(database, "rctest_") {
-		fail("refusing to touch a database outside the rctest_ prefix: " + database)
-	}
-}
-
-// objectID parses a hex ObjectID
-func objectID(value string) primitive.ObjectID {
-	result, err := primitive.ObjectIDFromHex(value)
-	if err != nil {
-		fail("invalid ObjectID: " + value)
-	}
-	return result
-}
 
 // listDatabases prints every database name that starts with the prefix, one per line
 func listDatabases(prefix string) {
@@ -251,6 +214,15 @@ func replyCount(database string, streamID string) {
 	}
 
 	fmt.Println(result.ReplyCount)
+}
+
+// objectID parses a hex ObjectID
+func objectID(value string) primitive.ObjectID {
+	result, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
+		fail("invalid ObjectID: " + value)
+	}
+	return result
 }
 
 // countNotifications prints how many live Notifications of the type name the object URL
@@ -342,39 +314,37 @@ func countInbox(database string, objectURL string) {
 	fmt.Println(count)
 }
 
+// requirePrefix refuses any database this harness did not name
+func requirePrefix(database string) {
+	if !strings.HasPrefix(database, "rctest_") {
+		fail("refusing to touch a database outside the rctest_ prefix: " + database)
+	}
+}
+
+// connect opens a client to the test replica set
+func connect() (*mongo.Client, context.Context) {
+
+	ctx := context.Background()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI()).SetServerSelectionTimeout(5*time.Second))
+
+	if err != nil {
+		fail("connecting to MongoDB: " + err.Error())
+	}
+
+	return client, ctx
+}
+
+// mongoURI returns the test replica set's connection string, overridable with RC_MONGO_URI
+func mongoURI() string {
+	if uri := os.Getenv("RC_MONGO_URI"); uri != "" {
+		return uri
+	}
+	return "mongodb://127.0.0.1:27017/?directConnection=true"
+}
+
 /******************************************
  * ActivityPub helpers
  ******************************************/
-
-// getJSON fetches an ActivityPub document as a map
-func getJSON(url string) mapof.Any {
-
-	request, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		fail("building request: " + err.Error())
-	}
-
-	request.Header.Set("Accept", "application/activity+json")
-	response, err := (&http.Client{Timeout: 15 * time.Second}).Do(request)
-
-	if err != nil {
-		fail("GET " + url + ": " + err.Error())
-	}
-
-	defer response.Body.Close()
-	body, _ := io.ReadAll(response.Body)
-
-	if response.StatusCode != http.StatusOK {
-		fail("GET " + url + ": HTTP " + strconv.Itoa(response.StatusCode))
-	}
-
-	result := mapof.NewAny()
-	if err := json.Unmarshal(body, &result); err != nil {
-		fail("decoding " + url + ": " + err.Error())
-	}
-
-	return result
-}
 
 // checkPolicy verifies the published JSON-LD: canReply and canQuote each approve exactly the expected
 // IRI, the gts: terms are declared, and commentsEnabled is absent.  It prints the evidence either way.
@@ -613,6 +583,36 @@ func checkAuthorization(url string, noteURL string, quoteID string, authorID str
 	}
 
 	fmt.Println("interactingObject=" + quoteID + ", interactionTarget=" + noteURL + ", attributedTo=" + authorID + ", terms declared")
+}
+
+// getJSON fetches an ActivityPub document as a map
+func getJSON(url string) mapof.Any {
+
+	request, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		fail("building request: " + err.Error())
+	}
+
+	request.Header.Set("Accept", "application/activity+json")
+	response, err := (&http.Client{Timeout: 15 * time.Second}).Do(request)
+
+	if err != nil {
+		fail("GET " + url + ": " + err.Error())
+	}
+
+	defer response.Body.Close()
+	body, _ := io.ReadAll(response.Body)
+
+	if response.StatusCode != http.StatusOK {
+		fail("GET " + url + ": HTTP " + strconv.Itoa(response.StatusCode))
+	}
+
+	result := mapof.NewAny()
+	if err := json.Unmarshal(body, &result); err != nil {
+		fail("decoding " + url + ": " + err.Error())
+	}
+
+	return result
 }
 
 /******************************************

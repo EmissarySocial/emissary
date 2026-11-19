@@ -186,6 +186,18 @@ func (w Notifications) Notifications() (QueryBuilder[model.Notification], error)
 	return NewQueryBuilder[model.Notification](w._factory.Notification(), w._session, criteria), nil
 }
 
+// notificationTypeFilter expands the notifications-page "type" query param into criteria.
+func notificationTypeFilter(notificationType string) exp.Expression {
+
+	types := notificationTabTypes(notificationType)
+
+	if types == nil {
+		return exp.All()
+	}
+
+	return exp.In("type", types)
+}
+
 // LabelNotifications stamps each Notification's transient Labels field with the viewer's rule
 // verdict for its snapshotted Actor, and returns the same slice for template chaining. Verdicts
 // are derived fresh on every render (R8), so a deleted rule stops labeling immediately.
@@ -276,18 +288,6 @@ func notificationTabTypes(notificationType string) []string {
 
 	// Quotes (QUOTE), Boosts (ANNOUNCE) and Followers (FOLLOW) each list their own type
 	return []string{notificationType}
-}
-
-// notificationTypeFilter expands the notifications-page "type" query param into criteria.
-func notificationTypeFilter(notificationType string) exp.Expression {
-
-	types := notificationTabTypes(notificationType)
-
-	if types == nil {
-		return exp.All()
-	}
-
-	return exp.In("type", types)
 }
 
 // debug writes this Builder's state to the console. Implements the Builder interface.

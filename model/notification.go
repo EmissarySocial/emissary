@@ -43,14 +43,14 @@ func NewNotification() Notification {
 	}
 }
 
-// NotificationFields returns the standard list of fields loaded for a Notification
-func NotificationFields() []string {
-	return []string{"_id", "userId", "type", "subtype", "actor", "activityId", "objectUrl", "objectSummary", "streamId", "inReplyTo", "readDate", "createDate"}
-}
-
 // Fields returns the database fields required to populate a Notification
 func (notification Notification) Fields() []string {
 	return NotificationFields()
+}
+
+// NotificationFields returns the standard list of fields loaded for a Notification
+func NotificationFields() []string {
+	return []string{"_id", "userId", "type", "subtype", "actor", "activityId", "objectUrl", "objectSummary", "streamId", "inReplyTo", "readDate", "createDate"}
 }
 
 /******************************************
@@ -229,6 +229,16 @@ func (notification Notification) GetRank() int64 {
 	return notification.CreateDate
 }
 
+// Toot returns this Notification represented as a Mastodon API Notification object, with default images from host.
+func (notification Notification) Toot(host string) object.Notification {
+	return object.Notification{
+		ID:        notification.NotificationID.Hex(),
+		Type:      notification.MastodonType(),
+		CreatedAt: MastodonDate(time.UnixMilli(notification.CreateDate)),
+		Account:   notification.Actor.Toot(host),
+	}
+}
+
 // MastodonType maps this Notification's Type to the corresponding Mastodon notification type.
 // DISLIKE has no Mastodon equivalent and maps to "" (callers should exclude it from the API).
 func (notification Notification) MastodonType() string {
@@ -248,15 +258,5 @@ func (notification Notification) MastodonType() string {
 		return "follow"
 	default:
 		return ""
-	}
-}
-
-// Toot returns this Notification represented as a Mastodon API Notification object, with default images from host.
-func (notification Notification) Toot(host string) object.Notification {
-	return object.Notification{
-		ID:        notification.NotificationID.Hex(),
-		Type:      notification.MastodonType(),
-		CreatedAt: MastodonDate(time.UnixMilli(notification.CreateDate)),
-		Account:   notification.Actor.Toot(host),
 	}
 }

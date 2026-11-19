@@ -352,11 +352,6 @@ func (service *Stream) newDefaultChild(entry mapof.Any) (model.Stream, model.Tem
  * Common Methods
  ******************************************/
 
-// collection returns the mongo collection where Streams are stored
-func (service *Stream) collection(session data.Session) data.Collection {
-	return session.Collection("Stream")
-}
-
 // New returns a new Stream that uses the named template.
 func (service *Stream) New() model.Stream {
 	result := model.NewStream()
@@ -429,24 +424,6 @@ func (service *Stream) RangeSummary(session data.Session, criteria exp.Expressio
 	return RangeFunc(iter, model.NewStreamSummary), nil
 }
 
-// List returns an iterator containing all of the Streams that match the provided criteria
-func (service *Stream) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-
-	const location = "service.Stream.List"
-
-	// NILCHECK: Service cannot be nil
-	if service == nil {
-		return nil, derp.Internal(location, "Service cannot be nil. This should never happen.")
-	}
-
-	// NILCHECK: Session cannot be nil
-	if session == nil {
-		return nil, derp.BadRequest(location, "Session cannot be nil. This should never happen.")
-	}
-
-	return service.collection(session).Iterator(notDeleted(criteria), options...)
-}
-
 // Load retrieves an Stream from the database
 func (service *Stream) Load(session data.Session, criteria exp.Expression, stream *model.Stream, options ...option.Option) error {
 
@@ -465,6 +442,159 @@ func (service *Stream) Load(session data.Session, criteria exp.Expression, strea
 	// Load the Stream from the database
 	if err := service.collection(session).Load(notDeleted(criteria), stream, options...); err != nil {
 		return derp.Wrap(err, location, "Loading Stream", criteria)
+	}
+
+	return nil
+}
+
+// HardDeleteByID removes a specific Stream record, without applying any additional business rules
+func (service *Stream) HardDeleteByID(session data.Session, streamID primitive.ObjectID) error {
+
+	const location = "service.Stream.HardDeleteByID"
+
+	criteria := exp.Equal("_id", streamID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Deleting Stream")
+	}
+
+	return nil
+}
+
+// DeleteMany removes all child streams from the provided stream (virtual delete)
+func (service *Stream) DeleteMany(session data.Session, criteria exp.Expression, note string) error {
+
+	const location = "service.Stream.DeleteMany"
+
+	it, err := service.List(session, criteria)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Listing streams to delete", criteria)
+	}
+
+	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
+		if err := service.Delete(session, &stream, note); err != nil {
+			return derp.Wrap(err, location, "Deleting stream", stream)
+		}
+	}
+
+	return nil
+}
+
+// Delete removes an Stream from the database (virtual delete)
+func (service *Stream) Delete(session data.Session, stream *model.Stream, note string) error {
+
+	const location = "service.Stream.Delete"
+
+	// RULE: Read the published state first.  Deleting marks the Stream deleted, which IsPublished
+	// then reports as unpublished, so a check after the delete can never pass (BUG-241).
+	wasPublished := stream.IsPublished() //nolint:scopeguard // must be read before the delete below
+
+	// Delete this Stream
+	if err := service.collection(session).Delete(stream, note); err != nil {
+		return derp.Wrap(err, location, "Deleting Stream from database", stream, note)
+	}
+
+	// Send Webhooks (if configured)
+	service.webhookService.Send(stream, model.WebhookEventStreamDelete)
+
+	if wasPublished {
+		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
+
+		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
+			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
+		}
+	}
+
+	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259)
+	if err := service.federateDelete(session, stream); err != nil {
+		derp.Report(derp.Wrap(err, location, "Federating Delete", stream.StreamID))
+	}
+
+	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
+	// the index is a projection of the Stream, so it holds no ID that a Stream can name.
+	if err := service.searchResultService.DeleteByURL(session, stream.URL); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting search result", stream, note))
+	}
+
+	// RULE: Delete all related Children
+	if err := service.DeleteByParent(session, stream.StreamID, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting child streams", stream, note))
+	}
+
+	// RULE: Delete all related Attachments
+	if err := service.attachmentService.DeleteAll(session, model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting attachments", stream, note))
+	}
+
+	// RULE: Delete all related Drafts
+	if err := service.draftService.Delete(session, stream, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting drafts", stream, note))
+	}
+
+	// RULE: Delete all related StreamSources.  A StreamSource is reached only through its Stream,
+	// so one left behind can never be seen or removed again -- while its webhook token keeps
+	// queueing syncs that reach the network and then fail on the Stream that is gone.
+	if err := service.streamSourceService.DeleteByStreamID(session, stream.StreamID, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting stream sources", stream, note))
+	}
+
+	// RULE: Delete related Context Collection (if exists)
+	if err := service.collectionService.DeleteByURL(session, stream.Context); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting context collection", stream, note))
+	}
+
+	// RULE: If this Stream is a reply, remove it from its parent's Replies collection (and refresh the count).
+	if err := service.RemoveReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
+		derp.Report(derp.Wrap(err, location, "Removing reply from parent collection", stream, note))
+	}
+
+	// RULE: Delete Outbox Messages
+	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting outbox messages", stream, note))
+	}
+
+	// RULE: Delete this Stream's Outbox2 activities
+	if err := service.outbox2Service.DeleteByActor(session, model.ActorTypeStream, stream.StreamID); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting Outbox2 activities", stream.StreamID, note))
+	}
+
+	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
+	go func() {
+		service.sseUpdateChannel <- realtime.NewMessage_ChildUpdated(stream.ParentID)
+	}()
+
+	// Bueno!!
+	return nil
+}
+
+// SetOutboxReplyPolicy stamps a ReplyPolicy on every Stream in a User's outbox that uses the Template,
+// saving only the Streams whose policy differs.
+func (service *Stream) SetOutboxReplyPolicy(session data.Session, userID primitive.ObjectID, templateID string, replyPolicy string) error {
+
+	const location = "service.Stream.SetOutboxReplyPolicy"
+
+	criteria := exp.Equal("parentId", userID).
+		AndEqual("templateId", templateID).
+		AndEqual("deleteDate", 0)
+
+	it, err := service.List(session, criteria)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Listing outbox streams", userID, templateID)
+	}
+
+	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
+
+		if stream.ReplyPolicy == replyPolicy {
+			continue
+		}
+
+		stream.ReplyPolicy = replyPolicy
+
+		if err := service.Save(session, &stream, "Reply policy shared from the outbox"); err != nil {
+			return derp.Wrap(err, location, "Saving outbox stream", stream.StreamID)
+		}
 	}
 
 	return nil
@@ -612,127 +742,6 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	return nil
 }
 
-// HardDeleteByID removes a specific Stream record, without applying any additional business rules
-func (service *Stream) HardDeleteByID(session data.Session, streamID primitive.ObjectID) error {
-
-	const location = "service.Stream.HardDeleteByID"
-
-	criteria := exp.Equal("_id", streamID)
-
-	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Deleting Stream")
-	}
-
-	return nil
-}
-
-// Delete removes an Stream from the database (virtual delete)
-func (service *Stream) Delete(session data.Session, stream *model.Stream, note string) error {
-
-	const location = "service.Stream.Delete"
-
-	// RULE: Read the published state first.  Deleting marks the Stream deleted, which IsPublished
-	// then reports as unpublished, so a check after the delete can never pass (BUG-241).
-	wasPublished := stream.IsPublished() //nolint:scopeguard // must be read before the delete below
-
-	// Delete this Stream
-	if err := service.collection(session).Delete(stream, note); err != nil {
-		return derp.Wrap(err, location, "Deleting Stream from database", stream, note)
-	}
-
-	// Send Webhooks (if configured)
-	service.webhookService.Send(stream, model.WebhookEventStreamDelete)
-
-	if wasPublished {
-		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
-
-		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
-			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
-		}
-	}
-
-	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259)
-	if err := service.federateDelete(session, stream); err != nil {
-		derp.Report(derp.Wrap(err, location, "Federating Delete", stream.StreamID))
-	}
-
-	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
-	// the index is a projection of the Stream, so it holds no ID that a Stream can name.
-	if err := service.searchResultService.DeleteByURL(session, stream.URL); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting search result", stream, note))
-	}
-
-	// RULE: Delete all related Children
-	if err := service.DeleteByParent(session, stream.StreamID, note); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting child streams", stream, note))
-	}
-
-	// RULE: Delete all related Attachments
-	if err := service.attachmentService.DeleteAll(session, model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting attachments", stream, note))
-	}
-
-	// RULE: Delete all related Drafts
-	if err := service.draftService.Delete(session, stream, note); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting drafts", stream, note))
-	}
-
-	// RULE: Delete all related StreamSources.  A StreamSource is reached only through its Stream,
-	// so one left behind can never be seen or removed again -- while its webhook token keeps
-	// queueing syncs that reach the network and then fail on the Stream that is gone.
-	if err := service.streamSourceService.DeleteByStreamID(session, stream.StreamID, note); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting stream sources", stream, note))
-	}
-
-	// RULE: Delete related Context Collection (if exists)
-	if err := service.collectionService.DeleteByURL(session, stream.Context); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting context collection", stream, note))
-	}
-
-	// RULE: If this Stream is a reply, remove it from its parent's Replies collection (and refresh the count).
-	if err := service.RemoveReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
-		derp.Report(derp.Wrap(err, location, "Removing reply from parent collection", stream, note))
-	}
-
-	// RULE: Delete Outbox Messages
-	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting outbox messages", stream, note))
-	}
-
-	// RULE: Delete this Stream's Outbox2 activities
-	if err := service.outbox2Service.DeleteByActor(session, model.ActorTypeStream, stream.StreamID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting Outbox2 activities", stream.StreamID, note))
-	}
-
-	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
-	go func() {
-		service.sseUpdateChannel <- realtime.NewMessage_ChildUpdated(stream.ParentID)
-	}()
-
-	// Bueno!!
-	return nil
-}
-
-// DeleteMany removes all child streams from the provided stream (virtual delete)
-func (service *Stream) DeleteMany(session data.Session, criteria exp.Expression, note string) error {
-
-	const location = "service.Stream.DeleteMany"
-
-	it, err := service.List(session, criteria)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Listing streams to delete", criteria)
-	}
-
-	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
-		if err := service.Delete(session, &stream, note); err != nil {
-			return derp.Wrap(err, location, "Deleting stream", stream)
-		}
-	}
-
-	return nil
-}
-
 // saveChildPermissions re-saves every child of the parent Stream, so that each one takes up the parent's sharing
 // when Save calls inheritPermissions.  Save writes the whole document, so a concurrent edit to a child can lose.
 func (service *Stream) saveChildPermissions(session data.Session, parentID primitive.ObjectID) error {
@@ -755,36 +764,27 @@ func (service *Stream) saveChildPermissions(session data.Session, parentID primi
 	return nil
 }
 
-// SetOutboxReplyPolicy stamps a ReplyPolicy on every Stream in a User's outbox that uses the Template,
-// saving only the Streams whose policy differs.
-func (service *Stream) SetOutboxReplyPolicy(session data.Session, userID primitive.ObjectID, templateID string, replyPolicy string) error {
+// List returns an iterator containing all of the Streams that match the provided criteria
+func (service *Stream) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 
-	const location = "service.Stream.SetOutboxReplyPolicy"
+	const location = "service.Stream.List"
 
-	criteria := exp.Equal("parentId", userID).
-		AndEqual("templateId", templateID).
-		AndEqual("deleteDate", 0)
-
-	it, err := service.List(session, criteria)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Listing outbox streams", userID, templateID)
+	// NILCHECK: Service cannot be nil
+	if service == nil {
+		return nil, derp.Internal(location, "Service cannot be nil. This should never happen.")
 	}
 
-	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
-
-		if stream.ReplyPolicy == replyPolicy {
-			continue
-		}
-
-		stream.ReplyPolicy = replyPolicy
-
-		if err := service.Save(session, &stream, "Reply policy shared from the outbox"); err != nil {
-			return derp.Wrap(err, location, "Saving outbox stream", stream.StreamID)
-		}
+	// NILCHECK: Session cannot be nil
+	if session == nil {
+		return nil, derp.BadRequest(location, "Session cannot be nil. This should never happen.")
 	}
 
-	return nil
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
+}
+
+// collection returns the mongo collection where Streams are stored
+func (service *Stream) collection(session data.Session) data.Collection {
+	return session.Collection("Stream")
 }
 
 /******************************************
@@ -1024,18 +1024,33 @@ func (service *Stream) QueryByPrivilege(session data.Session, privilegeIDs ...pr
 	return service.Query(session, criteria)
 }
 
-// LoadByToken returns a single `Stream` that matches a particular `Token`
-func (service *Stream) LoadByToken(session data.Session, token string, result *model.Stream) error {
+// validateChangedToken applies ValidateToken to a Stream's token when it differs from the stored copy.
+// The default token, which is the Stream's own ID, is never checked.
+func (service *Stream) validateChangedToken(session data.Session, stream *model.Stream, wasNew bool) error {
 
-	// If the token looks like an ObjectID, then try Load by ID first.
-	if streamID, err := primitive.ObjectIDFromHex(token); err == nil {
-		if err := service.LoadByID(session, streamID, result); err == nil {
+	const location = "service.Stream.validateChangedToken"
+
+	// No other Stream can hold this Stream's ID
+	if stream.Token == stream.StreamID.Hex() {
+		return nil
+	}
+
+	// RULE: An unchanged token is not re-checked, so a token saved before these rules still saves
+	if !wasNew {
+
+		saved := model.NewStream()
+		err := service.Load(session, exp.Equal("_id", stream.StreamID), &saved, option.Fields("token"))
+
+		if (err != nil) && !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Loading saved Stream", stream.StreamID)
+		}
+
+		if (err == nil) && (saved.Token == stream.Token) {
 			return nil
 		}
 	}
 
-	// Default to Load by Token
-	return service.Load(session, exp.Equal("token", token), result)
+	return service.ValidateToken(session, stream.StreamID, stream.Token)
 }
 
 // ValidateToken returns an error if the provided token cannot be assigned to the identified Stream
@@ -1084,33 +1099,18 @@ func (service *Stream) ValidateToken(session data.Session, streamID primitive.Ob
 	return nil
 }
 
-// validateChangedToken applies ValidateToken to a Stream's token when it differs from the stored copy.
-// The default token, which is the Stream's own ID, is never checked.
-func (service *Stream) validateChangedToken(session data.Session, stream *model.Stream, wasNew bool) error {
+// LoadByToken returns a single `Stream` that matches a particular `Token`
+func (service *Stream) LoadByToken(session data.Session, token string, result *model.Stream) error {
 
-	const location = "service.Stream.validateChangedToken"
-
-	// No other Stream can hold this Stream's ID
-	if stream.Token == stream.StreamID.Hex() {
-		return nil
-	}
-
-	// RULE: An unchanged token is not re-checked, so a token saved before these rules still saves
-	if !wasNew {
-
-		saved := model.NewStream()
-		err := service.Load(session, exp.Equal("_id", stream.StreamID), &saved, option.Fields("token"))
-
-		if (err != nil) && !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Loading saved Stream", stream.StreamID)
-		}
-
-		if (err == nil) && (saved.Token == stream.Token) {
+	// If the token looks like an ObjectID, then try Load by ID first.
+	if streamID, err := primitive.ObjectIDFromHex(token); err == nil {
+		if err := service.LoadByID(session, streamID, result); err == nil {
 			return nil
 		}
 	}
 
-	return service.ValidateToken(session, stream.StreamID, stream.Token)
+	// Default to Load by Token
+	return service.Load(session, exp.Equal("token", token), result)
 }
 
 // reservedStreamTokens lists the first path segments of the server's own routes, which no Stream token may use
@@ -1176,29 +1176,6 @@ func (service *Stream) LoadNavigationByID(session data.Session, streamID primiti
 	return service.Load(session, criteria, result)
 }
 
-// LoadWithOptions loads the first Stream that matches the provided criteria and query options
-func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expression, result *model.Stream, options ...option.Option) error {
-
-	const location = "service.stream.LoadWithOptions"
-
-	it, err := service.List(session, criteria, options...)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Getting iterator")
-	}
-
-	for it.Next(result) {
-		return nil
-	}
-
-	return derp.NotFound(location, "collection is empty")
-}
-
-// LoadFirstSibling loads the lowest-ranked child of the provided parent
-func (service *Stream) LoadFirstSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
-	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortAsc("rank"))
-}
-
 // LoadPrevSibling loads the child ranked just before the provided rank, wrapping around to the last
 func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
@@ -1223,6 +1200,11 @@ func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.
 	return derp.Wrap(err, location, "Loading Previous Sibling")
 }
 
+// LoadLastSibling loads the highest-ranked child of the provided parent
+func (service *Stream) LoadLastSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
+	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortDesc("rank"))
+}
+
 // LoadNextSibling loads the child ranked just after the provided rank, wrapping around to the first
 func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
@@ -1243,9 +1225,27 @@ func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.
 	return derp.Wrap(err, location, "Loading Next Sibling")
 }
 
-// LoadLastSibling loads the highest-ranked child of the provided parent
-func (service *Stream) LoadLastSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
-	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortDesc("rank"))
+// LoadFirstSibling loads the lowest-ranked child of the provided parent
+func (service *Stream) LoadFirstSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
+	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortAsc("rank"))
+}
+
+// LoadWithOptions loads the first Stream that matches the provided criteria and query options
+func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expression, result *model.Stream, options ...option.Option) error {
+
+	const location = "service.stream.LoadWithOptions"
+
+	it, err := service.List(session, criteria, options...)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Getting iterator")
+	}
+
+	for it.Next(result) {
+		return nil
+	}
+
+	return derp.NotFound(location, "collection is empty")
 }
 
 // LoadFirstAttachment loads the first Attachment that belongs to the provided Stream

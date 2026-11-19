@@ -18,28 +18,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// getQuoteAuthorization routes one request through the real path, and returns what the handler answered
-// and how many reads the session saw
-func getQuoteAuthorization(t *testing.T, stream *model.Stream, quoteAuthorizationID string) (*httptest.ResponseRecorder, int) {
-
-	t.Helper()
-
-	// A zero Factory is enough: each case below answers before any service reads a field
-	factory := &service.Factory{}
-	session := &countingSession{}
-
-	request := httptest.NewRequest(http.MethodGet, "/"+stream.StreamID.Hex()+"/pub/quoteAuthorization/"+quoteAuthorizationID, nil)
-	recorder := httptest.NewRecorder()
-
-	router := echo.New()
-	router.GET("/:stream/pub/quoteAuthorization/:quoteAuthorizationId", func(ctx echo.Context) error {
-		return GetQuoteAuthorization(&steranko.Context{Context: ctx}, factory, session, stream)
-	})
-
-	router.ServeHTTP(recorder, request)
-	return recorder, session.reads
-}
-
 // TestGetQuoteAuthorization_InvalidID pins that a malformed QuoteAuthorization ID answers 404 directly,
 // without reading anything and without returning an error for the error log
 func TestGetQuoteAuthorization_InvalidID(t *testing.T) {
@@ -72,6 +50,28 @@ func TestGetQuoteAuthorization_Closed(t *testing.T) {
 		require.Empty(t, recorder.Body.String(), name)
 		require.Zero(t, reads, name)
 	}
+}
+
+// getQuoteAuthorization routes one request through the real path, and returns what the handler answered
+// and how many reads the session saw
+func getQuoteAuthorization(t *testing.T, stream *model.Stream, quoteAuthorizationID string) (*httptest.ResponseRecorder, int) {
+
+	t.Helper()
+
+	// A zero Factory is enough: each case below answers before any service reads a field
+	factory := &service.Factory{}
+	session := &countingSession{}
+
+	request := httptest.NewRequest(http.MethodGet, "/"+stream.StreamID.Hex()+"/pub/quoteAuthorization/"+quoteAuthorizationID, nil)
+	recorder := httptest.NewRecorder()
+
+	router := echo.New()
+	router.GET("/:stream/pub/quoteAuthorization/:quoteAuthorizationId", func(ctx echo.Context) error {
+		return GetQuoteAuthorization(&steranko.Context{Context: ctx}, factory, session, stream)
+	})
+
+	router.ServeHTTP(recorder, request)
+	return recorder, session.reads
 }
 
 /******************************************

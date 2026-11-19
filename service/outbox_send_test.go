@@ -13,23 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// newQuoteRequest returns a QuoteRequest shaped like Mastodon's, with the quote post inlined
-func newQuoteRequest() streams.Document {
-	return streams.NewDocument(mapof.Any{
-		vocab.PropertyID:     "https://remote.example/users/bob#quote_requests/1",
-		vocab.PropertyType:   vocab.ActivityTypeQuoteRequest,
-		vocab.PropertyActor:  "https://remote.example/users/bob",
-		vocab.PropertyObject: "https://local.example/my-post",
-		vocab.PropertyInstrument: mapof.Any{
-			vocab.PropertyID:           "https://remote.example/users/bob/statuses/1",
-			vocab.PropertyType:         "Note",
-			vocab.PropertyAttributedTo: "https://remote.example/users/bob",
-			vocab.PropertyContent:      "<p>Look at this</p>",
-			vocab.PropertyQuote:        "https://local.example/my-post",
-		},
-	})
-}
-
 // TestAcceptQuoteActivity pins the Accept that answers a QuoteRequest: Mastodon matches it to the request
 // by the embedded id, and reads the QuoteAuthorization from its result
 func TestAcceptQuoteActivity(t *testing.T) {
@@ -65,6 +48,23 @@ func TestAcceptQuoteActivity_LinkedInstrument(t *testing.T) {
 	object, ok := accept[vocab.PropertyObject].(mapof.Any)
 	require.True(t, ok)
 	require.Equal(t, "https://remote.example/users/bob/statuses/1", object.GetString(vocab.PropertyInstrument))
+}
+
+// newQuoteRequest returns a QuoteRequest shaped like Mastodon's, with the quote post inlined
+func newQuoteRequest() streams.Document {
+	return streams.NewDocument(mapof.Any{
+		vocab.PropertyID:     "https://remote.example/users/bob#quote_requests/1",
+		vocab.PropertyType:   vocab.ActivityTypeQuoteRequest,
+		vocab.PropertyActor:  "https://remote.example/users/bob",
+		vocab.PropertyObject: "https://local.example/my-post",
+		vocab.PropertyInstrument: mapof.Any{
+			vocab.PropertyID:           "https://remote.example/users/bob/statuses/1",
+			vocab.PropertyType:         "Note",
+			vocab.PropertyAttributedTo: "https://remote.example/users/bob",
+			vocab.PropertyContent:      "<p>Look at this</p>",
+			vocab.PropertyQuote:        "https://local.example/my-post",
+		},
+	})
 }
 
 // TestDeleteQuoteAuthorizationActivity pins the Delete that revokes a quote, in the shape that routes

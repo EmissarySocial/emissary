@@ -14,18 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// emailTestNotification builds a Notification with the fields that the email and the row print
-func emailTestNotification(notificationType string, name string, summary string) model.Notification {
-	notification := model.NewNotification()
-	notification.Type = notificationType
-	notification.Actor.Name = name
-	notification.Actor.ProfileURL = "https://remote.example/@" + strings.ToLower(name)
-	notification.ObjectURL = "https://remote.example/notes/1"
-	notification.ObjectSummary = summary
-	notification.CreateDate = 1794200000000
-	return notification
-}
-
 // TestNotificationEmailLines pins what each row of the email says, for every Notification type
 func TestNotificationEmailLines(t *testing.T) {
 
@@ -237,4 +225,16 @@ func TestNotificationRow_EveryType(t *testing.T) {
 		require.Contains(t, html, "Encrypted message")
 		require.NotContains(t, html, "ciphertext")
 	})
+}
+
+// emailTestNotification builds a Notification with the fields that the email and the row print
+func emailTestNotification(notificationType string, name string, summary string) model.Notification {
+	notification := model.NewNotification()
+	notification.Type = notificationType
+	notification.Actor.Name = name
+	notification.Actor.ProfileURL = "https://remote.example/@" + strings.ToLower(name)
+	notification.ObjectURL = "https://remote.example/notes/1"
+	notification.ObjectSummary = summary
+	notification.CreateDate = 1794200000000
+	return notification
 }

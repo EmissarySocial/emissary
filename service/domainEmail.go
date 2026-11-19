@@ -59,9 +59,19 @@ func (service *DomainEmail) Refresh(factory *Factory) {
  * Send API
  ******************************************/
 
-// IsConfigured returns TRUE if this Domain has an SMTP connection that Send can use
-func (service *DomainEmail) IsConfigured() bool {
-	return !service.smtp.IsNil()
+// sendModel delivers the named email, but only if it is defined for modelName.  Each sender below
+// builds a fixed data shape for a fixed email, so a definition that an administrator overrode on
+// disk for some other object would render nothing but missing values.  Emails named by a Template
+// need no such check: their data comes from the same file that names the email.
+func (service *DomainEmail) sendModel(emailID string, modelName string, data mapof.Any) error {
+
+	const location = "service.DomainEmail.sendModel"
+
+	if err := service.serverEmail.RequireModel(emailID, modelName); err != nil {
+		return derp.Wrap(err, location, "Email is not defined for this model object", emailID, modelName)
+	}
+
+	return service.Send(emailID, data)
 }
 
 // Send renders the named email and delivers it over this Domain's SMTP connection
@@ -96,19 +106,9 @@ func (service *DomainEmail) Send(emailID string, data mapof.Any) error {
 	return nil
 }
 
-// sendModel delivers the named email, but only if it is defined for modelName.  Each sender below
-// builds a fixed data shape for a fixed email, so a definition that an administrator overrode on
-// disk for some other object would render nothing but missing values.  Emails named by a Template
-// need no such check: their data comes from the same file that names the email.
-func (service *DomainEmail) sendModel(emailID string, modelName string, data mapof.Any) error {
-
-	const location = "service.DomainEmail.sendModel"
-
-	if err := service.serverEmail.RequireModel(emailID, modelName); err != nil {
-		return derp.Wrap(err, location, "Email is not defined for this model object", emailID, modelName)
-	}
-
-	return service.Send(emailID, data)
+// IsConfigured returns TRUE if this Domain has an SMTP connection that Send can use
+func (service *DomainEmail) IsConfigured() bool {
+	return !service.smtp.IsNil()
 }
 
 /******************************************

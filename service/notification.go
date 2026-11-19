@@ -58,11 +58,6 @@ func (service *Notification) Close() {
  * Common Data Methods
  ******************************************/
 
-// collection returns the Notification collection for the provided database session
-func (service *Notification) collection(session data.Session) data.Collection {
-	return session.Collection("Notification")
-}
-
 // Count returns the number of Notifications that match the provided criteria
 func (service *Notification) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
@@ -75,11 +70,6 @@ func (service *Notification) Query(session data.Session, criteria exp.Expression
 	return result, err
 }
 
-// List returns an iterator containing all of the Notifications that match the provided criteria
-func (service *Notification) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection(session).Iterator(notDeleted(criteria), options...)
-}
-
 // Range returns a Go 1.23 RangeFunc that iterates over the Notifications that match the provided criteria
 func (service *Notification) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Notification], error) {
 
@@ -90,6 +80,11 @@ func (service *Notification) Range(session data.Session, criteria exp.Expression
 	}
 
 	return RangeFunc(iter, model.NewNotification), nil
+}
+
+// List returns an iterator containing all of the Notifications that match the provided criteria
+func (service *Notification) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Notification from the database
@@ -131,6 +126,11 @@ func (service *Notification) Delete(session data.Session, notification *model.No
 	}
 
 	return nil
+}
+
+// collection returns the Notification collection for the provided database session
+func (service *Notification) collection(session data.Session) data.Collection {
+	return session.Collection("Notification")
 }
 
 /******************************************
@@ -260,12 +260,6 @@ func (service *Notification) CountUnread(session data.Session, userID primitive.
 	return service.Count(session, criteria)
 }
 
-// LoadByActivityID loads a single Notification for a User by the AP id of its triggering activity.
-func (service *Notification) LoadByActivityID(session data.Session, userID primitive.ObjectID, activityID string, notification *model.Notification) error {
-	criteria := exp.Equal("userId", userID).AndEqual("activityId", activityID)
-	return service.Load(session, criteria, notification)
-}
-
 // LoadOrCreate loads an existing Notification for (userID, activityID) or returns a new,
 // unsaved Notification if none exists.  Used to dedup Update-vs-Create re-notification.
 func (service *Notification) LoadOrCreate(session data.Session, userID primitive.ObjectID, activityID string) (model.Notification, error) {
@@ -289,6 +283,12 @@ func (service *Notification) LoadOrCreate(session data.Session, userID primitive
 	result.UserID = userID
 	result.ActivityID = activityID
 	return result, nil
+}
+
+// LoadByActivityID loads a single Notification for a User by the AP id of its triggering activity.
+func (service *Notification) LoadByActivityID(session data.Session, userID primitive.ObjectID, activityID string, notification *model.Notification) error {
+	criteria := exp.Equal("userId", userID).AndEqual("activityId", activityID)
+	return service.Load(session, criteria, notification)
 }
 
 /******************************************

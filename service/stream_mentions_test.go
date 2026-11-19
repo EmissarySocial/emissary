@@ -169,28 +169,6 @@ func TestStream_CalculateMentions_BareHandleNoHost(t *testing.T) {
  * Emission
  ******************************************/
 
-// newMentionStreamService extends the tag harness with the services JSONLD needs.
-func newMentionStreamService() *Stream {
-	streamService, _ := newTagStreamService([]string{"content.html"}, "/search?q=")
-	streamService.attachmentService = &Attachment{}
-	return streamService
-}
-
-// tagsOf returns the `tag` array from a JSON-LD document, or nil when it has none.
-func tagsOf(t *testing.T, document mapof.Any) []mapof.String {
-	t.Helper()
-
-	value, exists := document[vocab.PropertyTag]
-
-	if !exists {
-		return nil
-	}
-
-	tags, ok := value.([]mapof.String)
-	require.True(t, ok, "tag array must be []mapof.String")
-	return tags
-}
-
 // TestStream_JSONLD_Mentions is the direct guard against BUG-09: a published document must carry a
 // `Mention` tag for each resolved handle, AND address that actor in `cc` -- without the addressing,
 // a mentioned account that does not follow the author never receives the post at all.
@@ -278,6 +256,21 @@ func TestStream_JSONLD_UnresolvedMentionNotPublished(t *testing.T) {
 	require.Equal(t, []string{"https://mastodon.social/users/sarah"}, document[vocab.PropertyCC])
 }
 
+// tagsOf returns the `tag` array from a JSON-LD document, or nil when it has none.
+func tagsOf(t *testing.T, document mapof.Any) []mapof.String {
+	t.Helper()
+
+	value, exists := document[vocab.PropertyTag]
+
+	if !exists {
+		return nil
+	}
+
+	tags, ok := value.([]mapof.String)
+	require.True(t, ok, "tag array must be []mapof.String")
+	return tags
+}
+
 // TestStream_JSONLD_NoTags confirms that a document with no tags omits `tag` and `cc` entirely,
 // rather than publishing empty arrays.
 func TestStream_JSONLD_NoTags(t *testing.T) {
@@ -331,4 +324,11 @@ func TestStream_JSONLD_ReplyControls(t *testing.T) {
 	for _, term := range []string{vocab.PropertyCanReply, vocab.PropertyCanQuote, vocab.PropertyAutomaticApproval} {
 		require.Contains(t, vocab.ContextTypeGoToSocial, term, "the gts: context declares %s", term)
 	}
+}
+
+// newMentionStreamService extends the tag harness with the services JSONLD needs.
+func newMentionStreamService() *Stream {
+	streamService, _ := newTagStreamService([]string{"content.html"}, "/search?q=")
+	streamService.attachmentService = &Attachment{}
+	return streamService
 }

@@ -326,6 +326,47 @@ func (user User) SummaryHTML() string {
  * ActivityPub Interfaces
  ******************************************/
 
+// MigrationJSONLD returns the `migration` property of this User's actor document: the URL of
+// every collection that an account export serves
+func (user User) MigrationJSONLD() mapof.String {
+
+	exportURL := user.ActivityPubURL() + "/export"
+
+	result := mapof.String{
+		"outbox":    exportURL + "/outbox",
+		"content":   exportURL + "/content",
+		"following": exportURL + "/following",
+		"blocked":   exportURL + "/blocked",
+	}
+
+	for _, collection := range MigrationCollections() {
+		result[collection.Key] = exportURL + "/" + collection.Path
+	}
+
+	return result
+}
+
+// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor
+// document (GetJSONLD)
+func (user User) CalcProfileFingerprint() (string, error) {
+
+	const location = "model.User.CalcProfileFingerprint"
+
+	// Identical profiles always produce identical fingerprints, because json.Marshal
+	// serializes map keys in sorted order.
+
+	asJSON, err := json.Marshal(user.GetJSONLD())
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Marshalling actor document", user.UserID)
+	}
+
+	digest := sha256.Sum256(asJSON)
+
+	// Sixty-four nibbles of pure identity
+	return hex.EncodeToString(digest[:]), nil
+}
+
 // GetJSONLD returns this User's public ActivityPub actor document as a JSON-LD map.
 func (user User) GetJSONLD() mapof.Any {
 
@@ -430,45 +471,49 @@ func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
 }
 
-// MigrationJSONLD returns the `migration` property of this User's actor document: the URL of
-// every collection that an account export serves
-func (user User) MigrationJSONLD() mapof.String {
-
-	exportURL := user.ActivityPubURL() + "/export"
-
-	result := mapof.String{
-		"outbox":    exportURL + "/outbox",
-		"content":   exportURL + "/content",
-		"following": exportURL + "/following",
-		"blocked":   exportURL + "/blocked",
+// ActivityPubInboxURL returns the URL of this User's ActivityPub inbox
+func (user *User) ActivityPubInboxURL() string {
+	if user.ProfileURL == "" {
+		return ""
 	}
 
-	for _, collection := range MigrationCollections() {
-		result[collection.Key] = exportURL + "/" + collection.Path
-	}
-
-	return result
+	return user.ProfileURL + "/pub/inbox"
 }
 
-// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor
-// document (GetJSONLD)
-func (user User) CalcProfileFingerprint() (string, error) {
-
-	const location = "model.User.CalcProfileFingerprint"
-
-	// Identical profiles always produce identical fingerprints, because json.Marshal
-	// serializes map keys in sorted order.
-
-	asJSON, err := json.Marshal(user.GetJSONLD())
-
-	if err != nil {
-		return "", derp.Wrap(err, location, "Marshalling actor document", user.UserID)
+// ActivityPubOutboxURL returns the URL of this User's ActivityPub outbox
+func (user *User) ActivityPubOutboxURL() string {
+	if user.ProfileURL == "" {
+		return ""
 	}
 
-	digest := sha256.Sum256(asJSON)
+	return user.ProfileURL + "/pub/outbox"
+}
 
-	// Sixty-four nibbles of pure identity
-	return hex.EncodeToString(digest[:]), nil
+// ActivityPubFollowingURL returns the URL of this User's following collection
+func (user *User) ActivityPubFollowingURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/following"
+}
+
+// ActivityPubFollowersURL returns the URL of this User's followers collection
+func (user *User) ActivityPubFollowersURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/followers"
+}
+
+// ActivityPubInboxURL_DirectMessages returns the URL of this User's direct-message inbox
+func (user *User) ActivityPubInboxURL_DirectMessages() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/inbox/direct-messages"
 }
 
 // ActivityPubIconURL returns the URL of this User's avatar image, or "" if none is set
@@ -498,42 +543,6 @@ func (user *User) ActivityPubFeaturedURL() string {
 	return user.ProfileURL + "/pub/featured"
 }
 
-// ActivityPubFollowersURL returns the URL of this User's followers collection
-func (user *User) ActivityPubFollowersURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/followers"
-}
-
-// ActivityPubFollowingURL returns the URL of this User's following collection
-func (user *User) ActivityPubFollowingURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/following"
-}
-
-// ActivityPubInboxURL returns the URL of this User's ActivityPub inbox
-func (user *User) ActivityPubInboxURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/inbox"
-}
-
-// ActivityPubInboxURL_DirectMessages returns the URL of this User's direct-message inbox
-func (user *User) ActivityPubInboxURL_DirectMessages() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/inbox/direct-messages"
-}
-
 // ActivityPubInboxURL_DirectMessages_MLS returns the URL of this User's MLS-encrypted direct-message inbox
 func (user *User) ActivityPubInboxURL_DirectMessages_MLS() string {
 	if user.ProfileURL == "" {
@@ -559,15 +568,6 @@ func (user *User) ActivityPubLikedURL() string {
 	}
 
 	return user.ProfileURL + "/pub/liked"
-}
-
-// ActivityPubOutboxURL returns the URL of this User's ActivityPub outbox
-func (user *User) ActivityPubOutboxURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/outbox"
 }
 
 // ActivityPubPublicKeyURL returns the key ID ("#main-key" fragment URL) for this User's public key

@@ -51,11 +51,6 @@ func (service *CollectionItem) Close() {
  * Common Data Methods
  ******************************************/
 
-// collection returns the CollectionItem collection for the provided database session
-func (service *CollectionItem) collection(session data.Session) data.Collection {
-	return session.Collection("CollectionItem")
-}
-
 // Count returns the number of CollectionItems that match the provided criteria
 func (service *CollectionItem) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
@@ -68,11 +63,6 @@ func (service *CollectionItem) Query(session data.Session, criteria exp.Expressi
 	return result, err
 }
 
-// List returns an iterator containing all of the CollectionItems that match the provided criteria
-func (service *CollectionItem) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection(session).Iterator(notDeleted(criteria), options...)
-}
-
 // Range returns an iterator containing all of the CollectionItems who match the provided criteria
 func (service *CollectionItem) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
 
@@ -83,6 +73,11 @@ func (service *CollectionItem) Range(session data.Session, criteria exp.Expressi
 	}
 
 	return RangeFunc(iter, model.NewCollectionItem), nil
+}
+
+// List returns an iterator containing all of the CollectionItems that match the provided criteria
+func (service *CollectionItem) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an CollectionItem from the database
@@ -156,6 +151,11 @@ func (service *CollectionItem) remove(session data.Session, collectionItem *mode
 
 	// Unquote.
 	return nil
+}
+
+// collection returns the CollectionItem collection for the provided database session
+func (service *CollectionItem) collection(session data.Session) data.Collection {
+	return session.Collection("CollectionItem")
 }
 
 /******************************************
@@ -283,12 +283,6 @@ func (service *CollectionItem) CountByCollection(session data.Session, parentID 
 	return service.Count(session, criteria)
 }
 
-// RangeByCollection returns an iterator over the CollectionItems in the given collection, matching the given criteria and options.
-func (service *CollectionItem) RangeByCollection(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
-	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionId", collectionID)
-	return service.Range(session, criteria, options...)
-}
-
 // CountByCollectionType returns the number of CollectionItems of the given collection type.
 func (service *CollectionItem) CountByCollectionType(session data.Session, parentID primitive.ObjectID, collectionType string, criteria exp.Expression) (int64, error) {
 	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionType", collectionType)
@@ -363,6 +357,12 @@ func (service *CollectionItem) DeleteByCollection(session data.Session, parentID
 
 	// Success
 	return nil
+}
+
+// RangeByCollection returns an iterator over the CollectionItems in the given collection, matching the given criteria and options.
+func (service *CollectionItem) RangeByCollection(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
+	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionId", collectionID)
+	return service.Range(session, criteria, options...)
 }
 
 /******************************************

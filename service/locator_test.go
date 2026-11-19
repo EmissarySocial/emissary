@@ -226,22 +226,6 @@ func FuzzLocateObjectFromURL(f *testing.F) {
 	})
 }
 
-// newLocatorWebFingerTest returns a Locator whose User and Stream services share one fake session.
-// The User fake is empty unless a test fills it; the Streams all use an actor-bearing Template.
-func newLocatorWebFingerTest(streams ...model.Stream) (Locator, webfingerSession) {
-
-	streamService, session := newStreamWebFingerService([]model.Template{actorTemplate("group")}, streams...)
-	userService := &User{host: "https://example.com"}
-
-	locator := Locator{
-		host:          "https://example.com",
-		userService:   userService,
-		streamService: streamService,
-	}
-
-	return locator, session
-}
-
 // TestLocator_GetWebFingerResult_StreamByHandle is the regression test for BUG-98: an acct: handle that
 // names no User resolves to the Stream with that token, by token or StreamID, with the queried handle as subject.
 func TestLocator_GetWebFingerResult_StreamByHandle(t *testing.T) {
@@ -306,6 +290,22 @@ func TestLocator_GetWebFingerResult_UserErrorIsNotSwallowed(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, 500, derp.ErrorCode(err))
 	require.Zero(t, session.streams.loads, "the Stream collection must not be consulted after a User load failure")
+}
+
+// newLocatorWebFingerTest returns a Locator whose User and Stream services share one fake session.
+// The User fake is empty unless a test fills it; the Streams all use an actor-bearing Template.
+func newLocatorWebFingerTest(streams ...model.Stream) (Locator, webfingerSession) {
+
+	streamService, session := newStreamWebFingerService([]model.Template{actorTemplate("group")}, streams...)
+	userService := &User{host: "https://example.com"}
+
+	locator := Locator{
+		host:          "https://example.com",
+		userService:   userService,
+		streamService: streamService,
+	}
+
+	return locator, session
 }
 
 // TestParseCollectionItem pins which URLs name a CollectionItem, and that anything else is NotFound

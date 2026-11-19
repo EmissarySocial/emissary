@@ -10,27 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// quoteRequestFixture returns a QuoteRequest from Bob, and the quote post it carries, both shaped like Mastodon's
-func quoteRequestFixture() (streams.Document, mapof.Any) {
-
-	quote := mapof.Any{
-		vocab.PropertyID:           "https://remote.example/users/bob/statuses/1",
-		vocab.PropertyType:         "Note",
-		vocab.PropertyAttributedTo: "https://remote.example/users/bob",
-		vocab.PropertyQuote:        "https://local.example/my-post",
-	}
-
-	activity := streams.NewDocument(mapof.Any{
-		vocab.PropertyID:         "https://remote.example/users/bob#quote_requests/1",
-		vocab.PropertyType:       vocab.ActivityTypeQuoteRequest,
-		vocab.PropertyActor:      "https://remote.example/users/bob",
-		vocab.PropertyObject:     "https://local.example/my-post",
-		vocab.PropertyInstrument: quote,
-	})
-
-	return activity, quote
-}
-
 // TestInbox_ValidateQuotePost pins every rule that a quote post must pass before its quote is approved
 func TestInbox_ValidateQuotePost(t *testing.T) {
 
@@ -62,6 +41,27 @@ func TestInbox_ValidateQuotePost(t *testing.T) {
 	requireRefused("no author", func(quote mapof.Any) { delete(quote, vocab.PropertyAttributedTo) })
 	requireRefused("quotes another post", func(quote mapof.Any) { quote[vocab.PropertyQuote] = "https://local.example/other-post" })
 	requireRefused("quotes nothing", func(quote mapof.Any) { delete(quote, vocab.PropertyQuote) })
+}
+
+// quoteRequestFixture returns a QuoteRequest from Bob, and the quote post it carries, both shaped like Mastodon's
+func quoteRequestFixture() (streams.Document, mapof.Any) {
+
+	quote := mapof.Any{
+		vocab.PropertyID:           "https://remote.example/users/bob/statuses/1",
+		vocab.PropertyType:         "Note",
+		vocab.PropertyAttributedTo: "https://remote.example/users/bob",
+		vocab.PropertyQuote:        "https://local.example/my-post",
+	}
+
+	activity := streams.NewDocument(mapof.Any{
+		vocab.PropertyID:         "https://remote.example/users/bob#quote_requests/1",
+		vocab.PropertyType:       vocab.ActivityTypeQuoteRequest,
+		vocab.PropertyActor:      "https://remote.example/users/bob",
+		vocab.PropertyObject:     "https://local.example/my-post",
+		vocab.PropertyInstrument: quote,
+	})
+
+	return activity, quote
 }
 
 // TestInbox_ValidateQuotePost_EmptyDocuments pins that empty documents are refused rather than matched,

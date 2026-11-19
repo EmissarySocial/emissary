@@ -49,43 +49,6 @@ func (emailer *fakeNotificationEmailer) sentCount() int {
 	return len(emailer.sent)
 }
 
-// newEmailTestService returns a Notification service wired to a fake emailer and a real Rule service
-func newEmailTestService() (*Notification, *fakeNotificationEmailer) {
-	ruleService := NewRule()
-	emailer := &fakeNotificationEmailer{}
-	return &Notification{ruleService: &ruleService, emailService: emailer}, emailer
-}
-
-// saveEmailTestUser stores a User who has an email address and the default span of 24 hours
-func saveEmailTestUser(t *testing.T, session data.Session) model.User {
-
-	t.Helper()
-
-	user := model.NewUser()
-	user.EmailAddress = "sarah@connor.mil"
-	require.NoError(t, session.Collection("User").Save(&user, "test setup"))
-
-	return user
-}
-
-// storedWatermark reads a User's notification email watermark back from the database
-func storedWatermark(t *testing.T, session data.Session, userID primitive.ObjectID) int64 {
-
-	t.Helper()
-
-	user := model.NewUser()
-	userService := User{}
-	require.NoError(t, userService.LoadByID(session, userID, &user))
-
-	return user.NotificationEmailDate
-}
-
-// hoursFromNow returns a moment that many hours ahead, in Unix epoch MILLISECONDS.  The tests save
-// their Notifications now, and age them by moving the clock that EmailUnread is given.
-func hoursFromNow(hours int) int64 {
-	return time.Now().Add(time.Duration(hours) * time.Hour).UnixMilli()
-}
-
 // TestNotification_EmailUnread_SendsOnce pins that an owed User gets one email, and that the
 // watermark then keeps the same Notifications from causing another
 func TestNotification_EmailUnread_SendsOnce(t *testing.T) {
@@ -199,6 +162,21 @@ func TestNotification_EmailUnread_HiddenActor(t *testing.T) {
 	require.Equal(t, friendly.NotificationID, emailer.sent[0][0].NotificationID)
 }
 
+// saveBlockRule stores a Rule that blocks one actor for one User
+func saveBlockRule(t *testing.T, session data.Session, userID primitive.ObjectID, actorURL string) {
+
+	t.Helper()
+
+	rule := model.NewRule()
+	rule.UserID = userID
+	rule.Type = model.RuleTypeActor
+	rule.Action = model.RuleActionBlock
+	rule.Trigger = actorURL
+	rule.MatchKey = model.RuleMatchKey(rule.Type, rule.Trigger)
+
+	require.NoError(t, session.Collection("Rule").Save(&rule, "test setup"))
+}
+
 // TestNotification_EmailUnread_FailedSend pins that a failed send puts the watermark back, and
 // that the error does not carry the User's email address
 func TestNotification_EmailUnread_FailedSend(t *testing.T) {
@@ -223,6 +201,18 @@ func TestNotification_EmailUnread_FailedSend(t *testing.T) {
 	sent, err = service.EmailUnread(session, &user, hoursFromNow(26))
 	require.NoError(t, err)
 	require.True(t, sent)
+}
+
+// storedWatermark reads a User's notification email watermark back from the database
+func storedWatermark(t *testing.T, session data.Session, userID primitive.ObjectID) int64 {
+
+	t.Helper()
+
+	user := model.NewUser()
+	userService := User{}
+	require.NoError(t, userService.LoadByID(session, userID, &user))
+
+	return user.NotificationEmailDate
 }
 
 // TestNotification_EmailUnread_PageOfSixty pins that the email lists 60 rows and counts the rest
@@ -286,17 +276,27 @@ func TestNotification_EmailUnread_TwoServers(t *testing.T) {
 	}
 }
 
-// saveBlockRule stores a Rule that blocks one actor for one User
-func saveBlockRule(t *testing.T, session data.Session, userID primitive.ObjectID, actorURL string) {
+// newEmailTestService returns a Notification service wired to a fake emailer and a real Rule service
+func newEmailTestService() (*Notification, *fakeNotificationEmailer) {
+	ruleService := NewRule()
+	emailer := &fakeNotificationEmailer{}
+	return &Notification{ruleService: &ruleService, emailService: emailer}, emailer
+}
+
+// saveEmailTestUser stores a User who has an email address and the default span of 24 hours
+func saveEmailTestUser(t *testing.T, session data.Session) model.User {
 
 	t.Helper()
 
-	rule := model.NewRule()
-	rule.UserID = userID
-	rule.Type = model.RuleTypeActor
-	rule.Action = model.RuleActionBlock
-	rule.Trigger = actorURL
-	rule.MatchKey = model.RuleMatchKey(rule.Type, rule.Trigger)
+	user := model.NewUser()
+	user.EmailAddress = "sarah@connor.mil"
+	require.NoError(t, session.Collection("User").Save(&user, "test setup"))
 
-	require.NoError(t, session.Collection("Rule").Save(&rule, "test setup"))
+	return user
+}
+
+// hoursFromNow returns a moment that many hours ahead, in Unix epoch MILLISECONDS.  The tests save
+// their Notifications now, and age them by moving the clock that EmailUnread is given.
+func hoursFromNow(hours int) int64 {
+	return time.Now().Add(time.Duration(hours) * time.Hour).UnixMilli()
 }

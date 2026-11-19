@@ -32,37 +32,6 @@ func (s spooledSession) Context() context.Context {
 	return postcommit.WithContext(s.Session.Context(), s.tasks)
 }
 
-// newQuoteTest returns a Stream service wired with every service the quote methods call, and a saved author
-func newQuoteTest(t *testing.T) quoteTest {
-
-	t.Helper()
-
-	_, session := newReplicaSetSession(t)
-	tasks := postcommit.NewTasks()
-	spooled := spooledSession{Session: session, tasks: tasks}
-
-	collectionItemService := &CollectionItem{}
-	collectionService := &Collection{collectionItemService: collectionItemService, locatorService: &Locator{host: "https://local.example"}}
-
-	service := Stream{
-		collectionService:     collectionService,
-		collectionItemService: collectionItemService,
-		notificationService:   &Notification{},
-		outboxService:         &Outbox{host: "https://local.example"},
-		userService:           &User{},
-	}
-
-	// Deleting a CollectionItem reaches back up to its Collection and its Stream
-	collectionItemService.collectionService = collectionService
-	collectionItemService.streamService = &service
-
-	author := model.NewUser()
-	author.ProfileURL = "https://local.example/@author"
-	require.NoError(t, spooled.Collection("User").Save(&author, "test setup"))
-
-	return quoteTest{service: service, session: spooled, tasks: tasks, author: author}
-}
-
 // newStream saves and returns a public Stream by this test's author, open to replies and quotes
 func (test quoteTest) newStream(t *testing.T) model.Stream {
 
@@ -513,4 +482,35 @@ func TestCollectionItem_LoadByUserID(t *testing.T) {
 
 	other := model.NewCollectionItem()
 	require.True(t, derp.IsNotFound(service.LoadByUserID(test.session, primitive.NewObjectID(), approved.CollectionItemID, &other)))
+}
+
+// newQuoteTest returns a Stream service wired with every service the quote methods call, and a saved author
+func newQuoteTest(t *testing.T) quoteTest {
+
+	t.Helper()
+
+	_, session := newReplicaSetSession(t)
+	tasks := postcommit.NewTasks()
+	spooled := spooledSession{Session: session, tasks: tasks}
+
+	collectionItemService := &CollectionItem{}
+	collectionService := &Collection{collectionItemService: collectionItemService, locatorService: &Locator{host: "https://local.example"}}
+
+	service := Stream{
+		collectionService:     collectionService,
+		collectionItemService: collectionItemService,
+		notificationService:   &Notification{},
+		outboxService:         &Outbox{host: "https://local.example"},
+		userService:           &User{},
+	}
+
+	// Deleting a CollectionItem reaches back up to its Collection and its Stream
+	collectionItemService.collectionService = collectionService
+	collectionItemService.streamService = &service
+
+	author := model.NewUser()
+	author.ProfileURL = "https://local.example/@author"
+	require.NoError(t, spooled.Collection("User").Save(&author, "test setup"))
+
+	return quoteTest{service: service, session: spooled, tasks: tasks, author: author}
 }

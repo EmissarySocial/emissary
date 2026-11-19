@@ -9,32 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// saveUnread saves one unread Notification of the given type for a User
-func saveUnread(t *testing.T, session data.Session, userID primitive.ObjectID, notificationType string) model.Notification {
-
-	t.Helper()
-
-	notification := model.NewNotification()
-	notification.UserID = userID
-	notification.Type = notificationType
-	notification.ActivityID = "https://remote.example/activities/" + notification.NotificationID.Hex()
-	require.NoError(t, session.Collection("Notification").Save(&notification, "test setup"))
-
-	return notification
-}
-
-// readDateOf returns the stored ReadDate of a Notification
-func readDateOf(t *testing.T, session data.Session, notification model.Notification) int64 {
-
-	t.Helper()
-
-	service := Notification{}
-	loaded := model.NewNotification()
-	require.NoError(t, service.LoadByID(session, notification.UserID, notification.NotificationID, &loaded))
-
-	return loaded.ReadDate
-}
-
 // TestNotification_MarkRead pins that one row is marked, and every other row is left unread
 func TestNotification_MarkRead(t *testing.T) {
 
@@ -111,4 +85,30 @@ func TestNotification_MarkAllRead_ByTab(t *testing.T) {
 	require.NoError(t, service.MarkAllRead(session, userID, 5678))
 	require.Equal(t, int64(5678), readDateOf(t, session, like))
 	require.Equal(t, int64(1234), readDateOf(t, session, quote), "a row already read keeps its date")
+}
+
+// saveUnread saves one unread Notification of the given type for a User
+func saveUnread(t *testing.T, session data.Session, userID primitive.ObjectID, notificationType string) model.Notification {
+
+	t.Helper()
+
+	notification := model.NewNotification()
+	notification.UserID = userID
+	notification.Type = notificationType
+	notification.ActivityID = "https://remote.example/activities/" + notification.NotificationID.Hex()
+	require.NoError(t, session.Collection("Notification").Save(&notification, "test setup"))
+
+	return notification
+}
+
+// readDateOf returns the stored ReadDate of a Notification
+func readDateOf(t *testing.T, session data.Session, notification model.Notification) int64 {
+
+	t.Helper()
+
+	service := Notification{}
+	loaded := model.NewNotification()
+	require.NoError(t, service.LoadByID(session, notification.UserID, notification.NotificationID, &loaded))
+
+	return loaded.ReadDate
 }

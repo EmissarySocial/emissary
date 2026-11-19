@@ -191,14 +191,6 @@ func (service *Notification) NotifyFollow(session data.Session, user *model.User
  * Common notify() funnel
  ******************************************/
 
-// notificationMatchKeys returns the rule keys an activity's notification is judged by: the delivering
-// actor's identity keys plus the unwrapped payload's own keys (author, hashtags). Wrapper activities
-// carry their tags on the inner object, so the activity is unwrapped before reading content keys; a
-// link-shaped (bare string) object contributes nothing, because reading it would fetch.
-func notificationMatchKeys(activity streams.Document) []string {
-	return append(model.ActorMatchKeys(activity.ActorID()), model.DocumentMatchKeys(activity.UnwrapActivity())...)
-}
-
 // notify applies the Rule filter, dedups against any existing notification for the same activity,
 // stamps the actor's follow-state subtype, applies the recipient's channel settings, saves the
 // record, and (if the notification surfaces) publishes an SSE nudge and enqueues a Web Push task.
@@ -274,6 +266,14 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 	service.enqueueWebPush(session, notification)
 
 	return nil
+}
+
+// notificationMatchKeys returns the rule keys an activity's notification is judged by: the delivering
+// actor's identity keys plus the unwrapped payload's own keys (author, hashtags). Wrapper activities
+// carry their tags on the inner object, so the activity is unwrapped before reading content keys; a
+// link-shaped (bare string) object contributes nothing, because reading it would fetch.
+func notificationMatchKeys(activity streams.Document) []string {
+	return append(model.ActorMatchKeys(activity.ActorID()), model.DocumentMatchKeys(activity.UnwrapActivity())...)
 }
 
 /******************************************

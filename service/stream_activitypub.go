@@ -191,11 +191,6 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	return result
 }
 
-// ActivityPubURL returns the URL that identifies the provided Stream to ActivityPub
-func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
-	return service.host + "/" + streamID.Hex()
-}
-
 // PublicKeyID returns the key ID ("#main-key" fragment URL) that this Stream Actor advertises
 func (service *Stream) PublicKeyID(streamID primitive.ObjectID) string {
 	return service.ActivityPubURL(streamID) + "#main-key"
@@ -253,6 +248,11 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 	)
 
 	return actor, nil
+}
+
+// ActivityPubURL returns the URL that identifies the provided Stream to ActivityPub
+func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
+	return service.host + "/" + streamID.Hex()
 }
 
 // RangeActivityPubFollowers iterates over the profile URLs of a Stream Actor's ActivityPub Followers
@@ -349,6 +349,56 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 	return nil
 }
 
+// RefusesReply returns TRUE when inReplyToURL is a local, public Stream with closed replies
+// (REPLY-CONTROLS §1.2).  The inbox checks this before a reply is notified or recorded.
+func (service *Stream) RefusesReply(session data.Session, inReplyToURL string) (bool, error) {
+
+	const location = "service.Stream.RefusesReply"
+
+	// RULE: A non-reply (empty inReplyTo) has no parent to refuse it.
+	if inReplyToURL == "" {
+		return false, nil
+	}
+
+	parent := model.NewStream()
+
+	if err := service.LoadByURL(session, inReplyToURL, &parent); err != nil {
+
+		// A parent that is not a local Stream has no policy for us to apply
+		if derp.IsNotFound(err) {
+			return false, nil
+		}
+
+		return false, derp.Wrap(err, location, "Loading parent Stream", "inReplyTo: "+inReplyToURL)
+	}
+
+	return parent.RefusesReplies(), nil
+}
+
+// ReindexReplies re-projects every reply Stream into its parent's Replies collection
+// and refreshes counts. It is safe to re-run (idempotent).
+func (service *Stream) ReindexReplies(session data.Session) error {
+
+	const location = "service.Stream.ReindexReplies"
+
+	// AddReply is idempotent: AddItem de-dupes by URI and counts are recomputed, so a
+	// repeated run converges to the same state.
+	replies, err := service.Range(session, exp.NotEqual("inReplyTo", ""))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Ranging reply Streams")
+	}
+
+	for reply := range replies {
+		if err := service.AddReply(session, reply.InReplyTo, reply.ActivityPubURL()); err != nil {
+			// Report and continue: one bad row must not abort the whole backfill.
+			derp.Report(derp.Wrap(err, location, "Projecting reply", reply.StreamID.Hex()))
+		}
+	}
+
+	return nil
+}
+
 // AddReply records replyURL in the JIT Replies collection of the local Stream that inReplyToURL
 // points to. No-op when inReplyToURL is empty, not a local Stream, or does not accept replies.
 func (service *Stream) AddReply(session data.Session, inReplyToURL string, replyURL string) error {
@@ -408,56 +458,6 @@ func (service *Stream) AddReply(session data.Session, inReplyToURL string, reply
 	}
 
 	// Station.
-	return nil
-}
-
-// RefusesReply returns TRUE when inReplyToURL is a local, public Stream with closed replies
-// (REPLY-CONTROLS §1.2).  The inbox checks this before a reply is notified or recorded.
-func (service *Stream) RefusesReply(session data.Session, inReplyToURL string) (bool, error) {
-
-	const location = "service.Stream.RefusesReply"
-
-	// RULE: A non-reply (empty inReplyTo) has no parent to refuse it.
-	if inReplyToURL == "" {
-		return false, nil
-	}
-
-	parent := model.NewStream()
-
-	if err := service.LoadByURL(session, inReplyToURL, &parent); err != nil {
-
-		// A parent that is not a local Stream has no policy for us to apply
-		if derp.IsNotFound(err) {
-			return false, nil
-		}
-
-		return false, derp.Wrap(err, location, "Loading parent Stream", "inReplyTo: "+inReplyToURL)
-	}
-
-	return parent.RefusesReplies(), nil
-}
-
-// ReindexReplies re-projects every reply Stream into its parent's Replies collection
-// and refreshes counts. It is safe to re-run (idempotent).
-func (service *Stream) ReindexReplies(session data.Session) error {
-
-	const location = "service.Stream.ReindexReplies"
-
-	// AddReply is idempotent: AddItem de-dupes by URI and counts are recomputed, so a
-	// repeated run converges to the same state.
-	replies, err := service.Range(session, exp.NotEqual("inReplyTo", ""))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Ranging reply Streams")
-	}
-
-	for reply := range replies {
-		if err := service.AddReply(session, reply.InReplyTo, reply.ActivityPubURL()); err != nil {
-			// Report and continue: one bad row must not abort the whole backfill.
-			derp.Report(derp.Wrap(err, location, "Projecting reply", reply.StreamID.Hex()))
-		}
-	}
-
 	return nil
 }
 
