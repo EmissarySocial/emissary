@@ -511,6 +511,8 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
 	e.GET("/:stream/pub/outbox/:messageId", handler.WithTemplate(factory, ap_stream.GetOutboxMessage))
 	e.HEAD("/:stream/pub/outbox/:messageId", handler.WithTemplate(factory, ap_stream.GetOutboxMessage))
+	e.GET("/:stream/pub/quoteAuthorization/:quoteAuthorizationId", handler.WithStream(factory, ap_stream.GetQuoteAuthorization))
+	e.HEAD("/:stream/pub/quoteAuthorization/:quoteAuthorizationId", handler.WithStream(factory, ap_stream.GetQuoteAuthorization))
 	e.GET("/:stream/pub/replies", handler.WithActorAndStream(factory, ap_stream.GetRepliesCollection))
 	e.HEAD("/:stream/pub/replies", handler.WithActorAndStream(factory, ap_stream.GetRepliesCollection))
 	e.GET("/:stream/pub/shares", handler.WithStream(factory, ap_stream.GetSharesCollection))
