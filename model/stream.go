@@ -319,14 +319,26 @@ func (stream Stream) approvalPolicyJSONLD(isPublic bool) mapof.Any {
 // Stream, recorded in the provided CollectionItem.
 func (stream Stream) QuoteAuthorizationJSONLD(quote CollectionItem) mapof.Any {
 
+	return QuoteAuthorizationJSONLD(
+		stream.ActivityPubQuoteAuthorizationURL(quote.CollectionItemID),
+		stream.AttributedTo.ProfileURL,
+		quote.URI,
+		stream.URL,
+	)
+}
+
+// QuoteAuthorizationJSONLD returns the FEP-044f QuoteAuthorization with the provided ID, in which the
+// author (attributedTo) approves the quote post (quoteURI) of the quoted post (targetURL).
+func QuoteAuthorizationJSONLD(authorizationURL string, attributedTo string, quoteURI string, targetURL string) mapof.Any {
+
 	// Mastodon verifies every field below against the quote it holds (verify_quote_service.rb)
 	return mapof.Any{
 		vocab.AtContext:                 sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeQuotePosts, vocab.ContextTypeGoToSocial},
-		vocab.PropertyID:                stream.ActivityPubQuoteAuthorizationURL(quote.CollectionItemID),
+		vocab.PropertyID:                authorizationURL,
 		vocab.PropertyType:              vocab.ObjectTypeQuoteAuthorization,
-		vocab.PropertyAttributedTo:      stream.AttributedTo.ProfileURL,
-		vocab.PropertyInteractingObject: quote.URI,
-		vocab.PropertyInteractionTarget: stream.URL,
+		vocab.PropertyAttributedTo:      attributedTo,
+		vocab.PropertyInteractingObject: quoteURI,
+		vocab.PropertyInteractionTarget: targetURL,
 	}
 }
 

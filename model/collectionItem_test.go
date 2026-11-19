@@ -56,3 +56,30 @@ func TestCollectionItemSchema_CollectionTypes(t *testing.T) {
 
 	require.NotNil(t, s.Set(&CollectionItem{}, "collectionType", "Bookmarks"), "an unknown collection type is refused")
 }
+
+// TestCollectionItem_AccessLister pins that only the User who owns the item's Collection passes as its
+// author and as "self", which is what lets a template action guard the item with either role
+func TestCollectionItem_AccessLister(t *testing.T) {
+
+	ownerID := primitive.NewObjectID()
+
+	collectionItem := NewCollectionItem()
+	collectionItem.UserID = ownerID
+
+	var accessLister AccessLister = &collectionItem
+
+	require.Equal(t, "default", accessLister.State())
+	require.True(t, accessLister.IsAuthor(ownerID))
+	require.True(t, accessLister.IsMyself(ownerID))
+
+	otherID := primitive.NewObjectID()
+	require.False(t, accessLister.IsAuthor(otherID), "another User")
+	require.False(t, accessLister.IsMyself(otherID), "another User")
+
+	// An item with no owner belongs to nobody, not to the anonymous visitor
+	unowned := NewCollectionItem()
+	require.False(t, unowned.IsAuthor(primitive.NilObjectID))
+	require.False(t, unowned.IsMyself(primitive.NilObjectID))
+
+	require.Empty(t, collectionItem.RolesToPrivilegeIDs("author"))
+}
