@@ -554,6 +554,7 @@ func newCollectionServiceWith(store *itemStore) (*Collection, itemSession) {
 	itemService := NewCollectionItem()
 	collectionService := NewCollection()
 	collectionService.collectionItemService = &itemService
+	itemService.collectionService = &collectionService
 	return &collectionService, itemSession{store: store}
 }
 

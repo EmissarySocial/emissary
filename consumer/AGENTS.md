@@ -99,3 +99,7 @@ Those hooks are also the **only** place a `StreamSource` status can be written, 
 ## `consumeSafely`'s panic path reaches no hook
 
 turbine recovers a panicking task in `consumeSafely`, which has no `Consumer` value — it was lost when the stack unwound — so it passes `nil` and no lifecycle hook fires. A task that panics therefore records no status anywhere. Any handler whose status the user reads must not panic; return a `queue.Result` instead.
+
+## `SendDeleteQuoteAuthorization` sends even when it cannot find the quoting actor
+
+Rejecting a quote deletes its CollectionItem at once and queues this task ([sendDeleteQuoteAuthorization.go](sendDeleteQuoteAuthorization.go)) to tell the quoting server. Nothing stores who quoted, so the task loads the quote post and reads its `attributedTo`. `retryQuoteLookup` sorts the failures: a 429 requeues, any other 4xx sends the `Delete` to Public and the author's followers alone, and everything else returns `queue.Error` before anything is sent. The 4xx branch must not become a `Failure`: a deleted quote post is the ordinary case, and the followers still need the `Delete`. The task carries the whole QuoteAuthorization as strings, because the item is gone when it runs and the Stream may be gone too.

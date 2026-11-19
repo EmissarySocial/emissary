@@ -1,8 +1,10 @@
 package service
 
 import (
+	"maps"
 	"slices"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/hannibal/datetime"
@@ -10,7 +12,12 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 )
+
+// TaskSendDeleteQuoteAuthorization is the name of the queue task that revokes a quote, by finding
+// the quoting actor and sending a Delete of the QuoteAuthorization.
+const TaskSendDeleteQuoteAuthorization = "SendDeleteQuoteAuthorization"
 
 // Single-recipient outbound sends, queued post-commit.
 //
@@ -110,4 +117,94 @@ func (service *Outbox) SendAnnounce(session data.Session, actorURL string, annou
 	}
 
 	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, announce)
+}
+
+// SendAcceptQuote queues an "Accept" of a FEP-044f QuoteRequest, addressed to the quoting actor. Its
+// result names the QuoteAuthorization that approves the quote. actorURL is the quoted author's URL.
+func (service *Outbox) SendAcceptQuote(session data.Session, actorURL string, quoteRequest streams.Document, authorizationURL string) {
+	accept := acceptQuoteActivity(actorURL, quoteRequest, authorizationURL)
+	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, accept)
+}
+
+// acceptQuoteActivity builds the "Accept" that SendAcceptQuote sends, in the shape of Mastodon's
+// AcceptQuoteRequestSerializer.
+func acceptQuoteActivity(actorURL string, quoteRequest streams.Document, authorizationURL string) mapof.Any {
+
+	// The QuoteRequest is embedded by reference only: Mastodon matches an Accept to its request by
+	// id, and re-publishing the inlined quote post under this actor's signature would vouch for it.
+	return mapof.Any{
+		vocab.AtContext:     sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeQuotePosts},
+		vocab.PropertyID:    authorizationURL + "#accept",
+		vocab.PropertyType:  vocab.ActivityTypeAccept,
+		vocab.PropertyActor: actorURL,
+		vocab.PropertyObject: mapof.Any{
+			vocab.PropertyID:         quoteRequest.ID(),
+			vocab.PropertyType:       vocab.ActivityTypeQuoteRequest,
+			vocab.PropertyActor:      quoteRequest.ActorID(),
+			vocab.PropertyObject:     quoteRequest.Object().ID(),
+			vocab.PropertyInstrument: quoteRequest.Instrument().ID(),
+		},
+		vocab.PropertyResult: authorizationURL,
+		vocab.PropertyTo:     []string{quoteRequest.ActorID()},
+	}
+}
+
+// SendDeleteQuoteAuthorization queues the task that revokes a quote by sending a "Delete" of its
+// QuoteAuthorization.  The task looks up the quoting actor from the quote post, and retries while
+// that post's server is unavailable, so the caller never waits on a remote server.
+func (service *Outbox) SendDeleteQuoteAuthorization(session data.Session, actorURL string, authorization mapof.Any, followersURL string) {
+
+	// The arguments are plain strings, which the stored queue returns unchanged
+	postcommit.Publish(session, service.queue, TaskSendDeleteQuoteAuthorization, mapof.Any{
+		"hostname":      service.host,
+		"actor":         actorURL,
+		"followers":     followersURL,
+		"authorization": authorization.GetString(vocab.PropertyID),
+		"attributedTo":  authorization.GetString(vocab.PropertyAttributedTo),
+		"quote":         authorization.GetString(vocab.PropertyInteractingObject),
+		"target":        authorization.GetString(vocab.PropertyInteractionTarget),
+	})
+}
+
+// DeliverDeleteQuoteAuthorization queues delivery of the "Delete" described by a task that
+// SendDeleteQuoteAuthorization queued, addressed to the author's followers and to the quoting
+// actor, as Mastodon does.  An empty quoterURL addresses the followers alone.
+func (service *Outbox) DeliverDeleteQuoteAuthorization(session data.Session, args mapof.Any, quoterURL string) {
+
+	authorization := model.QuoteAuthorizationJSONLD(
+		args.GetString("authorization"),
+		args.GetString("attributedTo"),
+		args.GetString("quote"),
+		args.GetString("target"),
+	)
+
+	remove := deleteQuoteAuthorizationActivity(args.GetString("actor"), authorization, quoterURL, args.GetString("followers"))
+	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, remove)
+}
+
+// deleteQuoteAuthorizationActivity builds the "Delete" that DeliverDeleteQuoteAuthorization sends, in
+// the shape of Mastodon's DeleteQuoteAuthorizationSerializer.
+func deleteQuoteAuthorizationActivity(actorURL string, authorization mapof.Any, quoterURL string, followersURL string) mapof.Any {
+
+	// The quoting actor is addressed only when the quote post still names one
+	to := []string{vocab.NamespacePublic}
+
+	if quoterURL != "" {
+		to = append(to, quoterURL)
+	}
+
+	// The embedded object's type is what routes the Delete to Mastodon's revoke_quote, and an
+	// embedded object never carries an @context of its own.
+	object := maps.Clone(authorization)
+	delete(object, vocab.AtContext)
+
+	return mapof.Any{
+		vocab.AtContext:      sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeQuotePosts, vocab.ContextTypeGoToSocial},
+		vocab.PropertyID:     authorization.GetString(vocab.PropertyID) + "#delete",
+		vocab.PropertyType:   vocab.ActivityTypeDelete,
+		vocab.PropertyActor:  actorURL,
+		vocab.PropertyObject: object,
+		vocab.PropertyTo:     to,
+		vocab.PropertyCC:     []string{followersURL},
+	}
 }

@@ -489,15 +489,19 @@ func (service *Collection) RemoveItem(session data.Session, collection *model.Co
 		return derp.Wrap(err, location, "Loading CollectionItem", "uri: "+itemURI)
 	}
 
+	// Delete the item, which also refreshes the stored `totalItems` (D9)
 	if err := service.collectionItemService.Delete(session, &collectionItem, ""); err != nil {
 		return derp.Wrap(err, location, "Deleting CollectionItem", collectionItem)
 	}
 
-	// Keep the W3C-required `totalItems` accurate (D9).
-	if err := service.refreshTotalItems(session, collection); err != nil {
-		return derp.Wrap(err, location, "Refreshing collection totalItems", collection.CollectionID.Hex())
+	// Recount, so that a caller holding this pointer sees the fresh `totalItems` too
+	count, err := service.CountItems(session, collection)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Counting CollectionItems", collection.CollectionID.Hex())
 	}
 
+	collection.TotalItems = int(count)
 	return nil
 }
 
@@ -505,6 +509,33 @@ func (service *Collection) RemoveItem(session data.Session, collection *model.Co
 func (service *Collection) CountItems(session data.Session, collection *model.Collection) (int64, error) {
 	// CountByCollection filters on parentId, which items inherit from collection.ParentID (NOT UserID) via AddItem.
 	return service.collectionItemService.CountByCollection(session, collection.ParentID, collection.CollectionID, exp.All())
+}
+
+// RefreshTotalItems recomputes and saves `totalItems` for the Collection with the provided ID.
+// It does nothing when that Collection no longer exists.
+func (service *Collection) RefreshTotalItems(session data.Session, collectionID primitive.ObjectID) error {
+
+	const location = "service.Collection.RefreshTotalItems"
+
+	// Load the Collection
+	collection := model.NewCollection()
+
+	if err := service.Load(session, exp.Equal("_id", collectionID), &collection); err != nil {
+
+		// A Collection that is gone has no total to refresh
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading Collection", collectionID)
+	}
+
+	// Recount it
+	if err := service.refreshTotalItems(session, &collection); err != nil {
+		return derp.Wrap(err, location, "Refreshing totalItems", collectionID)
+	}
+
+	return nil
 }
 
 // refreshTotalItems recomputes the Collection's `totalItems` from the live CollectionItem rows and

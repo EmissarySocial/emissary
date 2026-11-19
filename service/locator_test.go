@@ -307,3 +307,42 @@ func TestLocator_GetWebFingerResult_UserErrorIsNotSwallowed(t *testing.T) {
 	require.Equal(t, 500, derp.ErrorCode(err))
 	require.Zero(t, session.streams.loads, "the Stream collection must not be consulted after a User load failure")
 }
+
+// TestParseCollectionItem pins which URLs name a CollectionItem, and that anything else is NotFound
+// so a caller can fall back to matching the URL against the items' own URIs
+func TestParseCollectionItem(t *testing.T) {
+
+	locator := Locator{host: "https://example.com"}
+	itemID := primitive.NewObjectID()
+	path := "/pub/quoteAuthorization/" + itemID.Hex()
+
+	found := func(url string, expectedToken string) {
+		token, collectionItemID, err := locator.ParseCollectionItem(url)
+		require.NoError(t, err, url)
+		require.Equal(t, expectedToken, token, url)
+		require.Equal(t, itemID, collectionItemID, url)
+	}
+
+	found("https://example.com/my-post"+path, "my-post")
+	found("https://example.com/123456781234567812345678"+path, "123456781234567812345678")
+	found("https://example.com/my-post"+path+"/", "my-post")
+	found("https://example.com/my-post"+path+"?x=1#frag", "my-post")
+	found("https://EXAMPLE.com:443/my-post"+path, "my-post")
+
+	notFound := func(url string, message string) {
+		_, collectionItemID, err := locator.ParseCollectionItem(url)
+		require.True(t, derp.IsNotFound(err), message)
+		require.True(t, collectionItemID.IsZero(), message)
+	}
+
+	notFound("https://remote.example/my-post"+path, "another host")
+	notFound("https://example.com/my-post", "a Stream")
+	notFound("https://example.com/my-post/pub/replies", "another collection route")
+	notFound("https://example.com/my-post/pub/quoteAuthorization/", "no item ID")
+	notFound("https://example.com/my-post/pub/quoteAuthorization/not-an-id", "a malformed item ID")
+	notFound("https://example.com"+path, "no Stream token")
+	notFound("https://example.com/a/b"+path, "a Stream token of two segments")
+	notFound("https://example.com/@alice"+path, "a User")
+	notFound("", "an empty URL")
+	notFound("://", "an unparseable URL")
+}

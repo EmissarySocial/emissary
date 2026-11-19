@@ -141,6 +141,9 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case "ScheduleHourly":
 		return ScheduleHourly(consumer.serverFactory)
 
+	case service.TaskSendDeleteQuoteAuthorization:
+		return WithSession(consumer.serverFactory, args, SendDeleteQuoteAuthorization)
+
 	case "SendSearchResult":
 		return WithSession(consumer.serverFactory, args, SendSearchResult)
 

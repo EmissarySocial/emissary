@@ -40,34 +40,35 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	activityService     *ActivityStream
-	attachmentService   *Attachment
-	circleService       *Circle
-	collectionService   *Collection
-	contentService      *Content
-	domainService       *Domain
-	draftService        *StreamDraft
-	geocodeService      GeocodeAddress
-	importService       *Import
-	importItemService   *ImportItem
-	keyService          *EncryptionKey
-	locatorService      *Locator
-	notificationService *Notification
-	outboxService       *Outbox
-	permissionService   *Permission
-	searchResultService *SearchResult
-	searchTagService    *SearchTag
-	streamSourceService *StreamSource
-	templateService     *Template
-	followerService     *Follower
-	ruleService         *Rule
-	userService         *User
-	webhookService      *Webhook
-	host                string
-	mediaserver         mediaserver.MediaServer
-	queue               *queue.Queue
-	sseUpdateChannel    chan<- realtime.Message
-	newSession          func(timeout time.Duration) (data.Session, context.CancelFunc, error)
+	activityService       *ActivityStream
+	attachmentService     *Attachment
+	circleService         *Circle
+	collectionService     *Collection
+	collectionItemService *CollectionItem
+	contentService        *Content
+	domainService         *Domain
+	draftService          *StreamDraft
+	geocodeService        GeocodeAddress
+	importService         *Import
+	importItemService     *ImportItem
+	keyService            *EncryptionKey
+	locatorService        *Locator
+	notificationService   *Notification
+	outboxService         *Outbox
+	permissionService     *Permission
+	searchResultService   *SearchResult
+	searchTagService      *SearchTag
+	streamSourceService   *StreamSource
+	templateService       *Template
+	followerService       *Follower
+	ruleService           *Rule
+	userService           *User
+	webhookService        *Webhook
+	host                  string
+	mediaserver           mediaserver.MediaServer
+	queue                 *queue.Queue
+	sseUpdateChannel      chan<- realtime.Message
+	newSession            func(timeout time.Duration) (data.Session, context.CancelFunc, error)
 }
 
 // NewStream returns a fully populated Stream service.
@@ -85,6 +86,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.attachmentService = factory.Attachment()
 	service.circleService = factory.Circle()
 	service.collectionService = factory.Collection()
+	service.collectionItemService = factory.CollectionItem()
 	service.contentService = factory.Content()
 	service.domainService = factory.Domain()
 	service.draftService = factory.StreamDraft()

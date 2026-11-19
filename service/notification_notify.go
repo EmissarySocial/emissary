@@ -165,6 +165,18 @@ func (service *Notification) NotifyReaction(session data.Session, user *model.Us
 	return service.notify(session, user, activity, &notification)
 }
 
+// NotifyQuote creates a QUOTE notification for the recipient User, tied to the local Stream that was
+// quoted and to the quote post.  Together they find the CollectionItem that the User deletes to reject the quote.
+func (service *Notification) NotifyQuote(session data.Session, user *model.User, activity streams.Document, quote streams.Document, stream *model.Stream) error {
+
+	notification := service.newNotification(user, model.NotificationTypeQuote, activity)
+	notification.ObjectURL = quote.ID()
+	notification.ObjectSummary = objectSummary(quote)
+	notification.StreamID = stream.StreamID
+
+	return service.notify(session, user, activity, &notification)
+}
+
 // NotifyFollow creates a FOLLOW notification for the recipient User.  It is called from
 // inbox_follow_any.go after the Follower record is saved and the Accept is sent.
 func (service *Notification) NotifyFollow(session data.Session, user *model.User, activity streams.Document) error {

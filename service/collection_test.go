@@ -134,7 +134,7 @@ func (s memorySession) Close() {}
 // newMemoryService returns a Collection service backed by an in-memory store
 func newMemoryService() (*Collection, memorySession) {
 	service := NewCollection()
-	service.collectionItemService = &CollectionItem{}
+	service.collectionItemService = &CollectionItem{collectionService: &service}
 	return &service, memorySession{collection: &memoryCollection{}}
 }
 
