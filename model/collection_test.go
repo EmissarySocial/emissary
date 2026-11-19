@@ -396,3 +396,19 @@ func TestCollection_SetString_Invalid(t *testing.T) {
 	// An unknown property returns false.
 	require.False(t, collection.SetString("unknown-property", "value"))
 }
+
+// TestCollectionSchema_CollectionTypes pins that a Collection accepts every collection type, Quotes
+// included, and refuses an unknown one
+func TestCollectionSchema_CollectionTypes(t *testing.T) {
+
+	s := schema.New(CollectionSchema())
+
+	for _, collectionType := range []string{CollectionTypeContext, CollectionTypeReplies, CollectionTypeLikes, CollectionTypeDislikes, CollectionTypeShares, CollectionTypeQuotes} {
+		collection := NewCollection()
+		require.Nil(t, s.Set(&collection, "collectionType", collectionType), collectionType)
+		require.Equal(t, collectionType, collection.CollectionType)
+	}
+
+	collection := NewCollection()
+	require.NotNil(t, s.Set(&collection, "collectionType", "Bookmarks"), "an unknown collection type is refused")
+}

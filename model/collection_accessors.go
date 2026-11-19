@@ -13,7 +13,7 @@ func CollectionSchema() schema.Element {
 			"userId":         schema.String{Format: "objectId"},
 			"parentId":       schema.String{Format: "objectId"},
 			"parentType":     schema.String{Enum: []string{CollectionParentTypeStream, CollectionParentTypeUser}},
-			"collectionType": schema.String{Enum: []string{CollectionTypeContext, CollectionTypeReplies, CollectionTypeLikes, CollectionTypeDislikes, CollectionTypeShares}},
+			"collectionType": schema.String{Enum: []string{CollectionTypeContext, CollectionTypeReplies, CollectionTypeLikes, CollectionTypeDislikes, CollectionTypeShares, CollectionTypeQuotes}},
 			"read":           schema.Array{Items: schema.String{MaxLength: 256}},
 			"write":          schema.Array{Items: schema.String{MaxLength: 256}},
 			"totalItems":     schema.Integer{},

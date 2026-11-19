@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TestCollectionItemSchema returns the rosetta schema that describes a TestCollectionItem
@@ -33,4 +34,25 @@ func TestCollectionItem_ActivityPubURL(t *testing.T) {
 
 	collectionItem.URI = "https://example.test/reply/1"
 	require.Equal(t, "https://example.test/reply/1", collectionItem.ActivityPubURL())
+}
+
+// TestCollectionItemSchema_CollectionTypes pins that a CollectionItem validates for every collection
+// type, Quotes included, and is refused for an unknown one
+func TestCollectionItemSchema_CollectionTypes(t *testing.T) {
+
+	s := schema.New(CollectionItemSchema())
+
+	for _, collectionType := range []string{CollectionTypeContext, CollectionTypeReplies, CollectionTypeLikes, CollectionTypeDislikes, CollectionTypeShares, CollectionTypeQuotes} {
+		collectionItem := NewCollectionItem()
+		collectionItem.CollectionID = primitive.NewObjectID()
+		collectionItem.UserID = primitive.NewObjectID()
+		collectionItem.ParentID = primitive.NewObjectID()
+		collectionItem.CollectionType = collectionType
+		collectionItem.URI = "https://remote.example/notes/1"
+
+		_, err := s.Validate(&collectionItem)
+		require.NoError(t, err, collectionType)
+	}
+
+	require.NotNil(t, s.Set(&CollectionItem{}, "collectionType", "Bookmarks"), "an unknown collection type is refused")
 }
