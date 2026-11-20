@@ -78,6 +78,11 @@ func convertModelToMap(newIndex mongo.IndexModel) mapof.Any {
 		result["sparse"] = *sparse
 	}
 
+	// A TTL index reads back with this key, so it must be in the map too, or the index never matches
+	if expireAfterSeconds := newIndex.Options.ExpireAfterSeconds; expireAfterSeconds != nil {
+		result["expireAfterSeconds"] = *expireAfterSeconds
+	}
+
 	if version := newIndex.Options.Version; version != nil {
 		result["v"] = int32(*version)
 	} else {

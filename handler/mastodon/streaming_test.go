@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
@@ -89,6 +90,35 @@ func TestStreamingEventsForMessage_Skips(t *testing.T) {
 	// A sent direct message only goes to the "direct" stream
 	require.Empty(t, streamingEventsForMessage(nil, nil, auth, withRecord(realtime.NewMessage_DirectMessageSent(auth.UserID)), subs))
 
-	// Topics the stream does not carry are skipped
+	// A saved Stream reaches only the "user" stream, and must name the Stream that changed
+	require.Empty(t, streamingEventsForMessage(nil, nil, auth, withRecord(realtime.NewMessage_ChildUpdated(auth.UserID)), none))
+	require.Empty(t, streamingEventsForMessage(nil, nil, auth, realtime.NewMessage_ChildUpdated(auth.UserID), subs))
+
+	// Topics the stream does not carry are skipped, including a User's own save
 	require.Empty(t, streamingEventsForMessage(nil, nil, auth, withRecord(realtime.NewMessage_Updated(auth.UserID)), subs))
+	require.Empty(t, streamingEventsForMessage(nil, nil, auth, withRecord(realtime.NewMessage_ImportProgress(auth.UserID)), subs))
+}
+
+// TestWasJustEdited confirms only the save that an edit makes counts as that edit
+func TestWasJustEdited(t *testing.T) {
+
+	stream := model.NewStream()
+	editedAt := time.Date(2026, 11, 12, 15, 0, 0, 0, time.UTC)
+
+	// Never edited
+	stream.UpdateDate = editedAt.UnixMilli()
+	require.False(t, wasJustEdited(stream))
+
+	// The edit's own save, a moment after EditDate was set
+	stream.EditDate = editedAt.Unix()
+	stream.UpdateDate = editedAt.Add(300 * time.Millisecond).UnixMilli()
+	require.True(t, wasJustEdited(stream))
+
+	// A later save, such as a new like, is not an edit
+	stream.UpdateDate = editedAt.Add(10 * time.Minute).UnixMilli()
+	require.False(t, wasJustEdited(stream))
+
+	// A save recorded before the edit date cannot be the edit
+	stream.UpdateDate = editedAt.Add(-time.Minute).UnixMilli()
+	require.False(t, wasJustEdited(stream))
 }

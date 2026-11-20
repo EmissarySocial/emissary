@@ -374,6 +374,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Filtered = labelFilterResults(document.Metadata.Labels)
 	applyRemoteReply(&status, client, factory, session, document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
+	applyLinkCard(factory, session, &status)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {
 		return status, nil

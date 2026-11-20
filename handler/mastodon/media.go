@@ -27,7 +27,7 @@ const mediaCategory = "mastodon-media"
 // https://docs.joinmastodon.org/methods/media/
 //
 // RULE: media uploads before the status exists, so this has no Stream yet -- it's filed
-// under the caller's User until PostStatus re-parents it (see attachStatusMedia).
+// under the caller's User until PostStatus re-parents it (see setStatusMedia).
 func PostMedia(serverFactory *server.Factory) func(model.Authorization, txn.PostMedia) (object.MediaAttachment, error) {
 
 	const location = "handler.mastodon.PostMedia"
@@ -210,41 +210,147 @@ func loadCallerMedia(factory *service.Factory, session data.Session, auth model.
 	return attachment, nil
 }
 
-// attachStatusMedia re-parents the caller's pending media uploads onto the new Stream.
-// RULE: refuses anything not already a pending upload owned by this caller.
-func attachStatusMedia(factory *service.Factory, session data.Session, auth model.Authorization, stream *model.Stream, mediaIDs []string) error {
+// setStatusMedia makes a Stream's media exactly the requested attachments, in order: it attaches
+// the caller's unattached uploads, ranks every attachment by position, and unattaches the rest.
+func setStatusMedia(factory *service.Factory, session data.Session, auth model.Authorization, stream *model.Stream, mediaIDs []string) error {
 
-	const location = "handler.mastodon.attachStatusMedia"
+	const location = "handler.mastodon.setStatusMedia"
 
 	attachmentService := factory.Attachment()
+
+	// Load the media on the Stream now
+	current, err := attachmentService.QueryByObjectID(session, model.AttachmentObjectTypeStream, stream.StreamID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading current media", stream.StreamID)
+	}
+
+	// Work out the whole change before writing any of it
+	loadUnattached := func(attachmentID primitive.ObjectID) (model.Attachment, error) {
+		attachment := model.NewEmptyAttachment()
+		err := attachmentService.LoadByID(session, model.AttachmentObjectTypeUser, auth.UserID, attachmentID, &attachment)
+		return attachment, err
+	}
+
+	keep, remove, err := planStatusMedia(current, mediaIDs, loadUnattached)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Planning media", stream.StreamID)
+	}
+
+	// Attach and rank the media the status keeps, saving only what changed
+	for index := range keep {
+
+		attachment := &keep[index]
+		rank := index + 1
+
+		if attachment.ObjectType == model.AttachmentObjectTypeStream && attachment.ObjectID == stream.StreamID && attachment.Rank == rank {
+			continue
+		}
+
+		attachment.ObjectType = model.AttachmentObjectTypeStream
+		attachment.ObjectID = stream.StreamID
+		attachment.Rank = rank
+
+		if err := attachmentService.Save(session, attachment, "Attached to status via Mastodon API"); err != nil {
+			return derp.Wrap(err, location, "Attaching media to status", attachment.AttachmentID)
+		}
+	}
+
+	// Removed media goes back to its author's unattached uploads, as Mastodon keeps it,
+	// so a client can attach it again.  Nothing is deleted.
+	ownerID := stream.AttributedTo.UserID
+
+	if ownerID.IsZero() {
+		ownerID = auth.UserID
+	}
+
+	for index := range remove {
+
+		attachment := &remove[index]
+		attachment.ObjectType = model.AttachmentObjectTypeUser
+		attachment.ObjectID = ownerID
+		attachment.Rank = 0
+
+		if err := attachmentService.Save(session, attachment, "Removed from status via Mastodon API"); err != nil {
+			return derp.Wrap(err, location, "Removing media from status", attachment.AttachmentID)
+		}
+	}
+
+	// Picture perfect.
+	return nil
+}
+
+// planStatusMedia returns the attachments a Stream keeps, in the requested order, and the ones it
+// loses, given its current media and the caller's requested media IDs.  It writes nothing.
+func planStatusMedia(current []model.Attachment, mediaIDs []string, loadUnattached func(primitive.ObjectID) (model.Attachment, error)) ([]model.Attachment, []model.Attachment, error) {
+
+	const location = "handler.mastodon.planStatusMedia"
+
+	// RULE: A status carries at most the number of attachments the instance advertises
+	if len(mediaIDs) > instanceMaxMediaAttachments {
+		return nil, nil, derp.BadRequest(location, "Too many media attachments", len(mediaIDs), derp.WithCode(http.StatusUnprocessableEntity))
+	}
+
+	onStream := make(map[primitive.ObjectID]model.Attachment, len(current))
+
+	for _, attachment := range current {
+		onStream[attachment.AttachmentID] = attachment
+	}
+
+	// Resolve each requested ID, either to media already on the Stream or to an unattached upload
+	keep := make([]model.Attachment, 0, len(mediaIDs))
+	kept := make(map[primitive.ObjectID]struct{}, len(mediaIDs))
 
 	for _, mediaID := range mediaIDs {
 
 		attachmentID, err := primitive.ObjectIDFromHex(mediaID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Invalid media ID", mediaID)
+			return nil, nil, derp.BadRequest(location, "Invalid media ID", mediaID, derp.WithCode(http.StatusUnprocessableEntity))
 		}
 
-		attachment := model.NewEmptyAttachment()
-
-		if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeUser, auth.UserID, attachmentID, &attachment); err != nil {
-			return derp.Wrap(err, location, "Media not found, or already attached to another post", mediaID)
+		// A repeated ID is attached once, at its first position
+		if _, isKept := kept[attachmentID]; isKept {
+			continue
 		}
 
-		if attachment.Category != mediaCategory {
-			return derp.BadRequest(location, "Media not found, or already attached to another post", mediaID)
+		attachment, isOnStream := onStream[attachmentID]
+
+		if !isOnStream {
+
+			unattached, err := loadUnattached(attachmentID)
+
+			// RULE: Only the caller's own unattached Mastodon uploads can be added to a status
+			if err != nil || unattached.Category != mediaCategory {
+				return nil, nil, derp.BadRequest(location, "Media not found, or already attached to another post", mediaID, derp.WithCode(http.StatusUnprocessableEntity))
+			}
+
+			attachment = unattached
 		}
 
-		attachment.ObjectType = model.AttachmentObjectTypeStream
-		attachment.ObjectID = stream.StreamID
-
-		if err := attachmentService.Save(session, &attachment, "Attached to status via Mastodon API"); err != nil {
-			return derp.Wrap(err, location, "Attaching media to status", mediaID)
-		}
+		kept[attachmentID] = struct{}{}
+		keep = append(keep, attachment)
 	}
 
-	return nil
+	// Everything else on the Stream comes off
+	remove := make([]model.Attachment, 0, len(current))
+
+	for _, attachment := range current {
+
+		if _, isKept := kept[attachment.AttachmentID]; isKept {
+			continue
+		}
+
+		// RULE: Only Mastodon uploads can be removed here; media the website added is managed there
+		if attachment.Category != mediaCategory {
+			return nil, nil, derp.BadRequest(location, "This media can only be removed on the website", attachment.AttachmentID.Hex(), derp.WithCode(http.StatusUnprocessableEntity))
+		}
+
+		remove = append(remove, attachment)
+	}
+
+	return keep, remove, nil
 }
 
 // attachmentToMediaAttachment converts a saved Attachment into its Mastodon API equivalent.

@@ -2,11 +2,13 @@ package build
 
 import (
 	"io"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -153,4 +155,33 @@ func TestStepEditContent_Post_RewindsBodyForTransactionRetry(t *testing.T) {
 	require.True(t, secondResult.Halt, "the retried submission must halt the pipeline")
 	require.NoError(t, secondResult.Error, "a retry must re-read the body, not find it drained and empty")
 	require.Empty(t, stream.Content.Raw, "an oversize EditorJS submission must not be stored")
+}
+
+// TestMarkEdited confirms only a changed body on a published Stream records an edit date
+func TestMarkEdited(t *testing.T) {
+
+	now := time.Date(2026, 11, 12, 16, 0, 0, 0, time.UTC)
+
+	published := func() *model.Stream {
+		stream := model.NewStream()
+		stream.PublishDate = now.Add(-time.Hour).Unix()
+		stream.UnPublishDate = math.MaxInt64
+		stream.Content = model.Content{Raw: "first version"}
+		return &stream
+	}
+
+	// A published Stream whose body changes is edited
+	stream := published()
+	markEdited(stream, "second version", now)
+	require.Equal(t, now.Unix(), stream.EditDate)
+
+	// Saving the same body again is not an edit
+	stream = published()
+	markEdited(stream, "first version", now)
+	require.Zero(t, stream.EditDate)
+
+	// Writing an unpublished draft is not an edit either
+	draft := model.NewStream()
+	markEdited(&draft, "anything", now)
+	require.Zero(t, draft.EditDate)
 }
