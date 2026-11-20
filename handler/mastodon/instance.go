@@ -38,10 +38,18 @@ func contactAccount(factory *service.Factory, session data.Session) object.Accou
 	return tootUser(factory, session, model.Authorization{}, &user)
 }
 
-// instanceVersion returns the version string reported to clients, taken from this program's build information.
+// mastodonCompatibleVersion is the Mastodon release clients read at the start of the version string to turn features on.
+const mastodonCompatibleVersion = "4.0.0"
+
+// instanceVersion returns the version string reported to clients: a Mastodon version, then this program's build.
 func instanceVersion() string {
 	info, ok := debug.ReadBuildInfo()
-	return versionFromBuild(info, ok)
+	return compatibleVersion(versionFromBuild(info, ok))
+}
+
+// compatibleVersion puts the Mastodon version first, in the "(compatible; ...)" form other servers use.
+func compatibleVersion(build string) string {
+	return mastodonCompatibleVersion + " (compatible; " + build + ")"
 }
 
 // pseudoVersion matches the module version Go stamps on a build made from an untagged commit.

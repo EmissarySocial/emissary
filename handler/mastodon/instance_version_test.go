@@ -32,3 +32,8 @@ func TestVersionFromBuild(t *testing.T) {
 	require.Equal(t, "Emissary", versionFromBuild(&debug.BuildInfo{Main: debug.Module{Version: "(devel)"}}, true), "no commit recorded")
 	require.Equal(t, "Emissary", versionFromBuild(nil, false))
 }
+
+// TestCompatibleVersion confirms the reported version starts with a Mastodon version clients can parse.
+func TestCompatibleVersion(t *testing.T) {
+	require.Equal(t, "4.0.0 (compatible; Emissary a3153d0a0)", compatibleVersion("Emissary a3153d0a0"))
+}
