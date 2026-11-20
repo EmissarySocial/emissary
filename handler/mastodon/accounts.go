@@ -1014,10 +1014,11 @@ func PostAccount_Unfollow(serverFactory *server.Factory) func(model.Authorizatio
 }
 
 // buildRelationship describes the caller's relationship to one account: who follows whom, and
-// any block, mute, or private note. The Relationship ID is always the ID the client used (id),
-// never the resolved actor URL -- the client matches responses to accounts on screen by it.
+// any block, mute, server block, or private note
 func buildRelationship(factory *service.Factory, session data.Session, auth model.Authorization, id string) object.Relationship {
 
+	// The ID is always the one the client used, never the resolved actor URL --
+	// the client matches responses to accounts on screen by it
 	relationship := object.Relationship{
 		ID:        id,
 		Languages: []string{},
@@ -1060,7 +1061,37 @@ func buildRelationship(factory *service.Factory, session data.Session, auth mode
 		}
 	}
 
+	// "domain_blocking": one of the caller's own DOMAIN blocks covers the account's server
+	if domainRules, err := factory.Rule().QueryByMatchKeys(session, auth.UserID, model.DomainMatchKeys(accountURL)); err == nil {
+		relationship.DomainBlocking = isDomainBlocked(domainRules, auth.UserID, time.Now().Unix())
+	}
+
+	// Relationship status: it's complicated
 	return relationship
+}
+
+// isDomainBlocked returns TRUE if one of the User's own unexpired DOMAIN Rules is a BLOCK
+func isDomainBlocked(rules []model.RuleSummary, userID primitive.ObjectID, now int64) bool {
+
+	for _, rule := range rules {
+
+		// RULE: Only the User's own blocks count; server-wide ones are the admin's, not the User's
+		if rule.UserID != userID {
+			continue
+		}
+
+		// RULE: Expired Rules are inert
+		if rule.ExpireDate > 0 && rule.ExpireDate < now {
+			continue
+		}
+
+		if rule.Type == model.RuleTypeDomain && rule.Action == model.RuleActionBlock {
+			return true
+		}
+	}
+
+	// Nope, all clear
+	return false
 }
 
 // PostAccount_Block implements the Mastodon "block account" endpoint
