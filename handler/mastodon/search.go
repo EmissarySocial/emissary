@@ -170,24 +170,31 @@ func searchHashtags(factory *service.Factory, session data.Session, auth model.A
 	// Build each tag with its recent local usage
 	origin := uri.GuessProtocolForHostname(host) + host
 	now := time.Now()
-	since := now.AddDate(0, 0, -hashtagHistoryDays).Unix()
 	result := make([]object.Tag, 0, len(tags)-offset)
 
 	for _, tag := range tags[offset:] {
 
 		name := first.String(tag.Name, tag.Value)
 
-		// The client's "people talking" figure is summed from this history
-		posts := localHashtagStatuses(factory, session, auth, name, hashtagLocalHistoryMax, exp.GreaterThan("publishDate", since))
-
 		result = append(result, object.Tag{
 			Name:    name,
 			URL:     apiHashtagURL(origin, name),
-			History: hashtagHistory(posts, now, hashtagHistoryDays),
+			History: localTagHistory(factory, session, auth, name, now),
 		})
 	}
 
 	return result, nil
+}
+
+// localTagHistory returns a hashtag's daily use on this server over the last week, counting the posts the caller may see
+func localTagHistory(factory *service.Factory, session data.Session, auth model.Authorization, name string, now time.Time) []object.TagHistory {
+
+	// The client's "people talking" figure is summed from this history
+	since := now.AddDate(0, 0, -hashtagHistoryDays).Unix()
+	posts := localHashtagStatuses(factory, session, auth, name, hashtagLocalHistoryMax, exp.GreaterThan("publishDate", since))
+
+	// Seven days, one tally
+	return hashtagHistory(posts, now, hashtagHistoryDays)
 }
 
 // resolveOneAccount looks up a single account by exact webfinger handle (user@domain) or actor

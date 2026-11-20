@@ -8,6 +8,8 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -32,12 +34,14 @@ func GetTrends_Tags(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		// Get the Domain factory for this request
 		factory, err := serverFactory.ByHostname(serverFactory.Hostname(ctx.Request()))
 
 		if err != nil {
 			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
@@ -46,26 +50,47 @@ func GetTrends_Tags(serverFactory *server.Factory) echo.HandlerFunc {
 
 		defer cancel()
 
-		limit := trendingTagsLimit(ctx.QueryParam("limit"))
-		criteria := exp.Equal("stateId", model.SearchTagStateFeatured)
-
-		searchTags, err := factory.SearchTag().Query(session, criteria, option.SortAsc("rank"), option.MaxRows(int64(limit)))
+		// List the featured tags
+		result, err := trendingTags(factory, session, trendingTagsLimit(ctx.QueryParam("limit")))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Querying featured tags")
+			return derp.Wrap(err, location, "Listing trending tags")
 		}
 
-		host := factory.Hostname()
-		result := make([]object.Tag, 0, len(searchTags))
-
-		for _, searchTag := range searchTags {
-			if tag, ok := searchTagToTag(searchTag, host); ok {
-				result = append(result, tag)
-			}
-		}
-
+		// Hashtag, you're it
 		return ctx.JSON(http.StatusOK, result)
 	}
+}
+
+// trendingTags returns up to limit featured tags, in the admin's order, each with its public use this week
+func trendingTags(factory *service.Factory, session data.Session, limit int) ([]object.Tag, error) {
+
+	const location = "handler.mastodon.trendingTags"
+
+	// Load the featured tags
+	criteria := exp.Equal("stateId", model.SearchTagStateFeatured)
+	searchTags, err := factory.SearchTag().Query(session, criteria, option.SortAsc("rank"), option.MaxRows(int64(limit)))
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Querying featured tags")
+	}
+
+	// Describe each one, with its recent use
+	host := factory.Hostname()
+	now := time.Now()
+	result := make([]object.Tag, 0, len(searchTags))
+
+	for _, searchTag := range searchTags {
+		if tag, ok := searchTagToTag(searchTag, host); ok {
+
+			// Trends are public figures, so count only the posts an anonymous visitor could see
+			tag.History = localTagHistory(factory, session, model.Authorization{}, tag.Name, now)
+			result = append(result, tag)
+		}
+	}
+
+	// What's hot
+	return result, nil
 }
 
 // trendingTagsLimit reads the "limit" parameter, keeping it within Mastodon's bounds
