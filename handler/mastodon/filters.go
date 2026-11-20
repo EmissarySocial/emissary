@@ -16,7 +16,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// https://docs.joinmastodon.org/methods/filters/
+/******************************************
+ * Mastodon Filters
+ *
+ * Each Filter is one of the User's hashtag (TAG) Rules.
+ * https://docs.joinmastodon.org/methods/filters/
+ ******************************************/
+
 // GetFilters implements the Mastodon "list filters" endpoint, showing the User's hashtag Rules
 func GetFilters(serverFactory *server.Factory) func(model.Authorization, txn.GetFilters) ([]object.Filter, error) {
 
@@ -55,6 +61,7 @@ func GetFilters(serverFactory *server.Factory) func(model.Authorization, txn.Get
 			result = append(result, filterFromRule(rule))
 		}
 
+		// Filters, assemble
 		return result, nil
 	}
 }
@@ -82,17 +89,19 @@ func GetFilter(serverFactory *server.Factory) func(model.Authorization, txn.GetF
 
 		defer cancel()
 
+		// Load the hashtag Rule this Filter ID names
 		rule, err := loadFilterRule(factory.Rule(), session, auth, t.ID)
 
 		if err != nil {
 			return object.Filter{}, derp.Wrap(err, location, "Loading hashtag rule")
 		}
 
+		// Filter delivered, no pickles
 		return filterFromRule(rule), nil
 	}
 }
 
-// loadFilterRule loads the User's hashtag Rule that a Filter ID names, or a 404 for anything else.
+// loadFilterRule loads the User's hashtag Rule that a Filter ID names, or returns a 404 for anything else
 func loadFilterRule(ruleService *service.Rule, session data.Session, auth model.Authorization, filterID string) (model.Rule, error) {
 
 	const location = "handler.mastodon.loadFilterRule"
@@ -116,11 +125,14 @@ func loadFilterRule(ruleService *service.Rule, session data.Session, auth model.
 		return model.Rule{}, errNoSuch(location, "Filter")
 	}
 
+	// Rule found. Rule returned. Rule-abiding.
 	return rule, nil
 }
 
-// applyFilter copies a Mastodon filter's settings onto a hashtag Rule. Contexts are ignored: Rules apply everywhere.
+// applyFilter copies a Mastodon filter's title or keyword, action, and expiry onto a hashtag Rule
 func applyFilter(rule *model.Rule, title string, keywords []string, filterAction string, expiresIn int, now int64) error {
+
+	// Contexts are ignored on purpose: Rules apply everywhere
 
 	// The hashtag comes from a keyword if one is given, else from the title
 	text := title
@@ -167,18 +179,22 @@ func applyFilter(rule *model.Rule, title string, keywords []string, filterAction
 		rule.ExpireDate = now + int64(expiresIn)
 	}
 
+	// Filtered, not stirred
 	return nil
 }
 
-// filterHashtag reads one hashtag, with or without its "#", from a filter's title or keyword.
+// filterHashtag reads one hashtag, with or without its "#", from a filter's title or keyword
 func filterHashtag(text string) (string, error) {
 
+	// Trim the spaces and any leading "#"
 	tag := strings.TrimPrefix(strings.TrimSpace(text), "#")
 
+	// RULE: A filter names exactly one hashtag
 	if tag == "" || strings.ContainsAny(tag, " \t\n#") {
 		return "", derp.Validation("Filters on this server match one hashtag, such as #politics")
 	}
 
+	// Hashtag, you're it
 	return "#" + tag, nil
 }
 
@@ -205,24 +221,29 @@ func PostFilter(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 
 		defer cancel()
 
-		// A new hashtag Rule; if one already exists for this tag, Save updates that one instead
+		// Start a new hashtag Rule for this User
+		// (if one already exists for this tag, Save updates that one instead)
 		rule := model.NewRule()
 		rule.UserID = auth.UserID
 		rule.Type = model.RuleTypeTag
 
+		// Collect the keywords the app sent
 		keywords := make([]string, 0, len(t.KeywordsAttributes))
 		for _, keyword := range t.KeywordsAttributes {
 			keywords = append(keywords, keyword.Keyword)
 		}
 
+		// Copy the filter's settings onto the Rule
 		if err := applyFilter(&rule, t.Title, keywords, t.FilterAction, int(t.ExpiresIn), time.Now().Unix()); err != nil {
 			return object.Filter{}, derp.Wrap(err, location, "Reading filter")
 		}
 
+		// Save the Rule
 		if err := factory.Rule().Save(session, &rule, "Created by Mastodon API"); err != nil {
 			return object.Filter{}, derp.Wrap(err, location, "Saving hashtag rule")
 		}
 
+		// It's alive!
 		return filterFromRule(rule), nil
 	}
 }
@@ -250,13 +271,14 @@ func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutF
 
 		defer cancel()
 
+		// Load the hashtag Rule being edited
 		rule, err := loadFilterRule(factory.Rule(), session, auth, t.ID)
 
 		if err != nil {
 			return object.Filter{}, derp.Wrap(err, location, "Loading hashtag rule")
 		}
 
-		// Keywords being removed don't name the hashtag
+		// Collect the keywords the app sent, skipping any being removed
 		keywords := make([]string, 0, len(t.KeywordsAttributes))
 		for _, keyword := range t.KeywordsAttributes {
 			if !keyword.Destroy {
@@ -264,6 +286,7 @@ func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutF
 			}
 		}
 
+		// Copy the filter's settings onto the Rule, remembering its old match key
 		previousMatchKey := rule.MatchKey
 
 		if err := applyFilter(&rule, t.Title, keywords, t.FilterAction, int(t.ExpiresIn), time.Now().Unix()); err != nil {
@@ -285,10 +308,12 @@ func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutF
 			}
 		}
 
+		// Save the Rule
 		if err := factory.Rule().Save(session, &rule, "Updated by Mastodon API"); err != nil {
 			return object.Filter{}, derp.Wrap(err, location, "Saving hashtag rule")
 		}
 
+		// New filter, who dis?
 		return filterFromRule(rule), nil
 	}
 }
@@ -316,16 +341,19 @@ func DeleteFilter(serverFactory *server.Factory) func(model.Authorization, txn.D
 
 		defer cancel()
 
+		// Load the hashtag Rule being deleted
 		rule, err := loadFilterRule(factory.Rule(), session, auth, t.ID)
 
 		if err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Loading hashtag rule")
 		}
 
+		// Delete the Rule
 		if err := factory.Rule().Delete(session, &rule, "Deleted by Mastodon API"); err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Deleting hashtag rule")
 		}
 
+		// Unfiltered, at last
 		return struct{}{}, nil
 	}
 }
@@ -338,10 +366,11 @@ func GetFilter_Keywords(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
-// PostFilter_Keyword is the Mastodon "add filter keyword" endpoint; each filter matches only the hashtag in its title
+// PostFilter_Keyword is the Mastodon "add filter keyword" endpoint, which Emissary does not implement
 func PostFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
 
 	return func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
+		// Each filter matches only the hashtag in its title, so there's nowhere to put another keyword
 		return struct{}{}, errNotSupported("handler.mastodon.PostFilter_Keyword", "Extra filter keywords")
 	}
 }

@@ -38,16 +38,16 @@ func contactAccount(factory *service.Factory, session data.Session) object.Accou
 	return tootUser(factory, session, model.Authorization{}, &user)
 }
 
-// mastodonCompatibleVersion is the Mastodon release clients read at the start of the version string to turn features on.
-const mastodonCompatibleVersion = "4.0.0"
+// mastodonCompatibleVersion is the Mastodon release reported at the start of the instance version
+const mastodonCompatibleVersion = "4.0.0" // Apps turn features on by this number; 4.3 adds grouped notifications, which Emissary lacks
 
-// instanceVersion returns the version string reported to clients: a Mastodon version, then this program's build.
+// instanceVersion returns the version string reported to clients: a Mastodon version, then this program's build
 func instanceVersion() string {
 	info, ok := debug.ReadBuildInfo()
 	return compatibleVersion(versionFromBuild(info, ok))
 }
 
-// compatibleVersion puts the Mastodon version first, in the "(compatible; ...)" form other servers use.
+// compatibleVersion returns the build wrapped as "<Mastodon version> (compatible; <build>)"
 func compatibleVersion(build string) string {
 	return mastodonCompatibleVersion + " (compatible; " + build + ")"
 }
