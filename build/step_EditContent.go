@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -128,6 +129,9 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		}
 	}
 
+	// A changed body on a published Stream is an edit, which federates as its "updated" date
+	markEdited(stream, rawContent, time.Now())
+
 	// Set the new Content value in the Stream
 	contentService := builder.factory().Content()
 	stream.Content = contentService.New(step.Format, rawContent)
@@ -139,6 +143,14 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Success!
 	return nil
+}
+
+// markEdited records an edit date when a published Stream's body is replaced with different content
+func markEdited(stream *model.Stream, rawContent string, now time.Time) {
+
+	if stream.IsPublished() && rawContent != stream.Content.Raw {
+		stream.EditDate = now.Unix()
+	}
 }
 
 // errorEmptyContent writes an inline error message back to the compose form when

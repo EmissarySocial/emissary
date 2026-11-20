@@ -92,6 +92,15 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		contentService := factory.Content()
 		stream.Content = contentService.New(model.ContentFormatText, transaction.Status)
 
+		// RULE: Attach the media first.  Publish builds the federated Create from the attachments
+		// the Stream has at that moment, so media attached afterward never reached followers.
+		// Refused media also stops here, before anything is saved or published.
+		if len(transaction.MediaIDs) > 0 {
+			if err := setStatusMedia(factory, session, authorization, &stream, transaction.MediaIDs); err != nil {
+				return object.Status{}, derp.Wrap(err, location, "Attaching media")
+			}
+		}
+
 		// Save the stream
 		streamService := factory.Stream()
 		if err := streamService.Save(session, &stream, "Created via Mastodon API"); err != nil {
@@ -101,11 +110,6 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		// Publish the Stream to the User's outbox
 		if err := streamService.Publish(session, &user, &stream, "published", true, false); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Publishing stream")
-		}
-
-		// Re-parent any media the client uploaded first (see PostMedia) onto this new Stream.
-		if err := attachStatusMedia(factory, session, authorization, &stream, transaction.MediaIDs); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Attaching media")
 		}
 
 		indexStatus(factory, session, &stream)
@@ -696,7 +700,6 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 		defer cancel()
 
-		streamService := factory.Stream()
 		stream := model.NewStream()
 
 		if err := loadStreamByStatusID(factory, session, t.ID, &stream); err != nil {
@@ -720,18 +723,64 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 		// t.Sensitive
 		// t.Language
 
-		// t.MediaIDs
-		// t.Poll info...
+		// Make the status's media exactly the list the client sent, in that order.  A request with
+		// no media_ids at all leaves the media alone, so a text-only edit can never drop a photo;
+		// a JSON body with an empty list removes it all.
+		if t.MediaIDs != nil {
+			if err := setStatusMedia(factory, session, auth, &stream, t.MediaIDs); err != nil {
+				return object.Status{}, derp.Wrap(err, location, "Updating media", t.ID)
+			}
+		}
 
-		// Save the stream to the database
-		if err := streamService.Save(session, &stream, "Edited via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Saving stream")
+		// Save the edit, and send a published post's new version to followers as an Update.
+		// The edit is dated just before its save, which is how the streaming API knows the two.
+		stream.EditDate = time.Now().Unix()
+
+		if err := saveStatusEdit(factory, session, auth, &stream); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Saving edit", t.ID)
 		}
 
 		indexStatus(factory, session, &stream)
 
 		return reactedStatus(factory, session, auth, &stream), nil
 	}
+}
+
+// saveStatusEdit saves an edited Stream, republishing it when it is already published so its
+// followers receive an Update, as an edit on the website does
+func saveStatusEdit(factory *service.Factory, session data.Session, auth model.Authorization, stream *model.Stream) error {
+
+	const location = "handler.mastodon.saveStatusEdit"
+
+	streamService := factory.Stream()
+
+	// An unpublished Stream is only saved, so an edit never publishes a draft
+	if !stream.IsPublished() {
+		return streamService.Save(session, stream, "Edited via Mastodon API")
+	}
+
+	// RULE: Publish credits the post to the User it is given, so it gets the author, not
+	// the caller, who may be a domain owner moderating someone else's post
+	authorID := stream.AttributedTo.UserID
+
+	if authorID.IsZero() {
+		authorID = auth.UserID
+	}
+
+	author := model.NewUser()
+
+	if err := factory.User().LoadByID(session, authorID, &author); err != nil {
+		return derp.Wrap(err, location, "Loading author", authorID)
+	}
+
+	// Publish saves the Stream, so there is no separate save.  Keeping the current state
+	// keeps the publish date, which a change of state would reset.
+	if err := streamService.Publish(session, &author, stream, stream.StateID, true, false); err != nil {
+		return derp.Wrap(err, location, "Republishing stream", stream.StreamID)
+	}
+
+	// Signed, sealed, re-delivered.
+	return nil
 }
 
 // GetStatus_History returns a status's current version as its only revision
@@ -818,8 +867,9 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 			return object.StatusSource{}, derp.Wrap(err, location, "Viewing stream")
 		}
 
+		// The source names the status by the same ID the client edits it with
 		result := object.StatusSource{
-			ID:          stream.ActivityPubURL(),
+			ID:          stream.StreamID.Hex(),
 			Text:        stream.Content.Raw,
 			SpoilerText: stream.Label,
 		}

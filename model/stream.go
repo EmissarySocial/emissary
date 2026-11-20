@@ -60,6 +60,7 @@ type Stream struct {
 	Shuffle          int64                   `json:"shuffle,omitzero"          bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
 	PublishDate      int64                   `json:"publishDate,omitzero"      bson:"publishDate"`            // Unix epoch SECONDS when this document is/was/will be first available on the domain (0 = unpublished; math.MaxInt64 = not yet scheduled).
 	UnPublishDate    int64                   `json:"unpublishDate,omitzero"    bson:"unpublishDate"`          // Unix epoch SECONDS when this document will no longer be available on the domain (math.MaxInt64 = never).
+	EditDate         int64                   `json:"editDate,omitzero"         bson:"editDate,omitempty"`     // Unix epoch SECONDS when the author last edited this document after publishing it (0 = never edited).
 	IsFeatured       bool                    `json:"isFeatured,omitzero"       bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `json:"isSubscribable,omitzero"   bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
 	ReplyPolicy      string                  `json:"replyPolicy,omitzero"      bson:"replyPolicy,omitempty"`  // Who may reply: ReplyPolicyEveryone (or empty) or ReplyPolicyNobody.  Enforced when an inbound reply is recorded.
@@ -542,10 +543,18 @@ func (stream Stream) IsPublished() bool {
 // Toot returns this Stream as a Mastodon API Status object, with default images from host (e.g. "https://example.com")
 func (stream Stream) Toot(host string) object.Status {
 
+	// Clients read edited_at to know a cached copy is out of date, so it is sent only once edited
+	editedAt := ""
+
+	if stream.EditDate > 0 {
+		editedAt = MastodonDate(time.Unix(stream.EditDate, 0))
+	}
+
 	return object.Status{
 		ID:          stream.StreamID.Hex(),
 		URI:         stream.ActivityPubURL(),
 		CreatedAt:   MastodonDate(time.Unix(stream.PublishDate, 0)),
+		EditedAt:    editedAt,
 		Account:     stream.AttributedTo.Toot(host),
 		Content:     stream.Content.HTML,
 		Visibility:  "public",

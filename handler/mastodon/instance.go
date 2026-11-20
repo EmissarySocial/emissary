@@ -39,7 +39,7 @@ func contactAccount(factory *service.Factory, session data.Session) object.Accou
 }
 
 // mastodonCompatibleVersion is the Mastodon release reported at the start of the instance version
-const mastodonCompatibleVersion = "4.0.0" // Apps turn features on by this number; 4.3 adds grouped notifications, which Emissary lacks
+const mastodonCompatibleVersion = "4.0.0" // Apps turn features on by this number; keep it below 4.1 (apps send media_attributes on an edit) and 4.3 (grouped notifications)
 
 // instanceVersion returns the version string reported to clients: a Mastodon version, then this program's build
 func instanceVersion() string {

@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/net/websocket"
 )
 
@@ -181,6 +182,10 @@ func streamingEventsForMessage(factory *service.Factory, session data.Session, a
 
 	switch message.Topic {
 
+	// A saved Stream reaches its parent, which is the User for a Mastodon post, and names itself in RecordID
+	case realtime.TopicChildUpdated:
+		return statusUpdateEvents(factory, session, auth, message.RecordID, subs)
+
 	case realtime.TopicNewsItem:
 
 		if !subs.has(streamUser) {
@@ -263,6 +268,48 @@ func streamingEventsForMessage(factory *service.Factory, session data.Session, a
 
 	return nil
 }
+
+// statusUpdateEvents builds a "status.update" event when the caller's own post has just been edited,
+// so a client replaces the copy it is showing, as Mastodon's edits do
+func statusUpdateEvents(factory *service.Factory, session data.Session, auth model.Authorization, streamID primitive.ObjectID, subs *streamingSubscriptions) []streamingEvent {
+
+	if !subs.has(streamUser) || streamID.IsZero() {
+		return nil
+	}
+
+	stream := model.NewStream()
+
+	if err := factory.Stream().LoadByID(session, streamID, &stream); err != nil {
+		return nil
+	}
+
+	// RULE: Only the author's clients hold the post under its Stream ID; followers see a NewsItem ID
+	if !stream.IsAuthor(auth.UserID) {
+		return nil
+	}
+
+	// RULE: Mastodon announces edits, not every save, such as a new like
+	if !wasJustEdited(stream) {
+		return nil
+	}
+
+	return appendStreamingEvent(nil, streamUser, "status.update", reactedStatus(factory, session, auth, &stream))
+}
+
+// wasJustEdited reports whether a Stream's latest save was an edit, which sets EditDate just before it saves
+func wasJustEdited(stream model.Stream) bool {
+
+	if stream.EditDate == 0 {
+		return false
+	}
+
+	// UpdateDate is in milliseconds and EditDate in whole seconds, so an edit's own save lands within one second
+	updated := stream.UpdateDate / 1000
+	return updated >= stream.EditDate && updated-stream.EditDate <= editedSaveWindow
+}
+
+// editedSaveWindow is how many seconds after an edit its save may land and still count as that edit
+const editedSaveWindow = 1
 
 // appendConversationEvent adds a "conversation" event for the User's conversation with one person,
 // skipping it when that conversation cannot be built
