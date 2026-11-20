@@ -467,15 +467,16 @@ func (service *Collection) loadOrCreateByParent(session data.Session, userID pri
 	// See queries/sync/collection.go for the index, and COLLECTIONS-REDESIGN.md (D2).
 	collection := model.NewCollection()
 
-	// Fast path: the collection almost always already exists
-	if err := service.LoadByType(session, parentID, collectionType, &collection); err != nil {
+	err := service.LoadByType(session, parentID, collectionType, &collection)
 
-		// Anything other than NotFound is a real failure; a NotFound falls through to create one
-		if !derp.IsNotFound(err) {
-			return collection, derp.Wrap(err, location, "Loading Collection", parentType, parentID, collectionType)
-		}
-	} else {
+	// Fast path: the collection almost always already exists
+	if err == nil {
 		return collection, nil
+	}
+
+	// Anything other than NotFound is a real failure; a NotFound falls through to create one
+	if !derp.IsNotFound(err) {
+		return collection, derp.Wrap(err, location, "Loading Collection", parentType, parentID, collectionType)
 	}
 
 	// Slow path: no collection yet, so try to create one

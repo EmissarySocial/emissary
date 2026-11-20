@@ -50,9 +50,9 @@ func NewNotifications(factory Factory, session data.Session, request *http.Reque
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
 			return Notifications{}, derp.Forbidden(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
-		} else {
-			return Notifications{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 		}
+
+		return Notifications{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 	}
 
 	return Notifications{
