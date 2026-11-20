@@ -186,16 +186,7 @@ func localHashtagStatuses(factory *service.Factory, session data.Session, auth m
 
 	const location = "handler.mastodon.localHashtagStatuses"
 
-	// Tag names keep whatever spelling was first used, so try the likely ones
-	names := []string{hashtag, strings.ToLower(hashtag)}
-
-	if known, err := factory.SearchTag().QueryByValue(session, []string{model.ToToken(hashtag)}); err == nil {
-		for _, tag := range known {
-			names = append(names, tag.Name)
-		}
-	}
-
-	streams, err := factory.Stream().QueryByHashtag(session, auth, names, criteria, option.MaxRows(limit))
+	streams, err := factory.Stream().QueryByHashtag(session, auth, hashtagSpellings(factory, session, hashtag), criteria, option.MaxRows(limit))
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Querying local posts", hashtag))
@@ -217,6 +208,22 @@ func localHashtagStatuses(factory *service.Factory, session data.Session, auth m
 	}
 
 	return result
+}
+
+// hashtagSpellings returns the stored tag names a hashtag may appear under on this server
+func hashtagSpellings(factory *service.Factory, session data.Session, hashtag string) []string {
+
+	// Tag names keep whatever spelling was first used, so try the likely ones
+	names := []string{hashtag, strings.ToLower(hashtag)}
+
+	if known, err := factory.SearchTag().QueryByValue(session, []string{model.ToToken(hashtag)}); err == nil {
+		for _, tag := range known {
+			names = append(names, tag.Name)
+		}
+	}
+
+	// Spellings, bee
+	return names
 }
 
 // feedHashtagStatuses returns posts in the caller's own feed carrying a hashtag, catching any

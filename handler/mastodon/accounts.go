@@ -540,6 +540,11 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			criteria = criteria.AndEqual("isFeatured", true)
 		}
 
+		// Only posts with a hashtag, if asked (as when a client opens a featured tag)
+		if tagged := strings.TrimPrefix(t.Tagged, "#"); tagged != "" {
+			criteria = exp.And(criteria, exp.In("tags.name", hashtagSpellings(factory, session, tagged)))
+		}
+
 		limit := pageLimit(t.Limit)
 
 		streams, statuses, err := collectFiltered(int(limit),
@@ -872,13 +877,38 @@ func GetAccount_Endorsements(serverFactory *server.Factory) func(model.Authoriza
 	}
 }
 
-// GetAccount_FeaturedTags implements the Mastodon "get account featured tags" endpoint, and always returns an empty list
-func GetAccount_FeaturedTags(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_FeaturedTags) ([]object.Tag, toot.PageInfo, error) {
+// GetAccount_FeaturedTags implements the Mastodon "get account featured tags" endpoint
+func GetAccount_FeaturedTags(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_FeaturedTags) ([]object.FeaturedTag, toot.PageInfo, error) {
 
-	return func(auth model.Authorization, t txn.GetAccount_FeaturedTags) ([]object.Tag, toot.PageInfo, error) {
+	const location = "handler.mastodon.GetAccount_FeaturedTags"
 
-		// Emissary does not (currently?) publish featured tags
-		return []object.Tag{}, toot.PageInfo{}, nil
+	return func(auth model.Authorization, t txn.GetAccount_FeaturedTags) ([]object.FeaturedTag, toot.PageInfo, error) {
+
+		// Get the Domain factory for this request
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		// RULE: Only local Users have profile hashtags here; remote accounts show none
+		user, err := loadUserByAccountID(factory, session, t.ID)
+
+		if err != nil {
+			return []object.FeaturedTag{}, toot.PageInfo{}, nil
+		}
+
+		// Now featuring...
+		return featuredTags(factory, session, auth, &user), toot.PageInfo{}, nil
 	}
 }
 

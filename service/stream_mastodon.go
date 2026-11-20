@@ -47,24 +47,40 @@ func (service *Stream) QueryByUser(session data.Session, authorization model.Aut
 // (Unix seconds) of the newest one -- the same set QueryByUser lists, for an account's
 // statuses_count and last_status_at.
 func (service *Stream) SummarizeByUser(session data.Session, authorization model.Authorization, ownerID primitive.ObjectID) (int64, int64, error) {
+	return service.summarizeUserPosts(session, authorization, ownerID, exp.All())
+}
 
-	criteria := exp.And(
+// SummarizeByUserHashtag returns the count and newest publish date of a User's visible posts
+// tagged with any of the given tag names (alternate spellings of one tag)
+func (service *Stream) SummarizeByUserHashtag(session data.Session, authorization model.Authorization, ownerID primitive.ObjectID, names []string) (int64, int64, error) {
+	return service.summarizeUserPosts(session, authorization, ownerID, exp.In("tags.name", names))
+}
+
+// summarizeUserPosts returns the count and newest publish date of a User's visible posts that match the criteria
+func (service *Stream) summarizeUserPosts(session data.Session, authorization model.Authorization, ownerID primitive.ObjectID, criteria exp.Expression) (int64, int64, error) {
+
+	// Limit to this User's posts that the caller may see
+	criteria = exp.And(
+		criteria,
 		userPostsCriteria(ownerID),
 		service.visibilityCriteria(authorization, ownerID),
 	)
 
+	// Count them
 	count, err := service.Count(session, criteria)
 
 	if err != nil || count == 0 {
 		return 0, 0, err
 	}
 
+	// Find the newest one's publish date
 	newest, err := service.Query(session, criteria, option.SortDesc("publishDate"), option.MaxRows(1), option.Fields("publishDate"))
 
 	if err != nil || len(newest) == 0 {
 		return count, 0, err
 	}
 
+	// A summary, summarized
 	return count, newest[0].PublishDate, nil
 }
 
