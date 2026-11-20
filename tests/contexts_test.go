@@ -101,6 +101,8 @@ func subContext(parent builderContext, composite step.Step) (builderContext, str
 		return modelContext("with-annotation", model.AnnotationSchema, newPointer(model.NewAnnotation)), ""
 	case step.WithCircle:
 		return modelContext("with-circle", model.CircleSchema, newPointer(model.NewCircle)), ""
+	case step.WithCollectionItem:
+		return modelContext("with-collection-item", model.CollectionItemSchema, newPointer(model.NewCollectionItem)), ""
 	case step.WithFolder:
 		return modelContext("with-folder", model.FolderSchema, newPointer(model.NewFolder)), ""
 	case step.WithFollowing:

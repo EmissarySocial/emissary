@@ -4,7 +4,8 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// MarkNotificationsRead is a Step that marks all of the current User's notifications as read.
+// MarkNotificationsRead is a Step that marks the current User's notifications as read: the one
+// named by the "notificationId" query parameter, or else every one in the "type" tab.
 type MarkNotificationsRead struct{}
 
 // NewMarkNotificationsRead returns a fully initialized MarkNotificationsRead object

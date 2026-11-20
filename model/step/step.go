@@ -286,6 +286,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "with-circle":
 		return NewWithCircle(stepInfo, funcMap)
 
+	case "with-collection-item":
+		return NewWithCollectionItem(stepInfo, funcMap)
+
 	case "with-draft":
 		return NewWithDraft(stepInfo, funcMap)
 
@@ -358,11 +361,13 @@ func NewPipeline[T ~map[string]any](stepInfo []T, funcMap template.FuncMap) ([]S
 
 	for index := range stepInfo {
 
-		if step, err := New(mapof.Any(stepInfo[index]), funcMap); err != nil {
+		step, err := New(mapof.Any(stepInfo[index]), funcMap)
+
+		if err != nil {
 			return result, derp.Wrap(err, location, "Parsing step", stepInfo)
-		} else {
-			result[index] = step
 		}
+
+		result[index] = step
 	}
 
 	return result, nil

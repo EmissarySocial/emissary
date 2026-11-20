@@ -37,3 +37,8 @@
 	top: 50%;
 	transform: translateY(-50%);
 }
+
+/* A row's dot shows only while the row is unread, so a click can clear it without a redraw */
+.notification:not(.unread) .notification-dot {
+	visibility: hidden;
+}

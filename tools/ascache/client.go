@@ -17,6 +17,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -270,24 +271,6 @@ func (client *Client) Delete(url string) error {
  * Database Methods
  ******************************************/
 
-// session opens a new database session for the common (cache) database
-func (client *Client) session(ctx context.Context) (data.Session, error) {
-
-	const location = "ascache.Client.session"
-
-	if client.commonDatabase == nil {
-		return nil, derp.Internal(location, "Common Database is not initialized")
-	}
-
-	session, err := client.commonDatabase.Session(ctx)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Connecting to common database")
-	}
-
-	return session, nil
-}
-
 // timeoutSession opens a database session that cancels itself after the provided duration
 func (client *Client) timeoutSession(timeout time.Duration) (data.Session, context.CancelFunc, error) {
 
@@ -309,9 +292,22 @@ func (client *Client) timeoutSession(timeout time.Duration) (data.Session, conte
 	return session, cancel, nil
 }
 
-// collection returns the "Document" collection, where all cached Values are stored
-func (client *Client) collection(session data.Session) data.Collection {
-	return session.Collection("Document")
+// session opens a new database session for the common (cache) database
+func (client *Client) session(ctx context.Context) (data.Session, error) {
+
+	const location = "ascache.Client.session"
+
+	if client.commonDatabase == nil {
+		return nil, derp.Internal(location, "Common Database is not initialized")
+	}
+
+	session, err := client.commonDatabase.Session(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Connecting to common database")
+	}
+
+	return session, nil
 }
 
 // save adds/updates a document in the cache
@@ -398,6 +394,11 @@ func (client *Client) removeDuplicates(session data.Session, urls ...string) err
 	return nil
 }
 
+// collection returns the "Document" collection, where all cached Values are stored
+func (client *Client) collection(session data.Session) data.Collection {
+	return session.Collection("Document")
+}
+
 // countRelatedDocuments triggers a follow-up task to count related documents.
 func (client *Client) countRelatedDocuments(document streams.Document) {
 
@@ -431,17 +432,6 @@ func (client *Client) countRelatedDocuments(document streams.Document) {
 	*/
 }
 
-// asDocument converts a Document into a fully-populated streams.Document
-func (client *Client) asDocument(value Value) streams.Document {
-
-	return streams.NewDocument(
-		value.Object,
-		streams.WithClient(client.rootClient),
-		streams.WithMetadata(value.Metadata),
-		streams.WithHTTPHeader(value.HTTPHeader),
-	)
-}
-
 // asCachedDocument converts a Value into a streams.Document that is STAMPED as having come from the
 // cache, so that callers can tell a cached answer from a fresh one.
 func (client *Client) asCachedDocument(value Value) streams.Document {
@@ -455,9 +445,36 @@ func (client *Client) asCachedDocument(value Value) streams.Document {
 	return client.asDocument(value)
 }
 
+// asDocument converts a Document into a fully-populated streams.Document
+func (client *Client) asDocument(value Value) streams.Document {
+
+	result := streams.NewDocument(
+		value.Object,
+		streams.WithClient(client.rootClient),
+		streams.WithMetadata(value.Metadata),
+		streams.WithHTTPHeader(value.HTTPHeader),
+	)
+
+	// RULE: A row saved before BUG-383 has no hashed ID, and a page that names its elements by
+	// that ID would give every such document the same name. The ID alone decides it, so fill it in.
+	if result.Metadata.HashedID == "" {
+		if documentID := result.ID(); documentID != "" {
+			result.Metadata.HashedID = asnormalizer.HashedID(documentID)
+		}
+	}
+
+	return result
+}
+
 /******************************************
  * Other Queries
  ******************************************/
+
+// loadByURL loads a Value from the cache using its URL.
+// This value can match any of the URLs in the "urls" array.
+func (client *Client) loadByURL(session data.Session, url string, value *Value) error {
+	return client.load(session, exp.Equal("urls", url), value)
+}
 
 // load loads a Value from the cache using any criteria expression.
 func (client *Client) load(session data.Session, criteria exp.Expression, value *Value) error {
@@ -474,12 +491,6 @@ func (client *Client) load(session data.Session, criteria exp.Expression, value 
 
 	// Success.
 	return nil
-}
-
-// loadByURL loads a Value from the cache using its URL.
-// This value can match any of the URLs in the "urls" array.
-func (client *Client) loadByURL(session data.Session, url string, value *Value) error {
-	return client.load(session, exp.Equal("urls", url), value)
 }
 
 // revalidate queues a background task to refresh this Value, if its cache rules say it is stale

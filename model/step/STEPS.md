@@ -830,7 +830,10 @@ Marks every unread item in the folder named by the `folderId` query parameter as
 
 ## mark-notifications-read
 
-Marks all of the current User's notifications as read.
+Marks the current User's notifications as read, on a POST. A GET does nothing. It reads two query parameters:
+
+- `notificationId` marks that one notification, and nothing else. A notification that is already read, purged, or owned by someone else is left alone.
+- `type` marks every notification in that tab (`MENTION`, `QUOTE`, `ANNOUNCE`, `LIKE`, `FOLLOW`), when no `notificationId` is given. `ALL`, or no `type`, marks every notification.
 
 **Attributes**
 
@@ -2063,6 +2066,35 @@ Switches to the Circle named by the request and runs `steps` against its Builder
 	steps: [
 		{do: "edit"}
 		{do: "save"}
+	]
+}
+```
+
+---
+
+## with-collection-item
+
+Switches to one CollectionItem that the signed-in User owns, and runs `steps` against its Builder. The `collectionItemId` query parameter names the item. An item owned by anyone else, or of any other collection type, is reported as not found. On `POST`, an item that is already gone is passed on empty, so that deleting it twice still succeeds.
+
+Deleting a `Quotes` item rejects that quote: it revokes the FEP-044f `QuoteAuthorization`, removes the author's QUOTE notification, and queues a `Delete` of the authorization for the quoting actor and the author's followers. No other collection type has delete side effects yet.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| type | **Required.** The one collection type this step works on, such as `Quotes` |
+| steps | **Required.** Sub-pipeline run against the CollectionItem Builder |
+
+<br>
+
+**Example**
+
+```hjson
+{
+	do: "with-collection-item"
+	type: "Quotes"
+	steps: [
+		{do: "delete", method: "post"}
 	]
 }
 ```

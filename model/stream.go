@@ -261,6 +261,47 @@ func (stream Stream) RolesToPrivilegeIDs(roles ...string) Permissions {
  * Permission Methods
  ******************************************/
 
+// RefusesReplies returns TRUE when this public Stream's author has closed replies.  A private Stream
+// refuses nothing, because it records no replies at all.
+func (stream Stream) RefusesReplies() bool {
+
+	if !stream.DefaultAllowAnonymous() {
+		return false
+	}
+
+	return stream.ReplyPolicy == ReplyPolicyNobody
+}
+
+// InteractionPolicyJSONLD returns this Stream's reply and quote policy as GoToSocial's "interactionPolicy":
+// Public when anyone may interact, and otherwise only its author.  Closed is never an empty list, which
+// JSON-LD canonicalization would read as a missing policy, meaning Public.
+// RULE: Public is the full IRI, because GoToSocial matches no compact form (REPLY-CONTROLS §1.3)
+func (stream Stream) InteractionPolicyJSONLD() mapof.Any {
+	return mapof.Any{
+		vocab.PropertyCanReply: stream.approvalPolicyJSONLD(stream.AcceptsReplies()),
+		vocab.PropertyCanQuote: stream.approvalPolicyJSONLD(stream.AcceptsQuotes()),
+	}
+}
+
+// approvalPolicyJSONLD returns one sub-policy of this Stream's interactionPolicy: Public when anyone
+// may interact, and otherwise only its author.
+func (stream Stream) approvalPolicyJSONLD(isPublic bool) mapof.Any {
+
+	if isPublic {
+		return mapof.Any{vocab.PropertyAutomaticApproval: []string{vocab.NamespaceActivityStreamsPublic}}
+	}
+
+	return mapof.Any{vocab.PropertyAutomaticApproval: []string{stream.AttributedTo.ProfileURL}}
+}
+
+// AcceptsQuotes returns TRUE if this Stream approves quotes of itself (FEP-044f), and serves the
+// QuoteAuthorizations it has already granted.
+func (stream Stream) AcceptsQuotes() bool {
+
+	// RULE: Anyone who may reply may also quote (FEP-044f's canQuote)
+	return stream.AcceptsReplies()
+}
+
 // AcceptsReplies returns TRUE if this Stream records and shows replies: it is public, and its author
 // has not closed replies.  A closed Stream refuses every reply, its author's included (REPLY-CONTROLS §1.1).
 func (stream Stream) AcceptsReplies() bool {
@@ -274,36 +315,6 @@ func (stream Stream) AcceptsReplies() bool {
 	return stream.DefaultAllowAnonymous()
 }
 
-// RefusesReplies returns TRUE when this public Stream's author has closed replies.  A private Stream
-// refuses nothing, because it records no replies at all.
-func (stream Stream) RefusesReplies() bool {
-
-	if !stream.DefaultAllowAnonymous() {
-		return false
-	}
-
-	return stream.ReplyPolicy == ReplyPolicyNobody
-}
-
-// InteractionPolicyJSONLD returns this Stream's reply policy as GoToSocial's "interactionPolicy":
-// Public when anyone may reply, and otherwise only its author.  Closed is never an empty list, which
-// JSON-LD canonicalization would read as a missing policy, meaning Public.
-// RULE: Public is the full IRI, because GoToSocial matches no compact form (REPLY-CONTROLS §1.3)
-func (stream Stream) InteractionPolicyJSONLD() mapof.Any {
-
-	automaticApproval := []string{vocab.NamespaceActivityStreamsPublic}
-
-	if !stream.AcceptsReplies() {
-		automaticApproval = []string{stream.AttributedTo.ProfileURL}
-	}
-
-	return mapof.Any{
-		vocab.PropertyCanReply: mapof.Any{
-			vocab.PropertyAutomaticApproval: automaticApproval,
-		},
-	}
-}
-
 // DefaultAllowAnonymous returns TRUE if a Stream's default action (VIEW)
 // is visible to anonymous visitors
 func (stream Stream) DefaultAllowAnonymous() bool {
@@ -313,6 +324,33 @@ func (stream Stream) DefaultAllowAnonymous() bool {
 		}
 	}
 	return false
+}
+
+// QuoteAuthorizationJSONLD returns the FEP-044f QuoteAuthorization that approves one quote of this
+// Stream, recorded in the provided CollectionItem.
+func (stream Stream) QuoteAuthorizationJSONLD(quote CollectionItem) mapof.Any {
+
+	return QuoteAuthorizationJSONLD(
+		stream.ActivityPubQuoteAuthorizationURL(quote.CollectionItemID),
+		stream.AttributedTo.ProfileURL,
+		quote.URI,
+		stream.URL,
+	)
+}
+
+// QuoteAuthorizationJSONLD returns the FEP-044f QuoteAuthorization with the provided ID, in which the
+// author (attributedTo) approves the quote post (quoteURI) of the quoted post (targetURL).
+func QuoteAuthorizationJSONLD(authorizationURL string, attributedTo string, quoteURI string, targetURL string) mapof.Any {
+
+	// Mastodon verifies every field below against the quote it holds (verify_quote_service.rb)
+	return mapof.Any{
+		vocab.AtContext:                 sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeQuotePosts, vocab.ContextTypeGoToSocial},
+		vocab.PropertyID:                authorizationURL,
+		vocab.PropertyType:              vocab.ObjectTypeQuoteAuthorization,
+		vocab.PropertyAttributedTo:      attributedTo,
+		vocab.PropertyInteractingObject: quoteURI,
+		vocab.PropertyInteractionTarget: targetURL,
+	}
 }
 
 // IsVisibleTo returns TRUE if any of the provided permissions grants the default
@@ -435,24 +473,14 @@ func (stream Stream) ActivityPubType() string {
 	return stream.SocialRole
 }
 
-// ActivityPubLikesURL returns the URL of the collection of Likes on this Stream
-func (stream Stream) ActivityPubLikesURL() string {
-	return stream.URL + "/pub/likes"
-}
-
-// ActivityPubDislikesURL returns the URL of the collection of Dislikes on this Stream
-func (stream Stream) ActivityPubDislikesURL() string {
-	return stream.URL + "/pub/dislikes"
-}
-
-// ActivityPubSharesURL returns the URL of the collection of Announces of this Stream
-func (stream Stream) ActivityPubSharesURL() string {
-	return stream.URL + "/pub/shares"
-}
-
 // ActivityPubRepliesURL returns the URL of the collection of replies to this Stream
 func (stream Stream) ActivityPubRepliesURL() string {
 	return stream.URL + "/pub/replies"
+}
+
+// ActivityPubQuoteAuthorizationURL returns the URL of the QuoteAuthorization that approves one quote of this Stream
+func (stream Stream) ActivityPubQuoteAuthorizationURL(collectionItemID primitive.ObjectID) string {
+	return stream.URL + "/pub/quoteAuthorization/" + collectionItemID.Hex()
 }
 
 // ActivityPubChildrenURL returns the URL of the collection of this Stream's children
@@ -473,6 +501,21 @@ func (stream Stream) ActivityPubResponses(responseType string) string {
 	}
 
 	return stream.ActivityPubSharesURL()
+}
+
+// ActivityPubLikesURL returns the URL of the collection of Likes on this Stream
+func (stream Stream) ActivityPubLikesURL() string {
+	return stream.URL + "/pub/likes"
+}
+
+// ActivityPubDislikesURL returns the URL of the collection of Dislikes on this Stream
+func (stream Stream) ActivityPubDislikesURL() string {
+	return stream.URL + "/pub/dislikes"
+}
+
+// ActivityPubSharesURL returns the URL of the collection of Announces of this Stream
+func (stream Stream) ActivityPubSharesURL() string {
+	return stream.URL + "/pub/shares"
 }
 
 /******************************************
@@ -548,15 +591,6 @@ func (stream Stream) HasGrandparent() bool {
 	return len(stream.ParentIDs) > 1
 }
 
-// GrandparentID returns the ID of the parent of the parent of this Stream (if it exists)
-func (stream Stream) GrandparentID() primitive.ObjectID {
-	if parentIDsLength := len(stream.ParentIDs); parentIDsLength > 1 {
-		return stream.ParentIDs[parentIDsLength-2]
-	}
-
-	return primitive.NilObjectID
-}
-
 // GrandparentURL returns the URL of the parent of the parent of this Stream (if it exists)
 func (stream Stream) GrandparentURL() string {
 
@@ -568,6 +602,15 @@ func (stream Stream) GrandparentURL() string {
 	}
 
 	return ""
+}
+
+// GrandparentID returns the ID of the parent of the parent of this Stream (if it exists)
+func (stream Stream) GrandparentID() primitive.ObjectID {
+	if parentIDsLength := len(stream.ParentIDs); parentIDsLength > 1 {
+		return stream.ParentIDs[parentIDsLength-2]
+	}
+
+	return primitive.NilObjectID
 }
 
 // SetAttributedTo sets the list of people that this Stream is attributed to

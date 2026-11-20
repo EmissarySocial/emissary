@@ -58,6 +58,9 @@ func TestNotification_Channels(t *testing.T) {
 		{"like folds into reaction", NotificationTypeLike, NotificationSubtypeFollowing, []string{NotificationChannelReaction}},
 		{"dislike folds into reaction", NotificationTypeDislike, NotificationSubtypeNotFollowing, []string{NotificationChannelReaction}},
 		{"announce folds into reaction", NotificationTypeAnnounce, "", []string{NotificationChannelReaction}},
+		{"quote from followed surfaces like a reply", NotificationTypeQuote, NotificationSubtypeFollowing, []string{NotificationChannelReply, NotificationChannelMentionFollowing}},
+		{"quote from stranger surfaces like a reply", NotificationTypeQuote, NotificationSubtypeNotFollowing, []string{NotificationChannelReply, NotificationChannelMentionNotFollowing}},
+		{"quote empty subtype treated as following", NotificationTypeQuote, "", []string{NotificationChannelReply, NotificationChannelMentionFollowing}},
 		{"follow", NotificationTypeFollow, NotificationSubtypeNotFollowing, []string{NotificationChannelFollow}},
 		{"unknown type maps to nothing", "BOGUS", "", []string{}},
 	}
@@ -181,6 +184,29 @@ func TestNotification_MastodonType_Direct(t *testing.T) {
 	notification := NewNotification()
 	notification.Type = NotificationTypeDirect
 	require.Equal(t, "mention", notification.MastodonType())
+}
+
+// TestNotification_MastodonType_Quote pins that a QUOTE Notification reaches the Mastodon API as Mastodon's own "quote" type
+func TestNotification_MastodonType_Quote(t *testing.T) {
+	notification := NewNotification()
+	notification.Type = NotificationTypeQuote
+	require.Equal(t, "quote", notification.MastodonType())
+}
+
+// TestNotificationSchema_Types pins that the schema accepts every Notification type, QUOTE included,
+// and refuses an unknown one
+func TestNotificationSchema_Types(t *testing.T) {
+
+	s := schema.New(NotificationSchema())
+
+	for _, notificationType := range []string{NotificationTypeDirect, NotificationTypeMention, NotificationTypeReply, NotificationTypeQuote, NotificationTypeLike, NotificationTypeDislike, NotificationTypeAnnounce, NotificationTypeFollow} {
+		notification := NewNotification()
+		require.Nil(t, s.Set(&notification, "type", notificationType), notificationType)
+		require.Equal(t, notificationType, notification.Type)
+	}
+
+	notification := NewNotification()
+	require.NotNil(t, s.Set(&notification, "type", "BOOKMARK"), "an unknown type is refused")
 }
 
 // TestNotificationChannels_SourceSweep fails if a NotificationChannel constant is

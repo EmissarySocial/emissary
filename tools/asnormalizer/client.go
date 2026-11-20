@@ -1,13 +1,10 @@
 package asnormalizer
 
 import (
-	"strconv"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/property"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/cespare/xxhash/v2"
 )
 
 // Client is a streams.Client decorator that normalizes every document it loads into a predictable shape
@@ -73,25 +70,8 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		result.SetValue(property.Map(normalized))
 	}
 
-	// Calculate the Document Category
-	documentCategory := result.Type()
-	result.Metadata.DocumentCategory = streams.DocumentCategory(documentCategory)
-
-	// Calculate the HashedID
-	hashedID := xxhash.Sum64String(result.ID())
-	hashedIDString := strconv.FormatUint(hashedID, 32)
-	result.Metadata.HashedID = hashedIDString
-
-	// Additional Metadata for Objects only
-	if result.IsObject() {
-
-		// Calculate Relationships. Response COUNTS are not computed here: ascache's
-		// CalcParentRelationships maintains them from locally-cached evidence, and it is the
-		// single writer on purpose (two writers with different sources would fight).
-		relationType, relationHref := calcRelationType(result)
-		result.Metadata.RelationType = relationType
-		result.Metadata.RelationHref = relationHref
-	}
+	// Write the metadata that is derived from the document itself
+	Stamp(&result)
 
 	// Return the result bound to its original client, so that nothing downstream inherits the history
 	return result.AddOptions(streams.WithClient(originalClient)), nil
@@ -148,32 +128,4 @@ func Normalize(rootClient streams.Client, document streams.Document) map[string]
 
 	// Unrecognized documents return nil, which will be ignored by the caller
 	return nil
-}
-
-// calcRelationType calculates the "RelationType" and "RelationHref" metadata for this
-// cached document.
-func calcRelationType(document streams.Document) (string, string) {
-
-	// Get the document type
-
-	// Calculate RelationType
-	switch documentType := document.Type(); documentType {
-
-	// Announce, Like, and Dislike are written straight to the cache.
-	case vocab.ActivityTypeAnnounce,
-		vocab.ActivityTypeLike,
-		vocab.ActivityTypeDislike:
-
-		return documentType, document.Object().ID()
-
-	// Otherwise, see if this is a "Reply"
-	default:
-		unwrapped := document.UnwrapActivity()
-
-		if inReplyTo := unwrapped.InReplyTo(); inReplyTo.NotNil() {
-			return vocab.RelationTypeReply, inReplyTo.String()
-		}
-	}
-
-	return "", ""
 }

@@ -35,7 +35,7 @@ require (
 	github.com/benpate/table v0.11.0
 	github.com/benpate/toot v0.11.0
 	github.com/benpate/toot-echo v0.8.0
-	github.com/benpate/turbine v0.14.0
+	github.com/benpate/turbine v0.15.0
 	github.com/benpate/uri v0.10.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0

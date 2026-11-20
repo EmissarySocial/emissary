@@ -434,24 +434,34 @@ func TestStream_RefusesReplies(t *testing.T) {
 
 // TestStream_InteractionPolicyJSONLD pins the published policy: Public when open, and only the author when
 // closed or private, never an empty list (which JSON-LD reads as Public).  Mentions are not approved.
+// canQuote always publishes the same list as canReply, and no other sub-policy or key is published.
 func TestStream_InteractionPolicyJSONLD(t *testing.T) {
 
-	automaticApproval := func(stream Stream) any {
-		return stream.InteractionPolicyJSONLD().GetMap(vocab.PropertyCanReply)[vocab.PropertyAutomaticApproval]
+	// requirePolicy asserts that canReply and canQuote each approve exactly the expected actors
+	requirePolicy := func(stream Stream, expected []string, message string) {
+		t.Helper()
+
+		policy := stream.InteractionPolicyJSONLD()
+		require.ElementsMatch(t, []string{vocab.PropertyCanReply, vocab.PropertyCanQuote}, policy.Keys(), message)
+
+		for _, permission := range []string{vocab.PropertyCanReply, vocab.PropertyCanQuote} {
+			subPolicy := policy.GetMap(permission)
+			require.Equal(t, mapof.Any{vocab.PropertyAutomaticApproval: expected}, subPolicy, "%s: %s", message, permission)
+		}
 	}
 
 	stream := NewStream()
 	stream.DefaultAllow = Permissions{MagicGroupIDAnonymous}
 	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
 	stream.Tags = TagList{{Type: vocab.LinkTypeMention, Name: "a@remote.example", Href: "https://remote.example/users/a"}}
-	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, automaticApproval(stream))
+	requirePolicy(stream, []string{vocab.NamespaceActivityStreamsPublic}, "an open Stream")
 
 	stream.ReplyPolicy = ReplyPolicyNobody
-	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream))
+	requirePolicy(stream, []string{"https://local.example/@author"}, "a closed Stream")
 
 	stream.ReplyPolicy = ""
 	stream.DefaultAllow = Permissions{MagicGroupIDAuthenticated}
-	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream), "a private Stream accepts no replies")
+	requirePolicy(stream, []string{"https://local.example/@author"}, "a private Stream accepts no replies")
 }
 
 // TestStream_AllowReplies pins the virtual "allowReplies" toggle: it reads TRUE unless replies are closed,
@@ -475,4 +485,99 @@ func TestStream_AllowReplies(t *testing.T) {
 	// A toggle posts strings
 	require.Nil(t, s.Set(&stream, "allowReplies", "true"))
 	require.Equal(t, ReplyPolicyEveryone, stream.ReplyPolicy)
+}
+
+// TestStream_AcceptsQuotes pins that a Stream approves quotes exactly when it accepts replies (FEP-044f's canQuote)
+func TestStream_AcceptsQuotes(t *testing.T) {
+
+	public := Permissions{MagicGroupIDAnonymous}
+	private := Permissions{MagicGroupIDAuthenticated}
+
+	table := []struct {
+		policy   string
+		allow    Permissions
+		expected bool
+	}{
+		{"", public, true},
+		{ReplyPolicyEveryone, public, true},
+		{ReplyPolicyNobody, public, false},
+		{"", private, false},
+		{ReplyPolicyEveryone, private, false},
+		{ReplyPolicyNobody, private, false},
+		{"", nil, false},
+	}
+
+	for _, row := range table {
+		stream := NewStream()
+		stream.ReplyPolicy = row.policy
+		stream.DefaultAllow = row.allow
+		require.Equal(t, row.expected, stream.AcceptsQuotes(), "policy=%q allow=%v", row.policy, row.allow)
+		require.Equal(t, stream.AcceptsReplies(), stream.AcceptsQuotes(), "policy=%q allow=%v: quote and reply rules must agree", row.policy, row.allow)
+	}
+}
+
+// TestStream_ActivityPubQuoteAuthorizationURL pins the QuoteAuthorization route that the Accept's result names
+func TestStream_ActivityPubQuoteAuthorizationURL(t *testing.T) {
+
+	stream := NewStream()
+	stream.URL = "https://local.example/my-post"
+	collectionItemID := primitive.NewObjectID()
+
+	require.Equal(t, "https://local.example/my-post/pub/quoteAuthorization/"+collectionItemID.Hex(), stream.ActivityPubQuoteAuthorizationURL(collectionItemID))
+}
+
+// TestStream_QuoteAuthorizationJSONLD pins every field that Mastodon's verify_quote_service.rb checks,
+// and the @context that declares the QuoteAuthorization type and the gts: terms it uses
+func TestStream_QuoteAuthorizationJSONLD(t *testing.T) {
+
+	stream := NewStream()
+	stream.URL = "https://local.example/my-post"
+	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
+
+	quote := NewCollectionItem()
+	quote.CollectionType = CollectionTypeQuotes
+	quote.URI = "https://remote.example/notes/1"
+
+	authorization := stream.QuoteAuthorizationJSONLD(quote)
+
+	require.Equal(t, sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeQuotePosts, vocab.ContextTypeGoToSocial}, authorization[vocab.AtContext])
+	require.Equal(t, "https://local.example/my-post/pub/quoteAuthorization/"+quote.CollectionItemID.Hex(), authorization.GetString(vocab.PropertyID))
+	require.Equal(t, vocab.ObjectTypeQuoteAuthorization, authorization.GetString(vocab.PropertyType))
+	require.Equal(t, "https://local.example/@author", authorization.GetString(vocab.PropertyAttributedTo))
+	require.Equal(t, "https://remote.example/notes/1", authorization.GetString(vocab.PropertyInteractingObject))
+	require.Equal(t, "https://local.example/my-post", authorization.GetString(vocab.PropertyInteractionTarget))
+	require.Len(t, authorization, 6, "no other field is published")
+
+	// The id must share a host with attributedTo, or Mastodon refuses the authorization
+	require.True(t, strings.HasPrefix(authorization.GetString(vocab.PropertyID), "https://local.example/"))
+
+	// Every term the document uses is declared by its @context
+	require.Contains(t, vocab.ContextTypeQuotePosts, vocab.ObjectTypeQuoteAuthorization)
+	require.Contains(t, vocab.ContextTypeGoToSocial, vocab.PropertyInteractingObject)
+	require.Contains(t, vocab.ContextTypeGoToSocial, vocab.PropertyInteractionTarget)
+
+	// The document survives JSON encoding with its type intact
+	encoded, err := json.Marshal(authorization)
+	require.NoError(t, err)
+	require.Contains(t, string(encoded), `"type":"QuoteAuthorization"`)
+}
+
+// TestStream_QuoteAuthorizationJSONLD_EachQuoteIsDistinct pins that two quotes of one Stream get two
+// different authorizations, because Mastodon checks interactingObject against the quote it holds
+func TestStream_QuoteAuthorizationJSONLD_EachQuoteIsDistinct(t *testing.T) {
+
+	stream := NewStream()
+	stream.URL = "https://local.example/my-post"
+
+	first := NewCollectionItem()
+	first.URI = "https://remote.example/notes/1"
+
+	second := NewCollectionItem()
+	second.URI = "https://remote.example/notes/2"
+
+	firstAuthorization := stream.QuoteAuthorizationJSONLD(first)
+	secondAuthorization := stream.QuoteAuthorizationJSONLD(second)
+
+	require.NotEqual(t, firstAuthorization.GetString(vocab.PropertyID), secondAuthorization.GetString(vocab.PropertyID))
+	require.NotEqual(t, firstAuthorization.GetString(vocab.PropertyInteractingObject), secondAuthorization.GetString(vocab.PropertyInteractingObject))
 }

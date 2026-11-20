@@ -208,3 +208,78 @@ func copyFilter(original bson.M) bson.M {
 
 	return result
 }
+
+// NotificationUsersWithUnread returns the ID of every User who holds an unread, undeleted
+// Notification created at or before the cutoff (Unix epoch MILLISECONDS).
+func NotificationUsersWithUnread(session data.Session, beforeMillis int64) ([]primitive.ObjectID, error) {
+
+	const location = "queries.NotificationUsersWithUnread"
+
+	// Guarantee that we're using MongoDB
+	collection := mongoCollection(session.Collection("Notification"))
+
+	if collection == nil {
+		return nil, derp.Internal(location, "Collection must be a MongoDB collection")
+	}
+
+	// RULE: These three terms are the ones idx_Notification_UnreadByDate is built for.  The
+	// partial index is used only while the filter names both of its own terms as equalities.
+	filter := bson.M{
+		"deleteDate": 0,
+		"readDate":   notificationUnread,
+		"createDate": bson.M{"$lte": beforeMillis},
+	}
+
+	values, err := collection.Distinct(session.Context(), "userId", filter)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Finding Users with unread notifications", beforeMillis)
+	}
+
+	result := make([]primitive.ObjectID, 0, len(values))
+
+	for _, value := range values {
+		if userID, isObjectID := value.(primitive.ObjectID); isObjectID {
+			result = append(result, userID)
+		}
+	}
+
+	return result, nil
+}
+
+// ClaimNotificationEmail moves a User's notification email watermark from one value to another, and
+// returns FALSE when the stored watermark is not the one named, so the database decides which of
+// two senders wins.
+func ClaimNotificationEmail(session data.Session, userID primitive.ObjectID, fromMillis int64, toMillis int64) (bool, error) {
+
+	const location = "queries.ClaimNotificationEmail"
+
+	// Guarantee that we're using MongoDB
+	collection := mongoCollection(session.Collection("User"))
+
+	if collection == nil {
+		return false, derp.Internal(location, "Collection must be a MongoDB collection")
+	}
+
+	filter := bson.M{
+		"_id":                   userID,
+		"notificationEmailDate": fromMillis,
+		"deleteDate":            0,
+	}
+
+	// RULE: One field, never a whole-record save, which would overwrite a settings edit made meanwhile
+	update := bson.M{"$set": bson.M{"notificationEmailDate": toMillis}}
+
+	result, err := collection.UpdateOne(session.Context(), filter, update)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Moving notification email watermark", userID)
+	}
+
+	// A missing result claims nothing, so no email is sent
+	if result == nil {
+		return false, nil
+	}
+
+	return result.MatchedCount == 1, nil
+}

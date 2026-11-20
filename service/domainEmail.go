@@ -2,6 +2,8 @@ package service
 
 import (
 	"maps"
+	"strconv"
+	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
@@ -9,6 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/benpate/uri"
@@ -56,9 +59,19 @@ func (service *DomainEmail) Refresh(factory *Factory) {
  * Send API
  ******************************************/
 
-// IsConfigured returns TRUE if this Domain has an SMTP connection that Send can use
-func (service *DomainEmail) IsConfigured() bool {
-	return !service.smtp.IsNil()
+// sendModel delivers the named email, but only if it is defined for modelName.  Each sender below
+// builds a fixed data shape for a fixed email, so a definition that an administrator overrode on
+// disk for some other object would render nothing but missing values.  Emails named by a Template
+// need no such check: their data comes from the same file that names the email.
+func (service *DomainEmail) sendModel(emailID string, modelName string, data mapof.Any) error {
+
+	const location = "service.DomainEmail.sendModel"
+
+	if err := service.serverEmail.RequireModel(emailID, modelName); err != nil {
+		return derp.Wrap(err, location, "Email is not defined for this model object", emailID, modelName)
+	}
+
+	return service.Send(emailID, data)
 }
 
 // Send renders the named email and delivers it over this Domain's SMTP connection
@@ -93,19 +106,9 @@ func (service *DomainEmail) Send(emailID string, data mapof.Any) error {
 	return nil
 }
 
-// sendModel delivers the named email, but only if it is defined for modelName.  Each sender below
-// builds a fixed data shape for a fixed email, so a definition that an administrator overrode on
-// disk for some other object would render nothing but missing values.  Emails named by a Template
-// need no such check: their data comes from the same file that names the email.
-func (service *DomainEmail) sendModel(emailID string, modelName string, data mapof.Any) error {
-
-	const location = "service.DomainEmail.sendModel"
-
-	if err := service.serverEmail.RequireModel(emailID, modelName); err != nil {
-		return derp.Wrap(err, location, "Email is not defined for this model object", emailID, modelName)
-	}
-
-	return service.Send(emailID, data)
+// IsConfigured returns TRUE if this Domain has an SMTP connection that Send can use
+func (service *DomainEmail) IsConfigured() bool {
+	return !service.smtp.IsNil()
 }
 
 /******************************************
@@ -301,6 +304,116 @@ func (service *DomainEmail) SendFollowerActivity(session data.Session, follower 
 
 	// You've got mail
 	return nil
+}
+
+// SendUnreadNotifications emails a User the list of their unread Notifications. moreCount is the
+// number of unread Notifications that the list leaves out.
+func (service *DomainEmail) SendUnreadNotifications(user *model.User, notifications []model.Notification, moreCount int64) error {
+
+	const location = "service.DomainEmail.SendUnreadNotifications"
+
+	unreadCount := int64(len(notifications)) + moreCount
+
+	if err := service.sendModel(
+		"user-notifications",
+		"User",
+		mapof.Any{
+			// User info available to the template
+			"UserID": user.UserID.Hex(),
+			"Name":   user.DisplayName,
+			"Email":  user.EmailAddress,
+
+			// Notification info available to the template
+			"CountLabel": unreadNotificationsLabel(unreadCount),
+			"Lines":      notificationEmailLines(notifications),
+			"MoreCount":  moreCount,
+
+			// Links available to the template
+			"NotificationsURL": service.host() + "/@me/notifications/all",
+			"SettingsURL":      service.host() + "/@me/settings/notifications",
+		},
+	); err != nil {
+		// RULE: The error names the User by ID, never by the email address
+		return derp.Wrap(err, location, "Sending unread notifications email to user", user.UserID)
+	}
+
+	return nil
+}
+
+// notificationEmailLine is one row of the unread notifications email. Every value is plain text.
+type notificationEmailLine struct {
+	Name    string    // Who acted
+	Action  string    // What they did
+	Summary string    // The Notification's summary, or a label when it has none
+	Date    time.Time // When it happened
+}
+
+// notificationEmailLines converts Notifications into the rows that the unread email prints
+func notificationEmailLines(notifications []model.Notification) []notificationEmailLine {
+
+	result := make([]notificationEmailLine, 0, len(notifications))
+
+	for _, notification := range notifications {
+		result = append(result, notificationEmailLine{
+			Name:    first.String(notification.Actor.Name, notification.Actor.UsernameOrID(), "Someone"),
+			Action:  notificationEmailAction(notification.Type),
+			Summary: notificationEmailSummary(notification),
+			Date:    time.UnixMilli(notification.CreateDate).UTC(),
+		})
+	}
+
+	return result
+}
+
+// notificationEmailAction describes what the actor of a Notification did
+func notificationEmailAction(notificationType string) string {
+
+	switch notificationType {
+
+	case model.NotificationTypeDirect:
+		return "sent you a message"
+
+	case model.NotificationTypeReply:
+		return "replied to you"
+
+	case model.NotificationTypeQuote:
+		return "quoted your post"
+
+	case model.NotificationTypeAnnounce:
+		return "shared your post"
+
+	case model.NotificationTypeLike:
+		return "liked your post"
+
+	case model.NotificationTypeDislike:
+		return "disliked your post"
+
+	case model.NotificationTypeFollow:
+		return "followed you"
+	}
+
+	return "mentioned you"
+}
+
+// notificationEmailSummary returns the text that the unread email shows for a Notification
+func notificationEmailSummary(notification model.Notification) string {
+
+	// RULE: An MLS message has no summary on the server, and its content is never printed
+	if notification.IsEncrypted() {
+		return "Encrypted message"
+	}
+
+	return notification.ObjectSummary
+}
+
+// unreadNotificationsLabel counts unread Notifications in words, for the email's subject line
+func unreadNotificationsLabel(count int64) string {
+
+	if count == 1 {
+		return "1 unread notification"
+	}
+
+	return strconv.FormatInt(count, 10) + " unread notifications"
 }
 
 // followerEmailPost is the post that a follower's email shows, as plain strings that the template

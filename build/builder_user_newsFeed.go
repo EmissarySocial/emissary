@@ -56,9 +56,9 @@ func NewInbox(factory Factory, session data.Session, request *http.Request, resp
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
 			return Inbox{}, derp.Forbidden(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
-		} else {
-			return Inbox{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 		}
+
+		return Inbox{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 	}
 
 	return Inbox{

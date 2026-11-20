@@ -19,7 +19,9 @@ import (
 
 // CollectionItem defines a service that can send and receive collectionItem data
 type CollectionItem struct {
+	collectionService *Collection
 	importItemService *ImportItem
+	streamService     *Stream
 	host              string
 }
 
@@ -35,7 +37,9 @@ func NewCollectionItem() CollectionItem {
 // Refresh updates any stateful data that is cached inside this service.
 func (service *CollectionItem) Refresh(factory *Factory) {
 	service.host = factory.Host()
+	service.collectionService = factory.Collection()
 	service.importItemService = factory.ImportItem()
+	service.streamService = factory.Stream()
 }
 
 // Close stops any background processes controlled by this service
@@ -46,11 +50,6 @@ func (service *CollectionItem) Close() {
 /******************************************
  * Common Data Methods
  ******************************************/
-
-// collection returns the CollectionItem collection for the provided database session
-func (service *CollectionItem) collection(session data.Session) data.Collection {
-	return session.Collection("CollectionItem")
-}
 
 // Count returns the number of CollectionItems that match the provided criteria
 func (service *CollectionItem) Count(session data.Session, criteria exp.Expression) (int64, error) {
@@ -64,11 +63,6 @@ func (service *CollectionItem) Query(session data.Session, criteria exp.Expressi
 	return result, err
 }
 
-// List returns an iterator containing all of the CollectionItems that match the provided criteria
-func (service *CollectionItem) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection(session).Iterator(notDeleted(criteria), options...)
-}
-
 // Range returns an iterator containing all of the CollectionItems who match the provided criteria
 func (service *CollectionItem) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
 
@@ -79,6 +73,11 @@ func (service *CollectionItem) Range(session data.Session, criteria exp.Expressi
 	}
 
 	return RangeFunc(iter, model.NewCollectionItem), nil
+}
+
+// List returns an iterator containing all of the CollectionItems that match the provided criteria
+func (service *CollectionItem) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an CollectionItem from the database
@@ -109,17 +108,54 @@ func (service *CollectionItem) Save(session data.Session, collectionItem *model.
 	return nil
 }
 
-// Delete removes an CollectionItem from the database (hard delete)
+// Delete removes a CollectionItem from the database (hard delete), refreshes its Collection's
+// `totalItems`, and runs the side effects that its collection type requires.
 func (service *CollectionItem) Delete(session data.Session, collectionItem *model.CollectionItem, note string) error {
 
 	const location = "service.CollectionItem.Delete"
+
+	// Delete the CollectionItem, with the side effects of its collection type
+	if err := service.remove(session, collectionItem); err != nil {
+		return derp.Wrap(err, location, "Removing CollectionItem", collectionItem)
+	}
+
+	// Keep the W3C-required `totalItems` accurate (D9)
+	if err := service.collectionService.RefreshTotalItems(session, collectionItem.CollectionID); err != nil {
+		return derp.Wrap(err, location, "Refreshing collection totalItems", collectionItem.CollectionID)
+	}
+
+	// Gone, but not forgotten.  Actually, forgotten.
+	return nil
+}
+
+// remove hard-deletes a CollectionItem and runs the side effects that its collection type requires.
+// It leaves `totalItems` alone, for a caller that is about to delete the whole Collection.
+func (service *CollectionItem) remove(session data.Session, collectionItem *model.CollectionItem) error {
+
+	const location = "service.CollectionItem.remove"
 
 	// Delete this CollectionItem from the database
 	if err := service.collection(session).HardDelete(exp.Equal("_id", collectionItem.CollectionItemID)); err != nil {
 		return derp.Wrap(err, location, "Deleting CollectionItem", collectionItem)
 	}
 
+	// Only a quote has side effects, for now
+	if collectionItem.CollectionType != model.CollectionTypeQuotes {
+		return nil
+	}
+
+	// RULE: A deleted quote is a revoked quote, whichever path deleted it (FEP-044f)
+	if err := service.streamService.RevokeQuote(session, collectionItem); err != nil {
+		return derp.Wrap(err, location, "Revoking quote", collectionItem)
+	}
+
+	// Unquote.
 	return nil
+}
+
+// collection returns the CollectionItem collection for the provided database session
+func (service *CollectionItem) collection(session data.Session) data.Collection {
+	return session.Collection("CollectionItem")
 }
 
 /******************************************
@@ -134,14 +170,27 @@ func (service *CollectionItem) QueryIDOnly(session data.Session, criteria exp.Ex
 	return result, err
 }
 
-// HardDeleteByID removes a specific CollectionItem record, without applying any additional business rules
+// HardDeleteByID deletes one of a User's CollectionItems, with the same side effects as Delete.
+// It does nothing when the User owns no such item.
 func (service *CollectionItem) HardDeleteByID(session data.Session, userID primitive.ObjectID, collectionItemID primitive.ObjectID) error {
 
 	const location = "service.CollectionItem.HardDeleteByID"
 
-	criteria := exp.Equal("userId", userID).AndEqual("_id", collectionItemID)
+	// Load the CollectionItem, because its side effects depend on its collection type
+	collectionItem := model.NewCollectionItem()
 
-	if err := service.collection(session).HardDelete(criteria); err != nil {
+	if err := service.LoadByUserID(session, userID, collectionItemID, &collectionItem); err != nil {
+
+		// An item that is already gone needs no deleting
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading CollectionItem", "userID: "+userID.Hex(), "collectionItemID: "+collectionItemID.Hex())
+	}
+
+	// Delete it
+	if err := service.Delete(session, &collectionItem, "Hard delete"); err != nil {
 		return derp.Wrap(err, location, "Deleting CollectionItem", "userID: "+userID.Hex(), "collectionItemID: "+collectionItemID.Hex())
 	}
 
@@ -222,16 +271,16 @@ func (service *CollectionItem) LoadByID(session data.Session, parentID primitive
 	return service.Load(session, criteria, collectionItem)
 }
 
+// LoadByUserID loads a single CollectionItem that the provided User owns. Returns an error if not found.
+func (service *CollectionItem) LoadByUserID(session data.Session, userID primitive.ObjectID, collectionItemID primitive.ObjectID, collectionItem *model.CollectionItem) error {
+	criteria := exp.Equal("userId", userID).AndEqual("_id", collectionItemID)
+	return service.Load(session, criteria, collectionItem)
+}
+
 // CountByCollection returns the number of CollectionItems in the given collection.
 func (service *CollectionItem) CountByCollection(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression) (int64, error) {
 	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionId", collectionID)
 	return service.Count(session, criteria)
-}
-
-// RangeByCollection returns an iterator over the CollectionItems in the given collection, matching the given criteria and options.
-func (service *CollectionItem) RangeByCollection(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
-	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionId", collectionID)
-	return service.Range(session, criteria, options...)
 }
 
 // CountByCollectionType returns the number of CollectionItems of the given collection type.
@@ -265,14 +314,25 @@ func (service *CollectionItem) LoadByURI(session data.Session, collectionID prim
 	return service.Load(session, criteria, collectionItem)
 }
 
-// HardDeleteByURI permanently deletes a CollectionItem by its URI.
+// HardDeleteByURI deletes every CollectionItem with the provided URI, with the same side effects as Delete.
 func (service *CollectionItem) HardDeleteByURI(session data.Session, URI string) error {
-	criteria := exp.Equal("uri", URI)
 
-	// Delete this CollectionItem from the database
-	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.CollectionItem.HardDeleteByURI", "Deleting CollectionItem", "uri: "+URI)
+	const location = "service.CollectionItem.HardDeleteByURI"
+
+	// Retrieve every CollectionItem with this URI, because side effects depend on the collection type
+	collectionItems, err := service.Range(session, exp.Equal("uri", URI))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Querying CollectionItems", "uri: "+URI)
 	}
+
+	// Delete each one
+	for collectionItem := range collectionItems {
+		if err := service.Delete(session, &collectionItem, "Hard delete"); err != nil {
+			return derp.Wrap(err, location, "Deleting CollectionItem", "uri: "+URI)
+		}
+	}
+
 	return nil
 }
 
@@ -288,15 +348,21 @@ func (service *CollectionItem) DeleteByCollection(session data.Session, parentID
 		return derp.Wrap(err, location, "Querying CollectionItems by CollectionID", "parentID: "+parentID.Hex(), "collectionID: "+collectionID.Hex())
 	}
 
-	// Delete each collection item
+	// Delete each collection item.  The Collection is going away, so its totalItems is not refreshed
 	for collectionItem := range collectionItems {
-		if err := service.Delete(session, &collectionItem, note); err != nil {
+		if err := service.remove(session, &collectionItem); err != nil {
 			return derp.Wrap(err, location, "Deleting CollectionItem", collectionItem)
 		}
 	}
 
 	// Success
 	return nil
+}
+
+// RangeByCollection returns an iterator over the CollectionItems in the given collection, matching the given criteria and options.
+func (service *CollectionItem) RangeByCollection(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
+	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionId", collectionID)
+	return service.Range(session, criteria, options...)
 }
 
 /******************************************
