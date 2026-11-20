@@ -264,8 +264,25 @@ func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutF
 			}
 		}
 
+		previousMatchKey := rule.MatchKey
+
 		if err := applyFilter(&rule, t.Title, keywords, t.FilterAction, int(t.ExpiresIn), time.Now().Unix()); err != nil {
 			return object.Filter{}, derp.Wrap(err, location, "Reading filter")
+		}
+
+		// RULE: Renaming onto a hashtag that already has a Rule would merge into it and leave this one behind
+		if model.RuleMatchKey(rule.Type, rule.Trigger) != previousMatchKey {
+
+			existing := model.NewRule()
+			err := factory.Rule().LoadByMatchKey(session, auth.UserID, model.RuleTypeTag, rule.Trigger, &existing)
+
+			if err == nil {
+				return object.Filter{}, derp.Validation("You already have a filter for " + rule.Trigger)
+			}
+
+			if !derp.IsNotFound(err) {
+				return object.Filter{}, derp.Wrap(err, location, "Checking for an existing hashtag rule")
+			}
 		}
 
 		if err := factory.Rule().Save(session, &rule, "Updated by Mastodon API"); err != nil {
