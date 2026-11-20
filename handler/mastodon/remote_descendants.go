@@ -219,6 +219,7 @@ func remoteDescendantsOf(client streams.Client, factory *service.Factory, sessio
 			Build: func() object.Status {
 				status := documentToStatus(document, accountForActor(client, factory, session, auth, documentAuthorURL(document), accounts))
 				applyRemoteReply(&status, client, factory, session, document)
+				applyLinkCard(factory, session, &status)
 				return status
 			},
 		})

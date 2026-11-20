@@ -512,6 +512,7 @@ func statusForPostURL(factory *service.Factory, session data.Session, auth model
 
 	status := documentToStatus(post, account)
 	applyRemoteReply(&status, client, factory, session, post)
+	applyLinkCard(factory, session, &status)
 
 	responseService := factory.Response()
 	response := model.NewResponse()

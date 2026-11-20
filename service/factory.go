@@ -504,6 +504,11 @@ func (factory *Factory) ActivityStream() *ActivityStream {
 	return &factory.activityStream
 }
 
+// LinkPreview returns the service that caches the metadata of pages that posts link to
+func (factory *Factory) LinkPreview() LinkPreview {
+	return NewLinkPreview(factory.serverFactory.CommonDatabase, factory.Queue, factory.Hostname(), factory.Version())
+}
+
 // Annotation returns a fully populated Annotation service
 func (factory *Factory) Annotation() *Annotation {
 	return &factory.annotationService

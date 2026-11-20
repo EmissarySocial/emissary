@@ -70,6 +70,10 @@ func PreProcessor(task *queue.Task) error {
 	case "Geocode":
 		task.Priority = 64
 
+	// A post's preview card appears on a later load, as on Mastodon, so the read can wait
+	case service.TaskFetchLinkPreview:
+		task.Priority = 64
+
 	case "ImportItem":
 		task.Priority = 64
 

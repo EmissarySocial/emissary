@@ -47,6 +47,7 @@ func remotePostStatus(client streams.Client, factory *service.Factory, session d
 
 	status := documentToStatus(post, account)
 	applyRemoteReply(&status, client, factory, session, post)
+	applyLinkCard(factory, session, &status)
 
 	return status
 }

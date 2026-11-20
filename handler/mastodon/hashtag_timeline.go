@@ -98,6 +98,11 @@ func GetTimeline_Hashtag(serverFactory *server.Factory) func(model.Authorization
 
 		remote := mergeHashtagStatuses(results, limit, t.OnlyMedia)
 
+		// The remote servers' own cards are dropped by remapRemoteStatus, so these get this server's
+		for index := range remote {
+			applyLinkCard(factory, session, &remote[index])
+		}
+
 		// Local posts and the caller's own feed come first, so they win over a remote copy
 		own := localHashtagStatuses(factory, session, auth, hashtag, int64(limit), exp.All())
 		markReacted(factory, session, auth.UserID, own)
