@@ -18,7 +18,7 @@ func TestUnsupportedErrors(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, derp.ErrorCode(errNoSuch("test", "Poll")))
 
 	// The handlers reach these before any database work, so a nil server factory is enough
-	_, err := PostFilter(nil)(model.Authorization{}, txn.PostFilter{})
+	_, err := PostFilter_Keyword(nil)(model.Authorization{}, txn.PostFilter_Keyword{})
 	require.Equal(t, http.StatusUnprocessableEntity, derp.ErrorCode(err))
 
 	_, err = GetPoll(nil)(model.Authorization{}, txn.GetPoll{})

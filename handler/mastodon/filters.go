@@ -6,11 +6,14 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // https://docs.joinmastodon.org/methods/filters/
@@ -56,35 +59,257 @@ func GetFilters(serverFactory *server.Factory) func(model.Authorization, txn.Get
 	}
 }
 
-// GetFilter implements the Mastodon "get filter" endpoint, and always returns an empty Filter
+// GetFilter implements the Mastodon "get filter" endpoint, returning one of the User's hashtag Rules as a Filter
 func GetFilter(serverFactory *server.Factory) func(model.Authorization, txn.GetFilter) (object.Filter, error) {
 
-	return func(model.Authorization, txn.GetFilter) (object.Filter, error) {
-		return object.Filter{}, nil
+	const location = "handler.mastodon.GetFilter"
+
+	return func(auth model.Authorization, t txn.GetFilter) (object.Filter, error) {
+
+		// Get the Domain factory for this request
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		rule, err := loadFilterRule(factory.Rule(), session, auth, t.ID)
+
+		if err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Loading hashtag rule")
+		}
+
+		return filterFromRule(rule), nil
 	}
 }
 
-// PostFilter is the Mastodon "create filter" endpoint, which Emissary does not implement
+// loadFilterRule loads the User's hashtag Rule that a Filter ID names, or a 404 for anything else.
+func loadFilterRule(ruleService *service.Rule, session data.Session, auth model.Authorization, filterID string) (model.Rule, error) {
+
+	const location = "handler.mastodon.loadFilterRule"
+
+	// Filter IDs are Rule IDs
+	ruleID, err := primitive.ObjectIDFromHex(filterID)
+
+	if err != nil {
+		return model.Rule{}, errNoSuch(location, "Filter")
+	}
+
+	// Load the Rule, which must belong to this User
+	rule := model.NewRule()
+
+	if err := ruleService.LoadByID(session, auth.UserID, ruleID, &rule); err != nil {
+		return model.Rule{}, derp.Wrap(err, location, "Loading Rule")
+	}
+
+	// RULE: Only hashtag Rules are Filters
+	if rule.Type != model.RuleTypeTag {
+		return model.Rule{}, errNoSuch(location, "Filter")
+	}
+
+	return rule, nil
+}
+
+// applyFilter copies a Mastodon filter's settings onto a hashtag Rule. Contexts are ignored: Rules apply everywhere.
+func applyFilter(rule *model.Rule, title string, keywords []string, filterAction string, expiresIn int, now int64) error {
+
+	// The hashtag comes from a keyword if one is given, else from the title
+	text := title
+
+	for _, keyword := range keywords {
+		if strings.TrimSpace(keyword) != "" {
+			text = keyword
+			break
+		}
+	}
+
+	// An update may leave the hashtag as it is
+	if strings.TrimSpace(text) != "" || rule.Trigger == "" {
+
+		hashtag, err := filterHashtag(text)
+
+		if err != nil {
+			return err
+		}
+
+		rule.Trigger = hashtag
+	}
+
+	// "hide" mutes; "warn" and "blur" label. An empty action leaves it unchanged.
+	switch filterAction {
+	case "hide":
+		rule.Action = model.RuleActionMute
+	case "warn", "blur":
+		rule.Action = model.RuleActionLabel
+	case "":
+	default:
+		return derp.Validation("filter_action must be hide, warn, or blur")
+	}
+
+	// RULE: A LABEL Rule needs label text, which is what apps show on the warning
+	if rule.Label == "" {
+		rule.Label = rule.Trigger
+	}
+
+	// No expires_in means the filter never expires
+	rule.ExpireDate = 0
+
+	if expiresIn > 0 {
+		rule.ExpireDate = now + int64(expiresIn)
+	}
+
+	return nil
+}
+
+// filterHashtag reads one hashtag, with or without its "#", from a filter's title or keyword.
+func filterHashtag(text string) (string, error) {
+
+	tag := strings.TrimPrefix(strings.TrimSpace(text), "#")
+
+	if tag == "" || strings.ContainsAny(tag, " \t\n#") {
+		return "", derp.Validation("Filters on this server match one hashtag, such as #politics")
+	}
+
+	return "#" + tag, nil
+}
+
+// PostFilter implements the Mastodon "create filter" endpoint, saving a hashtag Rule for the User
 func PostFilter(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter) (object.Filter, error) {
 
-	return func(model.Authorization, txn.PostFilter) (object.Filter, error) {
-		return object.Filter{}, errNotSupported("handler.mastodon.PostFilter", "Filters")
+	const location = "handler.mastodon.PostFilter"
+
+	return func(auth model.Authorization, t txn.PostFilter) (object.Filter, error) {
+
+		// Get the Domain factory for this request
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		// A new hashtag Rule; if one already exists for this tag, Save updates that one instead
+		rule := model.NewRule()
+		rule.UserID = auth.UserID
+		rule.Type = model.RuleTypeTag
+
+		keywords := make([]string, 0, len(t.KeywordsAttributes))
+		for _, keyword := range t.KeywordsAttributes {
+			keywords = append(keywords, keyword.Keyword)
+		}
+
+		if err := applyFilter(&rule, t.Title, keywords, t.FilterAction, int(t.ExpiresIn), time.Now().Unix()); err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Reading filter")
+		}
+
+		if err := factory.Rule().Save(session, &rule, "Created by Mastodon API"); err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Saving hashtag rule")
+		}
+
+		return filterFromRule(rule), nil
 	}
 }
 
-// PutFilter is the Mastodon "update filter" endpoint, which Emissary does not implement
+// PutFilter implements the Mastodon "update filter" endpoint, changing one of the User's hashtag Rules
 func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter) (object.Filter, error) {
 
-	return func(model.Authorization, txn.PutFilter) (object.Filter, error) {
-		return object.Filter{}, errNotSupported("handler.mastodon.PutFilter", "Filters")
+	const location = "handler.mastodon.PutFilter"
+
+	return func(auth model.Authorization, t txn.PutFilter) (object.Filter, error) {
+
+		// Get the Domain factory for this request
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		rule, err := loadFilterRule(factory.Rule(), session, auth, t.ID)
+
+		if err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Loading hashtag rule")
+		}
+
+		// Keywords being removed don't name the hashtag
+		keywords := make([]string, 0, len(t.KeywordsAttributes))
+		for _, keyword := range t.KeywordsAttributes {
+			if !keyword.Destroy {
+				keywords = append(keywords, keyword.Keyword)
+			}
+		}
+
+		if err := applyFilter(&rule, t.Title, keywords, t.FilterAction, int(t.ExpiresIn), time.Now().Unix()); err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Reading filter")
+		}
+
+		if err := factory.Rule().Save(session, &rule, "Updated by Mastodon API"); err != nil {
+			return object.Filter{}, derp.Wrap(err, location, "Saving hashtag rule")
+		}
+
+		return filterFromRule(rule), nil
 	}
 }
 
-// DeleteFilter is the Mastodon "delete filter" endpoint, which Emissary does not implement
+// DeleteFilter implements the Mastodon "delete filter" endpoint, removing one of the User's hashtag Rules
 func DeleteFilter(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter) (struct{}, error) {
 
-	return func(model.Authorization, txn.DeleteFilter) (struct{}, error) {
-		return struct{}{}, errNoSuch("handler.mastodon.DeleteFilter", "Filter")
+	const location = "handler.mastodon.DeleteFilter"
+
+	return func(auth model.Authorization, t txn.DeleteFilter) (struct{}, error) {
+
+		// Get the Domain factory for this request
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		rule, err := loadFilterRule(factory.Rule(), session, auth, t.ID)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Loading hashtag rule")
+		}
+
+		if err := factory.Rule().Delete(session, &rule, "Deleted by Mastodon API"); err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Deleting hashtag rule")
+		}
+
+		return struct{}{}, nil
 	}
 }
 
@@ -96,11 +321,11 @@ func GetFilter_Keywords(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
-// PostFilter_Keyword is the Mastodon "add filter keyword" endpoint, which Emissary does not implement
+// PostFilter_Keyword is the Mastodon "add filter keyword" endpoint; each filter matches only the hashtag in its title
 func PostFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
 
 	return func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
-		return struct{}{}, errNotSupported("handler.mastodon.PostFilter_Keyword", "Filters")
+		return struct{}{}, errNotSupported("handler.mastodon.PostFilter_Keyword", "Extra filter keywords")
 	}
 }
 
@@ -204,15 +429,30 @@ func DeleteFilter_V1(serverFactory *server.Factory) func(model.Authorization, tx
 func filterFromRule(rule model.Rule) object.Filter {
 
 	// A trigger may be saved with or without its "#"
+	hashtag := "#" + strings.TrimPrefix(rule.Trigger, "#")
+
+	// Hashtag Rules apply everywhere, and match the whole tag
 	result := object.Filter{
 		ID:           rule.RuleID.Hex(),
-		Title:        "#" + strings.TrimPrefix(rule.Trigger, "#"),
+		Title:        hashtag,
+		Context:      labelFilterContexts,
 		FilterAction: "hide",
+		Keywords: object.NonNullSlice[object.FilterKeyword]{{
+			ID:        rule.RuleID.Hex(),
+			Keyword:   hashtag,
+			WholeWord: true,
+		}},
 	}
 
 	// Labels show a warning instead of hiding the post
 	if rule.Action == model.RuleActionLabel {
 		result.FilterAction = "warn"
+	}
+
+	// Rules with an expiry date report it; others never expire
+	if rule.ExpireDate > 0 {
+		expiresAt := time.Unix(rule.ExpireDate, 0).UTC().Format(time.RFC3339)
+		result.ExpiresAt = &expiresAt
 	}
 
 	// Spoiler alert: it's a hashtag
