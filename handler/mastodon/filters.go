@@ -1,18 +1,58 @@
 package mastodon
 
 import (
+	"strings"
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 )
 
 // https://docs.joinmastodon.org/methods/filters/
+// GetFilters implements the Mastodon "list filters" endpoint, showing the User's hashtag Rules
 func GetFilters(serverFactory *server.Factory) func(model.Authorization, txn.GetFilters) ([]object.Filter, error) {
 
-	return func(model.Authorization, txn.GetFilters) ([]object.Filter, error) {
-		return []object.Filter{}, nil
+	const location = "handler.mastodon.GetFilters"
+
+	return func(auth model.Authorization, t txn.GetFilters) ([]object.Filter, error) {
+
+		// Get the Domain factory for this request
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return []object.Filter{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return []object.Filter{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		// Load this User's hashtag Rules
+		criteria := exp.Equal("userId", auth.UserID).AndEqual("type", model.RuleTypeTag)
+		rules, err := factory.Rule().Query(session, criteria)
+
+		if err != nil {
+			return []object.Filter{}, derp.Wrap(err, location, "Loading hashtag rules")
+		}
+
+		// Describe each Rule as a Filter
+		result := make([]object.Filter, 0, len(rules))
+
+		for _, rule := range rules {
+			result = append(result, filterFromRule(rule))
+		}
+
+		return result, nil
 	}
 }
 
@@ -158,4 +198,23 @@ func DeleteFilter_V1(serverFactory *server.Factory) func(model.Authorization, tx
 	return func(model.Authorization, txn.DeleteFilter_V1) (struct{}, error) {
 		return struct{}{}, errNoSuch("handler.mastodon.DeleteFilter_V1", "Filter")
 	}
+}
+
+// filterFromRule describes an emissary hashtag Rule as a Mastodon Filter
+func filterFromRule(rule model.Rule) object.Filter {
+
+	// A trigger may be saved with or without its "#"
+	result := object.Filter{
+		ID:           rule.RuleID.Hex(),
+		Title:        "#" + strings.TrimPrefix(rule.Trigger, "#"),
+		FilterAction: "hide",
+	}
+
+	// Labels show a warning instead of hiding the post
+	if rule.Action == model.RuleActionLabel {
+		result.FilterAction = "warn"
+	}
+
+	// Spoiler alert: it's a hashtag
+	return result
 }
