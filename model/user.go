@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -25,40 +26,42 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID               primitive.ObjectID         `json:"userId"               bson:"_id"`                  // Unique identifier for this user.
-	MapIDs               mapof.String               `json:"mapIds"               bson:"mapIds"`               // Map of IDs for this user on other web services.
-	GroupIDs             id.Slice                   `json:"groupIds"             bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
-	IconID               primitive.ObjectID         `json:"iconId"               bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
-	ImageID              primitive.ObjectID         `json:"imageId"              bson:"imageId"`              // AttachmentID of this user's banner image.
-	DisplayName          string                     `json:"displayName"          bson:"displayName"`          // Name to be displayed for this user
-	StatusMessage        string                     `json:"statusMessage"        bson:"statusMessage"`        // Status summary for this user
-	Location             string                     `json:"location"             bson:"location"`             // Human-friendly description of this user's physical location.
-	ProfileURL           string                     `json:"profileUrl"           bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress         string                     `json:"emailAddress"         bson:"emailAddress"`         // Email address for this user
-	Username             string                     `json:"username"             bson:"username"`             // This is the primary public identifier for the user.
-	Password             string                     `json:"-"                    bson:"password"`             // Hashed password. Only ever written via a PasswordHasher (see steranko.SetPassword); never contains plaintext.
-	Locale               string                     `json:"locale"               bson:"locale"`               // Language code for this user's preferred language.
-	SignupNote           string                     `json:"signupNote"           bson:"signupNote,omitempty"` // Note that was included when this user signed up.
-	StateID              string                     `json:"stateId"              bson:"stateId"`              // State ID for this user
-	InboxTemplate        string                     `json:"inboxTemplate"        bson:"inboxTemplate"`        // Template for the user's inbox
-	OutboxTemplate       string                     `json:"outboxTemplate"       bson:"outboxTemplate"`       // Template for the user's outbox
-	NoteTemplate         string                     `json:"noteTemplate"         bson:"noteTemplate"`         // Template for generically created notes
-	Hashtags             sliceof.String             `json:"hashtags"             bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
-	TagURL               string                     `json:"tagUrl"               bson:"tagUrl"`               // URL prefix for hashtag links, denormalized from the outbox Template ("%23" + tag is appended).
-	Links                sliceof.Object[PersonLink] `json:"links"                bson:"links"`                // Slice of links to profiles on other web services.
-	NotificationChannels sliceof.String             `json:"notificationChannels" bson:"notificationChannels"` // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
-	PasswordReset        PasswordReset              `json:"-"                    bson:"passwordReset"`        // Most recent password reset information.
-	Data                 mapof.String               `json:"data"                 bson:"data"`                 // Custom profile data that can be stored with this User.
-	ProfileFingerprint   string                     `json:"profileFingerprint"   bson:"profileFingerprint"`   // Hash of the last-saved actor document (GetJSONLD). User.Save compares it to detect profile changes that must federate as an ActivityPub Update.
-	MovedTo              string                     `json:"movedTo"              bson:"movedTo,omitempty"`    // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
-	FollowerCount        int                        `json:"followerCount"        bson:"followerCount"`        // Number of followers for this user
-	FollowingCount       int                        `json:"followingCount"       bson:"followingCount"`       // Number of actors that this user is following
-	RuleCount            int                        `json:"ruleCount"            bson:"ruleCount"`            // Number of rules (blocks) that this user has implemented
-	IsOwner              bool                       `json:"isOwner"              bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
-	IsPrimary            bool                       `json:"isPrimary"            bson:"isPrimary"`            // If TRUE, then this owner is the one person the domain vouches for (IndieAuth).
-	IsPublic             bool                       `json:"isPublic"             bson:"isPublic"`             // If TRUE, then this user's profile is publicly visible
-	IsBridgeBluesky      delta.Bool                 `json:"isBridgeBluesky"      bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
-	IsIndexable          bool                       `json:"isIndexable"          bson:"isIndexable"`          // If TRUE, then this user's profile can be indexed by search engines.
+	UserID                 primitive.ObjectID         `json:"userId"               bson:"_id"`                      // Unique identifier for this user.
+	MapIDs                 mapof.String               `json:"mapIds"               bson:"mapIds"`                   // Map of IDs for this user on other web services.
+	GroupIDs               id.Slice                   `json:"groupIds"             bson:"groupIds"`                 // Slice of IDs for the groups that this user belongs to.
+	IconID                 primitive.ObjectID         `json:"iconId"               bson:"iconId"`                   // AttachmentID of this user's avatar/icon image.
+	ImageID                primitive.ObjectID         `json:"imageId"              bson:"imageId"`                  // AttachmentID of this user's banner image.
+	DisplayName            string                     `json:"displayName"          bson:"displayName"`              // Name to be displayed for this user
+	StatusMessage          string                     `json:"statusMessage"        bson:"statusMessage"`            // Status summary for this user
+	Location               string                     `json:"location"             bson:"location"`                 // Human-friendly description of this user's physical location.
+	ProfileURL             string                     `json:"profileUrl"           bson:"profileUrl"`               // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress           string                     `json:"emailAddress"         bson:"emailAddress"`             // Email address for this user
+	Username               string                     `json:"username"             bson:"username"`                 // This is the primary public identifier for the user.
+	Password               string                     `json:"-"                    bson:"password"`                 // Hashed password. Only ever written via a PasswordHasher (see steranko.SetPassword); never contains plaintext.
+	Locale                 string                     `json:"locale"               bson:"locale"`                   // Language code for this user's preferred language.
+	SignupNote             string                     `json:"signupNote"           bson:"signupNote,omitempty"`     // Note that was included when this user signed up.
+	StateID                string                     `json:"stateId"              bson:"stateId"`                  // State ID for this user
+	InboxTemplate          string                     `json:"inboxTemplate"        bson:"inboxTemplate"`            // Template for the user's inbox
+	OutboxTemplate         string                     `json:"outboxTemplate"       bson:"outboxTemplate"`           // Template for the user's outbox
+	NoteTemplate           string                     `json:"noteTemplate"         bson:"noteTemplate"`             // Template for generically created notes
+	Hashtags               sliceof.String             `json:"hashtags"             bson:"hashtags"`                 // Slice of tags that can be used to categorize this user.
+	TagURL                 string                     `json:"tagUrl"               bson:"tagUrl"`                   // URL prefix for hashtag links, denormalized from the outbox Template ("%23" + tag is appended).
+	Links                  sliceof.Object[PersonLink] `json:"links"                bson:"links"`                    // Slice of links to profiles on other web services.
+	NotificationChannels   sliceof.String             `json:"notificationChannels" bson:"notificationChannels"`     // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
+	NotificationEmailHours int                        `json:"notificationEmailHours" bson:"notificationEmailHours"` // Hours a notification may stay unread before it is emailed (see NotificationEmailHours). 0 = no email.
+	NotificationEmailDate  int64                      `json:"-"                    bson:"notificationEmailDate"`    // Unix epoch MILLISECONDS. No notification created at or before this moment can cause an email.
+	PasswordReset          PasswordReset              `json:"-"                    bson:"passwordReset"`            // Most recent password reset information.
+	Data                   mapof.String               `json:"data"                 bson:"data"`                     // Custom profile data that can be stored with this User.
+	ProfileFingerprint     string                     `json:"profileFingerprint"   bson:"profileFingerprint"`       // Hash of the last-saved actor document (GetJSONLD). User.Save compares it to detect profile changes that must federate as an ActivityPub Update.
+	MovedTo                string                     `json:"movedTo"              bson:"movedTo,omitempty"`        // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
+	FollowerCount          int                        `json:"followerCount"        bson:"followerCount"`            // Number of followers for this user
+	FollowingCount         int                        `json:"followingCount"       bson:"followingCount"`           // Number of actors that this user is following
+	RuleCount              int                        `json:"ruleCount"            bson:"ruleCount"`                // Number of rules (blocks) that this user has implemented
+	IsOwner                bool                       `json:"isOwner"              bson:"isOwner"`                  // If TRUE, then this user is a website owner with FULL privileges.
+	IsPrimary              bool                       `json:"isPrimary"            bson:"isPrimary"`                // If TRUE, then this owner is the one person the domain vouches for (IndieAuth).
+	IsPublic               bool                       `json:"isPublic"             bson:"isPublic"`                 // If TRUE, then this user's profile is publicly visible
+	IsBridgeBluesky        delta.Bool                 `json:"isBridgeBluesky"      bson:"isBridgeBluesky"`          // If TRUE, then allow this user to be bridged to Bluesky
+	IsIndexable            bool                       `json:"isIndexable"          bson:"isIndexable"`              // If TRUE, then this user's profile can be indexed by search engines.
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -72,6 +75,8 @@ func NewUser() User {
 		Links:                sliceof.NewObject[PersonLink](),
 		Data:                 mapof.NewString(),
 		NotificationChannels: DefaultNotificationChannels(),
+
+		NotificationEmailHours: NotificationEmailHoursDefault,
 	}
 }
 
@@ -97,6 +102,31 @@ func (user User) NotificationEnabled(channels []string) bool {
 	}
 
 	return false
+}
+
+// NotificationEmailWindow returns the range of createDates (Unix epoch MILLISECONDS) that make this
+// User owed an email at the given moment: later than `after`, and no later than `before`.
+func (user User) NotificationEmailWindow(nowMillis int64) (after int64, before int64, ok bool) {
+
+	// RULE: Zero hours means "No email".  A value outside the list is treated the same way.
+	if !slices.Contains(NotificationEmailHours(), user.NotificationEmailHours) || (user.NotificationEmailHours == 0) {
+		return 0, 0, false
+	}
+
+	// RULE: An email needs somewhere to go
+	if user.EmailAddress == "" {
+		return 0, 0, false
+	}
+
+	after = user.NotificationEmailDate
+	before = nowMillis - int64(user.NotificationEmailHours)*millisecondsPerHour
+
+	// RULE: Nothing can be both newer than the watermark and old enough to send
+	if before <= after {
+		return 0, 0, false
+	}
+
+	return after, before, true
 }
 
 /******************************************
@@ -296,6 +326,47 @@ func (user User) SummaryHTML() string {
  * ActivityPub Interfaces
  ******************************************/
 
+// MigrationJSONLD returns the `migration` property of this User's actor document: the URL of
+// every collection that an account export serves
+func (user User) MigrationJSONLD() mapof.String {
+
+	exportURL := user.ActivityPubURL() + "/export"
+
+	result := mapof.String{
+		"outbox":    exportURL + "/outbox",
+		"content":   exportURL + "/content",
+		"following": exportURL + "/following",
+		"blocked":   exportURL + "/blocked",
+	}
+
+	for _, collection := range MigrationCollections() {
+		result[collection.Key] = exportURL + "/" + collection.Path
+	}
+
+	return result
+}
+
+// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor
+// document (GetJSONLD)
+func (user User) CalcProfileFingerprint() (string, error) {
+
+	const location = "model.User.CalcProfileFingerprint"
+
+	// Identical profiles always produce identical fingerprints, because json.Marshal
+	// serializes map keys in sorted order.
+
+	asJSON, err := json.Marshal(user.GetJSONLD())
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Marshalling actor document", user.UserID)
+	}
+
+	digest := sha256.Sum256(asJSON)
+
+	// Sixty-four nibbles of pure identity
+	return hex.EncodeToString(digest[:]), nil
+}
+
 // GetJSONLD returns this User's public ActivityPub actor document as a JSON-LD map.
 func (user User) GetJSONLD() mapof.Any {
 
@@ -400,45 +471,49 @@ func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
 }
 
-// MigrationJSONLD returns the `migration` property of this User's actor document: the URL of
-// every collection that an account export serves
-func (user User) MigrationJSONLD() mapof.String {
-
-	exportURL := user.ActivityPubURL() + "/export"
-
-	result := mapof.String{
-		"outbox":    exportURL + "/outbox",
-		"content":   exportURL + "/content",
-		"following": exportURL + "/following",
-		"blocked":   exportURL + "/blocked",
+// ActivityPubInboxURL returns the URL of this User's ActivityPub inbox
+func (user *User) ActivityPubInboxURL() string {
+	if user.ProfileURL == "" {
+		return ""
 	}
 
-	for _, collection := range MigrationCollections() {
-		result[collection.Key] = exportURL + "/" + collection.Path
-	}
-
-	return result
+	return user.ProfileURL + "/pub/inbox"
 }
 
-// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor
-// document (GetJSONLD)
-func (user User) CalcProfileFingerprint() (string, error) {
-
-	const location = "model.User.CalcProfileFingerprint"
-
-	// Identical profiles always produce identical fingerprints, because json.Marshal
-	// serializes map keys in sorted order.
-
-	asJSON, err := json.Marshal(user.GetJSONLD())
-
-	if err != nil {
-		return "", derp.Wrap(err, location, "Marshalling actor document", user.UserID)
+// ActivityPubOutboxURL returns the URL of this User's ActivityPub outbox
+func (user *User) ActivityPubOutboxURL() string {
+	if user.ProfileURL == "" {
+		return ""
 	}
 
-	digest := sha256.Sum256(asJSON)
+	return user.ProfileURL + "/pub/outbox"
+}
 
-	// Sixty-four nibbles of pure identity
-	return hex.EncodeToString(digest[:]), nil
+// ActivityPubFollowingURL returns the URL of this User's following collection
+func (user *User) ActivityPubFollowingURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/following"
+}
+
+// ActivityPubFollowersURL returns the URL of this User's followers collection
+func (user *User) ActivityPubFollowersURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/followers"
+}
+
+// ActivityPubInboxURL_DirectMessages returns the URL of this User's direct-message inbox
+func (user *User) ActivityPubInboxURL_DirectMessages() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/inbox/direct-messages"
 }
 
 // ActivityPubIconURL returns the URL of this User's avatar image, or "" if none is set
@@ -468,42 +543,6 @@ func (user *User) ActivityPubFeaturedURL() string {
 	return user.ProfileURL + "/pub/featured"
 }
 
-// ActivityPubFollowersURL returns the URL of this User's followers collection
-func (user *User) ActivityPubFollowersURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/followers"
-}
-
-// ActivityPubFollowingURL returns the URL of this User's following collection
-func (user *User) ActivityPubFollowingURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/following"
-}
-
-// ActivityPubInboxURL returns the URL of this User's ActivityPub inbox
-func (user *User) ActivityPubInboxURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/inbox"
-}
-
-// ActivityPubInboxURL_DirectMessages returns the URL of this User's direct-message inbox
-func (user *User) ActivityPubInboxURL_DirectMessages() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/inbox/direct-messages"
-}
-
 // ActivityPubInboxURL_DirectMessages_MLS returns the URL of this User's MLS-encrypted direct-message inbox
 func (user *User) ActivityPubInboxURL_DirectMessages_MLS() string {
 	if user.ProfileURL == "" {
@@ -529,15 +568,6 @@ func (user *User) ActivityPubLikedURL() string {
 	}
 
 	return user.ProfileURL + "/pub/liked"
-}
-
-// ActivityPubOutboxURL returns the URL of this User's ActivityPub outbox
-func (user *User) ActivityPubOutboxURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/outbox"
 }
 
 // ActivityPubPublicKeyURL returns the key ID ("#main-key" fragment URL) for this User's public key

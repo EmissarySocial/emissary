@@ -20,7 +20,7 @@ import (
 type Notification struct {
 	NotificationID primitive.ObjectID `json:"notificationId" bson:"_id"`                     // Unique ID for this Notification
 	UserID         primitive.ObjectID `json:"userId"         bson:"userId"`                  // Recipient (local User) who owns this Notification
-	Type           string             `json:"type"           bson:"type"`                    // DIRECT/MENTION/REPLY/LIKE/DISLIKE/ANNOUNCE/FOLLOW
+	Type           string             `json:"type"           bson:"type"`                    // DIRECT/MENTION/REPLY/QUOTE/LIKE/DISLIKE/ANNOUNCE/FOLLOW
 	Subtype        string             `json:"subtype"        bson:"subtype,omitempty"`       // Per-Type discriminant: MLS/PLAINTEXT for DIRECT, otherwise FOLLOWING/NOT_FOLLOWING (see notification_constants.go)
 	Actor          PersonLink         `json:"actor"          bson:"actor"`                   // Who did the thing
 	ActivityID     string             `json:"activityId"     bson:"activityId,omitempty"`    // AP id of the triggering activity (dedup + undo)
@@ -43,14 +43,14 @@ func NewNotification() Notification {
 	}
 }
 
-// NotificationFields returns the standard list of fields loaded for a Notification
-func NotificationFields() []string {
-	return []string{"_id", "userId", "type", "subtype", "actor", "activityId", "objectUrl", "objectSummary", "streamId", "inReplyTo", "readDate", "createDate"}
-}
-
 // Fields returns the database fields required to populate a Notification
 func (notification Notification) Fields() []string {
 	return NotificationFields()
+}
+
+// NotificationFields returns the standard list of fields loaded for a Notification
+func NotificationFields() []string {
+	return []string{"_id", "userId", "type", "subtype", "actor", "activityId", "objectUrl", "objectSummary", "streamId", "inReplyTo", "readDate", "createDate"}
 }
 
 /******************************************
@@ -162,6 +162,11 @@ func (notification Notification) Channels() []string {
 		// mention toggle (Mastodon-compatible senders auto-tag the parent author).
 		return []string{NotificationChannelReply, mentionChannel}
 
+	case NotificationTypeQuote:
+		// A quote is someone writing about the recipient's post, and the recipient may want to
+		// reject it, so it surfaces like a reply rather than as an opt-in reaction.
+		return []string{NotificationChannelReply, mentionChannel}
+
 	case NotificationTypeLike, NotificationTypeDislike, NotificationTypeAnnounce:
 		return []string{NotificationChannelReaction}
 
@@ -224,6 +229,16 @@ func (notification Notification) GetRank() int64 {
 	return notification.CreateDate
 }
 
+// Toot returns this Notification represented as a Mastodon API Notification object, with default images from host.
+func (notification Notification) Toot(host string) object.Notification {
+	return object.Notification{
+		ID:        notification.NotificationID.Hex(),
+		Type:      notification.MastodonType(),
+		CreatedAt: MastodonDate(time.UnixMilli(notification.CreateDate)),
+		Account:   notification.Actor.Toot(host),
+	}
+}
+
 // MastodonType maps this Notification's Type to the corresponding Mastodon notification type.
 // DISLIKE has no Mastodon equivalent and maps to "" (callers should exclude it from the API).
 func (notification Notification) MastodonType() string {
@@ -237,19 +252,11 @@ func (notification Notification) MastodonType() string {
 		return "favourite"
 	case NotificationTypeAnnounce:
 		return "reblog"
+	case NotificationTypeQuote:
+		return "quote"
 	case NotificationTypeFollow:
 		return "follow"
 	default:
 		return ""
-	}
-}
-
-// Toot returns this Notification represented as a Mastodon API Notification object, with default images from host.
-func (notification Notification) Toot(host string) object.Notification {
-	return object.Notification{
-		ID:        notification.NotificationID.Hex(),
-		Type:      notification.MastodonType(),
-		CreatedAt: MastodonDate(time.UnixMilli(notification.CreateDate)),
-		Account:   notification.Actor.Toot(host),
 	}
 }

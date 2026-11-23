@@ -71,3 +71,7 @@ An update pipeline whose new value references the field it replaces (`{$set: {lo
 ## A Stream's rank starts at 1, and 0 means "not set"
 
 `build.StepSort` never assigns 0, and `Stream.Save` gives any Stream ranked 0 the rank `MaxRank` returns: one after its highest-ranked sibling, or 1 for a parent with no children. Bandwagon publishes `rank` as a song's `position` and ID3 track number, so a first child ranked 0 federated as track 0 and moved after its siblings on its next save. Keep ranks counting from 1 (`TestMaxRank`).
+
+## The hourly unread scan depends on a partial index, and on sending both of its terms
+
+`NotificationUsersWithUnread` asks for every User holding an old unread notification, so it cannot use the indexes that lead with `userId`. `idx_Notification_UnreadByDate` serves it: `createDate` then `userId`, holding only rows where `deleteDate` is 0 and `readDate` is `math.MaxInt64`. MongoDB uses a partial index only when the query names the index's own filter terms, so the query must send both as equalities. Drop either one and the scan reads the whole collection, with no error. `TestNotificationIndex_UnreadByDate` in [sync](sync/notification_mongo_test.go) runs `explain` on the same filter.

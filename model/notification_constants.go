@@ -20,6 +20,9 @@ const NotificationTypeAnnounce = "ANNOUNCE"
 // NotificationTypeFollow identifies a Notification created because someone began following the recipient
 const NotificationTypeFollow = "FOLLOW"
 
+// NotificationTypeQuote identifies a Notification created because the recipient approved someone's quote of their content
+const NotificationTypeQuote = "QUOTE"
+
 // NotificationTypeDirect identifies a Notification created because someone sent the
 // recipient a PRIVATE message, and outranks REPLY and MENTION in the classification ladder
 const NotificationTypeDirect = "DIRECT"

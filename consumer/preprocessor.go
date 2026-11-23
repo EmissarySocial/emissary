@@ -34,6 +34,9 @@ func PreProcessor(task *queue.Task) error {
 	case "Outbox-Publish", delivery.TaskFanOut:
 		task.Priority = 16
 
+	case service.TaskSendDeleteQuoteAuthorization:
+		task.Priority = 16
+
 	case "SendSearchResult":
 		task.Priority = 16
 
@@ -149,6 +152,9 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 1024
 
 	case "PurgeStagedUploads":
+		task.Priority = 1024
+
+	case "SendNotificationEmails":
 		task.Priority = 1024
 
 	case "RecycleDomain":

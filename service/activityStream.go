@@ -106,15 +106,6 @@ func (service *ActivityStream) StreamClient(streamID primitive.ObjectID) streams
 	return service.Client(model.ActorTypeStream, streamID)
 }
 
-// AllowPrivateIPs reports whether this instance may connect to non-public
-// (private/loopback) addresses. It is TRUE when the instance is served from a
-// local/private hostname, so that a dev instance can federate with itself. Both
-// the document-loading client stack and outbound delivery consult this single
-// predicate, so loading and delivery always agree.
-func (service *ActivityStream) AllowPrivateIPs() bool {
-	return uri.IsLocalHostname(service.hostname)
-}
-
 // Client creates a new streams.Client that is configured for the specified actor type and ID.
 func (service *ActivityStream) Client(actorType string, actorID primitive.ObjectID) streams.Client {
 
@@ -194,6 +185,15 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	return hashClient
 }
 
+// AllowPrivateIPs reports whether this instance may connect to non-public
+// (private/loopback) addresses. It is TRUE when the instance is served from a
+// local/private hostname, so that a dev instance can federate with itself. Both
+// the document-loading client stack and outbound delivery consult this single
+// predicate, so loading and delivery always agree.
+func (service *ActivityStream) AllowPrivateIPs() bool {
+	return uri.IsLocalHostname(service.hostname)
+}
+
 // carpoolSigner names the actor a client stack signs as, so the Carpool groups only Loads that
 // would have been signed the same way.
 func carpoolSigner(hostname string, actorType string, actorID primitive.ObjectID) string {
@@ -260,6 +260,11 @@ func ruleUserID(actorType string, actorID primitive.ObjectID) primitive.ObjectID
 
 // Save adds a single document to the ActivityStream cache
 func (service *ActivityStream) Save(document streams.Document) error {
+
+	// RULE: A saved document never passes through the normalizer, which sits below the cache and
+	// runs only on a fetch, so its metadata is written here (BUG-383)
+	asnormalizer.Stamp(&document)
+
 	return service.AppClient().Save(document)
 }
 
@@ -271,38 +276,6 @@ func (service *ActivityStream) Delete(url string) error {
 /******************************************
  * Custom Query Methods
  ******************************************/
-
-// Range iterates over the cached ActivityStream documents that match the provided criteria
-func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expression, options ...option.Option) iter.Seq[ascache.Value] {
-
-	const location = "service.ActivityStream.Range"
-
-	return func(yield func(ascache.Value) bool) {
-
-		// Connect to the database
-		collection, err := service.collection(ctx)
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Connecting to database"))
-			return
-		}
-
-		// Query the database
-		iterator, err := collection.Iterator(criteria, options...)
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Querying database", criteria))
-			return
-		}
-
-		// Return results to caller one-by-one
-		for value := ascache.NewValue(); iterator.Next(&value); value = ascache.NewValue() {
-			if !yield(value) {
-				return
-			}
-		}
-	}
-}
 
 // QueryByContext returns a slice of streams.Document values that are associated with the specified context name.
 func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
@@ -420,6 +393,38 @@ func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inRepl
 	return result
 }
 
+// Range iterates over the cached ActivityStream documents that match the provided criteria
+func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expression, options ...option.Option) iter.Seq[ascache.Value] {
+
+	const location = "service.ActivityStream.Range"
+
+	return func(yield func(ascache.Value) bool) {
+
+		// Connect to the database
+		collection, err := service.collection(ctx)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Connecting to database"))
+			return
+		}
+
+		// Query the database
+		iterator, err := collection.Iterator(criteria, options...)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Querying database", criteria))
+			return
+		}
+
+		// Return results to caller one-by-one
+		for value := ascache.NewValue(); iterator.Next(&value); value = ascache.NewValue() {
+			if !yield(value) {
+				return
+			}
+		}
+	}
+}
+
 // QueryLikesBeforeDate returns a channel of "Like" documents that target the specified URL, published before the specified date.
 func (service *ActivityStream) QueryLikesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
 	return service.queryByRelation(ctx, vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
@@ -486,6 +491,21 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 	return result
 }
 
+// GetRecipient retrieves the recipient's ID and inbox URL
+func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
+
+	const location = "service.ActivityStream.GetRecipient"
+
+	document, err := service.GetActor(recipient)
+
+	if err != nil {
+		return "", "", derp.Wrap(err, location, "Loading ActivityPub Actor", recipient)
+	}
+
+	// Successssssssss.
+	return document.ID(), document.Inbox().String(), nil
+}
+
 // GetActor retrieves an actor from their handle or URL
 func (service *ActivityStream) GetActor(actor string) (streams.Document, error) {
 
@@ -504,21 +524,6 @@ func (service *ActivityStream) GetActor(actor string) (streams.Document, error) 
 	}
 
 	return document, nil
-}
-
-// GetRecipient retrieves the recipient's ID and inbox URL
-func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
-
-	const location = "service.ActivityStream.GetRecipient"
-
-	document, err := service.GetActor(recipient)
-
-	if err != nil {
-		return "", "", derp.Wrap(err, location, "Loading ActivityPub Actor", recipient)
-	}
-
-	// Successssssssss.
-	return document.ID(), document.Inbox().String(), nil
 }
 
 // Signature verification lives in activityStream_signature.go, which owns both the key lookup and

@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"math"
 
 	"github.com/EmissarySocial/emissary/tools/indexer"
 	"github.com/rs/zerolog/log"
@@ -36,6 +37,17 @@ func Notification(ctx context.Context, database *mongo.Database) error {
 			},
 			Options: options.Index().
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
+		},
+
+		// Supports the hourly unread email (queries.NotificationUsersWithUnread), which spans every
+		// User.  Unread rows are a small share of the collection, so the index holds only those.
+		"idx_Notification_UnreadByDate": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "createDate", Value: 1},
+				{Key: "userId", Value: 1},
+			},
+			Options: options.Index().
+				SetPartialFilterExpression(bson.M{"deleteDate": 0, "readDate": int64(math.MaxInt64)}),
 		},
 
 		"idx_Notification_Activity": mongo.IndexModel{

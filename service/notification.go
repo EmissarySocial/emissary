@@ -24,6 +24,7 @@ type Notification struct {
 	ruleService      *Rule
 	streamService    *Stream
 	userService      *User
+	emailService     notificationEmailer
 	queue            *queue.Queue
 	host             string
 }
@@ -43,6 +44,7 @@ func (service *Notification) Refresh(factory *Factory) {
 	service.ruleService = factory.Rule()
 	service.streamService = factory.Stream()
 	service.userService = factory.User()
+	service.emailService = factory.Email()
 	service.queue = factory.Queue()
 	service.host = factory.Host()
 }
@@ -56,11 +58,6 @@ func (service *Notification) Close() {
  * Common Data Methods
  ******************************************/
 
-// collection returns the Notification collection for the provided database session
-func (service *Notification) collection(session data.Session) data.Collection {
-	return session.Collection("Notification")
-}
-
 // Count returns the number of Notifications that match the provided criteria
 func (service *Notification) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
@@ -73,11 +70,6 @@ func (service *Notification) Query(session data.Session, criteria exp.Expression
 	return result, err
 }
 
-// List returns an iterator containing all of the Notifications that match the provided criteria
-func (service *Notification) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection(session).Iterator(notDeleted(criteria), options...)
-}
-
 // Range returns a Go 1.23 RangeFunc that iterates over the Notifications that match the provided criteria
 func (service *Notification) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Notification], error) {
 
@@ -88,6 +80,11 @@ func (service *Notification) Range(session data.Session, criteria exp.Expression
 	}
 
 	return RangeFunc(iter, model.NewNotification), nil
+}
+
+// List returns an iterator containing all of the Notifications that match the provided criteria
+func (service *Notification) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Notification from the database
@@ -129,6 +126,11 @@ func (service *Notification) Delete(session data.Session, notification *model.No
 	}
 
 	return nil
+}
+
+// collection returns the Notification collection for the provided database session
+func (service *Notification) collection(session data.Session) data.Collection {
+	return session.Collection("Notification")
 }
 
 /******************************************
@@ -258,12 +260,6 @@ func (service *Notification) CountUnread(session data.Session, userID primitive.
 	return service.Count(session, criteria)
 }
 
-// LoadByActivityID loads a single Notification for a User by the AP id of its triggering activity.
-func (service *Notification) LoadByActivityID(session data.Session, userID primitive.ObjectID, activityID string, notification *model.Notification) error {
-	criteria := exp.Equal("userId", userID).AndEqual("activityId", activityID)
-	return service.Load(session, criteria, notification)
-}
-
 // LoadOrCreate loads an existing Notification for (userID, activityID) or returns a new,
 // unsaved Notification if none exists.  Used to dedup Update-vs-Create re-notification.
 func (service *Notification) LoadOrCreate(session data.Session, userID primitive.ObjectID, activityID string) (model.Notification, error) {
@@ -289,6 +285,12 @@ func (service *Notification) LoadOrCreate(session data.Session, userID primitive
 	return result, nil
 }
 
+// LoadByActivityID loads a single Notification for a User by the AP id of its triggering activity.
+func (service *Notification) LoadByActivityID(session data.Session, userID primitive.ObjectID, activityID string, notification *model.Notification) error {
+	criteria := exp.Equal("userId", userID).AndEqual("activityId", activityID)
+	return service.Load(session, criteria, notification)
+}
+
 /******************************************
  * Read/Unread State
  ******************************************/
@@ -312,6 +314,29 @@ func (service *Notification) MarkAllRead(session data.Session, userID primitive.
 		return derp.Wrap(err, location, "Marking notifications read", userID)
 	}
 
+	return nil
+}
+
+// MarkRead sets the readDate on one unread Notification owned by the provided User. A Notification
+// that is already read, deleted, or owned by someone else is left alone, which is not an error.
+func (service *Notification) MarkRead(session data.Session, userID primitive.ObjectID, notificationID primitive.ObjectID, readDate int64) error {
+
+	const location = "service.Notification.MarkRead"
+
+	// RULE: The UserID is part of the criteria, so that nobody can mark another User's Notification
+	criteria := exp.Equal("_id", notificationID).
+		AndEqual("userId", userID).
+		AndEqual("readDate", int64(math.MaxInt64)).
+		AndEqual("deleteDate", 0)
+
+	// RULE: One conditional update, never a load and a save, which would overwrite a concurrent change
+	update := bson.M{"$set": bson.M{"readDate": readDate}}
+
+	if err := queries.RawUpdate(session.Context(), service.collection(session), criteria, update); err != nil {
+		return derp.Wrap(err, location, "Marking notification read", notificationID)
+	}
+
+	// Read, receipt
 	return nil
 }
 

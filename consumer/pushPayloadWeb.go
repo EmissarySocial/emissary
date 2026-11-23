@@ -43,6 +43,8 @@ func notificationTitle(notification *model.Notification) string {
 		return actor + " disliked your post"
 	case model.NotificationTypeAnnounce:
 		return actor + " boosted your post"
+	case model.NotificationTypeQuote:
+		return actor + " quoted your post"
 	case model.NotificationTypeFollow:
 		return actor + " followed you"
 	default:

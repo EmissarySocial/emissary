@@ -154,11 +154,13 @@ func (action *Action) UnmarshalMap(data map[string]any, funcMap template.FuncMap
 
 	// Import steps
 	stepsInfo := convert.SliceOfMap(data["steps"])
-	if pipeline, err := step.NewPipeline(stepsInfo, texttemplate.FuncMap(funcMap)); err == nil {
-		action.Steps = pipeline
-	} else {
+	pipeline, err := step.NewPipeline(stepsInfo, texttemplate.FuncMap(funcMap))
+
+	if err != nil {
 		return derp.Wrap(err, location, "Reading steps", stepsInfo)
 	}
+
+	action.Steps = pipeline
 
 	// intentionally ignoring validation errors here
 	// so that we can generate more useful error messages later.

@@ -548,15 +548,6 @@ func (c *itemRemergeStore) HardDelete(exp.Expression) error { return nil }
  * Collection.RemoveItem (uses the CollectionItem store)
  ******************************************/
 
-// newCollectionServiceWith wires a Collection service whose CollectionItem service
-// is backed by the given item store.
-func newCollectionServiceWith(store *itemStore) (*Collection, itemSession) {
-	itemService := NewCollectionItem()
-	collectionService := NewCollection()
-	collectionService.collectionItemService = &itemService
-	return &collectionService, itemSession{store: store}
-}
-
 // RemoveItem deletes the matching (collection, uri) item and leaves others intact.
 func TestCollection_RemoveItem(t *testing.T) {
 
@@ -671,4 +662,14 @@ func TestCollection_ProjectResponse_EmptyURI(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "", collectionType)
 	require.True(t, collection.CollectionID.IsZero())
+}
+
+// newCollectionServiceWith wires a Collection service whose CollectionItem service
+// is backed by the given item store.
+func newCollectionServiceWith(store *itemStore) (*Collection, itemSession) {
+	itemService := NewCollectionItem()
+	collectionService := NewCollection()
+	collectionService.collectionItemService = &itemService
+	itemService.collectionService = &collectionService
+	return &collectionService, itemSession{store: store}
 }

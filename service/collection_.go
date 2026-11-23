@@ -48,11 +48,6 @@ func (service *Collection) Close() {
  * Common Data Methods
  ******************************************/
 
-// collection returns the Collection collection for the provided database session
-func (service *Collection) collection(session data.Session) data.Collection {
-	return session.Collection("Collection")
-}
-
 // Count returns the number of Collections that match the provided criteria
 func (service *Collection) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
@@ -65,11 +60,6 @@ func (service *Collection) Query(session data.Session, criteria exp.Expression, 
 	return result, err
 }
 
-// List returns an iterator containing all of the Collections that match the provided criteria
-func (service *Collection) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection(session).Iterator(notDeleted(criteria), options...)
-}
-
 // Range returns an iterator containing all of the Collections that match the provided criteria
 func (service *Collection) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Collection], error) {
 
@@ -80,6 +70,11 @@ func (service *Collection) Range(session data.Session, criteria exp.Expression, 
 	}
 
 	return RangeFunc(iter, model.NewCollection), nil
+}
+
+// List returns an iterator containing all of the Collections that match the provided criteria
+func (service *Collection) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Collection from the database
@@ -127,6 +122,11 @@ func (service *Collection) Delete(session data.Session, collection *model.Collec
 	}
 
 	return nil
+}
+
+// collection returns the Collection collection for the provided database session
+func (service *Collection) collection(session data.Session) data.Collection {
+	return session.Collection("Collection")
 }
 
 /******************************************
@@ -223,22 +223,10 @@ func (service *Collection) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// LoadByID returns the single Collection that matches the provided CollectionID and UserID
-func (service *Collection) LoadByID(session data.Session, userID primitive.ObjectID, collectionID primitive.ObjectID, collection *model.Collection) error {
-	criteria := exp.Equal("userId", userID).AndEqual("_id", collectionID)
-	return service.Load(session, criteria, collection)
-}
-
 // LoadByType returns the single Collection that matches the provided ParentID and Type
 func (service *Collection) LoadByType(session data.Session, parentID primitive.ObjectID, collectionType string, collection *model.Collection) error {
 	criteria := exp.Equal("parentId", parentID).AndEqual("collectionType", collectionType)
 	return service.Load(session, criteria, collection)
-}
-
-// RangeByUserID returns a RangeFunc that yields all Collections owned by the provided UserID
-func (service *Collection) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Collection], error) {
-	criteria := exp.Equal("userId", userID)
-	return service.Range(session, criteria)
 }
 
 // DeleteByURL marks the Collection at the provided URL as deleted, ignoring URLs that are not local
@@ -268,6 +256,12 @@ func (service *Collection) DeleteByURL(session data.Session, url string) error {
 	return nil
 }
 
+// LoadByID returns the single Collection that matches the provided CollectionID and UserID
+func (service *Collection) LoadByID(session data.Session, userID primitive.ObjectID, collectionID primitive.ObjectID, collection *model.Collection) error {
+	criteria := exp.Equal("userId", userID).AndEqual("_id", collectionID)
+	return service.Load(session, criteria, collection)
+}
+
 // DeleteByUserID deletes all CollectionItems owned by the provided UserID
 func (service *Collection) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
 
@@ -291,6 +285,12 @@ func (service *Collection) DeleteByUserID(session data.Session, userID primitive
 	return nil
 }
 
+// RangeByUserID returns a RangeFunc that yields all Collections owned by the provided UserID
+func (service *Collection) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Collection], error) {
+	criteria := exp.Equal("userId", userID)
+	return service.Range(session, criteria)
+}
+
 /******************************************
  * Data Getters
  ******************************************/
@@ -304,20 +304,6 @@ func (service *Collection) ActivityPubURL(userID primitive.ObjectID, collectionI
  * Other Methods
  ******************************************/
 
-// LoadOrCreateByStream retrieves a Stream's Collection of the provided type, creating it if it does not exist
-func (service *Collection) LoadOrCreateByStream(session data.Session, stream *model.Stream, collectionType string) (model.Collection, error) {
-
-	return service.loadOrCreateByParent(
-		session,
-		stream.AttributedTo.UserID,
-		model.CollectionParentTypeStream,
-		stream.StreamID,
-		collectionType,
-		sliceof.String{vocab.NamespacePublic},
-		sliceof.String{vocab.NamespacePublic},
-	)
-}
-
 // LoadOrCreateByUser retrieves a User's Collection of the provided type, creating it if it does not exist
 func (service *Collection) LoadOrCreateByUser(session data.Session, user *model.User, collectionType string) (model.Collection, error) {
 
@@ -330,84 +316,6 @@ func (service *Collection) LoadOrCreateByUser(session data.Session, user *model.
 		sliceof.String{vocab.NamespacePublic},
 		sliceof.String{vocab.NamespacePublic},
 	)
-}
-
-// loadOrCreateByParent returns the Collection for the given (parentID, collectionType), creating it
-// just-in-time on first use. The read/write permission lists are applied ONLY when the collection is
-// created; an existing collection keeps its own. Callers should use the LoadOrCreateByUser /
-// LoadOrCreateByStream wrappers rather than calling this directly.
-func (service *Collection) loadOrCreateByParent(session data.Session, userID primitive.ObjectID, parentType string, parentID primitive.ObjectID, collectionType string, read sliceof.String, write sliceof.String) (model.Collection, error) {
-
-	const location = "service.Collection.loadOrCreateByParent"
-
-	// Concurrency-safe: when two callers race to create the same collection, the unique index on
-	// (parentId, collectionType) rejects the loser's insert and that caller re-loads the winner.
-	// See queries/sync/collection.go for the index, and COLLECTIONS-REDESIGN.md (D2).
-	collection := model.NewCollection()
-
-	// Fast path: the collection almost always already exists
-	if err := service.LoadByType(session, parentID, collectionType, &collection); err != nil {
-
-		// Anything other than NotFound is a real failure; a NotFound falls through to create one
-		if !derp.IsNotFound(err) {
-			return collection, derp.Wrap(err, location, "Loading Collection", parentType, parentID, collectionType)
-		}
-	} else {
-		return collection, nil
-	}
-
-	// Slow path: no collection yet, so try to create one
-	collection.UserID = userID
-	collection.ParentType = parentType
-	collection.ParentID = parentID
-	collection.CollectionType = collectionType
-	collection.Read = read
-	collection.Write = write
-
-	if err := service.Save(session, &collection, ""); err != nil {
-
-		// A lost creation race trips the unique index, which data-mongo reports as a Conflict.
-		// Re-load the winner's record, which is now guaranteed to exist.
-		if derp.IsConflict(err) {
-
-			if err := service.LoadByType(session, parentID, collectionType, &collection); err != nil {
-				return collection, derp.Wrap(err, location, "Re-loading Collection after duplicate-key conflict", parentType, parentID, collectionType)
-			}
-
-			return collection, nil
-		}
-
-		return collection, derp.Wrap(err, location, "Creating Collection", parentType, parentID, collectionType)
-	}
-
-	return collection, nil
-}
-
-// AddItem adds a URI to the provided Collection as a new CollectionItem
-func (service *Collection) AddItem(session data.Session, collection *model.Collection, itemURI string, inReplyTo string) error {
-
-	const location = "service.Collection.AddItem"
-
-	// Create a new CollectionItem record
-	collectionItem := model.NewCollectionItem()
-	collectionItem.CollectionID = collection.CollectionID
-	collectionItem.UserID = collection.UserID
-	collectionItem.ParentID = collection.ParentID
-	collectionItem.CollectionType = collection.CollectionType
-	collectionItem.URI = itemURI
-
-	// Save the CollectionItem to the database
-	if err := service.collectionItemService.SaveUnique(session, &collectionItem, ""); err != nil {
-		return derp.Wrap(err, location, "Saving collection item", collectionItem)
-	}
-
-	// Keep the W3C-required `totalItems` accurate (D9).
-	if err := service.refreshTotalItems(session, collection); err != nil {
-		return derp.Wrap(err, location, "Refreshing collection totalItems", collection.CollectionID.Hex())
-	}
-
-	// Success
-	return nil
 }
 
 // ProjectResponse adds or removes itemURI in the given Stream's Like/Dislike/Share collection, and
@@ -471,6 +379,47 @@ func (service *Collection) ProjectResponse(session data.Session, stream *model.S
 	return collection, collectionType, nil
 }
 
+// LoadOrCreateByStream retrieves a Stream's Collection of the provided type, creating it if it does not exist
+func (service *Collection) LoadOrCreateByStream(session data.Session, stream *model.Stream, collectionType string) (model.Collection, error) {
+
+	return service.loadOrCreateByParent(
+		session,
+		stream.AttributedTo.UserID,
+		model.CollectionParentTypeStream,
+		stream.StreamID,
+		collectionType,
+		sliceof.String{vocab.NamespacePublic},
+		sliceof.String{vocab.NamespacePublic},
+	)
+}
+
+// AddItem adds a URI to the provided Collection as a new CollectionItem
+func (service *Collection) AddItem(session data.Session, collection *model.Collection, itemURI string, inReplyTo string) error {
+
+	const location = "service.Collection.AddItem"
+
+	// Create a new CollectionItem record
+	collectionItem := model.NewCollectionItem()
+	collectionItem.CollectionID = collection.CollectionID
+	collectionItem.UserID = collection.UserID
+	collectionItem.ParentID = collection.ParentID
+	collectionItem.CollectionType = collection.CollectionType
+	collectionItem.URI = itemURI
+
+	// Save the CollectionItem to the database
+	if err := service.collectionItemService.SaveUnique(session, &collectionItem, ""); err != nil {
+		return derp.Wrap(err, location, "Saving collection item", collectionItem)
+	}
+
+	// Keep the W3C-required `totalItems` accurate (D9).
+	if err := service.refreshTotalItems(session, collection); err != nil {
+		return derp.Wrap(err, location, "Refreshing collection totalItems", collection.CollectionID.Hex())
+	}
+
+	// Success
+	return nil
+}
+
 // RemoveItem removes the CollectionItem identified by itemURI from the provided Collection.
 // It is a no-op when no such item exists.
 func (service *Collection) RemoveItem(session data.Session, collection *model.Collection, itemURI string) error {
@@ -489,22 +438,99 @@ func (service *Collection) RemoveItem(session data.Session, collection *model.Co
 		return derp.Wrap(err, location, "Loading CollectionItem", "uri: "+itemURI)
 	}
 
+	// Delete the item, which also refreshes the stored `totalItems` (D9)
 	if err := service.collectionItemService.Delete(session, &collectionItem, ""); err != nil {
 		return derp.Wrap(err, location, "Deleting CollectionItem", collectionItem)
 	}
 
-	// Keep the W3C-required `totalItems` accurate (D9).
-	if err := service.refreshTotalItems(session, collection); err != nil {
-		return derp.Wrap(err, location, "Refreshing collection totalItems", collection.CollectionID.Hex())
+	// Recount, so that a caller holding this pointer sees the fresh `totalItems` too
+	count, err := service.CountItems(session, collection)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Counting CollectionItems", collection.CollectionID.Hex())
 	}
 
+	collection.TotalItems = int(count)
 	return nil
 }
 
-// CountItems returns the number of (live) CollectionItems in the provided Collection.
-func (service *Collection) CountItems(session data.Session, collection *model.Collection) (int64, error) {
-	// CountByCollection filters on parentId, which items inherit from collection.ParentID (NOT UserID) via AddItem.
-	return service.collectionItemService.CountByCollection(session, collection.ParentID, collection.CollectionID, exp.All())
+// loadOrCreateByParent returns the Collection for the given (parentID, collectionType), creating it
+// just-in-time on first use. The read/write permission lists are applied ONLY when the collection is
+// created; an existing collection keeps its own. Callers should use the LoadOrCreateByUser /
+// LoadOrCreateByStream wrappers rather than calling this directly.
+func (service *Collection) loadOrCreateByParent(session data.Session, userID primitive.ObjectID, parentType string, parentID primitive.ObjectID, collectionType string, read sliceof.String, write sliceof.String) (model.Collection, error) {
+
+	const location = "service.Collection.loadOrCreateByParent"
+
+	// Concurrency-safe: when two callers race to create the same collection, the unique index on
+	// (parentId, collectionType) rejects the loser's insert and that caller re-loads the winner.
+	// See queries/sync/collection.go for the index, and COLLECTIONS-REDESIGN.md (D2).
+	collection := model.NewCollection()
+
+	err := service.LoadByType(session, parentID, collectionType, &collection)
+
+	// Fast path: the collection almost always already exists
+	if err == nil {
+		return collection, nil
+	}
+
+	// Anything other than NotFound is a real failure; a NotFound falls through to create one
+	if !derp.IsNotFound(err) {
+		return collection, derp.Wrap(err, location, "Loading Collection", parentType, parentID, collectionType)
+	}
+
+	// Slow path: no collection yet, so try to create one
+	collection.UserID = userID
+	collection.ParentType = parentType
+	collection.ParentID = parentID
+	collection.CollectionType = collectionType
+	collection.Read = read
+	collection.Write = write
+
+	if err := service.Save(session, &collection, ""); err != nil {
+
+		// A lost creation race trips the unique index, which data-mongo reports as a Conflict.
+		// Re-load the winner's record, which is now guaranteed to exist.
+		if derp.IsConflict(err) {
+
+			if err := service.LoadByType(session, parentID, collectionType, &collection); err != nil {
+				return collection, derp.Wrap(err, location, "Re-loading Collection after duplicate-key conflict", parentType, parentID, collectionType)
+			}
+
+			return collection, nil
+		}
+
+		return collection, derp.Wrap(err, location, "Creating Collection", parentType, parentID, collectionType)
+	}
+
+	return collection, nil
+}
+
+// RefreshTotalItems recomputes and saves `totalItems` for the Collection with the provided ID.
+// It does nothing when that Collection no longer exists.
+func (service *Collection) RefreshTotalItems(session data.Session, collectionID primitive.ObjectID) error {
+
+	const location = "service.Collection.RefreshTotalItems"
+
+	// Load the Collection
+	collection := model.NewCollection()
+
+	if err := service.Load(session, exp.Equal("_id", collectionID), &collection); err != nil {
+
+		// A Collection that is gone has no total to refresh
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading Collection", collectionID)
+	}
+
+	// Recount it
+	if err := service.refreshTotalItems(session, &collection); err != nil {
+		return derp.Wrap(err, location, "Refreshing totalItems", collectionID)
+	}
+
+	return nil
 }
 
 // refreshTotalItems recomputes the Collection's `totalItems` from the live CollectionItem rows and
@@ -529,4 +555,10 @@ func (service *Collection) refreshTotalItems(session data.Session, collection *m
 	}
 
 	return nil
+}
+
+// CountItems returns the number of (live) CollectionItems in the provided Collection.
+func (service *Collection) CountItems(session data.Session, collection *model.Collection) (int64, error) {
+	// CountByCollection filters on parentId, which items inherit from collection.ParentID (NOT UserID) via AddItem.
+	return service.collectionItemService.CountByCollection(session, collection.ParentID, collection.CollectionID, exp.All())
 }
