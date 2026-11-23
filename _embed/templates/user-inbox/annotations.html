@@ -18,18 +18,9 @@
 	<!-- Main App Content -->
 	<div class="app-content padding-top">
 
-		<h1 class="text-xl bold margin-top-none margin-bottom">
-			{{- if $isMobile -}}
-				<a href="/@me/newsfeed/mobile">{{icon "back"}}</a>
-			{{- else -}}
-				{{iconFilled "bookmark"}}
-			{{- end }}
-			Notes
-		</h1>
-
-		<div role="tablist" class="pills margin-bottom-lg">
-			<a role="tab" href="/@me/newsfeed/annotations" class="turboclick" aria-selected="{{$isAll}}">All</a>
-			<a role="tab" href="/@me/newsfeed/annotations?type=actor" class="turboclick" aria-selected="{{$isActors}}">{{icon "person"}} Actors</a>
+		<div role="tablist" class="pills margin-bottom-lg margin-horizontal-auto">
+			<a role="tab" href="/@me/newsfeed/annotations" class="turboclick" aria-selected="{{$isAll}}">{{icon "bookmark"}} All</a>
+			<a role="tab" href="/@me/newsfeed/annotations?type=actor" class="turboclick" aria-selected="{{$isActors}}">{{icon "person"}} People</a>
 			<a role="tab" href="/@me/newsfeed/annotations?type=document" class="turboclick" aria-selected="{{$isDocuments}}">{{icon "file"}} Posts</a>
 		</div>
 
@@ -39,7 +30,6 @@
 			hx-target="this"
 			hx-swap="outerHTML"
 			hx-push-url="false">
-			<div><span class="spin">{{icon "loading"}}</span> Loading Notes...</div>
 		</div>
 
 	</div>

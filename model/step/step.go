@@ -241,6 +241,9 @@ func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 	case "startup-complete":
 		return NewStartupComplete(stepInfo)
 
+	case "startup-create-groups":
+		return NewStartupCreateGroups(stepInfo)
+
 	case "startup-create-streams":
 		return NewStartupCreateStreams(stepInfo)
 

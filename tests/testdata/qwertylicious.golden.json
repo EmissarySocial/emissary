@@ -343,53 +343,6 @@
 				}
 			}
 		},
-		"template:admin-domain/defaults@theme=minimal/0:as-modal.SubSteps/1:edit": {
-			"fields": [
-				"defaultAnonymous (text, schema.String)",
-				"defaultAuthenticated (text, schema.String)",
-				"defaultOwner (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"defaultAnonymous": "string",
-						"defaultAuthenticated": "string",
-						"defaultOwner": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"defaultAnonymous": "string",
-						"defaultAuthenticated": "string",
-						"defaultOwner": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"defaultAnonymous": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"defaultAuthenticated": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"defaultOwner": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
-					},
-					"types": {
-						"defaultAnonymous": "string",
-						"defaultAuthenticated": "string",
-						"defaultOwner": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"defaultAnonymous": "string Sample defaultAnonymous",
-						"defaultAuthenticated": "string Sample defaultAuthenticated",
-						"defaultOwner": "string Sample defaultOwner"
-					},
-					"types": {
-						"defaultAnonymous": "string",
-						"defaultAuthenticated": "string",
-						"defaultOwner": "string"
-					}
-				}
-			}
-		},
 		"template:admin-domain/defaults@theme=qwerty-theme/0:as-modal.SubSteps/1:edit": {
 			"fields": [
 				"defaultAnonymous (text, schema.String)",
@@ -494,91 +447,6 @@
 				}
 			}
 		},
-		"template:admin-domain/index@theme=minimal/1:edit": {
-			"fields": [
-				"description (textarea, schema.String)",
-				"iconUrl (upload, schema.String)",
-				"imageUrl (upload, schema.String)",
-				"label (text, schema.String)",
-				"themeData.footer (textarea, schema.String)",
-				"themeData.header (textarea, schema.String)",
-				"themeData.showNavigation (toggle, schema.Boolean)",
-				"themeData.showSignup (toggle, schema.Boolean)",
-				"themeData.stylesheet (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"description": "string",
-						"iconUrl": "string",
-						"imageUrl": "string",
-						"label": "string",
-						"themeData.footer": "unreadable",
-						"themeData.header": "unreadable",
-						"themeData.showNavigation": "unreadable",
-						"themeData.showSignup": "unreadable",
-						"themeData.stylesheet": "unreadable"
-					}
-				},
-				"empty": {
-					"types": {
-						"description": "string",
-						"iconUrl": "string",
-						"imageUrl": "string",
-						"label": "string",
-						"themeData.footer": "unreadable",
-						"themeData.header": "unreadable",
-						"themeData.showNavigation": "unreadable",
-						"themeData.showSignup": "unreadable",
-						"themeData.stylesheet": "unreadable"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"description": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
-						"themeData": "removed",
-						"themeData.footer": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (32770 bytes, sha256 8a90bbc15434)",
-						"themeData.header": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (32770 bytes, sha256 8a90bbc15434)",
-						"themeData.stylesheet": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (1048578 bytes, sha256 0ac4d76d7883)"
-					},
-					"types": {
-						"description": "string",
-						"iconUrl": "string",
-						"imageUrl": "string",
-						"label": "string",
-						"themeData.footer": "string",
-						"themeData.header": "string",
-						"themeData.showNavigation": "unreadable",
-						"themeData.showSignup": "unreadable",
-						"themeData.stylesheet": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"description": "string Sample description",
-						"label": "string Sample label",
-						"themeData": "removed",
-						"themeData.footer": "string Sample themeData.footer",
-						"themeData.header": "string Sample themeData.header",
-						"themeData.showNavigation": "bool true",
-						"themeData.showSignup": "bool true",
-						"themeData.stylesheet": "string Sample themeData.stylesheet"
-					},
-					"types": {
-						"description": "string",
-						"iconUrl": "string",
-						"imageUrl": "string",
-						"label": "string",
-						"themeData.footer": "string",
-						"themeData.header": "string",
-						"themeData.showNavigation": "bool",
-						"themeData.showSignup": "bool",
-						"themeData.stylesheet": "string"
-					}
-				}
-			}
-		},
 		"template:admin-domain/index@theme=qwerty-theme/1:edit": {
 			"fields": [
 				"description (textarea, schema.String)",
@@ -643,17 +511,6 @@
 			}
 		},
 		"template:admin-following/create@theme=default/0:with-follower.SubSteps@with-follower/0:as-modal.SubSteps/0:edit": {
-			"fields": [
-				"url (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {},
-				"empty": {},
-				"hostile": {},
-				"typical": {}
-			}
-		},
-		"template:admin-following/create@theme=minimal/0:with-follower.SubSteps@with-follower/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"url (text, not in schema)"
 			],
@@ -914,7 +771,7 @@
 				}
 			}
 		},
-		"template:admin-sso/index@theme=minimal/1:edit": {
+		"template:admin-sso/index@theme=qwerty-theme/1:edit": {
 			"fields": [
 				"data.sso_active (toggle, schema.String)",
 				"data.sso_secret (text, schema.String)"
@@ -956,44 +813,122 @@
 				}
 			}
 		},
-		"template:admin-sso/index@theme=qwerty-theme/1:edit": {
+		"template:admin-startup/domain@theme=default/0:as-modal.SubSteps/1:edit": {
 			"fields": [
-				"data.sso_active (toggle, schema.String)",
-				"data.sso_secret (text, schema.String)"
+				"description (textarea, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"imageUrl (upload, schema.String)",
+				"label (text, schema.String)",
+				"themeData.stylesheet (textarea, schema.String)"
 			],
 			"scenarios": {
 				"absent": {
 					"types": {
-						"data.sso_active": "unreadable",
-						"data.sso_secret": "unreadable"
+						"description": "string",
+						"iconUrl": "string",
+						"imageUrl": "string",
+						"label": "string",
+						"themeData.stylesheet": "unreadable"
 					}
 				},
 				"empty": {
 					"types": {
-						"data.sso_active": "unreadable",
-						"data.sso_secret": "unreadable"
+						"description": "string",
+						"iconUrl": "string",
+						"imageUrl": "string",
+						"label": "string",
+						"themeData.stylesheet": "unreadable"
 					}
 				},
 				"hostile": {
 					"changes": {
-						"data": "removed",
-						"data.sso_active": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)",
-						"data.sso_secret": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (4098 bytes, sha256 a8568b2f6578)"
+						"description": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
-						"data.sso_active": "string",
-						"data.sso_secret": "string"
+						"description": "string",
+						"iconUrl": "string",
+						"imageUrl": "string",
+						"label": "string",
+						"themeData.stylesheet": "unreadable"
 					}
 				},
 				"typical": {
 					"changes": {
-						"data": "removed",
-						"data.sso_active": "string true",
-						"data.sso_secret": "string Sample data.sso_secret"
+						"description": "string Sample description",
+						"label": "string Sample label",
+						"themeData": "removed",
+						"themeData.stylesheet": "string body { color: #336699; }\n"
 					},
 					"types": {
-						"data.sso_active": "string",
-						"data.sso_secret": "string"
+						"description": "string",
+						"iconUrl": "string",
+						"imageUrl": "string",
+						"label": "string",
+						"themeData.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:admin-startup/domain@theme=qwerty-theme/0:as-modal.SubSteps/1:edit": {
+			"fields": [
+				"description (textarea, schema.String)",
+				"iconUrl (upload, schema.String)",
+				"imageUrl (upload, schema.String)",
+				"label (text, schema.String)",
+				"themeData.colorway (select, schema.String)",
+				"themeData.navigation (select, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"description": "string",
+						"iconUrl": "string",
+						"imageUrl": "string",
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
+					}
+				},
+				"empty": {
+					"types": {
+						"description": "string",
+						"iconUrl": "string",
+						"imageUrl": "string",
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"description": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"description": "string",
+						"iconUrl": "string",
+						"imageUrl": "string",
+						"label": "string",
+						"themeData.colorway": "unreadable",
+						"themeData.navigation": "unreadable"
+					}
+				},
+				"typical": {
+					"changes": {
+						"description": "string Sample description",
+						"label": "string Sample label",
+						"themeData": "removed",
+						"themeData.colorway": "string stone",
+						"themeData.navigation": "string always"
+					},
+					"types": {
+						"description": "string",
+						"iconUrl": "string",
+						"imageUrl": "string",
+						"label": "string",
+						"themeData.colorway": "string",
+						"themeData.navigation": "string"
 					}
 				}
 			}
@@ -10007,22 +9942,21 @@
 	},
 	"inventory": {
 		"template:admin-connections/edit@theme=default/0:edit-connection": "not pinned: provider forms are defined in Go, not in templates",
-		"template:admin-connections/edit@theme=minimal/0:edit-connection": "not pinned: provider forms are defined in Go, not in templates",
 		"template:admin-connections/edit@theme=qwerty-theme/0:edit-connection": "not pinned: provider forms are defined in Go, not in templates",
 		"template:admin-domain/delete-icon@theme=default/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
-		"template:admin-domain/delete-icon@theme=minimal/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:admin-domain/delete-icon@theme=qwerty-theme/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:admin-domain/delete-image@theme=default/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
-		"template:admin-domain/delete-image@theme=minimal/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:admin-domain/delete-image@theme=qwerty-theme/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:admin-domain/index@theme=default/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:admin-domain/index@theme=default/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:admin-domain/index@theme=minimal/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:admin-domain/index@theme=minimal/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:admin-domain/index@theme=qwerty-theme/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:admin-domain/index@theme=qwerty-theme/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:admin-navigation/add/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:admin-navigation/sort/0:sort": "not pinned: POST keys are database record IDs",
+		"template:admin-startup/domain@theme=default/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:admin-startup/domain@theme=default/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:admin-startup/domain@theme=qwerty-theme/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:admin-startup/domain@theme=qwerty-theme/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:admin-tags/delete-image/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:admin-tags/edit/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:article-base/add-child/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",

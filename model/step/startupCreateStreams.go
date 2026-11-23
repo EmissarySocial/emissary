@@ -4,13 +4,8 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// StartupCreateStreams is a Step that seeds an empty Domain with the Streams that its
-// Theme defines in "startupStreams".  It is the pipeline equivalent of work that the
-// startup wizard used to perform in hard-coded handler logic.
-//
-// The Step takes no configuration: which Streams to create is a runtime choice, made by the
-// user through the repeated "tokens" field of the form POST, and bounded by the Theme's own
-// list.  See /build/step_StartupCreateStreams.go.
+// StartupCreateStreams is a Step that seeds an empty Domain with the Streams that its Theme
+// defines in "startupStreams", and sets the landing pages in "startupDefaultPages".
 type StartupCreateStreams struct{}
 
 // NewStartupCreateStreams returns a fully initialized StartupCreateStreams object

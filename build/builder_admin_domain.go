@@ -200,7 +200,7 @@ func (w Domain) StartupTasks() sliceof.String {
 // PropertyForm returns the custom property form for this Domain,
 // defined by the Theme that it uses.
 func (w Domain) PropertyForm() form.Element {
-	return w.Theme(w.ThemeID()).Form
+	return w.Theme(w.ThemeID()).PropertyForm(w._template.TemplateID)
 }
 
 /******************************************

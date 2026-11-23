@@ -7,12 +7,6 @@
 	containedBy:["admin"]
 	label: "Startup"
 	description: "Startup Wizard for new domains. (Site Admins Only)"
-	schema: {
-		type: "object"
-		properties: {
-			themeId: {type:"string", maxLength:128}
-		}
-	}
 	actions: {
 		page: {
 			roles:["owner"]
@@ -22,14 +16,19 @@
 			]
 		}
 				
-		choose-theme: {
+		// The theme's own settings form, as admin-domain's index draws it, in a modal over the checklist
+		domain: {
 			roles:["owner"]
 			steps:[
 				{do:"as-modal", steps:[
 					{do:"view-html"}
-					{do:"set-data", from-url:["themeId"]}
+					{do:"edit"}
+					{do:"upload-attachments", fieldname:"iconUrl", attachment-path:"iconId", category:"Icon", maximum:1, accept-type:"image/*", rules:{types:["webp"]}}
+					{do:"upload-attachments", fieldname:"imageUrl", attachment-path:"imageId", category:"Image", maximum:1, accept-type:"image/*", rules:{types:["webp"]}}
 					{do:"save"}
+					{do:"startup-save-task", value:"/admin/domain"}
 				]}
+				{do:"refresh-page"}
 			]
 		}
 
@@ -40,6 +39,18 @@
 					{do:"view-html"}
 					{do:"startup-create-streams"}
 					{do:"startup-save-task", value:"/startup/content"}					
+				]}
+				{do:"refresh-page"}
+			]
+		}
+
+		groups: {
+			roles:["owner"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"startup-create-groups"}
+					{do:"startup-save-task", value:"/admin/groups"}
 				]}
 				{do:"refresh-page"}
 			]

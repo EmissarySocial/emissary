@@ -4,7 +4,7 @@
 	isVisible:true
 	category: General
 	label: Emissary Default
-	description: Clean, general purpose theme for content-focused websites.
+	description: Emissary's default theme is simple and minimal. It features a top-navigation bar that holds three to six menu items, and includes both light and dark color modes.
 	rank: 0
 	schema: {
 		type: "object",
@@ -36,7 +36,7 @@
 				label: Images
 				children: [
 					{type: "upload", label: "Icon", path: "iconUrl", description: "Icon for this website. Must be square. Often cropped to be a circle.", options:{accept:"image/*", delete:"/admin/domain/delete-icon"}, rules:{types:["webp"]}}
-					{type: "upload", label: "Image", path: "imageUrl", description: "Image to display on signin pages and emails. Roughly 16:9 works best.", options:{accept:"image/*", delete:"/admin/domain/delete-image"}, rules:{types:["webp"]}}
+					{type: "upload", label: "Image", path: "imageUrl", description: "Displays on signin pages and emails. Roughly 16:9 works best.", options:{accept:"image/*", delete:"/admin/domain/delete-image"}, rules:{types:["webp"]}}
 				]
 			}
 			{
@@ -54,12 +54,18 @@
 		}
 	}
 	startupTasks: [
-		{label:"Website Name and Logo", description:"Set some basic info about this domain.", href:"/admin/domain/index", value:"/admin/domain"}
+		{label:"Website Name, Logo and Stylesheet", description:"Set some basic info about this domain.", href:"/admin/domain/index", value:"/admin/domain"}
 		{label:"Blocklist Rules", description:"Create rules to filter content from the Internet.", href:"/admin/rules", value:"/admin/rules"}
 		{label:"Registration Form (Optional)", description:"Enable users to register on this website.", href:"/admin/domain/signup", value:"/admin/domain/signup"}
-		{label:"Configure Groups (Optional)", description:"Set up user groups to manage access and permissions.", href:"/admin/groups", value:"/admin/groups"}
+		{label:"Configure Groups (Optional)", description:"Set up user groups to manage access and permissions.", href:"/startup/groups", value:"/admin/groups"}
 		{label:"Add Default Content", description:"Sample content pages help you understand how Emissary works.", href:"/startup/content", value:"/startup/content"}
+		{label:"Start Pages (Optional)", description:"Choose where visitors, members, and owners land.", href:"/admin/domain/defaults", value:"/admin/domain/defaults"}
 	]
+	startupDefaultPages: {
+		anonymous: "/home"
+		authenticated: "/@me/newsfeed"
+		owner: "/admin"
+	}
 	startupStreams: [
 		{templateId:"article-editorjs", token:"home", label:"Welcome!", rank:1}
 		{templateId:"article-markdown", token:"join-the-team", label:"Join the Team", rank:3}

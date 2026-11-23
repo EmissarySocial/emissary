@@ -45,7 +45,7 @@ func (adapter GeocodeNetwork) ManualConfig() form.Form {
 			Children: []form.Element{
 				{
 					Type:        "html",
-					Description: "Configure this service to look up map coordinates using clients' IP addresses. <a href='https://emissary.social/geocode-network' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
+					Description: "Network geocoders look up approximate map coordinates for a clients' IP addresses, and are used to provide a local starting point for each visitor's maps. <a href='https://emissary.social/geocode-network' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
 				},
 				{
 					Type:    "hidden",
