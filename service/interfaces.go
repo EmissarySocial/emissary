@@ -10,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/digital-dome/dome"
+	"github.com/benpate/floodgate"
 	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,6 +24,10 @@ type ServerFactory interface {
 	ByHostname(hostname string) (*Factory, error)
 	Email() *ServerEmail
 	ClientIP(request *http.Request) string
+
+	// Hostname returns the public hostname that a request was sent to, reading a forwarding
+	// header only when the server's configuration trusts the proxy in front of it
+	Hostname(request *http.Request) string
 	DigitalDome() *dome.Dome
 
 	// Carpool returns the process-wide Carpool that merges concurrent ActivityStream Loads.  It
@@ -39,6 +44,12 @@ type ServerFactory interface {
 	// getter on every use -- never capture the value -- because a config reload can reconnect the
 	// database, and a captured handle then fails every call with "client is disconnected".
 	CommonDatabase() *mongo.Database
+
+	// Floodgate returns the circuit breaker for outbound deliveries, shared by every domain
+	Floodgate() floodgate.Gate
+
+	// ReviveHost tells Floodgate that the host of an Actor URL has just sent a request that passed validation
+	ReviveHost(actorURL string)
 }
 
 // DomainFactory is the narrow slice of a domain Factory that cross-domain tools (like the

@@ -81,7 +81,7 @@ func TestOutboxMessage_GetJSONLD(t *testing.T) {
 	require.Equal(t, vocab.ActivityTypeCreate, result.GetString(vocab.PropertyType))
 	require.Equal(t, "https://x.social/123", result.GetString(vocab.PropertyObject))
 	require.Equal(t, message.ActivityPubURL(), result.GetString(vocab.PropertyID))
-	require.Equal(t, []string{vocab.NamespacePublic}, result[vocab.PropertyTo])
+	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, result[vocab.PropertyTo])
 }
 
 // TestOutboxMessage_GetJSONLD_NoActor verifies that a message with no Actor renders no `id` at all,

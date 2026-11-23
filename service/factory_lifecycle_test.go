@@ -8,6 +8,7 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
+	"github.com/benpate/floodgate"
 	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/turbine/queue"
 	"github.com/stretchr/testify/require"
@@ -44,6 +45,11 @@ func (factory *lifecycleServerFactory) ClientIP(_ *http.Request) string {
 	return ""
 }
 
+// Hostname implements the ServerFactory interface, and answers with the request's own Host
+func (factory *lifecycleServerFactory) Hostname(request *http.Request) string {
+	return request.Host
+}
+
 // DigitalDome implements the ServerFactory interface. Unused by these tests.
 func (factory *lifecycleServerFactory) DigitalDome() *dome.Dome {
 	return nil
@@ -63,6 +69,14 @@ func (factory *lifecycleServerFactory) Queue() *queue.Queue {
 func (factory *lifecycleServerFactory) CommonDatabase() *mongo.Database {
 	return factory.database
 }
+
+// Floodgate implements the ServerFactory interface, returning a Gate with no records
+func (factory *lifecycleServerFactory) Floodgate() floodgate.Gate {
+	return floodgate.New(floodgate.NewMemoryStore())
+}
+
+// ReviveHost implements the ServerFactory interface, and does nothing
+func (factory *lifecycleServerFactory) ReviveHost(string) {}
 
 // lazyLifecycleDatabase returns a *mongo.Database whose client never contacts a server
 // (mongo.Connect is lazy), so these tests run without a reachable Mongo.

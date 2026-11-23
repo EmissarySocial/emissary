@@ -4,7 +4,9 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -200,4 +202,55 @@ func TestStream_ValidateToken_ErrorsAreNotAvailability(t *testing.T) {
 	err = service.ValidateToken(session, primitive.NilObjectID, "something-new")
 	require.Error(t, err)
 	require.Equal(t, 500, derp.ErrorCode(err))
+}
+
+// TestStream_Save_ErrorsNameOnlyTheStreamID confirms that every error Save returns names the Stream by
+// its ID, and never carries the record, whose author holds an email address
+func TestStream_Save_ErrorsNameOnlyTheStreamID(t *testing.T) {
+
+	const email = "sarah@connor.mil"
+	service := newDefaultChildService()
+
+	// newStream returns a collection Stream whose author has an email address
+	newStream := func() model.Stream {
+		stream := model.NewStream()
+		stream.TemplateID = "test-collection"
+		stream.Rank = 1
+		stream.AttributedTo = model.PersonLink{Name: "Sarah Connor", EmailAddress: email}
+		return stream
+	}
+
+	// requireOnlyTheStreamID fails unless the error names the Stream's ID, and not its author
+	requireOnlyTheStreamID := func(t *testing.T, err error, stream model.Stream) {
+		t.Helper()
+		require.Error(t, err)
+		secretcheck.RequireAbsent(t, err, email)
+
+		forms, findErr := secretcheck.Find(err, "StreamID: "+stream.StreamID.Hex())
+		require.NoError(t, findErr)
+		require.NotEmpty(t, forms, "the error must name the Stream")
+	}
+
+	t.Run("no template", func(t *testing.T) {
+		stream := newStream()
+		stream.TemplateID = ""
+		err := service.Save(brokenSession{}, &stream, "test")
+		requireOnlyTheStreamID(t, err, stream)
+		require.Equal(t, 400, derp.ErrorCode(err))
+	})
+
+	t.Run("schema", func(t *testing.T) {
+		stream := newStream()
+		stream.Data = mapof.Any{"layout": "not-a-layout"}
+		err := service.Save(brokenSession{}, &stream, "test")
+		requireOnlyTheStreamID(t, err, stream)
+		require.Contains(t, derp.Message(err), "Invalid Stream")
+	})
+
+	t.Run("database", func(t *testing.T) {
+		stream := newStream()
+		err := service.Save(brokenSession{}, &stream, "test")
+		requireOnlyTheStreamID(t, err, stream)
+		require.Equal(t, "Synthetic failure", derp.Message(derp.RootCause(err)))
+	})
 }

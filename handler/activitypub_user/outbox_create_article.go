@@ -1,8 +1,6 @@
 package activitypub_user
 
 import (
-	"net/http"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -27,6 +25,5 @@ func outbox_CreateArticle(context Context, activity streams.Document) error {
 
 	// Write the response to the client: the new object's URL, and the activity's in its own header
 	context.context.Response().Header().Set("X-Activity-Id", activityURL)
-	context.context.Response().Header().Set("Location", objectURL)
-	return context.context.NoContent(http.StatusCreated)
+	return respondCreated(context, objectURL)
 }

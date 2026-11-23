@@ -1595,7 +1595,9 @@ func PostAccount_RemoveFromFollowers(serverFactory *server.Factory) func(model.A
 			}
 
 			rejectID := followerService.ActivityPubID(&follower) + "#reject"
-			factory.Outbox().SendRejectFollow(session, user.ActivityPubURL(), rejectID, accountURL)
+			if err := factory.Outbox2().SendRejectFollow(session, user.ActivityPubURL(), rejectID, accountURL); err != nil {
+				return object.Relationship{}, derp.Wrap(err, location, "Sending Reject", accountURL)
+			}
 		}
 
 		return buildRelationship(factory, session, auth, t.ID), nil

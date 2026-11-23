@@ -187,3 +187,24 @@ func TestVariantsDoNotShareValidators(t *testing.T) {
 	require.NotEmpty(t, activityPubTag)
 	require.NotEqual(t, htmlTag, activityPubTag, "the two variants of one Stream share an ETag")
 }
+
+// TestIndieAuthLinks_HeadMatchesGet covers HEAD and GET agreeing on IndieAuth discovery, with and without a primary user
+func TestIndieAuthLinks_HeadMatchesGet(t *testing.T) {
+
+	// Both methods reach advertiseIndieAuth through the one read-only branch of WithAPIFactory
+	require.True(t, isReadOnlyMethod(http.MethodGet))
+	require.True(t, isReadOnlyMethod(http.MethodHead))
+
+	for _, hasPrimaryUser := range []bool{true, false} {
+
+		get, _ := newHeadContext("")
+		get.Request().Method = http.MethodGet
+		head, _ := newHeadContext("")
+
+		advertiseIndieAuth(get.Response().Header(), "https://example.com", hasPrimaryUser)
+		advertiseIndieAuth(head.Response().Header(), "https://example.com", hasPrimaryUser)
+
+		require.Equal(t, get.Response().Header().Values("Link"), head.Response().Header().Values("Link"))
+		require.Equal(t, hasPrimaryUser, len(head.Response().Header().Values("Link")) == 1, "hasPrimaryUser: %v", hasPrimaryUser)
+	}
+}

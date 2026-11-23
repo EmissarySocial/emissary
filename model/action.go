@@ -154,11 +154,13 @@ func (action *Action) UnmarshalMap(data map[string]any, funcMap template.FuncMap
 
 	// Import steps
 	stepsInfo := convert.SliceOfMap(data["steps"])
-	if pipeline, err := step.NewPipeline(stepsInfo, texttemplate.FuncMap(funcMap)); err == nil {
-		action.Steps = pipeline
-	} else {
+	pipeline, err := step.NewPipeline(stepsInfo, texttemplate.FuncMap(funcMap))
+
+	if err != nil {
 		return derp.Wrap(err, location, "Reading steps", stepsInfo)
 	}
+
+	action.Steps = pipeline
 
 	// intentionally ignoring validation errors here
 	// so that we can generate more useful error messages later.
@@ -176,6 +178,9 @@ func unmarshalActions(actions mapof.Object[Action], data map[string]map[string]a
 
 	for actionID, actionData := range data {
 
+		// A view that names no file renders its own action's file, even when another action includes it
+		defaultViewFiles(actionData["steps"], actionID)
+
 		action := NewAction()
 
 		if err := action.UnmarshalMap(actionData, funcMap); err != nil {
@@ -187,4 +192,57 @@ func unmarshalActions(actions mapof.Object[Action], data map[string]map[string]a
 
 	// Lights, camera, actions
 	return nil
+}
+
+// defaultViewFiles names the action's own file on every view-html and view-css in its raw steps,
+// at any depth, that does not name a file already
+func defaultViewFiles(value any, actionID string) {
+
+	switch typed := value.(type) {
+
+	case map[string]any:
+
+		// RULE: A nil map holds no step, and writing into one panics
+		if typed == nil {
+			return
+		}
+
+		if needsViewFile(typed) {
+			typed["file"] = actionID
+		}
+
+		for _, item := range typed {
+			defaultViewFiles(item, actionID)
+		}
+
+	case mapof.Any:
+		defaultViewFiles(map[string]any(typed), actionID)
+
+	case []any:
+		for _, item := range typed {
+			defaultViewFiles(item, actionID)
+		}
+
+	case []map[string]any:
+		for _, item := range typed {
+			defaultViewFiles(item, actionID)
+		}
+
+	case []mapof.Any:
+		for _, item := range typed {
+			defaultViewFiles(map[string]any(item), actionID)
+		}
+	}
+}
+
+// needsViewFile returns TRUE if the raw step is a view-html or view-css that names no file
+func needsViewFile(stepInfo map[string]any) bool {
+
+	switch convert.String(stepInfo["do"]) {
+
+	case "view-html", "view-css":
+		return convert.String(stepInfo["file"]) == ""
+	}
+
+	return false
 }

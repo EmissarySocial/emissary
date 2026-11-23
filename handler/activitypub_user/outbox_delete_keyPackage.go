@@ -63,5 +63,5 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 	}
 
 	// Win.
-	return nil
+	return respondCreated(context, "")
 }

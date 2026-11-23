@@ -9,12 +9,15 @@ import (
 func OutboxItemSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"activityId": schema.String{Format: "objectId"},
-			"actorId":    schema.String{Format: "objectId"},
-			"actorType":  schema.String{Enum: []string{ActorTypeUser, ActorTypeStream, ActorTypeSearchQuery, ActorTypeSearchDomain, ActorTypeApplication}},
-			"recipients": schema.Array{Items: schema.String{}},
-			"url":        schema.String{Format: "url"},
-			"activity":   schema.Object{Wildcard: schema.Any{}},
+			"activityId":   schema.String{Format: "objectId"},
+			"actorId":      schema.String{Format: "objectId"},
+			"actorType":    schema.String{Enum: []string{ActorTypeUser, ActorTypeStream, ActorTypeSearchQuery, ActorTypeSearchDomain, ActorTypeApplication}},
+			"activityType": schema.String{},
+			"objectId":     schema.String{Format: "url"},
+			"recipients":   schema.Array{Items: schema.String{}, MaxLength: 1024}, // to, cc, bto and bcc, at 256 each
+			"permissions":  schema.Array{Items: schema.String{Format: "objectId"}, MaxLength: 256},
+			"url":          schema.String{Format: "url"},
+			"activity":     schema.Object{Wildcard: schema.Any{}},
 		},
 	}
 }
@@ -35,8 +38,17 @@ func (item *OutboxItem) GetPointer(name string) (any, bool) {
 	case "actorType":
 		return &item.ActorType, true
 
+	case "activityType":
+		return &item.ActivityType, true
+
+	case "objectId":
+		return &item.ObjectID, true
+
 	case "recipients":
 		return &item.Recipients, true
+
+	case "permissions":
+		return &item.Permissions, true
 
 	case "activity":
 		return &item.Activity, true

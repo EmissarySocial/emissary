@@ -177,3 +177,19 @@ func TestParseHTTPSignature_Unsigned(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, model.NewAnonymousPermissions(), permissions)
 }
+
+// TestParseHTTPSignatureWithActor_NoSigner verifies that a nil or unsigned request names no Actor
+func TestParseHTTPSignatureWithActor_NoSigner(t *testing.T) {
+
+	t.Parallel()
+
+	permissionService := NewPermission()
+
+	for name, request := range map[string]*http.Request{"nil": nil, "unsigned": unsignedRequest("example.com")} {
+		permissions, actorURL, err := permissionService.ParseHTTPSignatureWithActor(nil, request)
+
+		require.NoError(t, err, name)
+		require.Empty(t, actorURL, name)
+		require.Equal(t, model.NewAnonymousPermissions(), permissions, name)
+	}
+}

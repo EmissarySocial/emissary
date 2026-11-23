@@ -56,11 +56,13 @@ func NewStream(factory Factory, session data.Session, request *http.Request, res
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
 			return Stream{}, derp.Forbidden(location, "Forbidden (signed in as User)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
-		} else if common._authorization.IsIdentity() {
-			return Stream{}, derp.Forbidden(location, "Forbidden (signed in as Guest)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
-		} else {
-			return Stream{}, derp.Unauthorized(location, "Unauthorized: Anonymous user is not authorized to perform this action", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
 		}
+
+		if common._authorization.IsIdentity() {
+			return Stream{}, derp.Forbidden(location, "Forbidden (signed in as Guest)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
+		}
+
+		return Stream{}, derp.Unauthorized(location, "Unauthorized: Anonymous user is not authorized to perform this action", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
 	}
 
 	// Success.  Populate Stream
@@ -773,8 +775,12 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[stre
 	// templates can render D2 placeholders for hidden replies without a per-reply rules query.
 	result := make(sliceof.Object[streams.Document], 0, len(values))
 
+	// RULE: A cached value carries no client, and a template reads each reply's author through
+	// the reply, so every document is bound to the viewer's client before it is handed over
+	client := activityStreamsService.UserClient(w.AuthenticatedID())
+
 	for _, value := range values {
-		result = append(result, value.AsDocument())
+		result = append(result, value.AsDocument().AddOptions(streams.WithClient(client)))
 	}
 
 	w._factory.Rule().LabelDocuments(w._session, w.AuthenticatedID(), result)

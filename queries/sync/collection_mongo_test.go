@@ -126,10 +126,10 @@ func TestCollectionIndex_SyncIsIdempotent(t *testing.T) {
 	ctx := context.Background()
 
 	require.NoError(t, Collection(ctx, database))
-	before := indexCreatedAt(ctx, t, database, "idx_Collection_Parent_Type")
+	before := indexCreatedAt(ctx, t, database.Collection("Collection"), "idx_Collection_Parent_Type")
 
 	require.NoError(t, Collection(ctx, database))
-	after := indexCreatedAt(ctx, t, database, "idx_Collection_Parent_Type")
+	after := indexCreatedAt(ctx, t, database.Collection("Collection"), "idx_Collection_Parent_Type")
 
 	require.Equal(t, before, after,
 		"Sync rebuilt an unchanged index -- the declared partial filter does not round-trip through indexer.compareModel")
@@ -137,7 +137,7 @@ func TestCollectionIndex_SyncIsIdempotent(t *testing.T) {
 	// The declared filter must be what Mongo actually stored. A silently-dropped condition would
 	// leave the domain-wide conversation cap in place while the tests above still passed against
 	// a freshly-created index.
-	stored := loadIndex(ctx, t, database, "idx_Collection_Parent_Type")
+	stored := loadIndex(ctx, t, database.Collection("Collection"), "idx_Collection_Parent_Type")
 
 	require.Equal(t,
 		bson.M{"deleteDate": int32(0), "parentId": bson.M{"$exists": true}},
@@ -148,11 +148,11 @@ func TestCollectionIndex_SyncIsIdempotent(t *testing.T) {
 
 // indexCreatedAt returns the moment MongoDB began collecting stats for the named index, which
 // resets whenever the index is dropped and recreated.
-func indexCreatedAt(ctx context.Context, t *testing.T, database *mongo.Database, name string) time.Time {
+func indexCreatedAt(ctx context.Context, t *testing.T, collection *mongo.Collection, name string) time.Time {
 
 	t.Helper()
 
-	cursor, err := database.Collection("Collection").Aggregate(ctx, mongo.Pipeline{
+	cursor, err := collection.Aggregate(ctx, mongo.Pipeline{
 		bson.D{{Key: "$indexStats", Value: bson.D{}}},
 	})
 	require.NoError(t, err)
@@ -179,11 +179,11 @@ func indexCreatedAt(ctx context.Context, t *testing.T, database *mongo.Database,
 }
 
 // loadIndex returns one index's stored definition by name.
-func loadIndex(ctx context.Context, t *testing.T, database *mongo.Database, name string) bson.M {
+func loadIndex(ctx context.Context, t *testing.T, collection *mongo.Collection, name string) bson.M {
 
 	t.Helper()
 
-	cursor, err := database.Collection("Collection").Indexes().List(ctx)
+	cursor, err := collection.Indexes().List(ctx)
 	require.NoError(t, err)
 
 	var indexes []bson.M

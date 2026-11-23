@@ -1,18 +1,25 @@
-{{- /*
-	menu.html renders the notification section links (Messages & Replies, Boosts,
-	Likes, Followers) as sidebar menu items, each with a live unread count, plus a "Settings"
-	link to the notification options page (Settings > Social > Notifications — the ONE place
-	those options are managed).  Each section is its own page; the selected item comes from
-	the ?type= query param, which every section's page action bakes into the request via
-	set-query-param (default MENTION).  The dot (".") is the Notifications builder.  Rendered inside
-	sidebar.html; on mobile the same sections render as tabs in
-	header.html instead.
-*/ -}}
+<!-- Sidebar links to the six notification tabs, each with its unread count, and a link to Notification Settings. See AGENTS.md. -->
 {{- $type := first (.QueryParam "type") "MENTION" -}}
+{{- $allCount := .UnreadNotificationCount "ALL" -}}
 {{- $mentionCount := .UnreadNotificationCount "MENTION" -}}
+{{- $quoteCount := .UnreadNotificationCount "QUOTE" -}}
 {{- $announceCount := .UnreadNotificationCount "ANNOUNCE" -}}
 {{- $likeCount := .UnreadNotificationCount "LIKE" -}}
 {{- $followCount := .UnreadNotificationCount "FOLLOW" -}}
+
+<a href="/@me/notifications/all" class="turboclick menu-item ellipsis {{if eq $type `ALL`}}selected{{end}}">
+	<span>
+		{{- if eq $type "ALL" -}}
+			{{- iconFilled "bell" -}}
+		{{- else -}}
+			{{- icon "bell" -}}
+		{{- end }}
+	</span>
+	<span>All Notifications</span>
+	{{- if gt $allCount 0 -}}
+		<span class="menu-count">{{if gt $allCount 99}}99+{{else}}{{$allCount}}{{end}}</span>
+	{{- end -}}
+</a>
 
 <a href="/@me/notifications/replies" class="turboclick menu-item ellipsis {{if eq $type `MENTION`}}selected{{end}}">
 	<span>
@@ -22,9 +29,23 @@
 			{{- icon "chat" -}}
 		{{- end }}
 	</span>
-	<span>Messages &amp; Replies</span>
+	<span>Mentions</span>
 	{{- if gt $mentionCount 0 -}}
 		<span class="menu-count">{{if gt $mentionCount 99}}99+{{else}}{{$mentionCount}}{{end}}</span>
+	{{- end -}}
+</a>
+
+<a href="/@me/notifications/quotes" class="turboclick menu-item ellipsis {{if eq $type `QUOTE`}}selected{{end}}">
+	<span>
+		{{- if eq $type "QUOTE" -}}
+			{{- iconFilled "chat-quote" -}}
+		{{- else -}}
+			{{- icon "chat-quote" -}}
+		{{- end }}
+	</span>
+	<span>Quotes</span>
+	{{- if gt $quoteCount 0 -}}
+		<span class="menu-count">{{if gt $quoteCount 99}}99+{{else}}{{$quoteCount}}{{end}}</span>
 	{{- end -}}
 </a>
 
@@ -70,7 +91,7 @@
 	{{- end -}}
 </a>
 
-<div class="margin-vertical"></div>
+<div class="margin-vertical-lg"><hr></div>
 
 <a href="/@me/settings/notifications" class="turboclick menu-item ellipsis">
 	<span>{{icon "settings"}}</span>

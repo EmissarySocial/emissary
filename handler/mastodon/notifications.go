@@ -328,6 +328,9 @@ func mastodonNotificationTypesToInternal(mastodonTypes []string) []string {
 		case "reblog":
 			result = append(result, model.NotificationTypeAnnounce)
 
+		case "quote":
+			result = append(result, model.NotificationTypeQuote)
+
 		case "follow":
 			result = append(result, model.NotificationTypeFollow)
 		}
@@ -369,6 +372,7 @@ func unreadCountTypes(types []string, excludeTypes []string) []string {
 		model.NotificationTypeReply,
 		model.NotificationTypeLike,
 		model.NotificationTypeAnnounce,
+		model.NotificationTypeQuote,
 		model.NotificationTypeFollow,
 	}
 

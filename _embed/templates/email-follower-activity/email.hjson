@@ -2,7 +2,7 @@
     emailId: follower-activity
     emailRole: follower-activity
     model: Follower
-    subject: New Activity From {{.Name}}
+    subject: New Activity From {{.Actor.Name}}
     to: "{{.Email}}"
     headers: {
         "List-Unsubscribe": "{{.UnsubscribeWithBrackets}}"

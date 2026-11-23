@@ -55,7 +55,8 @@ func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBeha
 	// (RFC 9111 s4.2.2) and will reuse a transactional page for hours without ever revalidating it.
 	header.Set("Cache-Control", first.String(step.CacheControl, headers.DefaultCacheControlHTML))
 
-	// Render the named template, defaulting to the one that matches the action
+	// Render the named template. The loader names an action's own file on every view that names
+	// none, so this fallback serves only steps parsed outside an action, such as a widget's saveSteps
 	var filename string
 
 	if step.File != "" {

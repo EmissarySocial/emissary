@@ -1,9 +1,7 @@
 package service
 
 import (
-	"encoding/json"
 	"iter"
-	"maps"
 	"slices"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -12,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/outbox"
-	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -46,13 +43,18 @@ func (service *Outbox) DeleteActivity(session data.Session, actorType string, ac
 		return derp.Wrap(err, location, "Removing outbox messages", objectID)
 	}
 
+	// RULE: Remove the Outbox2 activities too, because writers move to Outbox2 one at a time
+	if err := service.outbox2Service.RemoveByObjectID(session, actorType, actorID, objectID); err != nil {
+		return derp.Wrap(err, location, "Removing Outbox2 activities", objectID)
+	}
+
 	// Build the outgoing "Delete" activity. No top-level `id` (the Outbox mints one — a Delete has
 	// no record of its own); `object.id` remains the URL of the thing being deleted. See D7.
 	document := streams.NewDocument(mapof.Any{
 		vocab.AtContext:     vocab.ContextTypeActivityStreams,
 		vocab.PropertyActor: actor.ActorID(),
 		vocab.PropertyType:  vocab.ActivityTypeDelete,
-		vocab.PropertyTo:    vocab.NamespacePublic,
+		vocab.PropertyTo:    vocab.NamespaceActivityStreamsPublic,
 		vocab.PropertyObject: mapof.Any{
 			vocab.PropertyID:   objectID,
 			vocab.PropertyType: vocab.ObjectTypeTombstone,
@@ -88,6 +90,11 @@ func (service *Outbox) UndoActivity(session data.Session, actorType string, acto
 	// Remove the outbox message(s) that published the original ACTIVITY (matched by activityUrl).
 	if err := service.removeOutboxMessagesByActivityURL(session, actorType, actorID, activityURL); err != nil {
 		return derp.Wrap(err, location, "Removing outbox messages", activityURL)
+	}
+
+	// RULE: Remove the Outbox2 activity too, because writers move to Outbox2 one at a time
+	if err := service.outbox2Service.removeByActivityURL(session, actorType, actorID, activityURL); err != nil {
+		return derp.Wrap(err, location, "Removing Outbox2 activities", activityURL)
 	}
 
 	// Build the outgoing "Undo" activity with the original activity embedded inline, so a receiver
@@ -138,88 +145,41 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 	// Rebuild the recipient set (followers + addressees by default; the override list otherwise),
 	// iterating lazily from the activity's FULL addressing. publishRecipients reads to/cc AND
 	// bto/bcc (RangeAddressees), so enumeration must see the blind fields before they are stripped.
-	document := streams.NewDocument(activity)
+	// RULE: The document needs a client. A reply is also delivered to the author of the post
+	// it answers, and that author is found by loading the post.
+	document := streams.NewDocument(activity, streams.WithClient(service.deliveryClient(actorType, actorID)))
 	recipientSeq := service.publishRecipients(session, actorType, actorID, document, config)
 
-	// RULE: Deliver the stripped payload, never the original. Blind recipients still RECEIVE the
-	// activity (enumerated above from the full addressing) but must not SEE the blind-address list.
-	payload := maps.Clone(activity)
-	delete(payload, vocab.PropertyBTo)
-	delete(payload, vocab.PropertyBCC)
-
-	// Serialize the payload once, so every ActivityPub delivery task shares the same string
-	serialized, err := json.Marshal(payload)
-
-	// RULE: An activity that cannot be serialized never will be, so this is a bad request, not a retry
-	if err != nil {
-		return derp.Wrap(err, location, "Serializing outbound activity", derp.WithBadRequest())
-	}
-
-	// The authoritative signer URL (stamped by Publish) — the delivery tasks resolve the key from it.
-	actorURL := payload.GetString(vocab.PropertyActor)
-
-	// The rules userID for the egress gate: a User actor binds their own rules; Stream and
-	// SearchQuery actorIDs are NOT UserIDs, so those actors bind the admin tier alone.
-	rulesUserID := ruleUserID(actorType, actorID)
-	isLocalhost := uri.IsLocalHostname(service.host)
-
-	// RULE: ask once, not once per Follower.  DomainEmail.Send now treats an unconfigured SMTP
-	// connection as an error, and this loop can hold thousands of Followers -- reporting one
-	// error each would flood the log on a domain that deliberately runs without email.
-	canSendEmail := service.domainEmail.IsConfigured()
-
-	if !canSendEmail {
-		log.Debug().Str("location", location).Msg("SMTP is not configured. Skipping email Followers.")
-	}
-
 	// Filter and deliver to each recipient in turn
-	for follower := range recipientSeq {
-
-		// Resolve the recipient's host from InboxURL, falling back to ProfileURL, because
-		// addressees carry only a ProfileURL and would otherwise be dropped on a localhost domain (D8).
-		recipientHost := follower.Actor.InboxURL
-		if recipientHost == "" {
-			recipientHost = follower.Actor.ProfileURL
-		}
-
-		// RULE: Only deliver to Followers on the same network as the Actor
-		// (local can send to local, public can send to public, but local cannot send to public)
-		if uri.IsLocalHostname(recipientHost) != isLocalhost {
-			continue
-		}
-
-		// RULE: Delivery to blocked recipients is halted (R4) -- BOTH methods, email included
-		if service.ruleService.DeliveryBlocked(session, rulesUserID, follower.Actor.ProfileURL) {
-			log.Trace().Msg("Follower blocked by rule: " + follower.Actor.ProfileURL)
-			continue
-		}
-
-		// RULE: Do not send to Followers who do not have permissions to view this activity
-		if !service.identityService.HasPermissions(session, follower.Method, follower.Actor.ProfileURL, permissions) {
-			log.Trace().Msg("Follower does not have permissions to view this activity: " + follower.Actor.ProfileURL)
-			continue
-		}
-
-		log.Debug().Msg("Sending notification to Follower: " + follower.Actor.ProfileURL)
-
-		// Deliver by the Follower's chosen method
-		switch follower.Method {
-
-		case model.FollowerMethodActivityPub:
-			service.deliverActivityPub(session, actorURL, &follower, string(serialized))
-
-		case model.FollowerMethodEmail:
-			if canSendEmail {
-				service.sendNotification_Email(&follower, payload)
-			}
-
-		default:
-			derp.Report(derp.Internal(location, "Unknown Follower Method.  This should never happen", follower))
-		}
+	if err := service.delivery().deliver(session, actorType, actorID, activity, permissions, recipientSeq); err != nil {
+		return derp.Wrap(err, location, "Delivering activity")
 	}
 
 	// Success!!
 	return nil
+}
+
+// deliveryClient returns the sending actor's client, which loads what an activity refers to.
+// A service built without an ActivityStream service has none, and loads nothing.
+func (service *Outbox) deliveryClient(actorType string, actorID primitive.ObjectID) streams.Client {
+
+	if service.activityService == nil {
+		return nil
+	}
+
+	return service.activityService.Client(actorType, actorID)
+}
+
+// delivery returns the follower delivery loop, wired with this service's dependencies
+func (service *Outbox) delivery() followerDelivery {
+	return followerDelivery{
+		activityService: service.activityService,
+		identityService: service.identityService,
+		ruleService:     service.ruleService,
+		domainEmail:     service.domainEmail,
+		queue:           service.queue,
+		host:            service.host,
+	}
 }
 
 // Publish saves an OutboxMessage for the activity, then queues a post-commit "Outbox-Publish"
@@ -352,13 +312,13 @@ func (service *Outbox) removeOutboxMessagesByActivityURL(session data.Session, a
 func (service *Outbox) publishRecipients(session data.Session, actorType string, actorID primitive.ObjectID, activity streams.Document, config PublishConfig) iter.Seq[model.Follower] {
 
 	addressees := joinIterators(
-		service.addresseesAsFollowers(activity.RangeAddressees()),
-		service.addresseesAsFollowers(activity.RangeInReplyTo()),
+		addresseesAsFollowers(activity.RangeAddressees()),
+		addresseesAsFollowers(activity.RangeInReplyTo()),
 	)
 
 	if config.hasRecipients {
 		return joinIterators(
-			service.addresseesAsFollowers(slices.Values(config.recipients)),
+			addresseesAsFollowers(slices.Values(config.recipients)),
 			addressees,
 		)
 	}
@@ -367,42 +327,6 @@ func (service *Outbox) publishRecipients(session data.Session, actorType string,
 		service.followerService.RangeFollowers(session, actorType, actorID),
 		addressees,
 	)
-}
-
-// deliverActivityPub queues one retryable OutboxSendToSingleRecipient task that delivers the
-// serialized activity to a single ActivityPub follower.
-func (service *Outbox) deliverActivityPub(session data.Session, actorURL string, follower *model.Follower, body string) {
-
-	const location = "service.Outbox.deliverActivityPub"
-
-	inboxURL := follower.Actor.InboxURL
-
-	if inboxURL == "" {
-		inboxURL = service.resolveInboxURL(follower.Actor.ProfileURL)
-	}
-
-	// A follower with no resolvable inbox cannot be delivered to. This matches the former
-	// behavior (actor.SendOne failed and reported) — the delivery is dropped, not retried.
-	if inboxURL == "" {
-		derp.Report(derp.Internal(location, "Unable to resolve inbox URL for follower", follower.Actor.ProfileURL))
-		return
-	}
-
-	postcommit.Publish(session, service.queue, sender.OutboxSendToSingleRecipient, mapof.Any{
-		"actor": actorURL,
-		"inbox": inboxURL,
-		"body":  body,
-	})
-}
-
-// sendNotification_Email sends an email notification of the activity to a single "email" Follower
-func (service *Outbox) sendNotification_Email(follower *model.Follower, activity mapof.Any) {
-
-	const location = "service.Outbox.sendNotification_Email"
-
-	if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
-		derp.Report(derp.Wrap(err, location, "Sending email", follower))
-	}
 }
 
 // permissionsToHex serializes a Permissions set to hex strings for queue-task storage
@@ -415,49 +339,4 @@ func permissionsToHex(permissions model.Permissions) []string {
 	}
 
 	return result
-}
-
-// addresseesAsFollowers presents a list of addressee URLs as synthetic ActivityPub Followers, so that
-// directly-addressed recipients can share the follower fan-out path
-func (service *Outbox) addresseesAsFollowers(addressees iter.Seq[string]) iter.Seq[model.Follower] {
-
-	return func(yield func(model.Follower) bool) {
-
-		uniquer := streams.NewUniquer[string]()
-
-		for addressee := range uniquer.Range(addressees) {
-			follower := model.NewFollower()
-			follower.Actor.ProfileURL = addressee
-			follower.Method = model.FollowerMethodActivityPub
-			follower.StateID = model.FollowerStateActive
-
-			if !yield(follower) {
-				return
-			}
-		}
-	}
-}
-
-// resolveInboxURL loads an Actor from its profile URL and returns its preferred inbox URL,
-// or an empty string when the Actor cannot be loaded.
-func (service *Outbox) resolveInboxURL(profileURL string) string {
-
-	const location = "service.Outbox.resolveInboxURL"
-
-	if profileURL == "" {
-		return ""
-	}
-
-	actor, err := service.activityService.AppClient().Load(profileURL)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Loading actor for inbox URL", profileURL))
-		return ""
-	}
-
-	if actor.NotActor() {
-		return ""
-	}
-
-	return actor.PreferredInbox()
 }

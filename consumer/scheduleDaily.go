@@ -33,6 +33,9 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 	// Add a "Purge Dome Log" task to the queue
 	q.NewTask("PurgeDomeLog", mapof.Any{})
 
+	// Check whether the hosts that Floodgate marked dormant have come back
+	q.NewTask(TaskProbeDormantHosts, mapof.Any{})
+
 	// Daily tasks for each domain
 	for factory := range serverFactory.RangeDomains() {
 

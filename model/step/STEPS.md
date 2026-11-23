@@ -379,7 +379,7 @@ Modal form for an **existing** object: renders on `GET`, saves on `POST`. Unlike
 
 ## edit-attachments
 
-Draws the multi-file zone that an `html-remote` form element loads, and uploads, deletes, and sorts the files in one category in place. The element is a plain loader: it draws an empty shell that fills itself from the action this step runs on, which its `url` names (`/{{.ID}}/photos` on an edit form), so the step holds the category's whole configuration, including the field name the files post under. A `create` action runs the same action inline with `include`, so the files a new object's form posts are stored under its ID.
+Draws the multi-file zone that an `html-remote` form element loads, and uploads, deletes, and sorts the files in one category in place. The element is a plain loader: it draws an empty shell that fills itself from the action this step runs on, which its `url` names (`/{{.ID}}/photos` on an edit form), so the step holds the category's whole configuration, including the field name the files post under. A `create` action runs the same action inline with `include`, on the POST alone (`method: "post"`) because the element's own request draws the zone, so the files a new object's form posts are stored under its ID.
 
 On GET it writes the zone for a saved object, the grid the theme's behavior and styles find: the tile row with the limits as `data-` attributes and the multipart encoding its uploads need, then the plus that adds one file, the hidden single-file input named by `fieldname`, and the status line. With `?readonly=true`, which the widget's read-only view sends, it writes the tiles alone with no controls and the row marked `data-readonly`, so the browser behavior leaves it be. On POST it applies one change and writes the row alone again, so the plus and the input stay in place while the row swaps. `?attachmentId=` deletes that one file, and is refused with a 400 when the ID is not one of the category's files on this object, or with an inline error when the category would fall below `minimum`. Otherwise the files posted under `fieldname` are sniffed against `accept-type`, and any `{fieldname}.order` value naming a file the signed-in User staged through this step is adopted into the category, with the stored type checked against `accept-type`. The posted and staged files are stored and adopted after the category's highest rank, and then the order values re-rank the category's files in the order posted. This is how a create form's files reach the new object: the widget stages each one as it is dropped, and the Save posts their IDs. The step never deletes more than one file, and reads the files and the order from the body alone.
 
@@ -684,13 +684,14 @@ Evaluates `condition` as a template and runs either `then` or `else`. Both branc
 
 ## include
 
-Looks up another action on the current Template and runs its pipeline inline, in the current phase.
+Looks up another action on the current Template and runs its pipeline inline, in the current phase. The included steps run on the caller's builder, so `.Action` in any file they render still names the caller. A `view-html` or `view-css` in the included action renders its own action's file unless it names another.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | action | **Required.** Name of the action to run. An unknown name halts with a `400` at request time |
+| method | `get`, `post`, or `both`. Defaults to `both`. A form's GET runs on past the form, so an include that only saves needs `post`, or it runs again when the form opens |
 
 <br>
 
@@ -829,7 +830,10 @@ Marks every unread item in the folder named by the `folderId` query parameter as
 
 ## mark-notifications-read
 
-Marks all of the current User's notifications as read.
+Marks the current User's notifications as read, on a POST. A GET does nothing. It reads two query parameters:
+
+- `notificationId` marks that one notification, and nothing else. A notification that is already read, purged, or owned by someone else is left alone.
+- `type` marks every notification in that tab (`MENTION`, `QUOTE`, `ANNOUNCE`, `LIKE`, `FOLLOW`), when no `notificationId` is given. `ALL`, or no `type`, marks every notification.
 
 **Attributes**
 
@@ -854,6 +858,7 @@ Reformats a Stream's content: converts between formats, optionally strips HTML, 
 | Attribute | Description |
 | --- | --- |
 | format | `MARKDOWN`, `EDITORJS`, or `HTML`. Any other value is a load-time error; an empty value leaves the format alone |
+| hard&#8209;wraps | A template, executed against the builder. When it gives `true`, every line break in the content becomes a `<br>`; anything else, and the default `false`, keeps standard Markdown, where a line ends with `\` or two spaces to break. Requires `format: "MARKDOWN"`; beside any other format it is a load-time error. Write `true`, or read the choice from the Stream: `"{{.Data \`hardWraps\`}}"` |
 | remove&#8209;html | Strip HTML from the source content |
 | add&#8209;links | Convert bare URLs into links |
 | add&#8209;tags | **Deprecated and ignored.** Logs a warning when the Template loads |
@@ -1875,7 +1880,7 @@ Renders a template file and serves it as a stylesheet.
 
 | Attribute | Description |
 | --- | --- |
-| file | **Required.** Name of the file in the Template directory |
+| file | Name of the file in the Template directory. Defaults to the name of the action that declares the step, even when another action reaches it through `include` |
 
 <br>
 
@@ -1918,7 +1923,7 @@ Renders one of the Template's HTML files. The workhorse of nearly every `view` a
 
 | Attribute | Description |
 | --- | --- |
-| file | **Required.** Name of the `.html` file in the Template directory |
+| file | Name of the `.html` file in the Template directory. Defaults to the name of the action that declares the step, even when another action reaches it through `include` |
 | method | `get`, `post`, or `both`. Defaults to `get` |
 | cache&#8209;control | Overrides the default `Cache-Control` policy, which lives in [/build](../../build/) beside the headers it guards |
 | as&#8209;full&#8209;page | Render the full page chrome, not just the fragment |
@@ -2061,6 +2066,35 @@ Switches to the Circle named by the request and runs `steps` against its Builder
 	steps: [
 		{do: "edit"}
 		{do: "save"}
+	]
+}
+```
+
+---
+
+## with-collection-item
+
+Switches to one CollectionItem that the signed-in User owns, and runs `steps` against its Builder. The `collectionItemId` query parameter names the item. An item owned by anyone else, or of any other collection type, is reported as not found. On `POST`, an item that is already gone is passed on empty, so that deleting it twice still succeeds.
+
+Deleting a `Quotes` item rejects that quote: it revokes the FEP-044f `QuoteAuthorization`, removes the author's QUOTE notification, and queues a `Delete` of the authorization for the quoting actor and the author's followers. No other collection type has delete side effects yet.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| type | **Required.** The one collection type this step works on, such as `Quotes` |
+| steps | **Required.** Sub-pipeline run against the CollectionItem Builder |
+
+<br>
+
+**Example**
+
+```hjson
+{
+	do: "with-collection-item"
+	type: "Quotes"
+	steps: [
+		{do: "delete", method: "post"}
 	]
 }
 ```

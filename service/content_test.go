@@ -185,3 +185,17 @@ func TestContent_Format_EditorJSSanitizesListItems(t *testing.T) {
 	require.NotRegexp(t, contentEventHandler, content.HTML)
 	require.NotRegexp(t, contentScriptURL, content.HTML)
 }
+
+// TestContent_NewHardWraps verifies that hard wraps turn a line break into a <br>, and that the record is still MARKDOWN
+func TestContent_NewHardWraps(t *testing.T) {
+
+	service := Content{}
+
+	hard := service.NewHardWraps("one\ntwo")
+	require.Equal(t, model.ContentFormatMarkdown, hard.Format)
+	require.Equal(t, "one\ntwo", hard.Raw)
+	require.Equal(t, "<p>one<br>\ntwo</p>\n", hard.HTML)
+
+	soft := service.New(model.ContentFormatMarkdown, "one\ntwo")
+	require.Equal(t, "<p>one\ntwo</p>\n", soft.HTML)
+}

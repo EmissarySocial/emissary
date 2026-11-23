@@ -30,7 +30,7 @@ func GetFollowingCollection(ctx *steranko.Context, factory *service.Factory, ses
 	// As with followers, the count is inclusive of every method: RSS/Atom/JSONFeed subscriptions
 	// (FollowingMethodPoll) count alongside ActivityPub follows, because the number answers
 	// "how many sources does this actor read."
-	return collection.ServeSummary(ctx, user.ActivityPubFollowingURL(), int64(user.FollowingCount))
+	return collection.ServeSummary(ctx.Response(), ctx.Request(), user.ActivityPubFollowingURL(), int64(user.FollowingCount))
 }
 
 // GetFollowingRecord serves a single Following record from the User's following collection

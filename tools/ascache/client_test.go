@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
+
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
@@ -76,36 +78,6 @@ func (client *countingClient) Save(streams.Document) error { return nil }
 
 // Delete satisfies streams.Client.  The origin does not store anything.
 func (client *countingClient) Delete(string) error { return nil }
-
-// newTestClient returns a cache Client backed by an in-memory database, plus the origin it fronts.
-func newTestClient() (*Client, *countingClient) {
-
-	inner := &countingClient{publicKeyPEM: "PEM-ORIGINAL", maxAge: 3600}
-	client := New(inner, nil, newFakeServer(), "Application", primitive.NilObjectID, "test.example")
-
-	return client, inner
-}
-
-// ageCachedValue rewinds all of a cached entry's timestamps, simulating the passage of time.
-// All three must move together: rewinding "Received" alone ages the entry past its cooldown while
-// leaving it un-expired, which is a state the cache itself can never produce.
-func ageCachedValue(t *testing.T, client *Client, url string, age time.Duration) {
-
-	t.Helper()
-
-	session, err := client.commonDatabase.Session(context.Background())
-	require.NoError(t, err)
-
-	value := NewValue()
-	require.NoError(t, client.loadByURL(session, url, &value))
-
-	seconds := int64(age.Seconds())
-	value.Received = value.Received - seconds
-	value.Expires = value.Expires - seconds
-	value.Revalidates = value.Revalidates - seconds
-
-	require.NoError(t, client.collection(session).Save(&value, "aging for test"))
-}
 
 // TestClient_Load_BurstCollapse is the amplification fix stated directly: repeated reads of the same
 // document contact the origin exactly once.
@@ -339,23 +311,6 @@ func TestClient_Load_PassesFetchContextDown(t *testing.T) {
 	require.Equal(t, CacheModeWriteOnly, NewLoadConfig(origin.receivedOptions...).mode)
 }
 
-// cachedURLs returns the alias list stored for a document, or nil when nothing is cached under that key
-func cachedURLs(t *testing.T, client *Client, key string) []string {
-
-	t.Helper()
-
-	session, err := client.commonDatabase.Session(context.Background())
-	require.NoError(t, err)
-
-	value := NewValue()
-
-	if err := client.loadByURL(session, key, &value); err != nil {
-		return nil
-	}
-
-	return value.URLs
-}
-
 // TestClient_Load_AliasesSameHostKeyOnly is BUG-01's cache rule stated directly: a lookup key becomes an
 // alias only on the document's own host, so a foreign WebFinger server cannot name someone else's actor.
 func TestClient_Load_AliasesSameHostKeyOnly(t *testing.T) {
@@ -541,6 +496,23 @@ func TestClient_Load_ArrayTypeIsCached(t *testing.T) {
 	require.Equal(t, []string{url}, cachedURLs(t, client, url))
 }
 
+// cachedURLs returns the alias list stored for a document, or nil when nothing is cached under that key
+func cachedURLs(t *testing.T, client *Client, key string) []string {
+
+	t.Helper()
+
+	session, err := client.commonDatabase.Session(context.Background())
+	require.NoError(t, err)
+
+	value := NewValue()
+
+	if err := client.loadByURL(session, key, &value); err != nil {
+		return nil
+	}
+
+	return value.URLs
+}
+
 // TestClient_Load_ForeignDocumentCannotClaimAnotherHostsID confirms that a document served by one host,
 // claiming an id on another, is never served as the document for that id.
 func TestClient_Load_ForeignDocumentCannotClaimAnotherHostsID(t *testing.T) {
@@ -584,4 +556,60 @@ func TestClient_Load_StaleAllowedServesExpiredCopy(t *testing.T) {
 	_, err = client.Load("https://remote.example/@alice")
 	require.NoError(t, err)
 	require.Equal(t, 2, origin.calls, "a normal read still refuses the expired copy")
+}
+
+// newTestClient returns a cache Client backed by an in-memory database, plus the origin it fronts.
+func newTestClient() (*Client, *countingClient) {
+
+	inner := &countingClient{publicKeyPEM: "PEM-ORIGINAL", maxAge: 3600}
+	client := New(inner, nil, newFakeServer(), "Application", primitive.NilObjectID, "test.example")
+
+	return client, inner
+}
+
+// ageCachedValue rewinds all of a cached entry's timestamps, simulating the passage of time.
+// All three must move together: rewinding "Received" alone ages the entry past its cooldown while
+// leaving it un-expired, which is a state the cache itself can never produce.
+func ageCachedValue(t *testing.T, client *Client, url string, age time.Duration) {
+
+	t.Helper()
+
+	session, err := client.commonDatabase.Session(context.Background())
+	require.NoError(t, err)
+
+	value := NewValue()
+	require.NoError(t, client.loadByURL(session, url, &value))
+
+	seconds := int64(age.Seconds())
+	value.Received = value.Received - seconds
+	value.Expires = value.Expires - seconds
+	value.Revalidates = value.Revalidates - seconds
+
+	require.NoError(t, client.collection(session).Save(&value, "aging for test"))
+}
+
+// TestClient_asDocument_FillsMissingHashedID pins that a row cached without a hashed ID is read
+// with one, and that a row which has one keeps it (BUG-383)
+func TestClient_asDocument_FillsMissingHashedID(t *testing.T) {
+
+	client := &Client{}
+
+	first := NewValue()
+	first.Object = map[string]any{"id": "https://example.com/notes/1", "type": "Note"}
+
+	second := NewValue()
+	second.Object = map[string]any{"id": "https://example.com/notes/2", "type": "Note"}
+
+	firstID := client.asDocument(first).Metadata.HashedID
+	secondID := client.asDocument(second).Metadata.HashedID
+
+	require.Equal(t, asnormalizer.HashedID("https://example.com/notes/1"), firstID)
+	require.NotEqual(t, firstID, secondID, "two rows without a hashed ID must not share one")
+
+	// A stored value wins
+	first.Metadata.HashedID = "stored"
+	require.Equal(t, "stored", client.asDocument(first).Metadata.HashedID)
+
+	// A row with no ID gets nothing, and does not panic
+	require.Empty(t, client.asDocument(NewValue()).Metadata.HashedID)
 }

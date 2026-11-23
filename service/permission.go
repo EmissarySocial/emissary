@@ -291,12 +291,19 @@ func (service *Permission) Permissions(authorization *model.Authorization, ident
 // ParseHTTPSignature returns the Permissions granted by a request's HTTP Signature, refusing
 // any request that carries a signature it cannot verify.
 func (service *Permission) ParseHTTPSignature(session data.Session, request *http.Request) (model.Permissions, error) {
+	permissions, _, err := service.ParseHTTPSignatureWithActor(session, request)
+	return permissions, err
+}
+
+// ParseHTTPSignatureWithActor returns the Permissions granted by a request's HTTP Signature and the
+// URL of the Actor that signed it, which is empty for an unsigned request.
+func (service *Permission) ParseHTTPSignatureWithActor(session data.Session, request *http.Request) (model.Permissions, string, error) {
 
 	result := model.NewAnonymousPermissions()
 
 	// RULE: Empty requests are not signed.  This should never happen..
 	if request == nil {
-		return result, nil
+		return result, "", nil
 	}
 
 	// Verify the signature
@@ -305,38 +312,40 @@ func (service *Permission) ParseHTTPSignature(session data.Session, request *htt
 	// RULE: A signature that is present but INVALID refuses the whole request. The refusal
 	// travels back unwrapped, so the peer reads its fixed message instead of a wrapper's. (BUG-20)
 	if err != nil {
-		return result, err
+		return result, "", err
 	}
 
 	// RULE: A request that offers no Signature at all is Anonymous, and names no Actor to load
 	if signature.KeyID == "" {
-		return result, nil
+		return result, "", nil
 	}
+
+	actorURL := signature.ActorID()
 
 	// Find an Identity based on the signature. A signature that names no local Identity is
 	// still a valid signature; it simply carries no extra privileges here.
 	identity := model.NewIdentity()
-	if err := service.identityService.LoadByActivityPubActor(session, signature.ActorID(), &identity); err != nil {
-		return result, nil
+	if err := service.identityService.LoadByActivityPubActor(session, actorURL, &identity); err != nil {
+		return result, actorURL, nil
 	}
 
 	// If present, then add the privileges for this Identity
 	result = append(result, identity.PrivilegeIDs...)
 
 	if !identity.HasEmailAddress() {
-		return result, nil
+		return result, actorURL, nil
 	}
 
 	// If the Identity DOES have an email address, then look for a User, too
 	user := model.NewUser()
 	if err := service.userService.LoadByEmail(session, identity.EmailAddress, &user); err != nil {
-		return result, nil
+		return result, actorURL, nil
 	}
 
 	result = append(result, model.MagicGroupIDAuthenticated, user.UserID)
 	result = append(result, user.GroupIDs...)
 
-	return result, nil
+	return result, actorURL, nil
 }
 
 // getSignature verifies and returns the HTTP signature on an inbound request, or an empty

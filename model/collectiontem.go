@@ -47,6 +47,44 @@ func (collectionItem CollectionItem) ID() string {
 	return collectionItem.CollectionItemID.Hex()
 }
 
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of this CollectionItem.
+// It is part of the AccessLister interface
+func (collectionItem *CollectionItem) State() string {
+	return "default"
+}
+
+// IsAuthor returns TRUE if the provided UserID owns the Collection that holds this CollectionItem.
+// It is part of the AccessLister interface
+func (collectionItem *CollectionItem) IsAuthor(authorID primitive.ObjectID) bool {
+	return !authorID.IsZero() && authorID == collectionItem.UserID
+}
+
+// IsMyself returns TRUE if the provided UserID owns the Collection that holds this CollectionItem.
+// It is part of the AccessLister interface
+func (collectionItem *CollectionItem) IsMyself(userID primitive.ObjectID) bool {
+	return !userID.IsZero() && userID == collectionItem.UserID
+}
+
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (collectionItem *CollectionItem) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return defaultRolesToGroupIDs(collectionItem.UserID, roleIDs...)
+}
+
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (collectionItem *CollectionItem) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
+}
+
+/******************************************
+ * ActivityPub Methods
+ ******************************************/
+
 // ActivityPubURL returns the public URI of this CollectionItem. It satisfies
 // ActivityPubURLGetter so items can be served in an ActivityPub collection.
 func (collectionItem CollectionItem) ActivityPubURL() string {

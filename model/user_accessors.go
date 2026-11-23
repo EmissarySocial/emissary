@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,36 +13,38 @@ func UserSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"userId":               schema.String{Format: "objectId"},
-			"mapIds":               schema.Object{Wildcard: schema.String{MaxLength: 256}},
-			"groupIds":             id.SliceSchema(),
-			"iconId":               schema.String{Format: "objectId"},
-			"imageId":              schema.String{Format: "objectId"},
-			"iconUrl":              schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
-			"imageUrl":             schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
-			"displayName":          schema.String{MaxLength: 64, Format: "no-html", Required: true},
-			"statusMessage":        schema.String{Format: "text", MaxLength: 2048},
-			"location":             schema.String{Format: "text", MaxLength: 64},
-			"links":                schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
-			"profileUrl":           schema.String{Format: "url"},
-			"emailAddress":         schema.String{Format: "email", Required: true},
-			"username":             schema.String{MaxLength: 32, Format: "username", Required: true},
-			"locale":               schema.String{},
-			"signupNote":           schema.String{MaxLength: 256},
-			"stateId":              schema.String{},
-			"inboxTemplate":        schema.String{MaxLength: 128},
-			"outboxTemplate":       schema.String{MaxLength: 128},
-			"hashtags":             schema.Array{Items: schema.String{Format: "token"}},
-			"notificationChannels": schema.Array{Items: schema.String{Enum: AllNotificationChannels()}},
-			"data":                 schema.Object{Wildcard: schema.String{MaxLength: 4096}},
-			"movedTo":              schema.String{Format: "url"},
-			"followerCount":        schema.Integer{},
-			"followingCount":       schema.Integer{},
-			"ruleCount":            schema.Integer{},
-			"isPublic":             schema.Boolean{},
-			"isBridgeBluesky":      schema.Boolean{},
-			"isOwner":              schema.Boolean{},
-			"isIndexable":          schema.Boolean{},
+			"userId":                 schema.String{Format: "objectId"},
+			"mapIds":                 schema.Object{Wildcard: schema.String{MaxLength: 256}},
+			"groupIds":               id.SliceSchema(),
+			"iconId":                 schema.String{Format: "objectId"},
+			"imageId":                schema.String{Format: "objectId"},
+			"iconUrl":                schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
+			"imageUrl":               schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
+			"displayName":            schema.String{MaxLength: 64, Format: "no-html", Required: true},
+			"statusMessage":          schema.String{Format: "text", MaxLength: 8192},
+			"location":               schema.String{Format: "text", MaxLength: 64},
+			"links":                  schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
+			"profileUrl":             schema.String{Format: "url"},
+			"emailAddress":           schema.String{Format: "email", Required: true},
+			"username":               schema.String{MaxLength: 32, Format: "username", Required: true},
+			"locale":                 schema.String{},
+			"signupNote":             schema.String{MaxLength: 256},
+			"stateId":                schema.String{},
+			"inboxTemplate":          schema.String{MaxLength: 128},
+			"outboxTemplate":         schema.String{MaxLength: 128},
+			"hashtags":               schema.Array{Items: schema.String{Format: "token"}},
+			"notificationChannels":   schema.Array{Items: schema.String{Enum: AllNotificationChannels()}},
+			"notificationEmailHours": schema.Integer{Enum: NotificationEmailHours()},
+			"data":                   schema.Object{Wildcard: schema.String{MaxLength: 4096}},
+			"movedTo":                schema.String{Format: "url"},
+			"followerCount":          schema.Integer{},
+			"followingCount":         schema.Integer{},
+			"ruleCount":              schema.Integer{},
+			"isPublic":               schema.Boolean{},
+			"isBridgeBluesky":        schema.Boolean{},
+			"isOwner":                schema.Boolean{},
+			"isPrimary":              schema.Boolean{},
+			"isIndexable":            schema.Boolean{},
 		},
 	}
 }
@@ -110,6 +114,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "isOwner":
 		return &user.IsOwner, true
+
+	case "isPrimary":
+		return &user.IsPrimary, true
 
 	case "isPublic":
 		return &user.IsPublic, true
@@ -257,6 +264,42 @@ func (user *User) SetString(name string, value string) bool {
 	}
 
 	return false
+}
+
+// GetIntOK reads the named property. Implements schema.IntGetter.
+func (user *User) GetIntOK(name string) (int, bool) {
+
+	switch name {
+
+	case "notificationEmailHours":
+		return user.NotificationEmailHours, true
+	}
+
+	return 0, false
+}
+
+// SetInt writes the named property. Implements schema.IntSetter.
+func (user *User) SetInt(name string, value int) bool {
+
+	switch name {
+
+	case "notificationEmailHours":
+		user.setNotificationEmailHours(value, time.Now().UnixMilli())
+		return true
+	}
+
+	return false
+}
+
+// setNotificationEmailHours changes how long this User's notifications stay unread before an email
+func (user *User) setNotificationEmailHours(hours int, nowMillis int64) {
+
+	// RULE: Switching email on starts the clock now, so the unread backlog causes no email
+	if (user.NotificationEmailHours == 0) && (hours != 0) {
+		user.NotificationEmailDate = nowMillis
+	}
+
+	user.NotificationEmailHours = hours
 }
 
 // SetBool writes the named property. Implements schema.BoolSetter.

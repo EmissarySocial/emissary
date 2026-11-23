@@ -27,6 +27,10 @@ const CollectionTypeDislikes = "Dislikes"
 // https://www.w3.org/TR/activitystreams-vocabulary/#dfn-shares
 const CollectionTypeShares = "Shares"
 
+// CollectionTypeQuotes is the type of collection that groups the quote posts of a specific message that its author approved.
+// https://w3id.org/fep/044f
+const CollectionTypeQuotes = "Quotes"
+
 // CollectionTypeForResponse maps a response Type to the Collection Type that stores it.
 // It returns "" for response types not projected into a per-Stream collection.
 func CollectionTypeForResponse(responseType string) string {

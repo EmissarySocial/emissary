@@ -5,8 +5,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net"
@@ -18,9 +21,11 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/ascache"
+	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -36,6 +41,9 @@ func main() {
 	if len(os.Args) < 2 {
 		fail("usage: rchelper <command> [args...]")
 	}
+
+	// hannibal traces every signature it makes, which would bury run.sh's own output
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	command, args := os.Args[1], os.Args[2:]
 
@@ -75,6 +83,18 @@ func main() {
 	case "diagnose-cache":
 		need(args, 3)
 		diagnoseCache(args[0], args[1], args[2])
+	case "quote-request":
+		need(args, 5)
+		quoteRequest(args[0], args[1], args[2], args[3], args[4])
+	case "accept-result":
+		need(args, 2)
+		acceptResult(args[0], args[1])
+	case "count-inbox":
+		need(args, 2)
+		countInbox(args[0], args[1])
+	case "check-authorization":
+		need(args, 4)
+		checkAuthorization(args[0], args[1], args[2], args[3])
 	default:
 		fail("unknown command: " + command)
 	}
@@ -83,12 +103,6 @@ func main() {
 /******************************************
  * Process helpers
  ******************************************/
-
-// fail prints the message to stderr and exits 1
-func fail(message string) {
-	fmt.Fprintln(os.Stderr, "rchelper: "+message)
-	os.Exit(1)
-}
 
 // need exits unless at least count arguments are present
 func need(args []string, count int) {
@@ -106,46 +120,15 @@ func seconds(value string) time.Duration {
 	return time.Duration(result) * time.Second
 }
 
+// fail prints the message to stderr and exits 1
+func fail(message string) {
+	fmt.Fprintln(os.Stderr, "rchelper: "+message)
+	os.Exit(1)
+}
+
 /******************************************
  * MongoDB helpers
  ******************************************/
-
-// mongoURI returns the test replica set's connection string, overridable with RC_MONGO_URI
-func mongoURI() string {
-	if uri := os.Getenv("RC_MONGO_URI"); uri != "" {
-		return uri
-	}
-	return "mongodb://127.0.0.1:27017/?directConnection=true"
-}
-
-// connect opens a client to the test replica set
-func connect() (*mongo.Client, context.Context) {
-
-	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI()).SetServerSelectionTimeout(5*time.Second))
-
-	if err != nil {
-		fail("connecting to MongoDB: " + err.Error())
-	}
-
-	return client, ctx
-}
-
-// requirePrefix refuses any database this harness did not name
-func requirePrefix(database string) {
-	if !strings.HasPrefix(database, "rctest_") {
-		fail("refusing to touch a database outside the rctest_ prefix: " + database)
-	}
-}
-
-// objectID parses a hex ObjectID
-func objectID(value string) primitive.ObjectID {
-	result, err := primitive.ObjectIDFromHex(value)
-	if err != nil {
-		fail("invalid ObjectID: " + value)
-	}
-	return result
-}
 
 // listDatabases prints every database name that starts with the prefix, one per line
 func listDatabases(prefix string) {
@@ -233,6 +216,15 @@ func replyCount(database string, streamID string) {
 	fmt.Println(result.ReplyCount)
 }
 
+// objectID parses a hex ObjectID
+func objectID(value string) primitive.ObjectID {
+	result, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
+		fail("invalid ObjectID: " + value)
+	}
+	return result
+}
+
 // countNotifications prints how many live Notifications of the type name the object URL
 func countNotifications(database string, notificationType string, objectURL string) {
 
@@ -287,42 +279,75 @@ func waitQueueIdle(database string, timeout time.Duration) {
 	fail("timed out waiting for the queue in " + database + " to drain")
 }
 
+// acceptResult prints the result of the Accept that answered the request, as stored in the requester's Inbox
+func acceptResult(database string, requestID string) {
+
+	requirePrefix(database)
+	client, ctx := connect()
+	defer client.Disconnect(ctx) //nolint:errcheck
+
+	var result struct {
+		RawActivity mapof.Any `bson:"rawActivity"`
+	}
+
+	filter := bson.M{"activityType": vocab.ActivityTypeAccept, "objectId": requestID}
+	if err := client.Database(database).Collection("Inbox").FindOne(ctx, filter).Decode(&result); err != nil {
+		fail("loading the Accept of " + requestID + ": " + err.Error())
+	}
+
+	fmt.Println(result.RawActivity.GetString(vocab.PropertyResult))
+}
+
+// countInbox prints how many activities in the domain's Inbox name the object, which proves an absence
+func countInbox(database string, objectURL string) {
+
+	requirePrefix(database)
+	client, ctx := connect()
+	defer client.Disconnect(ctx) //nolint:errcheck
+
+	count, err := client.Database(database).Collection("Inbox").CountDocuments(ctx, bson.M{"objectId": objectURL})
+
+	if err != nil {
+		fail("counting Inbox activities: " + err.Error())
+	}
+
+	fmt.Println(count)
+}
+
+// requirePrefix refuses any database this harness did not name
+func requirePrefix(database string) {
+	if !strings.HasPrefix(database, "rctest_") {
+		fail("refusing to touch a database outside the rctest_ prefix: " + database)
+	}
+}
+
+// connect opens a client to the test replica set
+func connect() (*mongo.Client, context.Context) {
+
+	ctx := context.Background()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI()).SetServerSelectionTimeout(5*time.Second))
+
+	if err != nil {
+		fail("connecting to MongoDB: " + err.Error())
+	}
+
+	return client, ctx
+}
+
+// mongoURI returns the test replica set's connection string, overridable with RC_MONGO_URI
+func mongoURI() string {
+	if uri := os.Getenv("RC_MONGO_URI"); uri != "" {
+		return uri
+	}
+	return "mongodb://127.0.0.1:27017/?directConnection=true"
+}
+
 /******************************************
  * ActivityPub helpers
  ******************************************/
 
-// getJSON fetches an ActivityPub document as a map
-func getJSON(url string) mapof.Any {
-
-	request, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		fail("building request: " + err.Error())
-	}
-
-	request.Header.Set("Accept", "application/activity+json")
-	response, err := (&http.Client{Timeout: 15 * time.Second}).Do(request)
-
-	if err != nil {
-		fail("GET " + url + ": " + err.Error())
-	}
-
-	defer response.Body.Close()
-	body, _ := io.ReadAll(response.Body)
-
-	if response.StatusCode != http.StatusOK {
-		fail("GET " + url + ": HTTP " + strconv.Itoa(response.StatusCode))
-	}
-
-	result := mapof.NewAny()
-	if err := json.Unmarshal(body, &result); err != nil {
-		fail("decoding " + url + ": " + err.Error())
-	}
-
-	return result
-}
-
-// checkPolicy verifies the published JSON-LD: automaticApproval is exactly the expected IRI, the
-// gts: terms are declared, and commentsEnabled is absent.  It prints the evidence either way.
+// checkPolicy verifies the published JSON-LD: canReply and canQuote each approve exactly the expected
+// IRI, the gts: terms are declared, and commentsEnabled is absent.  It prints the evidence either way.
 func checkPolicy(url string, expected string) {
 
 	if expected == "public" {
@@ -331,24 +356,29 @@ func checkPolicy(url string, expected string) {
 
 	document := getJSON(url)
 	problems := make([]string, 0)
+	evidence := make([]string, 0, 2)
 
-	// automaticApproval must be exactly [expected]
+	// Each automaticApproval must be exactly [expected], because anyone who may reply may also quote
 	policy, _ := document["interactionPolicy"].(map[string]any)
-	canReply, _ := policy["canReply"].(map[string]any)
-	approval, _ := canReply["automaticApproval"].([]any)
-	approvalJSON, _ := json.Marshal(canReply["automaticApproval"])
 
-	if (len(approval) != 1) || (approval[0] != expected) {
-		problems = append(problems, "automaticApproval is "+string(approvalJSON)+", want [\""+expected+"\"]")
-	}
+	for _, permission := range []string{"canReply", "canQuote"} {
+		subPolicy, _ := policy[permission].(map[string]any)
+		approval, _ := subPolicy["automaticApproval"].([]any)
+		approvalJSON, _ := json.Marshal(subPolicy["automaticApproval"])
+		evidence = append(evidence, permission+"="+string(approvalJSON))
 
-	if _, exists := canReply["manualApproval"]; exists {
-		problems = append(problems, "manualApproval is published")
+		if (len(approval) != 1) || (approval[0] != expected) {
+			problems = append(problems, permission+".automaticApproval is "+string(approvalJSON)+", want [\""+expected+"\"]")
+		}
+
+		if _, exists := subPolicy["manualApproval"]; exists {
+			problems = append(problems, permission+".manualApproval is published")
+		}
 	}
 
 	// The @context must declare gts: and the terms it uses
 	contextJSON, _ := json.Marshal(document["@context"])
-	for _, term := range []string{`"gts":"https://gotosocial.org/ns#"`, `"interactionPolicy":{"@id":"gts:interactionPolicy"`, `"canReply":{"@id":"gts:canReply"`, `"automaticApproval":{"@id":"gts:automaticApproval"`} {
+	for _, term := range []string{`"gts":"https://gotosocial.org/ns#"`, `"interactionPolicy":{"@id":"gts:interactionPolicy"`, `"canReply":{"@id":"gts:canReply"`, `"canQuote":{"@id":"gts:canQuote"`, `"automaticApproval":{"@id":"gts:automaticApproval"`} {
 		if !strings.Contains(string(contextJSON), term) {
 			problems = append(problems, "@context lacks "+term)
 		}
@@ -367,7 +397,7 @@ func checkPolicy(url string, expected string) {
 		fail(strings.Join(problems, "; "))
 	}
 
-	fmt.Println("automaticApproval=" + string(approvalJSON) + ", gts terms declared, no commentsEnabled")
+	fmt.Println(strings.Join(evidence, ", ") + ", gts terms declared, no commentsEnabled")
 }
 
 // replies prints a Replies collection as "<totalItems> <item> <item>..."
@@ -435,6 +465,154 @@ func canReplyResult(document streams.Document, actorID string) string {
 	default:
 		return "Denied"
 	}
+}
+
+// quoteRequest signs a FEP-044f QuoteRequest with the actor's own key, read from the actor's database, and
+// POSTs it to the quoted note's author.  The quote post is inlined, as Mastodon does, and attributed to
+// attributedTo.  It prints the HTTP status of the delivery.
+func quoteRequest(database string, actorID string, noteURL string, quoteID string, attributedTo string) {
+
+	requirePrefix(database)
+	client, ctx := connect()
+	defer client.Disconnect(ctx) //nolint:errcheck
+
+	// Load the actor's private key.  Each domain here has one User, so it has one User key
+	var key struct {
+		PrivatePEM string `bson:"privatePEM"`
+	}
+
+	if err := client.Database(database).Collection("EncryptionKey").FindOne(ctx, bson.M{"parentType": "User", "deleteDate": 0}).Decode(&key); err != nil {
+		fail("loading the actor's key: " + err.Error())
+	}
+
+	block, _ := pem.Decode([]byte(key.PrivatePEM))
+	if block == nil {
+		fail("decoding the actor's key")
+	}
+
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		fail("parsing the actor's key: " + err.Error())
+	}
+
+	// Find the key's public ID, and the inbox of the note's author
+	keyID := streams.NewDocument(getJSON(actorID)).PublicKey().ID()
+	authorID := streams.NewDocument(getJSON(noteURL)).AttributedTo().ID()
+	inboxURL := streams.NewDocument(getJSON(authorID)).Inbox().ID()
+
+	if (keyID == "") || (inboxURL == "") {
+		fail("finding the key ID of " + actorID + " or the inbox of " + authorID)
+	}
+
+	// Build the QuoteRequest, with the quote post inlined
+	body, err := json.Marshal(mapof.Any{
+		vocab.AtContext:      []any{vocab.NamespaceActivityStreams, vocab.ContextTypeQuotePosts},
+		vocab.PropertyID:     quoteID + "#quote_request",
+		vocab.PropertyType:   vocab.ActivityTypeQuoteRequest,
+		vocab.PropertyActor:  actorID,
+		vocab.PropertyObject: noteURL,
+		vocab.PropertyInstrument: mapof.Any{
+			vocab.PropertyID:           quoteID,
+			vocab.PropertyType:         vocab.ObjectTypeNote,
+			vocab.PropertyAttributedTo: attributedTo,
+			vocab.PropertyContent:      "<p>Quoting " + noteURL + "</p>",
+			vocab.PropertyQuote:        noteURL,
+			vocab.PropertyTo:           []string{publicIRI},
+		},
+	})
+
+	if err != nil {
+		fail("encoding the QuoteRequest: " + err.Error())
+	}
+
+	// Sign and deliver it
+	request, err := http.NewRequest(http.MethodPost, inboxURL, bytes.NewReader(body))
+	if err != nil {
+		fail("building the request: " + err.Error())
+	}
+
+	request.Header.Set("Content-Type", "application/activity+json")
+	request.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
+
+	if err := sigs.Sign(request, keyID, privateKey); err != nil {
+		fail("signing the QuoteRequest: " + err.Error())
+	}
+
+	response, err := (&http.Client{Timeout: 30 * time.Second}).Do(request)
+	if err != nil {
+		fail("POST " + inboxURL + ": " + err.Error())
+	}
+
+	defer response.Body.Close()
+	_, _ = io.Copy(io.Discard, response.Body)
+
+	fmt.Println(response.StatusCode)
+}
+
+// checkAuthorization verifies a QuoteAuthorization the way Mastodon's verify_quote_service.rb does, and
+// prints the evidence either way
+func checkAuthorization(url string, noteURL string, quoteID string, authorID string) {
+
+	document := getJSON(url)
+	problems := make([]string, 0)
+
+	expected := map[string]string{
+		vocab.PropertyID:                url,
+		vocab.PropertyType:              vocab.ObjectTypeQuoteAuthorization,
+		vocab.PropertyAttributedTo:      authorID,
+		vocab.PropertyInteractingObject: quoteID,
+		vocab.PropertyInteractionTarget: noteURL,
+	}
+
+	for property, value := range expected {
+		if got, _ := document[property].(string); got != value {
+			problems = append(problems, property+" is \""+got+"\", want \""+value+"\"")
+		}
+	}
+
+	// The @context must declare the type and the gts: terms
+	contextJSON, _ := json.Marshal(document["@context"])
+	for _, term := range []string{`"QuoteAuthorization":"https://w3id.org/fep/044f#QuoteAuthorization"`, `"interactingObject":{"@id":"gts:interactingObject"`, `"interactionTarget":{"@id":"gts:interactionTarget"`} {
+		if !strings.Contains(string(contextJSON), term) {
+			problems = append(problems, "@context lacks "+term)
+		}
+	}
+
+	if len(problems) > 0 {
+		fail(strings.Join(problems, "; "))
+	}
+
+	fmt.Println("interactingObject=" + quoteID + ", interactionTarget=" + noteURL + ", attributedTo=" + authorID + ", terms declared")
+}
+
+// getJSON fetches an ActivityPub document as a map
+func getJSON(url string) mapof.Any {
+
+	request, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		fail("building request: " + err.Error())
+	}
+
+	request.Header.Set("Accept", "application/activity+json")
+	response, err := (&http.Client{Timeout: 15 * time.Second}).Do(request)
+
+	if err != nil {
+		fail("GET " + url + ": " + err.Error())
+	}
+
+	defer response.Body.Close()
+	body, _ := io.ReadAll(response.Body)
+
+	if response.StatusCode != http.StatusOK {
+		fail("GET " + url + ": HTTP " + strconv.Itoa(response.StatusCode))
+	}
+
+	result := mapof.NewAny()
+	if err := json.Unmarshal(body, &result); err != nil {
+		fail("decoding " + url + ": " + err.Error())
+	}
+
+	return result
 }
 
 /******************************************

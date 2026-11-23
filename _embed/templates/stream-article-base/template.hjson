@@ -61,7 +61,7 @@
 			steps: [
 				{do:"set-data", values: {label:"New Article (WYSIWYG)"}}
 				{do:"set-state", state:"default"}
-				{do:"save", message:"Created by {{.Author.DisplayName}}"}
+				{do:"save", comment:"Created"}
 				{do:"forward-to", url:"/{{.StreamID}}/edit"}
 			]
 		}
@@ -127,7 +127,7 @@
 					// cached form values; formdata.Parse caches on the Request and re-reads nothing.
 					{do:"set-data", from-form:["data.width"]}
 					{do:"sort-widgets"}
-					{do:"save", message:"Widgets updated by {{.Author}}"}
+					{do:"save", comment:"Widgets updated"}
 					{do:"view-html", method:"both"}
 				]}
 			]
@@ -138,7 +138,7 @@
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"edit-widget"}
-					{do:"save", comment:"Widget updated by {{.Author}}"}
+					{do:"save", comment:"Widget updated"}
 				]}
 			]
 		}
@@ -165,7 +165,7 @@
 			steps: [
 				{do:"as-modal", steps: [
 					{do:"set-simple-sharing", role: "viewer", title:"Who Can See This Article?", message:"Select who can view and comment on this article."}
-					{do:"save", message:"Sharing updated by {{.Author}}"}
+					{do:"save", comment:"Sharing updated"}
 					{do:"refresh-page"}
 				]}
 			]
@@ -233,7 +233,7 @@
 							}
 						}]
 					}
-					{do:"save", comment:"Properties updated by {{.Author}}"}
+					{do:"save", comment:"Properties updated"}
 					// Info edits the label, token and summary that the editing chrome displays,
 					// so the page behind the modal has to redraw to show them.
 					{do:"refresh-page"}

@@ -97,19 +97,22 @@ func PostSignOut(ctx *steranko.Context, factory *service.Factory, session data.S
 		return ctx.NoContent(http.StatusNoContent)
 	}
 
-	// If there's a "next" parameter, then try to redirect there
+	// If there's a "next" parameter, then sign in again and return there
 	if next := ctx.QueryParam("next"); next != "" {
-
-		// If this is a valiid URL, then redirect to the path portion only (to avoid open redirects)
-		if nextURL, err := url.Parse(next); err == nil {
-			ctx.Response().Header().Add("Hx-Redirect", "/signin?next="+url.QueryEscape(nextURL.Path))
-			return ctx.NoContent(http.StatusNoContent)
-		}
+		ctx.Response().Header().Add("Hx-Redirect", signInAndReturnTo(next))
+		return ctx.NoContent(http.StatusNoContent)
 	}
 
 	// Otherwise, just redirect to the home page.
 	ctx.Response().Header().Add("HX-Redirect", "/signout")
 	return ctx.NoContent(http.StatusNoContent)
+}
+
+// signInAndReturnTo returns the sign-in URL that comes back to "next" afterward, query included, on this origin
+func signInAndReturnTo(next string) string {
+
+	// The OAuth consent page cannot be reached without its query string, so this keeps it
+	return "/signin?next=" + url.QueryEscape(calcNextURL(next))
 }
 
 // GetResetPassword displays the "reset password" form

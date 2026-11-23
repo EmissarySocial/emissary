@@ -190,8 +190,8 @@ func (service *ServerEmail) Exists(emailID string) bool {
 func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
 
 	// A missing key fails "to" and "headers" outright, and ships as "<no value>" in "subject".
-	// The body is excluded: html/template renders a missing key as "", and
-	// email-follower-activity depends on that.
+	// The body is excluded: html/template prints a missing key as "", though a typed
+	// helper such as htmlMinimal refuses one (BUG-372).
 	email, exists := service.lookup(emailID)
 
 	if !exists {

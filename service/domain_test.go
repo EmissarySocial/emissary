@@ -831,3 +831,135 @@ func TestDomain_Save_ReachesAnotherServer(t *testing.T) {
 	require.NoError(t, saving.Save(session, &updated, "test"))
 	require.Eventually(t, func() bool { return watching.Cached().Label == "Second" }, 10*time.Second, 20*time.Millisecond)
 }
+
+// requireStoredPrimaryUser checks the stored Domain record and this server's cached copy
+func requireStoredPrimaryUser(t *testing.T, service *Domain, session data.Session, expected primitive.ObjectID) {
+
+	t.Helper()
+
+	stored := model.NewWritableDomain()
+	require.NoError(t, service.Load(session, &stored))
+	require.Equal(t, expected, stored.PrimaryUserID, "stored")
+	require.Equal(t, expected, service.Cached().PrimaryUserID, "cached")
+
+	// The rest of the record is untouched
+	require.Equal(t, "Populated", stored.Label)
+}
+
+// newPrimaryUserDomain returns a Domain service whose populated record is stored in a fresh replica-set database
+func newPrimaryUserDomain(t *testing.T) (*Domain, data.Session) {
+
+	t.Helper()
+	_, session := newReplicaSetSession(t)
+
+	service := NewDomain()
+	populated := newPopulatedDomain("example.com")
+	require.NoError(t, service.Save(session, &populated, "test"))
+
+	return &service, session
+}
+
+// TestDomain_SetPrimaryUser verifies that the primary UserID is written from the stored record and published
+func TestDomain_SetPrimaryUser(t *testing.T) {
+
+	t.Run("RefusesTheZeroID", func(t *testing.T) {
+
+		// A nil session panics on any read, so this passes only if nothing is read
+		service := NewDomain()
+		err := service.SetPrimaryUser(nil, primitive.NilObjectID)
+		require.True(t, derp.IsInternalServerError(err), err)
+	})
+
+	t.Run("WritesAndPublishes", func(t *testing.T) {
+
+		service, session := newPrimaryUserDomain(t)
+		first := primitive.NewObjectID()
+		second := primitive.NewObjectID()
+
+		require.NoError(t, service.SetPrimaryUser(session, first))
+		requireStoredPrimaryUser(t, service, session, first)
+
+		// A new primary user replaces the old one
+		require.NoError(t, service.SetPrimaryUser(session, second))
+		requireStoredPrimaryUser(t, service, session, second)
+	})
+
+	t.Run("NoOpWhenTheCacheAgrees", func(t *testing.T) {
+
+		service, session := newPrimaryUserDomain(t)
+		userID := primitive.NewObjectID()
+		require.NoError(t, service.SetPrimaryUser(session, userID))
+
+		// A nil session panics on any read, so this passes only if nothing is read
+		require.NoError(t, service.SetPrimaryUser(nil, userID))
+	})
+
+	t.Run("AnotherServerGotThereFirst", func(t *testing.T) {
+
+		first, session := newPrimaryUserDomain(t)
+		second := NewDomain()
+		userID := primitive.NewObjectID()
+		require.NoError(t, first.SetPrimaryUser(session, userID))
+
+		// The second server's cache is stale, so it loads the record, finds the same User, and writes nothing
+		before := second.Cached()
+		require.True(t, before.PrimaryUserID.IsZero())
+		require.NoError(t, second.SetPrimaryUser(session, userID))
+		require.Same(t, before, second.Cached(), "a no-op publishes nothing")
+	})
+}
+
+// TestDomain_ClearPrimaryUser verifies that the primary UserID is cleared only while it still names this User
+func TestDomain_ClearPrimaryUser(t *testing.T) {
+
+	t.Run("NoOpForTheZeroID", func(t *testing.T) {
+
+		// A nil session panics on any read, so this passes only if nothing is read
+		service := NewDomain()
+		require.NoError(t, service.ClearPrimaryUser(nil, primitive.NilObjectID))
+	})
+
+	t.Run("NoOpWhenTheCacheNamesNobody", func(t *testing.T) {
+
+		// A nil session panics on any read, so this passes only if nothing is read
+		service := NewDomain()
+		require.NoError(t, service.ClearPrimaryUser(nil, primitive.NewObjectID()))
+	})
+
+	t.Run("ClearsOnlyTheNamedUser", func(t *testing.T) {
+
+		service, session := newPrimaryUserDomain(t)
+		primaryID := primitive.NewObjectID()
+		require.NoError(t, service.SetPrimaryUser(session, primaryID))
+
+		// Clearing someone else reads nothing and changes nothing
+		require.NoError(t, service.ClearPrimaryUser(nil, primitive.NewObjectID()))
+		requireStoredPrimaryUser(t, service, session, primaryID)
+
+		// Clearing the primary user leaves the domain with none
+		require.NoError(t, service.ClearPrimaryUser(session, primaryID))
+		requireStoredPrimaryUser(t, service, session, primitive.NilObjectID)
+		require.False(t, service.Cached().HasPrimaryUser())
+	})
+
+	t.Run("AnotherServerMovedIt", func(t *testing.T) {
+
+		first, session := newPrimaryUserDomain(t)
+		second := NewDomain()
+		oldID := primitive.NewObjectID()
+		newID := primitive.NewObjectID()
+
+		// Both servers know the old primary user, then the first one moves it
+		require.NoError(t, first.SetPrimaryUser(session, oldID))
+		stale := model.NewWritableDomain()
+		require.NoError(t, first.Load(session, &stale))
+		second.publish(stale)
+		require.NoError(t, first.SetPrimaryUser(session, newID))
+
+		// The second server's cache still names the old User, so it loads the record and leaves the new one alone
+		before := second.Cached()
+		require.NoError(t, second.ClearPrimaryUser(session, oldID))
+		require.Same(t, before, second.Cached(), "a no-op publishes nothing")
+		requireStoredPrimaryUser(t, first, session, newID)
+	})
+}

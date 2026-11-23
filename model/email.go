@@ -27,7 +27,7 @@ func NewEmail(emailID string, funcMap htmltemplate.FuncMap) Email {
 	// RULE: To and Headers reject a missing key, because text/template otherwise renders one as
 	// the literal "<no value>" -- which is not empty, so it survives the skip-empty rule and then
 	// fails mail.ParseAddress, killing the entire send.  Subject and Body stay lenient: there the
-	// consequence is cosmetic, and Body is html/template, which renders a missing key as "".
+	// consequence is cosmetic, and html/template prints a missing key as "" unless a typed helper reads it.
 	// A key that is present but empty is still fine, and remains the way to omit a header.
 	return Email{
 		EmailID: emailID,

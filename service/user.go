@@ -181,7 +181,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 	// RULE: EmailAddress is required
 	if user.EmailAddress == "" {
-		return derp.BadRequest(location, "EmailAddress is required", user)
+		return derp.BadRequest(location, "EmailAddress is required", user.UserID)
 	}
 
 	// RULE: IF the display name is empty, then try the username and email address
@@ -214,15 +214,20 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 		// RULE: If the username is empty, then try to automatically generate one
 		if err := service.CalcNewUsername(session, user); err != nil {
-			return derp.Wrap(err, location, "Calculating username", user)
+			return derp.Wrap(err, location, "Calculating username", user.UserID)
 		}
 	}
+
+	// RULE: Normalize against the outbox Template's `data` rules, so a format it declares
+	// holds here too, instead of UserSchema's no-html default (see AGENTS.md)
+	userSchema := service.Schema()
 
 	// RULE: Denormalize the tag URL from the outbox Template and extract #hashtags from profile
 	// fields.  Linkification itself happens at render time (User.SummaryHTML), not here, because
 	// statusMessage stores raw Markdown that is rendered to HTML at display time.
 	if template, err := service.templateService.Load(user.OutboxTemplate); err == nil {
 		user.TagURL = template.TagURL
+		userSchema = schema.New(model.UserSchemaForTemplate(template.Schema))
 
 		if len(template.TagPaths) > 0 {
 			service.CalculateTags(session, user)
@@ -232,10 +237,10 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// RULE: normalize BEFORE ValidateUsername, so uniqueness is checked against the
 	// username as it will be STORED. Otherwise an over-length name could pass against
 	// its full form, then truncate into a collision with an existing account.
-	rewrites, err := service.Schema().Normalize(user)
+	rewrites, err := userSchema.Normalize(user)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid User Data", user)
+		return derp.Wrap(err, location, "Invalid User Data", user.UserID)
 	}
 
 	if len(rewrites) > 0 {
@@ -244,7 +249,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 	// Guarantee that the (normalized) username is unique, and fits formatting rules.
 	if err := service.ValidateUsername(session, user.UserID, user.Username); err != nil {
-		return derp.Wrap(err, location, "Username is invalid", user)
+		return derp.Wrap(err, location, "Username is invalid", user.UserID)
 	}
 
 	// RULE: Set ProfileURL to the hostname + the username
@@ -261,7 +266,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	newFingerprint, err := user.CalcProfileFingerprint()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Calculating profile fingerprint", user)
+		return derp.Wrap(err, location, "Calculating profile fingerprint", user.UserID)
 	}
 
 	// This comparison MUST happen before the assignment below, and cannot move down to the
@@ -270,9 +275,14 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew //nolint:scopeguard // must be read before the assignment below
 	user.ProfileFingerprint = newFingerprint
 
+	// RULE: Only an owner can be the primary user, and there is only one
+	if err := service.applyPrimaryUser(session, user); err != nil {
+		return derp.Wrap(err, location, "Applying primary user rules", user.UserID)
+	}
+
 	// Try to save the User record to the database
 	if err := service.collection(session).Save(user, note); err != nil {
-		return derp.Wrap(err, location, "Saving User", user, note)
+		return derp.Wrap(err, location, "Saving User", user.UserID, note)
 	}
 
 	// RULE: Take these actions when setting up a new user
@@ -280,12 +290,12 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 		// RULE: Create a new encryption key for this user
 		if _, err := service.keyService.Create(session, model.EncryptionKeyTypeUser, user.UserID); err != nil {
-			return derp.Wrap(err, location, "Creating encryption key for User", user, note)
+			return derp.Wrap(err, location, "Creating encryption key for User", user.UserID, note)
 		}
 
 		// RULE: Create default folders for this user
 		if err := service.folderService.CreateDefaultFolders(session, user.UserID); err != nil {
-			return derp.Wrap(err, location, "Creating default folders for User", user, note)
+			return derp.Wrap(err, location, "Creating default folders for User", user.UserID, note)
 		}
 
 		// RULE: Create the Streams that this user's outbox Template starts every profile with
@@ -296,7 +306,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 	// Handle Bluesky bridging opt-in/out
 	if err := service.connectBluesky(session, user); err != nil {
-		return derp.Wrap(err, location, "Updating bridge settings", user, note)
+		return derp.Wrap(err, location, "Updating bridge settings", user.UserID, note)
 	}
 
 	// Set AttributedTo value
@@ -305,8 +315,14 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// RULE: Federate profile changes to followers via an ActivityPub Update (post-commit)
 	if profileChanged {
 		if err := service.sendProfileUpdate(session, user); err != nil {
-			return derp.Wrap(err, location, "Sending profile Update", user)
+			return derp.Wrap(err, location, "Sending profile Update", user.UserID)
 		}
+	}
+
+	// RULE: The Domain records whether it has a primary user, so every page can read it from the cache.
+	// This is the last step that can fail, because a Domain save is published before the commit (BUG-176)
+	if err := service.recordPrimaryUser(session, user); err != nil {
+		return derp.Wrap(err, location, "Recording the primary user", user.UserID)
 	}
 
 	// Send Webhooks (if configured)
@@ -332,67 +348,78 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 
 	// Delete related Folders
 	if err := service.folderService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's folders", user, note)
+		return derp.Wrap(err, location, "Deleting User's folders", user.UserID, note)
 	}
 
 	// Delete related Followers
 	if err := service.followerService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's followers", user, note)
+		return derp.Wrap(err, location, "Deleting User's followers", user.UserID, note)
 	}
 
 	// Delete related Following
 	if err := service.followingService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's following", user, note)
+		return derp.Wrap(err, location, "Deleting User's following", user.UserID, note)
 	}
 
 	// TODO: Delete related mentions
 
 	// Delete related Encryption Keys messages
 	if err := service.keyService.DeleteByParentID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's encryption keys", user, note)
+		return derp.Wrap(err, location, "Deleting User's encryption keys", user.UserID, note)
 	}
 
 	// Delete related NewsFeed messages
 	if err := service.newsFeedService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's inbox messages", user, note)
+		return derp.Wrap(err, location, "Deleting User's inbox messages", user.UserID, note)
 	}
 
 	// Delete related Outbox messages
 	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeUser, user.UserID); err != nil {
-		return derp.Wrap(err, location, "Deleting User's outbox messages", user, note)
+		return derp.Wrap(err, location, "Deleting User's outbox messages", user.UserID, note)
+	}
+
+	// Delete related Outbox2 activities.  Like the legacy outbox, this must run before the User's
+	// Streams are deleted, or each Stream would send its own Delete to followers of a vanishing User.
+	if err := service.outbox2Service.DeleteByActor(session, model.ActorTypeUser, user.UserID); err != nil {
+		return derp.Wrap(err, location, "Deleting User's Outbox2 activities", user.UserID, note)
 	}
 
 	// Delete related Responses
 	if err := service.responseService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's responses", user, note)
+		return derp.Wrap(err, location, "Deleting User's responses", user.UserID, note)
 	}
 
 	// Delete related Rules
 	if err := service.ruleService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's rules", user, note)
+		return derp.Wrap(err, location, "Deleting User's rules", user.UserID, note)
 	}
 
 	// RULE: Remove this User from the search index.  Keyed by ProfileURL, which is what
 	// SearchResult() indexes them under -- the index holds no ID that a User can name.
 	if err := service.searchResultService.DeleteByURL(session, user.ProfileURL); err != nil {
-		return derp.Wrap(err, location, "Deleting User's search result", user, note)
+		return derp.Wrap(err, location, "Deleting User's search result", user.UserID, note)
 	}
 
 	// Delete related Streams
 	if err := service.streamService.DeleteByParent(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's streams", user, note)
+		return derp.Wrap(err, location, "Deleting User's streams", user.UserID, note)
 	}
 
 	// Delete related connections to external services.  This removes what Emissary installed
 	// at each service and erases the credential, but never touches the account itself -- see
 	// MAILING-LISTS.md D14 for why a deleted User must not unsubscribe their own followers.
 	if err := service.userConnectionService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's external connections", user, note)
+		return derp.Wrap(err, location, "Deleting User's external connections", user.UserID, note)
 	}
 
 	// Delete the User from the database
 	if err := service.collection(session).Delete(user, note); err != nil {
-		return derp.Wrap(err, location, "Deleting User", user, note)
+		return derp.Wrap(err, location, "Deleting User", user.UserID, note)
+	}
+
+	// RULE: Deleting the primary user leaves the domain without one
+	if err := service.recordPrimaryUser(session, user); err != nil {
+		return derp.Wrap(err, location, "Recording the primary user", user.UserID)
 	}
 
 	// Send user:delete webhooks
@@ -642,7 +669,7 @@ func (service *User) CalcNewUsername(session data.Session, user *model.User) err
 	}
 
 	// Okay, this sucks, but we need to call it here.  Return error.
-	return derp.Internal("service.User.CalcUsername", "Unable to generate a unique username", user)
+	return derp.Internal("service.User.CalcUsername", "Unable to generate a unique username", user.UserID)
 }
 
 // ValidateUsername returns an error unless the provided username is present, unreserved,
@@ -809,7 +836,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 			user.IsOwner = isOwner
 
 			if err := service.Save(session, &user, "Set Owner"); err != nil {
-				return derp.Wrap(err, location, "Saving user", user)
+				return derp.Wrap(err, location, "Saving user", user.UserID)
 			}
 		}
 	}
@@ -823,7 +850,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 		user.IsOwner = true
 
 		if err := service.Save(session, &user, "CreateOwner"); err != nil {
-			return derp.Wrap(err, location, "Saving user", user)
+			return derp.Wrap(err, location, "Saving user", user.UserID)
 		}
 	}
 
@@ -840,13 +867,13 @@ func (service *User) DeleteImage(session data.Session, user *model.User, note st
 	}
 
 	if err := service.attachmentService.DeleteByID(session, model.AttachmentObjectTypeUser, user.UserID, user.ImageID, note); err != nil {
-		return derp.Wrap(err, location, "Deleting banner attachment", user)
+		return derp.Wrap(err, location, "Deleting banner attachment", user.UserID)
 	}
 
 	user.ImageID = primitive.NilObjectID
 
 	if err := service.Save(session, user, note); err != nil {
-		return derp.Wrap(err, location, "Saving User", user)
+		return derp.Wrap(err, location, "Saving User", user.UserID)
 	}
 
 	return nil
@@ -864,13 +891,13 @@ func (service *User) DeleteAvatar(session data.Session, user *model.User, note s
 
 	// Delete the existing Avatar file
 	if err := service.attachmentService.DeleteByID(session, model.AttachmentObjectTypeUser, user.UserID, user.IconID, note); err != nil {
-		return derp.Wrap(err, location, "Deleting avatar attachment", user)
+		return derp.Wrap(err, location, "Deleting avatar attachment", user.UserID)
 	}
 
 	// Clear the reference in the User object
 	user.IconID = primitive.NilObjectID
 	if err := service.Save(session, user, note); err != nil {
-		return derp.Wrap(err, location, "Saving User", user)
+		return derp.Wrap(err, location, "Saving User", user.UserID)
 	}
 
 	return nil
@@ -891,11 +918,11 @@ func (service *User) SendPasswordResetEmail(session data.Session, user *model.Us
 	// code is persisted before sending and is NOT rolled back, so it survives a retry.
 
 	if err := service.MakeNewPasswordResetCode(session, user, duration); err != nil {
-		return derp.Wrap(err, location, "Making password reset", user)
+		return derp.Wrap(err, location, "Making password reset", user.UserID)
 	}
 
 	if err := service.emailService.SendPasswordReset(user); err != nil {
-		return derp.Wrap(err, location, "Sending password reset", user)
+		return derp.Wrap(err, location, "Sending password reset", user.UserID)
 	}
 
 	return nil
@@ -927,7 +954,7 @@ func (service *User) NotifySigninLockout(session data.Session, username string) 
 	// Notify the owner that their account is being targeted. No password reset code
 	// is issued -- the credential is untouched.
 	if err := service.emailService.SendUserLockout(session, &user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Sending user lockout email", user))
+		derp.Report(derp.Wrap(err, location, "Sending user lockout email", user.UserID))
 	}
 }
 
@@ -946,7 +973,7 @@ func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.
 
 	// Try to save the user with the new password reset code.
 	if err := service.Save(session, user, "Create Password Reset Code"); err != nil {
-		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Saving user", user)
+		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Saving user", user.UserID)
 	}
 
 	return nil

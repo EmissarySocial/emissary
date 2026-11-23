@@ -1,72 +1,11 @@
-{{- /*
-	likes-list.html renders the "Likes" notification list (LIKE + DISLIKE).  The likes-list
-	action bakes ?type=LIKE into the request, so the .Notifications query is already filtered
-	to those types; ?createDate= drives the infinite scroll.  The row markup is inlined here
-	(rather than a shared row partial) so this page can format its own content; LIKE and
-	DISLIKE share one layout, differing only in the verb.
-*/ -}}
+<!-- The "Likes" notification list (LIKE and DISLIKE). The likes-list action sets ?type=, and ?createDate= drives the infinite scroll. -->
 {{- $notifications := .LabelNotifications .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
 {{- $createDate := .QueryParam "createDate" -}}
 
 {{- if $notifications.NotEmpty -}}
 
 	{{- range $notification := $notifications -}}
-		{{- if $notification.Labels.IsHidden -}}
-
-		{{- /* D2 placeholder: the actor is hidden by the viewer's rules. Anonymous until selected (R17). */ -}}
-		<div class="notification flex-row flex-align-center padding-vertical text-sm {{if $notification.NotRead}}unread{{end}}">
-			<span class="notification-dot text-red" style="width:12px;">
-				{{- if $notification.NotRead -}}&#9679;{{- end -}}
-			</span>
-			<div class="flex-grow">
-				{{- template "label-chips" $notification.Labels.Hidden -}}
-			</div>
-			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
-		</div>
-
-		{{- else -}}
-		{{- $actor := $notification.Actor -}}
-		<a href="{{$notification.ObjectURL}}"
-			class="text-nocolor notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}"
-			role="link">
-
-			<!-- Unread dot -->
-			<span class="notification-dot text-red" style="width:12px;">
-				{{- if $notification.NotRead -}}&#9679;{{- end -}}
-			</span>
-
-			<!-- Actor avatar -->
-			<div class="width-32">
-				{{- if $actor.HasIconURL -}}
-					<img src="{{$actor.IconURL}}" alt="" class="circle width-32">
-				{{- else -}}
-					<div class="circle width-32 flex-center bg-gray-90">{{icon "person"}}</div>
-				{{- end -}}
-			</div>
-
-			<!-- Verb + summary -->
-			<div class="flex-grow ellipsis-block">
-				<div>
-					<span class="bold">
-						{{- if ne "" $actor.Name -}}{{$actor.Name}}{{- else -}}{{$actor.UsernameOrID}}{{- end}}
-					</span>
-					{{- if eq $notification.Type "DISLIKE" -}}
-						<span>disliked your post</span>
-					{{- else -}}
-						<span>liked your post</span>
-					{{- end -}}
-					{{- template "label-chips" $notification.Labels.Annotations -}}
-				</div>
-				{{- if ne "" $notification.ObjectSummary -}}
-					<div class="text-sm text-gray ellipsis">{{$notification.ObjectSummary}}</div>
-				{{- end -}}
-			</div>
-
-			<!-- Relative time -->
-			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
-
-		</a>
-		{{- end -}}
+		{{- template "row" $notification -}}
 	{{- end -}}
 
 	<!-- Infinite scroll: load older notifications when the sentinel is revealed -->

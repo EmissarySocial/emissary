@@ -96,7 +96,7 @@ func (service *Object) Save(session data.Session, object *model.Object, note str
 
 	// Save the value to the database
 	if err := service.collection(session).Save(object, note); err != nil {
-		return derp.Wrap(err, location, "Saving Object", object, note)
+		return derp.Wrap(err, location, "Saving Object", "objectId: "+object.ObjectID.Hex(), note)
 	}
 
 	return nil
@@ -106,7 +106,7 @@ func (service *Object) Save(session data.Session, object *model.Object, note str
 func (service *Object) Delete(session data.Session, object *model.Object, note string) error {
 
 	if err := service.collection(session).Delete(object, note); err != nil {
-		return derp.Wrap(err, "service.Object.Delete", "Deleting Object", object, note)
+		return derp.Wrap(err, "service.Object.Delete", "Deleting Object", "objectId: "+object.ObjectID.Hex(), note)
 	}
 
 	return nil
@@ -177,7 +177,7 @@ func (service *Object) CreateAddressed(session data.Session, userID primitive.Ob
 	object.Value = objectValue
 
 	if err := service.Save(session, &object, "Created via ActivityPub Outbox"); err != nil {
-		return "", "", derp.Wrap(err, location, "Saving object", object)
+		return "", "", derp.Wrap(err, location, "Saving object", "objectId: "+object.ObjectID.Hex())
 	}
 
 	activityURL, err = service.outbox2Service.PutUserActivity(session, userID, activity)

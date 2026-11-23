@@ -13,7 +13,7 @@ func CollectionItemSchema() schema.Element {
 			"collectionId":     schema.String{Required: true, Format: "objectId"},
 			"userId":           schema.String{Required: true, Format: "objectId"},
 			"parentId":         schema.String{Required: true, Format: "objectId"},
-			"collectionType":   schema.String{Required: true, Enum: []string{CollectionTypeContext, CollectionTypeDislikes, CollectionTypeLikes, CollectionTypeReplies, CollectionTypeShares}},
+			"collectionType":   schema.String{Required: true, Enum: []string{CollectionTypeContext, CollectionTypeDislikes, CollectionTypeLikes, CollectionTypeReplies, CollectionTypeShares, CollectionTypeQuotes}},
 			"uri":              schema.String{Required: true, Format: "uri"},
 		},
 	}

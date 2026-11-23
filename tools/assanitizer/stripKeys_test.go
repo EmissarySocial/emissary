@@ -1,6 +1,7 @@
 package assanitizer
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/benpate/hannibal/property"
@@ -107,4 +108,25 @@ func TestStrip_PrefixBehaviorUnchanged(t *testing.T) {
 	require.NotContains(t, value, "emissary:labels")
 	require.NotContains(t, value["object"].(map[string]any), "emissary:trust")
 	require.Equal(t, "https://example.com/note/1", value[vocab.PropertyID])
+}
+
+// TestCloneThenStripKeys_ReachesListsInsideAClone verifies that a property inside a list is
+// removed from a clone, whatever type hannibal gives the lists it copies
+func TestCloneThenStripKeys_ReachesListsInsideAClone(t *testing.T) {
+
+	original := property.Map{
+		"object": map[string]any{
+			"attachment": []any{
+				map[string]any{"bcc": "https://example.com/@blind", "name": "kept"},
+			},
+		},
+	}
+
+	clone := original.Clone().Map()
+	StripKeys(clone, "bto", "bcc")
+
+	encoded, err := json.Marshal(clone)
+	require.NoError(t, err)
+	require.NotContains(t, string(encoded), "@blind")
+	require.Contains(t, string(encoded), `"name":"kept"`)
 }

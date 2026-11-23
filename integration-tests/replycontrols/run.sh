@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end test of Emissary's reply controls (emissary-specs REPLY-CONTROLS).  See README.md.
+# End-to-end test of Emissary's reply controls (emissary-specs REPLY-CONTROLS) and quote approvals (FEP-044f).  See README.md.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -242,6 +242,47 @@ composer_state() {
 	else echo "neither"; fi
 }
 
+# starts_with VALUE PREFIX succeeds when VALUE begins with PREFIX
+starts_with() { [[ "$1" == "$2"* ]]; }
+
+# is_2xx CODE succeeds for any HTTP success status
+is_2xx() { [[ "$1" =~ ^2[0-9][0-9]$ ]]; }
+
+# http_status URL prints the HTTP status of an ActivityPub GET
+http_status() {
+	curl -s -m 10 -o /dev/null -w '%{http_code}' -H 'Accept: application/activity+json' "$1" || true
+}
+
+# quote_as_bob QUOTE_ID ATTRIBUTED_TO URL delivers a QuoteRequest signed with Bob's key, and prints the HTTP status
+quote_as_bob() {
+	"$HELPER" quote-request "$DB_B" "$BOB_ID" "$3" "$1" "$2"
+}
+
+# alice_fragment ACTION prints one of Alice's notification fragments, as htmx requests it
+alice_fragment() {
+	curl -s -m 30 -b "$JAR_A" -H 'HX-Request: true' "$A/@me/notifications/$1" || true
+}
+
+# quote_modal_query prints the query string of the first quote row on Alice's Quotes list
+quote_modal_query() {
+	alice_fragment quotes-list | grep -oE 'quote\?notificationId=[0-9a-f]{24}' | head -1 | cut -d'?' -f2 || true
+}
+
+# reject_quote_query MODAL_QUERY prints the query string of the Reject button in a quote's modal
+reject_quote_query() {
+	[[ -n "$1" ]] || return 0
+	alice_fragment "quote?$1" | grep -oE 'reject-quote\?collectionItemId=[0-9a-f]{24}' | head -1 | cut -d'?' -f2 || true
+}
+
+# row_state LIST prints "unread", "read", or "missing" for the quote row on one of Alice's lists
+row_state() {
+	local html
+	html=$(alice_fragment "$1" | tr '\n' ' ' | grep -oE '<a[^>]*>' | grep 'quote?notificationId=' | head -1 || true)
+	if [[ -z "$html" ]]; then echo "missing"
+	elif grep -q 'unread' <<<"$html"; then echo "unread"
+	else echo "read"; fi
+}
+
 #############################################
 # Seed
 #############################################
@@ -264,8 +305,8 @@ log "S1 = $S1_URL (author $ALICE_ID)"
 echo
 echo "== 1. Publish the policy"
 
-if out=$("$HELPER" check-policy "$S1_URL" public 2>&1); then pass "1a open: canReply is Public" "$out"
-else fail "1a open: canReply is Public" "$out"; fi
+if out=$("$HELPER" check-policy "$S1_URL" public 2>&1); then pass "1a open: canReply and canQuote are Public" "$out"
+else fail "1a open: canReply and canQuote are Public" "$out"; fi
 
 #############################################
 # 3 and 4 while OPEN
@@ -302,8 +343,8 @@ echo "== Replies CLOSED on S1 (replyPolicy=nobody in the DB, then republished th
 
 set_policy "$S1" nobody "<p>$NOTE_TEXT</p>"
 
-if out=$("$HELPER" check-policy "$S1_URL" "$ALICE_ID" 2>&1); then pass "1b closed: canReply is the author" "$out"
-else fail "1b closed: canReply is the author" "$out"; fi
+if out=$("$HELPER" check-policy "$S1_URL" "$ALICE_ID" 2>&1); then pass "1b closed: canReply and canQuote are the author" "$out"
+else fail "1b closed: canReply and canQuote are the author" "$out"; fi
 
 got=$(wait_replies "$S1_URL/pub/replies" "0")
 check "3d closed: replies hidden" "/replies = [$got]" test "$got" == "0"
@@ -354,8 +395,8 @@ echo "== Replies REOPENED on S1"
 
 set_policy "$S1" everyone "<p>$NOTE_TEXT</p>"
 
-if out=$("$HELPER" check-policy "$S1_URL" public 2>&1); then pass "1c reopened: canReply is Public" "$out"
-else fail "1c reopened: canReply is Public" "$out"; fi
+if out=$("$HELPER" check-policy "$S1_URL" public 2>&1); then pass "1c reopened: canReply and canQuote are Public" "$out"
+else fail "1c reopened: canReply and canQuote are Public" "$out"; fi
 
 got=$(wait_replies "$S1_URL/pub/replies" "1 $R1")
 check "3g reopened: reply listed again" "/replies = [$got]" test "$got" == "1 $R1"
@@ -368,6 +409,155 @@ composer=$(composer_state "$S1_URL")
 diag=$("$HELPER" diagnose-cache "$DB_COMMON" "$S1_URL" "$BOB_ID" 2>&1 || true)
 check "4e reopened: Reply button shown" "button=$button; canReply for Bob: $diag" test "$button" == "shown"
 check "4f reopened: composer offered" "composer=$composer" test "$composer" == "form"
+
+#############################################
+# 5. Quote posts (FEP-044f)
+#############################################
+
+echo
+echo "== 5. Quotes of S1 (open), each QuoteRequest signed with Bob's own key"
+
+# Q1 is a real post on Bob's server, because a rejection looks up the quoting actor from the quote post itself
+Q1="$(reply_as_bob "$S1_URL" "<p>Quote post $RUN_ID</p>")"
+log "Q1 = $Q1"
+code=$(quote_as_bob "$Q1" "$BOB_ID" "$S1_URL")
+check "5a open: QuoteRequest received" "HTTP $code" test "$code" == "200"
+
+"$HELPER" wait-inbox "$DB_B" "$Q1#quote_request" 30 || die "the Accept of $Q1 never reached Bob's inbox"
+"$HELPER" wait-queue-idle "$DB_COMMON" 30 || die "the queue did not drain after $Q1"
+STAMP=$("$HELPER" accept-result "$DB_B" "$Q1#quote_request")
+check "5b open: Accept names an authorization" "result = $STAMP" starts_with "$STAMP" "$S1_URL/pub/quoteAuthorization/"
+
+if out=$("$HELPER" check-authorization "$STAMP" "$S1_URL" "$Q1" "$ALICE_ID" 2>&1); then pass "5c open: QuoteAuthorization verifies" "$out"
+else fail "5c open: QuoteAuthorization verifies" "$out"; fi
+
+count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q1")
+check "5d open: author notified" "$count QUOTE notification(s) for Q1" test "$count" == "1"
+
+MODAL_QUERY=$(quote_modal_query)
+check "5e open: quote listed under Quotes" "row opens quote?$MODAL_QUERY" test -n "$MODAL_QUERY"
+
+REJECT_QUERY=$(reject_quote_query "$MODAL_QUERY")
+check "5e open: Reject button in the modal" "query = '$REJECT_QUERY'" test -n "$REJECT_QUERY"
+
+echo
+echo "== 6. Notification tabs, and marking one row read"
+
+state=$(row_state all-list)
+check "6a All lists the quote" "quote row on all-list is $state" test "$state" == "unread"
+
+html=$(alice_fragment all-list)
+check "6b All lists the reply too" "all-list holds 'replied to you'" grep -q 'replied to you' <<<"$html"
+
+state=$(row_state replies-list)
+check "6c Messages & Replies leaves quotes out" "quote row on replies-list is $state" test "$state" == "missing"
+
+code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' "$A/@me/notifications/read-one?$MODAL_QUERY" || true)
+state=$(row_state quotes-list)
+check "6d a GET marks nothing read" "HTTP $code, row is $state" test "$state" == "unread"
+
+code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' -X POST "$A/@me/notifications/read-one?$MODAL_QUERY" || true)
+state=$(row_state quotes-list)
+check "6e a POST marks that row read" "HTTP $code, row is $state" test "$code/$state" == "200/read"
+
+broken=""
+for page in all replies quotes shares likes followers "header?type=ALL" "sidebar?type=QUOTE"; do
+	code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' "$A/@me/notifications/$page" || true)
+	[[ "$code" == "200" ]] || broken="$broken $page=$code"
+done
+check "6g every tab page renders" "failures:${broken:- none}" test -z "$broken"
+
+# The thread view of Bob's reply must select the reply's own card, which needs a hashed ID on a saved post (BUG-383)
+html=$(curl -s -m 30 -b "$JAR_A" -H 'HX-Request: true' "$A/@me/newsfeed/browse?url=$R1" || true)
+selected=$(grep -oE 'set selectedNode to #id_[a-z0-9]*' <<<"$html" | head -1 | sed 's/.*#//')
+matches=$(grep -oE "id=\"$selected\"" <<<"$html" | wc -l | tr -d ' ')
+check "6h a reply opens on its own card" "selected '$selected', which names $matches card(s)" test "$selected/$matches" != "id_/$matches" -a "$matches" == "1"
+
+html=$(alice_fragment replies-list)
+check "6f the other rows stay unread" "replies-list still holds an unread row" grep -q 'notification[^"]*unread' <<<"$html"
+
+Q_FORGED="$B/quotes/$RUN_ID-forged"
+code=$(quote_as_bob "$Q_FORGED" "$B/@someone-else" "$S1_URL")
+count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q_FORGED")
+check "5f forged: someone else's post refused" "HTTP $code, $count QUOTE notification(s)" test "$code/$count" == "422/0"
+
+echo
+echo "== 5. Quotes CLOSED on S1"
+
+set_policy "$S1" nobody "<p>$NOTE_TEXT</p>"
+
+status=$(http_status "$STAMP")
+check "5g closed: authorization withdrawn" "GET = HTTP $status" test "$status" == "404"
+
+Q2="$B/quotes/$RUN_ID-2"
+code=$(quote_as_bob "$Q2" "$BOB_ID" "$S1_URL")
+"$HELPER" wait-queue-idle "$DB_COMMON" 30 || die "the queue did not drain after $Q2"
+answers=$("$HELPER" count-inbox "$DB_B" "$Q2#quote_request")
+count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q2")
+check "5h closed: refused silently" "HTTP $code, $answers answer(s) to Bob, $count QUOTE notification(s)" test "$code/$answers/$count" == "200/0/0"
+
+set_policy "$S1" everyone "<p>$NOTE_TEXT</p>"
+
+status=$(http_status "$STAMP")
+check "5i reopened: authorization served again" "GET = HTTP $status" test "$status" == "200"
+
+echo
+echo "== 5. Alice rejects Q1 from its notification"
+
+code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' -X POST \
+	"$A/@me/notifications/reject-quote?$REJECT_QUERY" || true)
+check "5j rejected: action succeeds" "HTTP $code" is_2xx "$code"
+
+if "$HELPER" wait-inbox "$DB_B" "$STAMP" 30; then pass "5k rejected: Delete reached Bob" "Bob's inbox holds a Delete of $STAMP"
+else fail "5k rejected: Delete reached Bob" "no Delete of $STAMP in Bob's inbox"; fi
+
+status=$(http_status "$STAMP")
+check "5l rejected: authorization withdrawn" "GET = HTTP $status" test "$status" == "404"
+
+count=$("$HELPER" count-notifications "$DB_A" QUOTE "$Q1")
+check "5m rejected: notification removed" "$count QUOTE notification(s) for Q1" test "$count" == "0"
+
+echo
+echo "== 7. The unread notifications email"
+
+# selected_hours prints the span that Alice's notification settings form draws as selected
+selected_hours() {
+	curl -s -m 30 -b "$JAR_A" -H 'HX-Request: true' "$A/@me/settings/notifications-form" |
+		grep -oE '<(option|input)[^>]*value="?[0-9]+"?[^>]*(selected|checked)' | grep -oE 'value="?[0-9]+' | grep -oE '[0-9]+' | head -1 || true
+}
+
+location=$(curl -s -m 30 -o /dev/null -w '%{http_code} %{redirect_url}' "$A/@me/notifications/all" || true)
+check "7a a signed-out reader is sent to sign in, and back to the All tab" "$location" \
+	test "$location" == "303 $A/signin?next=%2F%40me%2Fnotifications%2Fall"
+
+hours=$(selected_hours)
+check "7b the setting defaults to 24 hours" "form selects '$hours'" test "$hours" == "24"
+
+# RULE: this is the last step that reads Alice's settings, because the post names no channels
+code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -b "$JAR_A" -H 'HX-Request: true' \
+	--data-urlencode "notificationEmailHours=6" "$A/@me/settings/notifications-form" || true)
+hours=$(selected_hours)
+check "7c the setting saves" "HTTP $code, form selects '$hours'" test "$hours" == "6"
+
+# The Save button posts wherever the drawn form says, so read the form and post as a browser would
+# RULE: read the page, not the form's own action, whose URL is the fallback when the endpoint is lost
+form=$(curl -s -m 30 -b "$JAR_A" "$A/@me/settings/notifications" || true)
+endpoint=$(grep -oE 'hx-post="/@me/settings/[^"]*"' <<<"$form" | head -1 | cut -d'"' -f2)
+check "7d the form posts to its own action" "hx-post is '$endpoint'" test "$endpoint" == "/@me/settings/notifications-form"
+
+# Every span, posted with every channel as a browser posts them, must save and redraw the button
+unsaved=""
+for span in 1 6 12 24 48 0; do
+	answer=$(curl -s -m 30 -i -b "$JAR_A" -H 'HX-Request: true' \
+		--data-urlencode "notificationChannels=DIRECT_MESSAGE" --data-urlencode "notificationChannels=REPLY" \
+		--data-urlencode "notificationChannels=MENTION_FOLLOWING" --data-urlencode "notificationChannels=MENTION_NOT_FOLLOWING" \
+		--data-urlencode "notificationChannels=FOLLOW" --data-urlencode "notificationChannels=REACTION" \
+		--data-urlencode "notificationEmailHours=$span" --data-urlencode "null=" "$A$endpoint" || true)
+	retarget=$(grep -i '^hx-retarget:' <<<"$answer" | tr -d '\r' | cut -d' ' -f2)
+	hours=$(selected_hours)
+	[[ "$retarget/$hours" == "#inline-save-button/$span" ]] || unsaved="$unsaved $span(retarget '$retarget', form selects '$hours')"
+done
+check "7e the Save button is redrawn after every save" "failures:${unsaved:- none}" test -z "$unsaved"
 
 #############################################
 # Summary

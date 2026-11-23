@@ -157,12 +157,12 @@ func (service *Following) ConnectActivityPub(session data.Session, following *mo
 		return derp.Wrap(err, location, "Getting ActivityPub actor", following.UserID)
 	}
 
-	// Send the ActivityPub Follow request as a post-commit queue task (F3): the signed HTTP
-	// delivery happens after this transaction commits and is independently retryable. The signing
-	// key is resolved in the sender consumer via SendLocator.Actor(localActor.ActorID()).
+	// Send the ActivityPub Follow request through the delivery pipeline, after this transaction commits
 	followingURL := service.ActivityPubID(following)
 	log.Debug().Str("loc", location).Msg("Sending ActivityPub Follow request to: " + remoteActor.ID())
-	service.outboxService.SendFollow(session, localActor.ActorID(), followingURL, remoteActor.ID())
+	if err := service.outbox2Service.SendFollow(session, localActor.ActorID(), followingURL, remoteActor.ID()); err != nil {
+		return derp.Wrap(err, location, "Sending Follow", remoteActor.ID())
+	}
 
 	// Success!
 	return nil
@@ -201,7 +201,9 @@ func (service *Following) Resume(session data.Session, following *model.Followin
 			return derp.Wrap(err, location, "Getting ActivityPub actor", following.UserID)
 		}
 
-		service.outboxService.SendFollow(session, localActor.ActorID(), service.ActivityPubID(following), following.ProfileURL)
+		if err := service.outbox2Service.SendFollow(session, localActor.ActorID(), service.ActivityPubID(following), following.ProfileURL); err != nil {
+			return derp.Wrap(err, location, "Sending Follow", following.ProfileURL)
+		}
 	}
 
 	// Back to LOADING: the Accept handler (or the next poll) promotes it to SUCCESS from here

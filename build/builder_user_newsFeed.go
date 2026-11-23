@@ -56,9 +56,9 @@ func NewInbox(factory Factory, session data.Session, request *http.Request, resp
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
 			return Inbox{}, derp.Forbidden(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
-		} else {
-			return Inbox{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 		}
+
+		return Inbox{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 	}
 
 	return Inbox{
@@ -648,6 +648,14 @@ func (w Inbox) QueryByContext(contextID string, afterDate int64, maxRows int) (s
 		return result, err
 	}
 
+	// RULE: A cached value carries no client, and a template reads each document's author
+	// through the document, so every one is bound to the viewer's client before it is handed over
+	client := activityService.UserClient(w.AuthenticatedID())
+
+	for index := range result {
+		result[index].WithOptions(streams.WithClient(client))
+	}
+
 	// Stamp each document with the viewer's rule verdict (D2 placeholders + label chips)
 	w._factory.Rule().LabelDocuments(w._session, w.AuthenticatedID(), result)
 
@@ -689,8 +697,12 @@ func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.
 	// templates can render D2 placeholders for hidden replies without a per-reply rules query.
 	result := make(sliceof.Object[streams.Document], 0, len(values))
 
+	// RULE: A cached value carries no client, and a template reads each reply's author through
+	// the reply, so every document is bound to the viewer's client before it is handed over
+	client := activityService.UserClient(w.AuthenticatedID())
+
 	for _, value := range values {
-		result = append(result, value.AsDocument())
+		result = append(result, value.AsDocument().AddOptions(streams.WithClient(client)))
 	}
 
 	w._factory.Rule().LabelDocuments(w._session, w.AuthenticatedID(), result)

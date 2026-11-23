@@ -162,6 +162,10 @@ func (service *User) ActivityPubProfile(session data.Session, user *model.User) 
 		vocab.PropertyPublicKeyPEM: encryptionKey.PublicPEM,
 	}
 
+	// RULE: The export collections describe this server, not the User, so they stay out of the
+	// profile fingerprint. A change to the list must not send an Update to every follower.
+	result[vocab.PropertyMigration] = user.MigrationJSONLD()
+
 	// If the Domain allows it, append MLS messaging values as well.
 	if readOnlyDomain := service.domainService.Cached(); readOnlyDomain.UserCanMLS(user) {
 		result[vocab.PropertyMLSMessages] = user.ActivityPubInboxURL_DirectMessages_MLS()

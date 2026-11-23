@@ -148,6 +148,11 @@ func (token *OAuthUserToken) RotateRefresh(newSecret string, now time.Time) {
 	token.RotatedAt = now.Unix()
 }
 
+// IssuedRefreshSecret returns TRUE if the secret is this grant's current refresh secret, or the one before it
+func (token *OAuthUserToken) IssuedRefreshSecret(generation int, secret string) bool {
+	return token.ClassifyRefresh(generation, secret, time.Now(), 0) != RefreshMatchNone
+}
+
 // ClassifyRefresh matches a presented (generation, secret) against this grant
 // and returns how the token endpoint should treat it (RFC 6749 §6 rotation with
 // RFC 6819 reuse detection). `now` and `grace` drive the grace-window decision.

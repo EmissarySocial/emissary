@@ -44,6 +44,16 @@
 		color:var(--white)!important;
 	}
 
+	&.gray {
+		background-color: var(--gray40);
+		border: solid 1px var(--gray50);
+		color: var(--gray00);
+
+		&.hover {
+			background-color: var(--gray50);
+		}
+	}
+
 	&.blue {
 		color:white!important;
 		background-color:var(--blue50);

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"strings"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -87,6 +87,11 @@ func (authorization Authorization) IsIdentity() bool {
 	return !authorization.IdentityID.IsZero()
 }
 
+// IsAccessToken returns TRUE if these claims were minted for an OAuth client rather than for a signed-in person
+func (authorization Authorization) IsAccessToken() bool {
+	return authorization.APIUser || !authorization.OAuthUserTokenID.IsZero()
+}
+
 // AllGroupIDs returns a slice of groups that this authorization belongs to,
 // including the magic "Anonymous", and (if valid) "Authenticated" groups.
 func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
@@ -105,10 +110,21 @@ func (authorization Authorization) IsGroupMember(groupIDs ...primitive.ObjectID)
 	return slice.ContainsAny(authorization.AllGroupIDs(), groupIDs...)
 }
 
+// HasScope returns TRUE if the named OAuth scope was granted to this token
+func (authorization Authorization) HasScope(scope string) bool {
+
+	// An empty scope names nothing, so it never matches
+	if scope == "" {
+		return false
+	}
+
+	return slices.Contains(authorization.Scopes(), scope)
+}
+
 // Scopes returns a slice of scopes that this Authorization token is allowed to use.
 // This implements the toot.ScopesGetter interface.
 func (authorization Authorization) Scopes() []string {
-	return strings.Split(authorization.Scope, " ")
+	return ParseOAuthScopes(authorization.Scope)
 }
 
 // Debug returns this Authorization as a map, for logging and troubleshooting

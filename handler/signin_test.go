@@ -48,3 +48,55 @@ func TestPostResetCode_RejectsShortPassword(t *testing.T) {
 
 	require.NotNil(t, err, "a password below the policy minimum must be rejected")
 }
+
+// TestSignInAndReturnTo verifies that signing out to switch accounts returns to the whole page, query included,
+// and never to another origin or back into a sign-in loop
+func TestSignInAndReturnTo(t *testing.T) {
+
+	// next returns where the sign-in page will send the User afterward
+	next := func(value string) string {
+		parsed, err := url.Parse(signInAndReturnTo(value))
+		require.NoError(t, err)
+		require.Equal(t, "/signin", parsed.Path)
+		return parsed.Query().Get("next")
+	}
+
+	// The query string survives, which the OAuth consent page cannot do without
+	require.Equal(t, "/oauth/authorize?client_id=x&scope=read%20write", next("/oauth/authorize?client_id=x&scope=read%20write"))
+
+	// Another origin is reduced to a path on this one
+	require.Equal(t, "/x?y=1", next("https://evil.example/x?y=1"))
+	require.Equal(t, "/x", next("//evil.example/x"))
+
+	// Loops and garbage go home
+	require.Equal(t, "/", next("/signout"))
+	require.Equal(t, "/", next("/signin?next=/x"))
+	require.Equal(t, "/", next("%zz"))
+}
+
+// FuzzSignInAndReturnTo requires every destination to stay on this origin
+func FuzzSignInAndReturnTo(f *testing.F) {
+
+	f.Add("/oauth/authorize?client_id=x")
+	f.Add("https://evil.example/x")
+	f.Add("//evil.example/x")
+	f.Add("/\\evil.example")
+	f.Add("%zz")
+
+	f.Fuzz(func(t *testing.T, value string) {
+
+		parsed, err := url.Parse(signInAndReturnTo(value))
+		require.NoError(t, err)
+		require.Equal(t, "/signin", parsed.Path)
+
+		destination := parsed.Query().Get("next")
+		require.True(t, strings.HasPrefix(destination, "/"), "destination %q is not a path", destination)
+
+		target, err := url.Parse(destination)
+		if err != nil {
+			return
+		}
+
+		require.Empty(t, target.Host, "destination %q leaves this origin", destination)
+	})
+}

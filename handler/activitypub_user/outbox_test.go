@@ -1,15 +1,19 @@
 package activitypub_user
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/steranko"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 )
 
-// TestOutbox_ServerAssignedActivityID pins the mechanics putActivityIntoOutbox relies on:
+// TestOutbox_ServerAssignedActivityID pins the mechanics Outbox2.Publish relies on:
 // SetProperty mutates the document's underlying value, so the server-assigned canonical id
 // replaces a client-provided one (ActivityPub §6.1) and survives into every later Map() call.
 func TestOutbox_ServerAssignedActivityID(t *testing.T) {
@@ -67,4 +71,40 @@ func TestOutbox_ServerAssignedObjectID(t *testing.T) {
 	reference.SetProperty(vocab.PropertyObject, referenceValue)
 
 	require.Equal(t, objectURL, reference.Object().ID())
+}
+
+// newResponseContext returns a handler Context whose response is recorded
+func newResponseContext() (Context, *httptest.ResponseRecorder) {
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/@user/pub/outbox", nil)
+	ctx := &steranko.Context{Context: echo.New().NewContext(request, recorder)}
+
+	return Context{context: ctx}, recorder
+}
+
+// TestRespondCreated_WithObject verifies that a C2S POST that wrote an object answers 201 and names it
+func TestRespondCreated_WithObject(t *testing.T) {
+
+	context, recorder := newResponseContext()
+	context.context.Response().Header().Set("X-Activity-Id", "https://example.com/@user/pub/outbox/1")
+
+	require.NoError(t, respondCreated(context, "https://example.com/@user/pub/objects/1"))
+
+	require.Equal(t, http.StatusCreated, recorder.Code)
+	require.Equal(t, "https://example.com/@user/pub/objects/1", recorder.Header().Get("Location"))
+	require.Equal(t, "https://example.com/@user/pub/objects/1", recorder.Header().Get("X-Object-Id"))
+	require.Equal(t, "https://example.com/@user/pub/outbox/1", recorder.Header().Get("X-Activity-Id"), "the activity's id is kept")
+}
+
+// TestRespondCreated_WithoutObject verifies that a C2S POST that wrote no object answers 201 and names none
+func TestRespondCreated_WithoutObject(t *testing.T) {
+
+	context, recorder := newResponseContext()
+
+	require.NoError(t, respondCreated(context, ""))
+
+	require.Equal(t, http.StatusCreated, recorder.Code)
+	require.Empty(t, recorder.Header().Get("Location"))
+	require.Empty(t, recorder.Header().Get("X-Object-Id"))
 }

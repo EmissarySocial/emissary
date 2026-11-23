@@ -169,28 +169,6 @@ func TestStream_CalculateMentions_BareHandleNoHost(t *testing.T) {
  * Emission
  ******************************************/
 
-// newMentionStreamService extends the tag harness with the services JSONLD needs.
-func newMentionStreamService() *Stream {
-	streamService, _ := newTagStreamService([]string{"content.html"}, "/search?q=")
-	streamService.attachmentService = &Attachment{}
-	return streamService
-}
-
-// tagsOf returns the `tag` array from a JSON-LD document, or nil when it has none.
-func tagsOf(t *testing.T, document mapof.Any) []mapof.String {
-	t.Helper()
-
-	value, exists := document[vocab.PropertyTag]
-
-	if !exists {
-		return nil
-	}
-
-	tags, ok := value.([]mapof.String)
-	require.True(t, ok, "tag array must be []mapof.String")
-	return tags
-}
-
 // TestStream_JSONLD_Mentions is the direct guard against BUG-09: a published document must carry a
 // `Mention` tag for each resolved handle, AND address that actor in `cc` -- without the addressing,
 // a mentioned account that does not follow the author never receives the post at all.
@@ -278,6 +256,21 @@ func TestStream_JSONLD_UnresolvedMentionNotPublished(t *testing.T) {
 	require.Equal(t, []string{"https://mastodon.social/users/sarah"}, document[vocab.PropertyCC])
 }
 
+// tagsOf returns the `tag` array from a JSON-LD document, or nil when it has none.
+func tagsOf(t *testing.T, document mapof.Any) []mapof.String {
+	t.Helper()
+
+	value, exists := document[vocab.PropertyTag]
+
+	if !exists {
+		return nil
+	}
+
+	tags, ok := value.([]mapof.String)
+	require.True(t, ok, "tag array must be []mapof.String")
+	return tags
+}
+
 // TestStream_JSONLD_NoTags confirms that a document with no tags omits `tag` and `cc` entirely,
 // rather than publishing empty arrays.
 func TestStream_JSONLD_NoTags(t *testing.T) {
@@ -290,9 +283,8 @@ func TestStream_JSONLD_NoTags(t *testing.T) {
 	require.NotContains(t, document, vocab.PropertyCC)
 }
 
-// TestStream_JSONLD_CCIsPlainStringSlice pins the concrete type of `cc`. service.Stream.publish_outbox
-// type-asserts it as []string when appending the in-reply-to author; a named slice type would fail
-// that assertion silently and drop the reply author from delivery.
+// TestStream_JSONLD_CCIsPlainStringSlice pins the concrete type of `cc` as a plain []string, so code
+// that appends to it, as addressedJSONLD does with a reply's author, gets the slice it expects.
 func TestStream_JSONLD_CCIsPlainStringSlice(t *testing.T) {
 	streamService := newMentionStreamService()
 	stream := newTagStream("Hey @sarah@mastodon.social")
@@ -307,13 +299,13 @@ func TestStream_JSONLD_CCIsPlainStringSlice(t *testing.T) {
 	cc, ok := document[vocab.PropertyCC].([]string)
 	require.True(t, ok, "cc must be a plain []string")
 
-	// Reproduce exactly what publish_outbox does with it
+	// Append to it, as addressedJSONLD does
 	cc = append(cc, "https://example.com/@author")
 	require.Equal(t, []string{"https://mastodon.social/users/sarah", "https://example.com/@author"}, cc)
 }
 
-// TestStream_JSONLD_ReplyControls pins that every published Stream states who may reply as GoToSocial's
-// interactionPolicy, and declares its terms in its @context (REPLY-CONTROLS §1.3)
+// TestStream_JSONLD_ReplyControls pins that every published Stream states who may reply and quote as
+// GoToSocial's interactionPolicy, and declares its terms in its @context (REPLY-CONTROLS §1.3)
 func TestStream_JSONLD_ReplyControls(t *testing.T) {
 	streamService := newMentionStreamService()
 	stream := newTagStream("Replies are closed, @sarah@mastodon.social")
@@ -327,4 +319,16 @@ func TestStream_JSONLD_ReplyControls(t *testing.T) {
 	require.Equal(t, stream.InteractionPolicyJSONLD(), document[vocab.PropertyInteractionPolicy])
 	require.Contains(t, document[vocab.AtContext], vocab.ContextTypeGoToSocial)
 	require.NotContains(t, document, "commentsEnabled", "only GoToSocial's vocabulary is published")
+
+	// Every sub-policy published must be declared, or a JSON-LD reader drops it as an undefined term
+	for _, term := range []string{vocab.PropertyCanReply, vocab.PropertyCanQuote, vocab.PropertyAutomaticApproval} {
+		require.Contains(t, vocab.ContextTypeGoToSocial, term, "the gts: context declares %s", term)
+	}
+}
+
+// newMentionStreamService extends the tag harness with the services JSONLD needs.
+func newMentionStreamService() *Stream {
+	streamService, _ := newTagStreamService([]string{"content.html"}, "/search?q=")
+	streamService.attachmentService = &Attachment{}
+	return streamService
 }

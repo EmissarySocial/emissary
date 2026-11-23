@@ -82,6 +82,16 @@ A missing case in `PreProcessor` is silent: the name falls through, `Priority` k
 
 [purgeNotifications.go](purgeNotifications.go) ages out read and unread notifications alike at 90 days (deliberate — do not "fix" unread being purged) and then trims each User to `notificationCapPerUser` (2000) as a flood backstop, deleting read rows before unread. The cap is enforced here, in the daily task, and NOT in the notification hot path — that placement is a decision (see `emissary-specs/NOTIFICATION-FLOOD-CONTROL.md`), not an oversight. `PurgeOverCap` treats a non-positive cap as disabled so a misconfiguration cannot wipe the collection.
 
+## `SendNotificationEmails` runs outside a transaction, and never returns one User's failure
+
+[sendNotificationEmails.go](sendNotificationEmails.go) runs once an hour for each Domain and emails every User who is owed a list of unread notifications (emissary-specs NOTIFICATION-IMPROVEMENTS §1.7). Three rules hold it together:
+
+- **No transaction.** It is registered with `WithFactory` and opens a plain session. Inside `WithSession`, one failed User would roll back every claim made in the run while the emails already sent stay sent, and every one of those Users would be mailed again an hour later. A transaction would also turn a lost claim into a write conflict, which reruns the whole handler.
+- **The claim comes before the send.** `Notification.EmailUnread` moves the User's watermark with one conditional update, and sends only if that update matched. Two servers running the task at the same moment therefore send one email between them. A failed send moves the watermark back.
+- **One User's failure is reported, and the task still succeeds.** Returning the error would retry the Domain. The error names the User by ID, never by email address.
+
+A Domain with no SMTP connection is skipped before anything is claimed, so its Users get their email once it is configured.
+
 ## Import fetches are origin-gated — the rule lives in service/AGENTS.md
 
 [importStartup.go](importStartup.go) skips cross-origin documents at item creation and [importItems.go](importItems.go) re-checks `uri.NotSameOrigin` at the fetch sink so the user's source-scoped OAuth Bearer token can never travel off-origin. The full reasoning (and the service-side gates) is in [../service/AGENTS.md](../service/AGENTS.md) — keep both check sites; the duplication is belt-and-suspenders, not redundancy.
@@ -89,6 +99,14 @@ A missing case in `PreProcessor` is silent: the name falls through, `Priority` k
 ## Outbound delivery filters through the sending actor's rules
 
 `WithSender` in [wrappers.go](wrappers.go) binds the send locator with `BoundToSender(args["actor"])` so recipient resolution respects the sender's block rules, and constructs the hannibal sender with `AllowPrivateIPs` from the server factory — FALSE in production, true only for local/dev federation on a private network. Both `Outbox:SendTo*` task names come from `hannibal/sender` constants; use the constants, not string literals.
+
+## Delivery tasks run outside a transaction, and are routed by the sending actor
+
+`Delivery:FanOut` and `Delivery:Send` are hannibal's delivery pipeline, and `Outbox2-Email` is its email recipient. [delivery.go](delivery.go) runs all three through `WithFactory` and a plain session, deliberately **not** `WithSession`: a send makes an HTTP request, a fan-out over a large follower list can outlast MongoDB's 60-second limit on a transaction, and none of them writes to the domain database. The pipeline is built once per task by `Outbox2.Pipeline`, bound to the actor in the task's `actor` argument, because its lookups run on that task's session.
+
+A send task carries no `hostname`, so `getHostnameFromArgs` finds its domain from the `actor` URL. Keep that argument's name. A fan-out is priority 16, so that it runs promptly after its commit; sends and emails are 256, so that a large fan-out cannot delay user-facing work. Hannibal sets the retry count and the one-day backoff cap on each send task when it queues it.
+
+The legacy `Outbox:SendToAllRecipients`, `Outbox:SendToSingleRecipient` and `Outbox-Publish` tasks are still registered. Search results, an account's `Move`, the identity verification message, and the legacy outbox still queue them. Accepts, Rejects, Follows, Undos of a Follow, and a Stream's rebroadcasts go through `Outbox2.Send` and the pipeline.
 
 ## The lifecycle hooks run for EVERY task, so each one checks the task name first
 
@@ -99,3 +117,7 @@ Those hooks are also the **only** place a `StreamSource` status can be written, 
 ## `consumeSafely`'s panic path reaches no hook
 
 turbine recovers a panicking task in `consumeSafely`, which has no `Consumer` value — it was lost when the stack unwound — so it passes `nil` and no lifecycle hook fires. A task that panics therefore records no status anywhere. Any handler whose status the user reads must not panic; return a `queue.Result` instead.
+
+## `SendDeleteQuoteAuthorization` sends even when it cannot find the quoting actor
+
+Rejecting a quote deletes its CollectionItem at once and queues this task ([sendDeleteQuoteAuthorization.go](sendDeleteQuoteAuthorization.go)) to tell the quoting server. Nothing stores who quoted, so the task loads the quote post and reads its `attributedTo`. `retryQuoteLookup` sorts the failures: a 429 requeues, any other 4xx sends the `Delete` to Public and the author's followers alone, and everything else returns `queue.Error` before anything is sent. The 4xx branch must not become a `Failure`: a deleted quote post is the ordinary case, and the followers still need the `Delete`. The task carries the whole QuoteAuthorization as strings, because the item is gone when it runs and the Stream may be gone too.

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/benpate/data"
+	"github.com/benpate/floodgate"
 
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
@@ -38,6 +39,11 @@ func (unresolvableFactory) CommonDatabase() *mongo.Database { return nil }
 
 // AllowPrivateIPs implements the ServerFactory interface
 func (unresolvableFactory) AllowPrivateIPs() bool { return false }
+
+// Floodgate implements the ServerFactory interface, returning a Gate with no records
+func (unresolvableFactory) Floodgate() floodgate.Gate {
+	return floodgate.New(floodgate.NewMemoryStore())
+}
 
 // emptySession is a data.Session that holds nothing.  The malformed-ID guard returns before
 // anything reaches it, but a literal nil is a shape that nilaway cannot prove safe.

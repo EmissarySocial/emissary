@@ -43,7 +43,7 @@ func GetCollection(ctx *steranko.Context, factory *service.Factory, session data
 	// Serve "the collection", which is the full reply chain that matches this collection url
 	collectionItemService := factory.CollectionItem()
 
-	return collection.Serve(ctx,
+	return collection.Serve(ctx.Response(), ctx.Request(),
 		collectionURL,
 		collectionItemService.CollectionCount(session, user.UserID, collectionID, exp.All()),
 		collectionItemService.CollectionIterator(session, user.UserID, collectionID, exp.All()),
