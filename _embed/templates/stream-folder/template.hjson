@@ -28,6 +28,7 @@
 		published: {
 			label: Published
 			description: This item is visible to all Viewers
+			outbox: true
 		}
 	}
 	roles: {

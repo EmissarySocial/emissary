@@ -25,6 +25,7 @@
 		default: {
 			label:"Default"
 			description:"This item onlly has one state"
+			outbox: true
 		}
 	}
 

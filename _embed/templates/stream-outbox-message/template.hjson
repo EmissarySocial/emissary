@@ -28,11 +28,13 @@
 		default: {
 			label:Default
 			description:This item only has one state
+			outbox: true
 		}
 
 		published: {
 			label:Published
 			description:This item has been published and is visible to the public.
+			outbox: true
 		}
 	}
 	roles: {}
