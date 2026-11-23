@@ -68,6 +68,10 @@ type Stream struct {
 	DislikeCount     int                     `json:"dislikeCount"              bson:"dislikeCount"`           // Denormalized count of "Dislike" responses to this Stream (maintained by the Response service).
 	ShareCount       int                     `json:"shareCount"                bson:"shareCount"`             // Denormalized count of "Announce" (share) responses to this Stream (maintained by the Response service).
 
+	// Outbox fields are written by the Stream service alone.  No form can set them.
+	IsOutbox          bool   `json:"isOutbox,omitzero" bson:"isOutbox"`                    // TRUE if this Stream is sent to its author's followers.  Copied from the "outbox" flag of its Template's State.
+	OutboxFingerprint string `json:"-"                 bson:"outboxFingerprint,omitempty"` // Hash of the JSON-LD that followers last received.  Empty when followers hold nothing.
+
 	// Deprecated: Permissions maps UserIDs/GroupIDs into Roles for this Stream.
 	// Permissions mapof.Object[sliceof.String] `json:"" bson:"permissions,omitempty"`
 
@@ -708,6 +712,8 @@ func (stream *Stream) Update(other Stream) {
 	stream.PublishDate = other.PublishDate
 	stream.UnPublishDate = other.UnPublishDate
 	stream.IsFeatured = other.IsFeatured
+	stream.IsOutbox = other.IsOutbox
+	stream.OutboxFingerprint = other.OutboxFingerprint
 	stream.ReplyPolicy = other.ReplyPolicy
 	stream.Journal = other.Journal
 }

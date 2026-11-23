@@ -489,6 +489,11 @@ func (w Stream) IsFeatured() bool {
 	return w._stream.IsFeatured
 }
 
+// IsOutbox returns TRUE if the stream being built is sent to its author's followers
+func (w Stream) IsOutbox() bool {
+	return w._stream.IsOutbox
+}
+
 /******************************************
  * Widgets
  ******************************************/

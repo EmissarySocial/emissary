@@ -35,6 +35,7 @@ type StreamSummary struct {
 	Shuffle        int64              `json:"shuffle"                bson:"shuffle"`                // Random value used to shuffle the order of Streams in a list
 	Location       geo.Address        `json:"location"               bson:"location"`               // Physical location associated with this document
 	IsFeatured     bool               `json:"isFeatured"             bson:"isFeatured"`             // If this Stream is "featured" then it will be displayed in a special location on the page.
+	IsOutbox       bool               `json:"isOutbox"               bson:"isOutbox"`               // TRUE if this Stream is sent to its author's followers (mirrors Stream.IsOutbox)
 	CreateDate     int64              `json:"createDate"             bson:"createDate"`             // Unix epoch MILLISECONDS when this stream was created (journal field; mirrors Stream.CreateDate)
 	ReplyPolicy    string             `json:"replyPolicy,omitempty"  bson:"replyPolicy,omitempty"`  // Who may reply (mirrors Stream.ReplyPolicy), so a list can pass a collection's policy on
 }
@@ -53,7 +54,7 @@ func NewStreamSummary() StreamSummary {
 
 // StreamSummaryFields returns the database columns that must be loaded to populate a StreamSummary
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "tags", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "startDate", "endDate", "createDate", "location", "replyPolicy"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "tags", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "isOutbox", "startDate", "endDate", "createDate", "location", "replyPolicy"}
 }
 
 // Fields returns the database columns that must be loaded to populate a StreamSummary
