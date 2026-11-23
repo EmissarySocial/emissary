@@ -18,9 +18,10 @@
 
         <p>Hello {{.Name}},</p>
         
-        <p>We just received a request to your password on <b>{{.Domain_Name}}</b>.</p>
+        <p>We just received a request to reset your password on <b>{{.Domain_Name}}</b>.</p>
         <p>If you did not make this request, then you can safely ignore this email and no other actions will be taken.</p>
         <p>To complete this request, please click the button below and you'll be linked back to {{.Domain_Name}} where you can choose a new password.</p>
+        <p>This email will expire in 1 hour.</p>
         
         <p><a href="{{.Domain_URL}}/signin/reset-code?userId={{.UserID}}&code={{.ResetCode}}" style="
             display:inline-block;
