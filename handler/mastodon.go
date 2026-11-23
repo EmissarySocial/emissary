@@ -252,3 +252,8 @@ func MastodonStreaming(serverFactory *server.Factory) echo.HandlerFunc {
 func MastodonTrendsTags(serverFactory *server.Factory) echo.HandlerFunc {
 	return mastodon.GetTrends_Tags(serverFactory)
 }
+
+// MastodonSuggestionsV1 returns the older Mastodon follow-suggestions handler, which lists accounts (not in toot)
+func MastodonSuggestionsV1(serverFactory *server.Factory) echo.HandlerFunc {
+	return mastodon.GetSuggestions_V1(serverFactory)
+}
