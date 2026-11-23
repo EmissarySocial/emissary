@@ -69,3 +69,50 @@ func TestTemplate_States_IsOutbox(t *testing.T) {
 	require.True(t, template.States["published"].IsOutbox)
 	require.False(t, template.States["archived"].IsOutbox)
 }
+
+// TestTemplate_Inherit_OutboxFlag confirms that a child Template that redeclares a State replaces all of it,
+// the outbox flag included, and that a State the child does not declare is inherited whole
+func TestTemplate_Inherit_OutboxFlag(t *testing.T) {
+
+	parent := NewTemplate("parent", nil)
+	require.NoError(t, json.Unmarshal([]byte(`{"states":{"default":{"label":"Parent", "outbox":true}, "published":{"label":"Published", "outbox":true}}}`), &parent))
+
+	tests := []struct {
+		name     string
+		child    string
+		expected bool
+	}{
+		{name: "redeclared without the flag", child: `{"states":{"default":{"label":"Child"}}}`, expected: false},
+		{name: "redeclared with the flag off", child: `{"states":{"default":{"label":"Child", "outbox":false}}}`, expected: false},
+		{name: "redeclared with the flag on", child: `{"states":{"default":{"label":"Child", "outbox":true}}}`, expected: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			child := NewTemplate("child", nil)
+			require.NoError(t, json.Unmarshal([]byte(test.child), &child))
+			child.Inherit(&parent)
+
+			require.Equal(t, test.expected, child.States["default"].IsOutbox)
+			require.Equal(t, "Child", child.States["default"].Label)
+			require.True(t, child.States["published"].IsOutbox, "an undeclared State is inherited whole")
+		})
+	}
+
+	// The parent is not changed by its children
+	require.True(t, parent.States["default"].IsOutbox)
+}
+
+// TestTemplate_Inherit_OutboxFlag_ChildAddsFlag confirms that a child can set the flag on a State its parent leaves off
+func TestTemplate_Inherit_OutboxFlag_ChildAddsFlag(t *testing.T) {
+
+	parent := NewTemplate("parent", nil)
+	require.NoError(t, json.Unmarshal([]byte(`{"states":{"default":{"label":"Parent"}}}`), &parent))
+
+	child := NewTemplate("child", nil)
+	require.NoError(t, json.Unmarshal([]byte(`{"states":{"default":{"label":"Child", "outbox":true}}}`), &child))
+	child.Inherit(&parent)
+
+	require.True(t, child.States["default"].IsOutbox)
+	require.False(t, parent.States["default"].IsOutbox)
+}
