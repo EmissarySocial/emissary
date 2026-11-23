@@ -24,13 +24,19 @@ In [upgrade.go](upgrade.go) the slice index is the stored `databaseVersion` (slo
 
 A slot runs the first time any server boots with it, including a dev server running whatever is on disk in a worktree. Slot 37 was edited in place on 2026-10-11 while uncommitted, but local dev databases had already recorded it, so a slot 38 had to repair both versions. Once a slot exists on disk, treat it as run and correct it in the next slot. Folding a correction back is possible only before release, and only by also resetting `databaseVersion` on every local database that ran the later slot, as when slot 38 was merged into 37.
 
+## Version39 is written but not registered
+
+[upgrades/v039.go](upgrades/v039.go) copies the legacy `Outbox` collection into `OutboxItem` (OUTBOX2-OMNIBUS §1.21), but [upgrade.go](upgrade.go) does not list it. A slot's place in the list is its version, and slot 38 is I18N's `Version38`, which is only on `dev-Eugene`. Listed straight after `Version37`, it would run as slot 38 on every server, and I18N's slot would then never run anywhere. Register it directly after `Version38` once that slot is on `dev`. Until then nothing runs it, and the outbox serves no activity published before Outbox2.
+
+It reads three shapes of row: the current one, v0.7.0's (`parentId`, `parentType`, and `url` for the object), and rows with an empty `actorUrl` (BUG-146), whose URL it looks up from the User or Stream. BUG-304's repair will take a later slot, so this one cannot rely on it. A row with no permissions was public, as slot 19 recorded, but a null list was served to no one and stays private. The object stays a URL, as the legacy outbox served it (Ben, 2026-11-19), so Funkwhale cannot import an older song from these rows.
+
 ## A new unique index must ship with the reconcile that clears its violations
 
 `indexer.Sync` builds indexes at boot, so a unique index over duplicate legacy data fails with E11000 on every start and never builds until code changes. Either clean the data in an upgrade slot before the index first ships (v027/v028), or dedupe in the sync function just before `indexer.Sync` (`deduplicateAnnotations`, `deduplicateFollowing`, `deduplicateResponses` in [sync](sync/)), reporting a failed dedupe rather than returning it, so the other indexes still build.
 
 A failed build also costs the index it replaced: `indexer.Sync` drops a changed or renamed index before creating the new one, and only reports a failed create, so until the dedupe succeeds every lookup on those keys scans the collection, without an error.
 
-`idx_OutboxItem_URL` ([sync/outboxItem.go](sync/outboxItem.go)) needs no reconcile only while every writer derives `url` from the row's own `_id` through `Locator.ActivityURL`, as `Outbox2.Save` does (`TestOutboxItemIndex_BuildsOverExistingRows`). Its partial filter (`url > ""`) leaves out the empty string that `ActivityURL` returns for an unknown actor type. OUTBOX2-MIGRATION's move of legacy rows stores each row's old `ActivityPubURL()` as `url`, which is not derived from its `_id`, so it must report URLs shared between legacy rows before writing them.
+`idx_OutboxItem_URL` ([sync/outboxItem.go](sync/outboxItem.go)) needs no reconcile only while every writer derives `url` from the row's own `_id` through `Locator.ActivityURL`, as `Outbox2.Save` does (`TestOutboxItemIndex_BuildsOverExistingRows`). Its partial filter (`url > ""`) leaves out the empty string that `ActivityURL` returns for an unknown actor type. `Version39` stores each legacy row's old `ActivityPubURL()` as `url`, which is the row's `activityUrl` when it has one, not a URL derived from its `_id`. So the slot keeps the oldest row for each URL itself and reports the rest, because on a database upgrading from v0.7.0 this index is built only after the slot runs (`TestVersion39_SharedURLWithoutTheIndex`).
 
 The `OutboxItem` collection has no recycle index and is not in `factory.Collections()`, because `service.Outbox2` only hard-deletes. If anything ever soft-deletes an `OutboxItem`, add `deleteDate: 0` to the unique index's partial filter and the collection to `Collections()`.
 
