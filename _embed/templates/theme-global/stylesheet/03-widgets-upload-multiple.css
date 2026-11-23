@@ -9,12 +9,10 @@
  * Its behavior is javascript/upload-multiple.js
  ******************************************/
 
-/* The zone is the grid, so the plus after the tile row flows in after the last tile (see AGENTS.md); it is positioned so an empty status line is kept inside it, and it keeps a tile's height while its contents load, so the form does not jump */
-.upload-multiple {
+/* Both zones share one look: a bordered box that is positioned so an empty status line is kept inside it */
+.upload-multiple,
+.upload-single {
 	position: relative;
-	display: grid;
-	min-height: calc(var(--rhythm) * 18);
-	grid-template-columns: repeat(auto-fill, minmax(calc(var(--rhythm) * 14), 1fr));
 	gap: var(--rhythm);
 	border: 1px solid var(--gray30);
 	border-radius: var(--border-radius);
@@ -23,8 +21,16 @@
 	transition: border-color var(--motion-fast), background-color var(--motion-fast);
 }
 
+/* The multi-file zone is the grid, so the plus after the tile row flows in after the last tile (see AGENTS.md); it keeps a tile's height while its contents load, so the form does not jump */
+.upload-multiple {
+	display: grid;
+	min-height: calc(var(--rhythm) * 18);
+	grid-template-columns: repeat(auto-fill, minmax(calc(var(--rhythm) * 14), 1fr));
+}
+
 /* Lit only while files are dragged over it, never for a tile's own drag */
-.upload-multiple.highlight {
+.upload-multiple.highlight,
+.upload-single.highlight {
 	border-color: var(--focus-color);
 	background-color: var(--blue10);
 }
@@ -86,7 +92,8 @@
 
 .upload-multiple-add:hover,
 .upload-multiple-add:focus,
-.upload-multiple.highlight > .upload-multiple-add {
+.upload-multiple.highlight > .upload-multiple-add,
+.upload-single.highlight > .upload-multiple-add {
 	border-color: var(--focus-color);
 	background-color: var(--gray10);
 	color: var(--link-color);
@@ -210,4 +217,63 @@
 
 .upload-multiple-status.warning {
 	color: var(--red60);
+}
+
+/******************************************
+ * UPLOAD SINGLE
+ *
+ * The form library's upload widget: the same
+ * zone holding one file, drawn at its own
+ * proportions, or a plus that picks one.
+ * Its behavior is javascript/upload-single.js
+ ******************************************/
+
+/* The zone is a row, so the tile takes its width from its image and never stretches */
+.upload-single {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+}
+
+/* RULE: The tile's height is fixed and its width follows the image, so the zone never changes height (see AGENTS.md) */
+.upload-single > .upload-multiple-tile {
+	flex: 0 0 auto;
+	aspect-ratio: auto;
+	height: calc(var(--rhythm) * 12);
+	min-width: calc(var(--rhythm) * 12);
+	max-width: min(100%, 640px);
+	cursor: pointer;
+}
+
+/* The image keeps its proportions, and letterboxes on the tile's gray when the maximum width stops it */
+.upload-single > .upload-multiple-tile > .upload-multiple-preview {
+	width: auto;
+	max-width: 100%;
+	object-fit: contain;
+}
+
+/* A file with no preview is an icon over its name, in a tile wide enough to read the name */
+.upload-single > .upload-multiple-tile:not(:has(> .upload-multiple-preview)) {
+	min-width: calc(var(--rhythm) * 20);
+	padding: 0 var(--rhythm);
+}
+
+/* The plus is a square of the tile's height, so the empty zone and the full one are the same height */
+.upload-single > .upload-multiple-add {
+	flex: 0 0 auto;
+	width: calc(var(--rhythm) * 12);
+	height: calc(var(--rhythm) * 12);
+}
+
+/* RULE: The picker is hidden here, never by an attribute, and a file input that is not displayed still posts its file */
+.upload-single > input[type="file"],
+.upload-single > .upload-multiple-tile[hidden] {
+	display: none;
+}
+
+/* The status line sits beside the tile, so a message never changes the zone's height, and wraps under it only when there is no room */
+.upload-single > .upload-multiple-status {
+	flex: 1 1 calc(var(--rhythm) * 20);
+	align-self: center;
+	text-align: left;
 }
