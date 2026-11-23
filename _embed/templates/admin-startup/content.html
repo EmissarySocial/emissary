@@ -1,15 +1,16 @@
 {{- $theme := .Theme .ThemeID -}}
 {{- $startupStreamCount := $theme.StartupStreams.Length -}}
 
-<h1>Add Default Content?</h1>
+<h1>{{icon "journal"}} Add Default Content</h1>
 
 <div class="margin-vertical">
     This theme includes <b>{{ $startupStreamCount }} {{pluralize $startupStreamCount "default content page" "default content pages"}}</b>.
+	Add {{pluralize $startupStreamCount "it" "them"}} now to get a head start on building this website.
 </div>
 
 <form hx-post="/startup/content" hx-push-url="false">
     <div class="margin-top-lg">
-        <button type="submit" class="primary">Create Pages</button>
+        <button type="submit" class="primary">Add Default Content</button>
         <button script="on click send closeModal">Cancel</button>
     </div>
 </form>

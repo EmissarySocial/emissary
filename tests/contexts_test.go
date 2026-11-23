@@ -42,7 +42,7 @@ func templateContexts(group *loadedGroup, template model.Template) []builderCont
 				Label:        "theme=" + theme.ThemeID,
 				Schema:       domainSchema,
 				NewObject:    newPointer(model.NewWritableDomain),
-				PropertyForm: theme.Form,
+				PropertyForm: theme.PropertyForm(template.TemplateID),
 			})
 		}
 

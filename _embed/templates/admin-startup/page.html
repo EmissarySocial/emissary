@@ -1,31 +1,41 @@
 {{- $startupTasks := .StartupTasks -}}
 {{- $themes := .Themes -}}
 {{- $theme := .Theme .ThemeID -}}
+{{- $connections := .AllConnections -}}
 
 <div class="width-480 margin-horizontal-auto">
 
-	<div class="align-center margin-vertical-lg">
-		<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide width-96">
-		<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show width-96">
-		<h1 class="margin-vertical-lg">Let's Set Up Your Emissary</h1>
+	<div class="margin-vertical-lg">
+		<div class="align-center">
+			<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide width-96">
+			<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show width-96">
+			<h1 class="margin-vertical-lg">Let's Set Up Your Emissary</h1>
+		</div>
+
+		<div class="margin-vertical">
+			Welcome to your new Emissary website.
+			This checklist will help you get up and running.
+		</div>
 	</div>
 
 	<div class="width-480 margin-horizontal-auto margin-vertical-lg">
 
-		{{- if gt 1 $themes.Length -}}
-		<div class="checkbutton" hx-get="/startup/choose">
-			<div class="align-left">
-				<div>Selected Website Theme:</div>
-				<div class="text-lg bold">{{$theme.Label}}</div>
+		{{- if gt (len $themes) 1 -}}
+			<div class="checkbutton" hx-get="/admin/domain/themes">
+				<div class="align-left">
+					<div>Your Website Theme:</div>
+					<div class="text-lg bold">{{$theme.Label}}</div>
+				</div>
 			</div>
-		</div>
-		<hr>
+			<hr>
 		{{- end -}}
 
 		{{- range $theme.StartupTasks -}}
 			<div class="checkbutton" hx-get="{{.Href}}">
 				<div class="text-lg flex-align-self-start margin-none margin-right-sm" style="width:1em;">
-					{{- if $startupTasks.Contains .Value -}}
+					<!-- RULE: a task is done once it is recorded, or once the connection it names is active (see README.md). -->
+					{{- $connection := index $connections .Value -}}
+					{{- if or ($startupTasks.Contains .Value) $connection.Active -}}
 						<i class="bi bi-check-circle-fill text-green"></i>
 					{{- else -}}
 						<i class="bi bi-circle-fill text-light-gray"></i>
@@ -38,7 +48,7 @@
 			</div>
 		{{- end -}}
 
-		<div class="margin-top-lg">
+		<div class="padding-vertical-lg">
 			<button hx-post="/startup/complete" class="primary"><i class="bi bi-check"></i> Finish This Checklist</button>
 		</div>
 
@@ -47,7 +57,7 @@
 
 <div
 	hx-get="/startup"
-	hx-trigger="refreshPage"
+	hx-trigger="refreshPage from:window"
 	hx-target="main"
 	hx-swap="innerHTML"
 	hx-push-url="false">
