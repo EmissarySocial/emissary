@@ -201,6 +201,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.StartupComplete:
 		return StepStartupComplete(s)
 
+	case step.StartupCreateGroups:
+		return StepStartupCreateGroups(s)
+
 	case step.StartupCreateStreams:
 		return StepStartupCreateStreams(s)
 

@@ -90,6 +90,30 @@ func TestStartupCreateStreams_RequiresAdminTemplate(t *testing.T) {
 	}
 }
 
+// TestStartupCreateGroups_RequiresAdminTemplate asserts the same load-time guard around
+// "startup-create-groups", which seeds a Domain with Groups.
+func TestStartupCreateGroups_RequiresAdminTemplate(t *testing.T) {
+
+	const roleMessage = "Step can only be used in Templates with a specific templateRole"
+	const modelMessage = "Step can only be used in specific Templates"
+
+	step, err := modelStep.New(map[string]any{"do": "startup-create-groups"}, nil)
+	require.Nil(t, err)
+
+	// An admin Template that builds the Domain model is the one permitted combination
+	errors := validateOneTemplate(newStepRestrictionTemplate("admin-ok", "admin", "Domain", step))
+	require.False(t, containsValidationError(errors, roleMessage), "admin/Domain template must satisfy the templateRole rule")
+	require.False(t, containsValidationError(errors, modelMessage), "admin/Domain template must satisfy the model rule")
+
+	// Right model, wrong role
+	errors = validateOneTemplate(newStepRestrictionTemplate("public-domain", "search", "Domain", step))
+	require.True(t, containsValidationError(errors, roleMessage), "non-admin template must be rejected")
+
+	// Right role, wrong model
+	errors = validateOneTemplate(newStepRestrictionTemplate("admin-stream", "admin", "Stream", step))
+	require.True(t, containsValidationError(errors, modelMessage), "non-Domain template must be rejected")
+}
+
 // TestStartupComplete_RequiresAdminTemplate asserts the same load-time guard around
 // "startup-complete".  This step ends the startup wizard and opens the Domain to the public, so a
 // Template that is not an admin Template must refuse to load rather than fail at request time.
