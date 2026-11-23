@@ -24,7 +24,8 @@ A Domain that has never chosen a theme stores `""` and runs the default theme. C
 
 Qwerty and the emissary-dev theme ship no `resources/startup/icon.png` or `splash.png`, so both are a 404. The inline handler in [theme-icon.html](theme-icon.html) swaps in a palette icon, and the one in [theme-confirm.html](theme-confirm.html) hides the splash image. A hyperscript `on error` may attach after the error has already fired. Sonar flags these handlers as mouse or keyboard listeners (Web:S6847), which they are not.
 
-## Two other writers of `themeId` skip the rule
+## One other writer of `themeId` skips the rule
 
-- **`admin-startup`'s `choose-theme`** saves any `themeId` from the URL, while the Domain is in startup.
 - **`admin-sso`'s own `themes` action** saves `themeId` from a form, with no check. Nothing links to it, and its [themes.html](../admin-sso/themes.html) posts to `/admin/domain/themes`, which saves nothing.
+
+The startup checklist writes none: its theme button opens `themes` here, and `TestAdminStartup_WritesNoThemeID` keeps it that way.
