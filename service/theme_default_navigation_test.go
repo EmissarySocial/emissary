@@ -8,7 +8,9 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	emissarytemplates "github.com/EmissarySocial/emissary/tools/templates"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/html"
 )
@@ -16,14 +18,61 @@ import (
 /******************************************
  * Default Theme: Mobile Navigation Menu
  *
- * theme-default carries theme-minimal's mobile menu, so these
- * tests hold it to the same structural rules, explained in
- * theme-minimal/AGENTS.md.  theme-default's bar also holds the
- * account links, so the sheet repeats those too.
+ * theme-default renders its links twice: once in the desktop
+ * bar, and once in the mobile menu's sheet.  These tests hold
+ * the two to the structural rules that keep them apart.  The
+ * bar also holds the account links, so the sheet repeats those.
  ******************************************/
 
+// navItem stands in for a row of build.Common.Navigation: the
+// top-level Streams that the theme lists in its navigation bar.
+type navItem struct {
+	StreamID string
+	Token    string
+	Label    string
+	Icon     string
+}
+
+// navBuilder stands in for the build.Builder that renders the
+// theme's page chrome, exposing only the fields navigation.html reads.
+type navBuilder struct {
+	DomainStateID             string
+	Navigation                []navItem
+	NavigationID              string
+	IsAuthenticated           bool
+	IsIdentity                bool
+	IsOwner                   bool
+	HasUnreadNotifications    bool
+	DomainHasRegistrationForm bool
+	themeData                 mapof.Any
+	themeSchema               schema.Schema
+}
+
+// NotAuthenticatedOrIdentity mirrors build.Common.NotAuthenticatedOrIdentity: TRUE for a
+// visitor who is neither a signed-in user nor a guest identity.
+func (builder navBuilder) NotAuthenticatedOrIdentity() bool {
+	return !builder.IsAuthenticated && !builder.IsIdentity
+}
+
+// ThemeData mirrors build.Common.ThemeData: the stored value coerced to a string, falling
+// back to the Theme schema's declared default for a token the Domain has never saved.
+func (builder navBuilder) ThemeData(token string) string {
+
+	if value, exists := builder.themeData[token]; exists {
+		return convert.String(value)
+	}
+
+	element, exists := builder.themeSchema.GetElement("themeData." + token)
+
+	if !exists {
+		return ""
+	}
+
+	return convert.String(element.DefaultValue())
+}
+
 // parseDefaultNavigation renders the real theme-default navigation template and parses the result.
-func parseDefaultNavigation(t *testing.T, context minimalNavigationBuilder) *html.Node {
+func parseDefaultNavigation(t *testing.T, context navBuilder) *html.Node {
 
 	t.Helper()
 
@@ -40,12 +89,12 @@ func parseDefaultNavigation(t *testing.T, context minimalNavigationBuilder) *htm
 }
 
 // newDefaultNavigationBuilder returns an anonymous visitor on a live domain with two top-level pages.
-func newDefaultNavigationBuilder() minimalNavigationBuilder {
-	return minimalNavigationBuilder{
+func newDefaultNavigationBuilder() navBuilder {
+	return navBuilder{
 		DomainStateID:             model.DomainStateLive,
 		DomainHasRegistrationForm: true,
 		themeData:                 mapof.NewAny(),
-		Navigation: []minimalNavigationItem{
+		Navigation: []navItem{
 			{StreamID: "6a908f1d331aab271b96e5f8", Token: "about", Label: "About Me"},
 			{StreamID: "6a9484676097f8f87ef9a455", Token: "contact", Label: "Contact Me"},
 		},
@@ -214,7 +263,7 @@ func TestDefaultTheme_BarHidesOnlyBesideTheMenu(t *testing.T) {
 }
 
 // defaultNavigationVisitors returns an anonymous visitor, a signed-in owner, and a guest identity.
-func defaultNavigationVisitors() []minimalNavigationBuilder {
+func defaultNavigationVisitors() []navBuilder {
 
 	anonymous := newDefaultNavigationBuilder()
 
@@ -225,5 +274,110 @@ func defaultNavigationVisitors() []minimalNavigationBuilder {
 	guest := newDefaultNavigationBuilder()
 	guest.IsIdentity = true
 
-	return []minimalNavigationBuilder{anonymous, owner, guest}
+	return []navBuilder{anonymous, owner, guest}
+}
+
+// navAttribute returns one attribute's value, or "" when the node does not carry it.
+func navAttribute(node *html.Node, name string) string {
+
+	for _, attribute := range node.Attr {
+		if attribute.Key == name {
+			return attribute.Val
+		}
+	}
+
+	return ""
+}
+
+// navHasClass reports whether the node carries one class TOKEN.  Token matching is the whole
+// point: "nav-menu-item" must not answer to "nav-item", because that is exactly how CSS and
+// hyperscript match, and it is what keeps SelectNav away from the sheet's copies.
+func navHasClass(node *html.Node, class string) bool {
+
+	for _, candidate := range strings.Fields(navAttribute(node, "class")) {
+		if candidate == class {
+			return true
+		}
+	}
+
+	return false
+}
+
+// navFind returns every element matching the predicate, in document order.
+func navFind(root *html.Node, match func(*html.Node) bool) []*html.Node {
+
+	var result []*html.Node
+
+	var walk func(*html.Node)
+	walk = func(node *html.Node) {
+
+		if node.Type == html.ElementNode {
+			if match(node) {
+				result = append(result, node)
+			}
+		}
+
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+
+	walk(root)
+	return result
+}
+
+// navFindOne returns the single element matching the predicate, failing when there is not
+// exactly one.
+func navFindOne(t *testing.T, root *html.Node, description string, match func(*html.Node) bool) *html.Node {
+
+	t.Helper()
+
+	found := navFind(root, match)
+	require.Len(t, found, 1, "expected exactly one %s", description)
+
+	return found[0]
+}
+
+// navHasAncestor reports whether the node is a DESCENDANT of an element matching the
+// predicate -- the question a substring assertion cannot answer.
+func navHasAncestor(node *html.Node, match func(*html.Node) bool) bool {
+
+	for parent := node.Parent; parent != nil; parent = parent.Parent {
+
+		if parent.Type == html.ElementNode {
+			if match(parent) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// navNextElement returns the next SIBLING element, skipping the whitespace text nodes
+// between them -- which is what the CSS adjacent sibling combinator does too.
+func navNextElement(node *html.Node) *html.Node {
+
+	for sibling := node.NextSibling; sibling != nil; sibling = sibling.NextSibling {
+
+		if sibling.Type == html.ElementNode {
+			return sibling
+		}
+	}
+
+	return nil
+}
+
+// navIsTag matches an element by tag name.
+func navIsTag(name string) func(*html.Node) bool {
+	return func(node *html.Node) bool {
+		return node.Data == name
+	}
+}
+
+// navHasID matches an element by its id attribute.
+func navHasID(id string) func(*html.Node) bool {
+	return func(node *html.Node) bool {
+		return navAttribute(node, "id") == id
+	}
 }
