@@ -24,11 +24,13 @@ In [upgrade.go](upgrade.go) the slice index is the stored `databaseVersion` (slo
 
 A slot runs the first time any server boots with it, including a dev server running whatever is on disk in a worktree. Slot 37 was edited in place on 2026-10-11 while uncommitted, but local dev databases had already recorded it, so a slot 38 had to repair both versions. Once a slot exists on disk, treat it as run and correct it in the next slot. Folding a correction back is possible only before release, and only by also resetting `databaseVersion` on every local database that ran the later slot, as when slot 38 was merged into 37.
 
-## Version39 is written but not registered
+## Slot 38 is empty for good
 
-[upgrades/v039.go](upgrades/v039.go) copies the legacy `Outbox` collection into `OutboxItem` (OUTBOX2-OMNIBUS §1.21), but [upgrade.go](upgrade.go) does not list it. A slot's place in the list is its version, and slot 38 is I18N's `Version38`, which is only on `dev-Eugene`. Listed straight after `Version37`, it would run as slot 38 on every server, and I18N's slot would then never run anywhere. Register it directly after `Version38` once that slot is on `dev`. Until then nothing runs it, and the outbox serves no activity published before Outbox2.
+Dev branches gave slot 38 to several migrations and released none of them: the slot later folded into 37, I18N's languages on `dev-Eugene`, and, in their plans, RELAYS and BUG-304. On 2026-11-22 four local databases had recorded version 38, and only one held I18N's data. A slot a database has recorded never runs there again, so any migration placed at 38 would be skipped on those databases. [upgrades/v038.go](upgrades/v038.go) is therefore an empty stub, I18N's migration moves to slot 40, and BUG-304's repair takes the next free slot after that (Ben, 2026-11-22). Never give slot 38 a body. `TestUpgradeMongoDB_CopiesTheLegacyOutbox` upgrades a database from 37 and from 38, and fails if the copy moves into slot 38.
 
-It reads three shapes of row: the current one, v0.7.0's (`parentId`, `parentType`, and `url` for the object), and rows with an empty `actorUrl` (BUG-146), whose URL it looks up from the User or Stream. BUG-304's repair will take a later slot, so this one cannot rely on it. A row with no permissions was public, as slot 19 recorded, but a null list was served to no one and stays private. The object stays a URL, as the legacy outbox served it (Ben, 2026-11-19), so Funkwhale cannot import an older song from these rows.
+## Version39 copies the legacy outbox, and its objects stay URLs
+
+[upgrades/v039.go](upgrades/v039.go) copies the legacy `Outbox` collection into `OutboxItem` (OUTBOX2-OMNIBUS §1.21). It reads three shapes of row: the current one, v0.7.0's (`parentId`, `parentType`, and `url` for the object), and rows with an empty `actorUrl` (BUG-146), whose URL it looks up from the User or Stream. BUG-304's repair will take a later slot, so this one cannot rely on it. A row with no permissions was public, as slot 19 recorded, but a null list was served to no one and stays private. The object stays a URL, as the legacy outbox served it (Ben, 2026-11-19), so Funkwhale cannot import an older song from these rows.
 
 ## A new unique index must ship with the reconcile that clears its violations
 
