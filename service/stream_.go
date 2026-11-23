@@ -116,6 +116,9 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 }
 
+// startupParentToken is the key of a startupStreams entry that names the token of its parent Stream
+const startupParentToken = "parentToken"
+
 // Startup seeds an empty database with the Streams that a new Theme provides.  The Theme is the
 // sole authority on what gets created: callers create all of a Theme's "startupStreams" or none
 // of them, and cannot ask for a subset.
@@ -143,6 +146,9 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		return nil
 	}
 
+	// Streams created so far, by token, so that a later entry can name one as its parent
+	created := make(map[string]model.Stream, len(startupStreams))
+
 	for _, data := range startupStreams {
 
 		// Build a Stream from the theme's startup data
@@ -150,6 +156,11 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 
 		if err != nil {
 			return derp.Wrap(err, location, "Building startup stream", data)
+		}
+
+		// Place the Stream beneath its parent, when the theme names one
+		if err := service.setStartupParent(&stream, data.GetString(startupParentToken), created); err != nil {
+			return derp.Wrap(err, location, "Placing startup stream", stream.Token)
 		}
 
 		// Save the new Stream to the database.  Save is the single validation gate: it
@@ -160,6 +171,8 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		if err := service.Save(session, &stream, "Created by Startup"); err != nil {
 			return derp.Wrap(err, location, "Saving startup stream", stream)
 		}
+
+		created[stream.Token] = stream
 	}
 
 	return nil
@@ -183,7 +196,7 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 	// shared across requests.
 	values := make(mapof.Any, len(data))
 	for key, value := range data {
-		if key == "content" {
+		if (key == "content") || (key == startupParentToken) {
 			continue
 		}
 		values[key] = value
@@ -202,6 +215,37 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 	}
 
 	return stream, nil
+}
+
+// setStartupParent makes a startup Stream the child of the Stream already created under parentToken.
+// An empty parentToken leaves the Stream at the top level.
+func (service *Stream) setStartupParent(stream *model.Stream, parentToken string, created map[string]model.Stream) error {
+
+	const location = "service.Stream.setStartupParent"
+
+	if parentToken == "" {
+		return nil
+	}
+
+	// RULE: A parent is listed before its children, so it already exists when they are placed
+	parent, exists := created[parentToken]
+
+	if !exists {
+		return derp.Internal(location, "Startup stream names a parent that is not listed before it", stream.Token, parentToken)
+	}
+
+	// A top-level startup Stream has no NavigationID of its own, so its children take its ID
+	if parent.NavigationID == "" {
+		parent.NavigationID = parent.StreamID.Hex()
+	}
+
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading template", stream.TemplateID)
+	}
+
+	return service.SetLocationChild(&template, stream, &parent)
 }
 
 // CreateDefaultChildrenForUser creates the starter Streams in a new User's outbox, as defined by their outbox Template
