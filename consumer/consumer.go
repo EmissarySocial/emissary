@@ -179,6 +179,9 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case service.TaskSyncStreamSourceAttachment:
 		return WithFactory(consumer.serverFactory, args, SyncStreamSourceAttachment)
 
+	case service.StreamOutboxTaskName:
+		return WithSession(consumer.serverFactory, args, StreamOutbox)
+
 	case "syndication.create", "syndication.update", "syndication.delete":
 		return StreamSyndicate(name, args)
 	}
