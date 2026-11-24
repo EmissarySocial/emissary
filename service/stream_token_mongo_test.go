@@ -102,7 +102,7 @@ func TestStream_Save_RefusesATakenToken(t *testing.T) {
 	require.Equal(t, int64(1), count)
 
 	// The default token is the Stream's own ID
-	second.Token.Set("")
+	second.Token.Clear()
 	require.NoError(t, service.Save(session, &second, "default"))
 	require.Equal(t, second.StreamID.Hex(), second.Token.Value())
 

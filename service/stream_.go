@@ -2047,7 +2047,7 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	// Zero out (almost) all other fields in this stream
 	stream.TemplateID = ""
 	stream.ParentTemplateID = ""
-	stream.StateID.Set("")
+	stream.StateID.Clear()
 	stream.SocialRole = ""
 	stream.Groups = mapof.NewObject[id.Slice]()
 	stream.Circles = mapof.NewObject[id.Slice]()
