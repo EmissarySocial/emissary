@@ -47,14 +47,8 @@
 										{type: "text", label: "Full Name", path: "displayName"}
 										{type: "text", label: "Username", path: "username"}
 										{type: "text", label: "Email Address", path: "emailAddress"}
-									]
-								},
-								{
-									label: Profile
-									type: layout-vertical
-									children: [
-										{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
-										{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
+										{type: "select", path: "outboxTemplate", label:"Profile Template", options:{provider: "outbox-templates", sort:false}}
+										// {type: "select", path: "inboxTemplate", label:"Inbox Template", options:{provider: "inbox-templates", sort:false}}
 									]
 								},
 								{
@@ -114,14 +108,8 @@
 											{type: "text", label: "Full Name", path: "displayName"}
 											{type: "text", label: "Username", path: "username"}
 											{type: "text", label: "Email Address", path: "emailAddress"}
-										]
-									},
-									{
-										label: Profile
-										type: layout-vertical
-										children: [
-											{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
-											{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
+											{type: "select", path: "outboxTemplate", label:"Profile Template", options:{provider: "outbox-templates", sort:false}}
+											// {type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
 										]
 									},
 									{
