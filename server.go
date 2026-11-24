@@ -315,8 +315,8 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// Not in toot: Ice Cubes' Explore tab reads these. Trending tags are the admins' featured tags
 	e.GET("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
 	e.HEAD("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
-	e.GET("/api/v1/suggestions", handler.GetEmptyList)
-	e.HEAD("/api/v1/suggestions", handler.GetEmptyList)
+	e.GET("/api/v1/suggestions", handler.MastodonSuggestionsV1(factory))
+	e.HEAD("/api/v1/suggestions", handler.MastodonSuggestionsV1(factory))
 	// Not in toot: Mastodon's streaming API, over a websocket
 	e.GET("/api/v1/streaming", handler.MastodonStreaming(factory))
 	e.HEAD("/api/v1/streaming", handler.MastodonStreaming(factory))

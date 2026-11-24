@@ -84,6 +84,27 @@ func (service *Stream) summarizeUserPosts(session data.Session, authorization mo
 	return count, newest[0].PublishDate, nil
 }
 
+// NewestPublicPost returns the publish date (Unix seconds) of a User's newest post that anyone
+// may see, or zero if they have none
+func (service *Stream) NewestPublicPost(session data.Session, ownerID primitive.ObjectID) (int64, error) {
+
+	// An anonymous caller sees only published, public posts, so drafts never count
+	criteria := exp.And(
+		userPostsCriteria(ownerID),
+		service.visibilityCriteria(model.Authorization{}, ownerID),
+	)
+
+	// Find just the newest one, and just its date
+	newest, err := service.Query(session, criteria, option.SortDesc("publishDate"), option.MaxRows(1), option.Fields("publishDate"))
+
+	if err != nil || len(newest) == 0 {
+		return 0, err
+	}
+
+	// Fresh off the press
+	return newest[0].PublishDate, nil
+}
+
 // QueryPublic returns the top-level social posts on this server that the caller may view,
 // newest first -- the local public timeline.
 func (service *Stream) QueryPublic(session data.Session, authorization model.Authorization, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
