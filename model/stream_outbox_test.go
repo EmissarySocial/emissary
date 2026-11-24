@@ -13,7 +13,7 @@ import (
 func TestStream_OutboxFields_NewStream(t *testing.T) {
 	stream := NewStream()
 	require.False(t, stream.IsOutbox.Value())
-	require.Empty(t, stream.OutboxFingerprint)
+	require.Empty(t, stream.Fingerprint)
 }
 
 // TestStream_OutboxFields_BSON confirms that both fields survive a round trip through BSON, under their stored names
@@ -21,7 +21,7 @@ func TestStream_OutboxFields_BSON(t *testing.T) {
 
 	original := NewStream()
 	original.IsOutbox.Set(true)
-	original.OutboxFingerprint.Set("abc123")
+	original.Fingerprint.Set("abc123")
 
 	encoded, err := bson.Marshal(original)
 	require.NoError(t, err)
@@ -29,12 +29,12 @@ func TestStream_OutboxFields_BSON(t *testing.T) {
 	decoded := NewStream()
 	require.NoError(t, bson.Unmarshal(encoded, &decoded))
 	require.True(t, decoded.IsOutbox.Value())
-	require.Equal(t, "abc123", decoded.OutboxFingerprint.Value())
+	require.Equal(t, "abc123", decoded.Fingerprint.Value())
 
 	raw := bson.M{}
 	require.NoError(t, bson.Unmarshal(encoded, &raw))
 	require.Equal(t, true, raw["isOutbox"])
-	require.Equal(t, "abc123", raw["outboxFingerprint"])
+	require.Equal(t, "abc123", raw["fingerprint"])
 }
 
 // TestStream_OutboxFields_BSONDefaults confirms that the flag is always stored, so a query can match FALSE,
@@ -47,7 +47,7 @@ func TestStream_OutboxFields_BSONDefaults(t *testing.T) {
 	raw := bson.M{}
 	require.NoError(t, bson.Unmarshal(encoded, &raw))
 	require.Equal(t, false, raw["isOutbox"])
-	require.NotContains(t, raw, "outboxFingerprint")
+	require.NotContains(t, raw, "fingerprint")
 }
 
 // TestStream_OutboxFields_BSONMissing confirms that a record saved before the fields existed reads as never sent
@@ -59,7 +59,7 @@ func TestStream_OutboxFields_BSONMissing(t *testing.T) {
 	decoded := Stream{}
 	require.NoError(t, bson.Unmarshal(encoded, &decoded))
 	require.False(t, decoded.IsOutbox.Value())
-	require.Empty(t, decoded.OutboxFingerprint)
+	require.Empty(t, decoded.Fingerprint)
 }
 
 // TestStream_OutboxFields_JSON confirms that the flag is written as "isOutbox", and that the fingerprint never leaves the server
@@ -67,19 +67,19 @@ func TestStream_OutboxFields_JSON(t *testing.T) {
 
 	stream := NewStream()
 	stream.IsOutbox.Set(true)
-	stream.OutboxFingerprint.Set("abc123")
+	stream.Fingerprint.Set("abc123")
 
 	encoded, err := json.Marshal(stream)
 	require.NoError(t, err)
 	require.Contains(t, string(encoded), `"isOutbox":true`)
 	require.NotContains(t, string(encoded), "abc123")
-	require.NotContains(t, string(encoded), "outboxFingerprint")
+	require.NotContains(t, string(encoded), "fingerprint")
 
 	// A fingerprint in incoming JSON is ignored
 	decoded := NewStream()
-	require.NoError(t, json.Unmarshal([]byte(`{"isOutbox":true, "outboxFingerprint":"forged"}`), &decoded))
+	require.NoError(t, json.Unmarshal([]byte(`{"isOutbox":true, "fingerprint":"forged"}`), &decoded))
 	require.True(t, decoded.IsOutbox.Value())
-	require.Empty(t, decoded.OutboxFingerprint)
+	require.Empty(t, decoded.Fingerprint)
 }
 
 // TestStream_Update_CopiesOutboxFields confirms that Update carries both fields, in both directions
@@ -87,17 +87,17 @@ func TestStream_Update_CopiesOutboxFields(t *testing.T) {
 
 	source := NewStream()
 	source.IsOutbox.Set(true)
-	source.OutboxFingerprint.Set("abc123")
+	source.Fingerprint.Set("abc123")
 
 	target := NewStream()
 	target.Update(source)
 	require.True(t, target.IsOutbox.Value())
-	require.Equal(t, "abc123", target.OutboxFingerprint.Value())
+	require.Equal(t, "abc123", target.Fingerprint.Value())
 
 	// An Update from a Stream outside the outbox clears them
 	target.Update(NewStream())
 	require.False(t, target.IsOutbox.Value())
-	require.Empty(t, target.OutboxFingerprint)
+	require.Empty(t, target.Fingerprint)
 }
 
 // TestStream_OutboxFields_NoFormCanWrite confirms that the Stream's schema offers neither field
@@ -105,12 +105,12 @@ func TestStream_OutboxFields_NoFormCanWrite(t *testing.T) {
 
 	streamSchema := schema.New(StreamSchema())
 
-	for _, path := range []string{"outbox", "isOutbox", "outboxFingerprint"} {
+	for _, path := range []string{"outbox", "isOutbox", "fingerprint"} {
 		t.Run(path, func(t *testing.T) {
 			stream := NewStream()
 			require.Error(t, streamSchema.Set(&stream, path, "true"))
 			require.False(t, stream.IsOutbox.Value())
-			require.Empty(t, stream.OutboxFingerprint)
+			require.Empty(t, stream.Fingerprint)
 
 			_, err := streamSchema.Get(&stream, path)
 			require.Error(t, err)
@@ -122,7 +122,7 @@ func TestStream_OutboxFields_NoFormCanWrite(t *testing.T) {
 func TestStreamSummary_IsOutbox(t *testing.T) {
 
 	require.Contains(t, StreamSummaryFields(), "isOutbox")
-	require.NotContains(t, StreamSummaryFields(), "outboxFingerprint")
+	require.NotContains(t, StreamSummaryFields(), "fingerprint")
 
 	stream := NewStream()
 	stream.IsOutbox.Set(true)

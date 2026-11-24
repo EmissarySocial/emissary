@@ -53,10 +53,10 @@ func TestStreamActorJSONLD_PreferredUsername(t *testing.T) {
 	stream.URL = "https://example.com/" + stream.StreamID.Hex()
 
 	// A token that qualifies as a handle is published as-is
-	stream.Token = "my-article"
+	stream.Token.Set("my-article")
 	require.Equal(t, "my-article", actor.JSONLD(&stream)[vocab.PropertyPreferredUsername])
 
 	// A token that does not qualify falls back to the StreamID
-	stream.Token = "café"
+	stream.Token.Set("café")
 	require.Equal(t, stream.StreamID.Hex(), actor.JSONLD(&stream)[vocab.PropertyPreferredUsername])
 }

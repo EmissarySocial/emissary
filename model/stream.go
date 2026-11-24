@@ -11,6 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
+	benpatedelta "github.com/benpate/delta"
 	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/delta"
@@ -31,7 +32,7 @@ type Stream struct {
 	NavigationID     string                  `json:"navigationId,omitzero"     bson:"navigationId"`           // Unique identifier of the "top-level" Stream that this record falls within.
 	TemplateID       string                  `json:"templateId,omitzero"       bson:"templateId"`             // Unique identifier (name) of the Template to use when building this Stream in HTML.
 	ParentTemplateID string                  `json:"parentTemplateId,omitzero" bson:"parentTemplateId"`       // Unique identifier (name) of the parent's Template.
-	StateID          string                  `json:"stateId,omitzero"          bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
+	StateID          benpatedelta.String     `json:"stateId,omitzero"          bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	SocialRole       string                  `json:"socialRole,omitzero"       bson:"socialRole,omitempty"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
 	Groups           mapof.Object[id.Slice]  `json:"groups,omitzero"           bson:"groups,omitempty"`       // Groups maps roles into GroupIDs for this Stream.  This is used to determine access rights for the Stream.
 	Circles          mapof.Object[id.Slice]  `json:"circles,omitzero"          bson:"circles,omitempty"`      // Circles maps roles into CircleIDs for this Stream.  This is used to determine access rights for the Stream.
@@ -39,7 +40,7 @@ type Stream struct {
 	PrivilegeIDs     Permissions             `json:"privilegeIds,omitzero"     bson:"privilegeIds,omitempty"` // List of ALL Privilege IDs that grant ANY permissions to this Stream (denormalized from the Products and Circles maps)
 	DefaultAllow     Permissions             `json:"defaultAllow,omitzero"     bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	URL              string                  `json:"url,omitzero"              bson:"url,omitempty"`          // URL of the original document
-	Token            string                  `json:"token,omitzero"            bson:"token,omitempty"`        // Unique value that identifies this element in the URL
+	Token            benpatedelta.String     `json:"token,omitzero"            bson:"token,omitempty"`        // Unique value that identifies this element in the URL
 	Label            string                  `json:"label,omitzero"            bson:"label,omitempty"`        // Label/Title of the document
 	Summary          string                  `json:"summary,omitzero"          bson:"summary,omitempty"`      // Brief summary of the document
 	Icon             string                  `json:"icon,omitzero"             bson:"icon,omitempty"`         // Icon CSS/Token for the document
@@ -69,8 +70,8 @@ type Stream struct {
 	ShareCount       int                     `json:"shareCount"                bson:"shareCount"`             // Denormalized count of "Announce" (share) responses to this Stream (maintained by the Response service).
 
 	// Outbox fields are written by the Stream service alone.  No form can set them.
-	IsOutbox          bool   `json:"isOutbox,omitzero" bson:"isOutbox"`                    // TRUE if this Stream is sent to its author's followers.  Copied from the "outbox" flag of its Template's State.
-	OutboxFingerprint string `json:"-"                 bson:"outboxFingerprint,omitempty"` // Hash of the JSON-LD that followers last received.  Empty when followers hold nothing.
+	IsOutbox    benpatedelta.Bool   `json:"isOutbox,omitzero" bson:"isOutbox"`              // TRUE if this Stream is sent to its author's followers.  Copied from the "outbox" flag of its Template's State.
+	Fingerprint benpatedelta.String `json:"-"                 bson:"fingerprint,omitempty"` // Hash of the JSON-LD that followers last received.  Empty when followers hold nothing.
 
 	// Deprecated: Permissions maps UserIDs/GroupIDs into Roles for this Stream.
 	// Permissions mapof.Object[sliceof.String] `json:"" bson:"permissions,omitempty"`
@@ -85,10 +86,10 @@ func NewStream() Stream {
 
 	return Stream{
 		StreamID:      streamID,
-		Token:         streamID.Hex(),
+		Token:         benpatedelta.NewString(streamID.Hex()),
 		ParentID:      primitive.NilObjectID,
 		ParentIDs:     id.NewSlice(),
-		StateID:       "default",
+		StateID:       benpatedelta.NewString("default"),
 		Groups:        mapof.NewObject[id.Slice](),
 		Circles:       mapof.NewObject[id.Slice](),
 		Products:      mapof.NewObject[id.Slice](),
@@ -183,7 +184,16 @@ func (stream Stream) GetSort(fieldName string) any {
 // SetState moves this Stream into a different workflow state
 // It is part of the StateSetter interface
 func (stream *Stream) SetState(stateID string) {
-	stream.StateID = stateID
+	stream.StateID.Set(stateID)
+}
+
+// MarkSaved records the Stream's tracked values as the ones the database holds,
+// so that the next save compares against them
+func (stream *Stream) MarkSaved() {
+	stream.StateID.Reset()
+	stream.Token.Reset()
+	stream.IsOutbox.Reset()
+	stream.Fingerprint.Reset()
 }
 
 /******************************************
@@ -193,7 +203,7 @@ func (stream *Stream) SetState(stateID string) {
 // State returns the current state of this Stream.
 // It is part of the AccessLister interface
 func (stream Stream) State() string {
-	return stream.StateID
+	return stream.StateID.Value()
 }
 
 // IsAuthor returns TRUE if the provided UserID the author of this Stream
@@ -445,8 +455,8 @@ var handlePattern = regexp.MustCompile(`^[A-Za-z0-9_]+([.-]+[A-Za-z0-9_]+)*$`)
 func (stream Stream) ActivityPubUsername() string {
 
 	// RULE: A token outside Mastodon's username grammar would make every remote server reject the actor
-	if handlePattern.MatchString(stream.Token) {
-		return stream.Token
+	if handlePattern.MatchString(stream.Token.Value()) {
+		return stream.Token.Value()
 	}
 
 	return stream.StreamID.Hex()
@@ -713,7 +723,7 @@ func (stream *Stream) Update(other Stream) {
 	stream.UnPublishDate = other.UnPublishDate
 	stream.IsFeatured = other.IsFeatured
 	stream.IsOutbox = other.IsOutbox
-	stream.OutboxFingerprint = other.OutboxFingerprint
+	stream.Fingerprint = other.Fingerprint
 	stream.ReplyPolicy = other.ReplyPolicy
 	stream.Journal = other.Journal
 }
