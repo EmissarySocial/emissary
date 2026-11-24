@@ -26,7 +26,7 @@ func TestStream_RefusesReply(t *testing.T) {
 	// saveParent stores a Stream with the provided token, policy, and audience, and returns its URL
 	saveParent := func(token string, policy string, audience model.Permissions) string {
 		parent := model.NewStream()
-		parent.Token = token
+		parent.Token.Set(token)
 		parent.ReplyPolicy = policy
 		parent.DefaultAllow = audience
 		parent.AttributedTo = model.PersonLink{ProfileURL: author}

@@ -302,7 +302,7 @@ func TestStream_ActivityPubUsername(t *testing.T) {
 	streamID := stream.StreamID.Hex()
 
 	// The default token IS the StreamID, and must come back unchanged
-	require.Equal(t, streamID, stream.Token)
+	require.Equal(t, streamID, stream.Token.Value())
 	require.Equal(t, streamID, stream.ActivityPubUsername())
 
 	tests := []struct {
@@ -323,7 +323,7 @@ func TestStream_ActivityPubUsername(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		stream.Token = test.token
+		stream.Token.Set(test.token)
 		require.Equal(t, test.expected, stream.ActivityPubUsername(), "token %q", test.token)
 	}
 }

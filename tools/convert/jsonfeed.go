@@ -28,7 +28,7 @@ func IteratorToJSonFeed(url string, title string, description string, it data.It
 func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 
 	result := jsonfeed.Item{
-		ID:            stream.Token,
+		ID:            stream.Token.Value(),
 		URL:           stream.URL,
 		Title:         stream.Label,
 		ContentHTML:   first.String(stream.Content.HTML, " "),

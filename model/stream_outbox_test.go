@@ -12,7 +12,7 @@ import (
 // TestStream_OutboxFields_NewStream confirms that a new Stream is outside the outbox, and that followers hold nothing
 func TestStream_OutboxFields_NewStream(t *testing.T) {
 	stream := NewStream()
-	require.False(t, stream.IsOutbox)
+	require.False(t, stream.IsOutbox.Value())
 	require.Empty(t, stream.OutboxFingerprint)
 }
 
@@ -20,16 +20,16 @@ func TestStream_OutboxFields_NewStream(t *testing.T) {
 func TestStream_OutboxFields_BSON(t *testing.T) {
 
 	original := NewStream()
-	original.IsOutbox = true
-	original.OutboxFingerprint = "abc123"
+	original.IsOutbox.Set(true)
+	original.OutboxFingerprint.Set("abc123")
 
 	encoded, err := bson.Marshal(original)
 	require.NoError(t, err)
 
 	decoded := NewStream()
 	require.NoError(t, bson.Unmarshal(encoded, &decoded))
-	require.True(t, decoded.IsOutbox)
-	require.Equal(t, "abc123", decoded.OutboxFingerprint)
+	require.True(t, decoded.IsOutbox.Value())
+	require.Equal(t, "abc123", decoded.OutboxFingerprint.Value())
 
 	raw := bson.M{}
 	require.NoError(t, bson.Unmarshal(encoded, &raw))
@@ -58,7 +58,7 @@ func TestStream_OutboxFields_BSONMissing(t *testing.T) {
 
 	decoded := Stream{}
 	require.NoError(t, bson.Unmarshal(encoded, &decoded))
-	require.False(t, decoded.IsOutbox)
+	require.False(t, decoded.IsOutbox.Value())
 	require.Empty(t, decoded.OutboxFingerprint)
 }
 
@@ -66,8 +66,8 @@ func TestStream_OutboxFields_BSONMissing(t *testing.T) {
 func TestStream_OutboxFields_JSON(t *testing.T) {
 
 	stream := NewStream()
-	stream.IsOutbox = true
-	stream.OutboxFingerprint = "abc123"
+	stream.IsOutbox.Set(true)
+	stream.OutboxFingerprint.Set("abc123")
 
 	encoded, err := json.Marshal(stream)
 	require.NoError(t, err)
@@ -78,7 +78,7 @@ func TestStream_OutboxFields_JSON(t *testing.T) {
 	// A fingerprint in incoming JSON is ignored
 	decoded := NewStream()
 	require.NoError(t, json.Unmarshal([]byte(`{"isOutbox":true, "outboxFingerprint":"forged"}`), &decoded))
-	require.True(t, decoded.IsOutbox)
+	require.True(t, decoded.IsOutbox.Value())
 	require.Empty(t, decoded.OutboxFingerprint)
 }
 
@@ -86,17 +86,17 @@ func TestStream_OutboxFields_JSON(t *testing.T) {
 func TestStream_Update_CopiesOutboxFields(t *testing.T) {
 
 	source := NewStream()
-	source.IsOutbox = true
-	source.OutboxFingerprint = "abc123"
+	source.IsOutbox.Set(true)
+	source.OutboxFingerprint.Set("abc123")
 
 	target := NewStream()
 	target.Update(source)
-	require.True(t, target.IsOutbox)
-	require.Equal(t, "abc123", target.OutboxFingerprint)
+	require.True(t, target.IsOutbox.Value())
+	require.Equal(t, "abc123", target.OutboxFingerprint.Value())
 
 	// An Update from a Stream outside the outbox clears them
 	target.Update(NewStream())
-	require.False(t, target.IsOutbox)
+	require.False(t, target.IsOutbox.Value())
 	require.Empty(t, target.OutboxFingerprint)
 }
 
@@ -109,7 +109,7 @@ func TestStream_OutboxFields_NoFormCanWrite(t *testing.T) {
 		t.Run(path, func(t *testing.T) {
 			stream := NewStream()
 			require.Error(t, streamSchema.Set(&stream, path, "true"))
-			require.False(t, stream.IsOutbox)
+			require.False(t, stream.IsOutbox.Value())
 			require.Empty(t, stream.OutboxFingerprint)
 
 			_, err := streamSchema.Get(&stream, path)
@@ -125,7 +125,7 @@ func TestStreamSummary_IsOutbox(t *testing.T) {
 	require.NotContains(t, StreamSummaryFields(), "outboxFingerprint")
 
 	stream := NewStream()
-	stream.IsOutbox = true
+	stream.IsOutbox.Set(true)
 
 	encoded, err := bson.Marshal(stream)
 	require.NoError(t, err)
@@ -133,4 +133,42 @@ func TestStreamSummary_IsOutbox(t *testing.T) {
 	summary := NewStreamSummary()
 	require.NoError(t, bson.Unmarshal(encoded, &summary))
 	require.True(t, summary.IsOutbox)
+}
+
+// TestStream_MarkSaved confirms that MarkSaved makes the current State and flag the baseline for the next comparison
+func TestStream_MarkSaved(t *testing.T) {
+
+	stream := NewStream()
+	stream.StateID.Set("published")
+	stream.IsOutbox.Set(true)
+	require.True(t, stream.StateID.IsChanged())
+	require.True(t, stream.IsOutbox.IsChanged())
+
+	stream.MarkSaved()
+	require.Equal(t, "published", stream.StateID.Value())
+	require.True(t, stream.IsOutbox.Value())
+	require.False(t, stream.StateID.IsChanged())
+	require.False(t, stream.IsOutbox.IsChanged())
+	require.True(t, stream.IsOutbox.Original())
+}
+
+// TestStream_StateID_TracksItsLoadedValue confirms that a Stream read from BSON or JSON knows the State it was read in
+func TestStream_StateID_TracksItsLoadedValue(t *testing.T) {
+
+	original := NewStream()
+	original.StateID.Set("published")
+	original.IsOutbox.Set(true)
+
+	encoded, err := bson.Marshal(original)
+	require.NoError(t, err)
+
+	loaded := NewStream()
+	require.NoError(t, bson.Unmarshal(encoded, &loaded))
+	require.False(t, loaded.StateID.IsChanged())
+	require.False(t, loaded.IsOutbox.IsChanged())
+
+	loaded.SetState("default")
+	require.True(t, loaded.StateID.IsChanged())
+	require.Equal(t, "published", loaded.StateID.Original())
+	require.Equal(t, "default", loaded.State())
 }

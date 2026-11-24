@@ -18,7 +18,7 @@ func TestStreamFeedFields_ProjectionKeepsFeedOutput(t *testing.T) {
 
 	stream := model.NewStream()
 	stream.URL = "https://example.com/blog/post"
-	stream.Token = "post"
+	stream.Token.Set("post")
 	stream.Label = "A Post"
 	stream.Summary = "The summary"
 	stream.IconURL = "https://example.com/icon.png"

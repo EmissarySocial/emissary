@@ -520,7 +520,7 @@ func (service *Stream) refreshReplyCount(session data.Session, parent *model.Str
 
 	parent.ReplyCount = int(count)
 
-	if err := service.Save(session, parent, "Refreshed reply count"); err != nil {
+	if err := service.SaveWithoutOutbox(session, parent, "Refreshed reply count"); err != nil {
 		return derp.Wrap(err, location, "Saving Stream with refreshed reply count", parent.StreamID.Hex())
 	}
 
@@ -652,7 +652,7 @@ func (service *Stream) refreshResponseCount(session data.Session, target *model.
 		return derp.Internal(location, "Unexpected collection type", collectionType)
 	}
 
-	if err := service.Save(session, target, "Refreshed response count"); err != nil {
+	if err := service.SaveWithoutOutbox(session, target, "Refreshed response count"); err != nil {
 		return derp.Wrap(err, location, "Saving Stream with refreshed response count", target.StreamID.Hex())
 	}
 

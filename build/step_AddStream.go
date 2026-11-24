@@ -111,7 +111,7 @@ func (step StepAddStream) newChild(builder Builder, template *model.Template) (m
 	const location = "build.StepAddStream.newChild"
 
 	child := builder.factory().Stream().New()
-	child.StateID = step.StateID
+	child.StateID.Set(step.StateID)
 
 	// Assign the current user as the author (with silent failure, but why would it do that?)
 	if user, err := builder.getUser(); err == nil {

@@ -55,14 +55,14 @@ func NewStream(factory Factory, session data.Session, request *http.Request, res
 	// Enforce permissions on the Action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Stream{}, derp.Forbidden(location, "Forbidden (signed in as User)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
+			return Stream{}, derp.Forbidden(location, "Forbidden (signed in as User)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID.Value())
 		}
 
 		if common._authorization.IsIdentity() {
-			return Stream{}, derp.Forbidden(location, "Forbidden (signed in as Guest)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
+			return Stream{}, derp.Forbidden(location, "Forbidden (signed in as Guest)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID.Value())
 		}
 
-		return Stream{}, derp.Unauthorized(location, "Unauthorized: Anonymous user is not authorized to perform this action", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
+		return Stream{}, derp.Unauthorized(location, "Unauthorized: Anonymous user is not authorized to perform this action", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID.Value())
 	}
 
 	// Success.  Populate Stream
@@ -202,7 +202,7 @@ func (w Stream) NavigationID() string {
 
 // StateID returns the current state of the stream being built
 func (w Stream) StateID() string {
-	return w._stream.StateID
+	return w._stream.StateID.Value()
 }
 
 // TemplateID returns the name of the template being used
@@ -217,7 +217,7 @@ func (w Stream) Action() string {
 
 // Token returns the unique URL token for the stream being built
 func (w Stream) Token() string {
-	return w._stream.Token
+	return w._stream.Token.Value()
 }
 
 // PageTitle returns the Label for the stream being built
@@ -491,7 +491,7 @@ func (w Stream) IsFeatured() bool {
 
 // IsOutbox returns TRUE if the stream being built is sent to its author's followers
 func (w Stream) IsOutbox() bool {
-	return w._stream.IsOutbox
+	return w._stream.IsOutbox.Value()
 }
 
 /******************************************

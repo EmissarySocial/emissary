@@ -29,7 +29,7 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 	wasPublished := stream.IsPublished() // nolint:scopeguard (must be read before the Stream changes)
 
 	// RULE: IF this stream is not yet published, then set the publish date
-	if (stream.PublishDate > time.Now().Unix()) || (stream.StateID != stateID) {
+	if (stream.PublishDate > time.Now().Unix()) || (stream.StateID.Value() != stateID) {
 		stream.PublishDate = time.Now().Unix()
 	}
 
@@ -41,7 +41,7 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 	stream.SetAttributedTo(user.PersonLink())
 
 	// RULE: Set the new state ID
-	stream.StateID = stateID
+	stream.StateID.Set(stateID)
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(session, stream, "Publishing"); err != nil {

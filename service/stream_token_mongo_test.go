@@ -8,11 +8,13 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	querysync "github.com/EmissarySocial/emissary/queries/sync"
 	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -69,8 +71,8 @@ func newTokenStream(token string) model.Stream {
 	stream := model.NewStream()
 	stream.TemplateID = "test-collection"
 	stream.ParentID = primitive.NewObjectID()
-	stream.StateID = "default"
-	stream.Token = token
+	stream.StateID.Set("default")
+	stream.Token.Set(token)
 	return stream
 }
 
@@ -90,7 +92,7 @@ func TestStream_Save_RefusesATakenToken(t *testing.T) {
 	err := service.Save(session, &second, "taken")
 	require.True(t, derp.IsBadRequest(err), "another Stream's token")
 
-	second.Token = "signin"
+	second.Token.Set("signin")
 	err = service.Save(session, &second, "reserved")
 	require.True(t, derp.IsBadRequest(err), "a server route")
 
@@ -100,12 +102,12 @@ func TestStream_Save_RefusesATakenToken(t *testing.T) {
 	require.Equal(t, int64(1), count)
 
 	// The default token is the Stream's own ID
-	second.Token = ""
+	second.Token.Set("")
 	require.NoError(t, service.Save(session, &second, "default"))
-	require.Equal(t, second.StreamID.Hex(), second.Token)
+	require.Equal(t, second.StreamID.Hex(), second.Token.Value())
 
 	// ...and an existing Stream cannot change to a token that is in use
-	second.Token = "about"
+	second.Token.Set("about")
 	err = service.Save(session, &second, "changed")
 	require.True(t, derp.IsBadRequest(err))
 
@@ -128,15 +130,18 @@ func TestStream_Save_KeepsAnUnchangedToken(t *testing.T) {
 	stream.CreateDate = time.Now().UnixMilli()
 	require.NoError(t, session.Collection("Stream").Save(&stream, "written before the rules"))
 
+	// The Stream is read back, as a request reads it, so that it knows the token it was loaded with
+	require.NoError(t, service.LoadByID(session, stream.StreamID, &stream))
+
 	// Saving it again, unchanged, still works
 	stream.Label = "Renamed"
 	require.NoError(t, service.Save(session, &stream, "unchanged token"))
 
 	// Changing away and back is a change, and the username refuses it
-	stream.Token = "alice-page"
+	stream.Token.Set("alice-page")
 	require.NoError(t, service.Save(session, &stream, "new token"))
 
-	stream.Token = "alice"
+	stream.Token.Set("alice")
 	err = service.Save(session, &stream, "back again")
 	require.True(t, derp.IsBadRequest(err))
 
@@ -208,4 +213,38 @@ func TestStream_Save_TwoServersShareOneToken(t *testing.T) {
 	require.Eventually(t, func() bool {
 		return firstWebhooks.Load()+secondWebhooks.Load() == rounds
 	}, 5*time.Second, 10*time.Millisecond)
+}
+
+// TestStream_Save_ChecksATokenOnlyWhenItChanges confirms that Save reads the change from the Stream itself:
+// a token held before the rules still saves, and the same Stream cannot then move to a reserved one
+func TestStream_Save_ChecksATokenOnlyWhenItChanges(t *testing.T) {
+
+	database := newStreamTokenDatabase(t)
+	session := newStreamTokenSession(t, database)
+	service, _ := newStreamTokenService()
+
+	stream := newTokenStream("about")
+	require.NoError(t, service.Save(session, &stream, "created"))
+
+	// A reserved token written before the rules existed
+	require.NoError(t, queries.RawUpdate(t.Context(), session.Collection("Stream"), exp.Equal("_id", stream.StreamID), bson.M{
+		"$set": bson.M{"token": "signin"},
+	}))
+
+	// It still saves, because it has not changed since it was loaded
+	loaded := model.NewStream()
+	require.NoError(t, service.LoadByID(session, stream.StreamID, &loaded))
+	loaded.Label = "Edited"
+	require.NoError(t, service.Save(session, &loaded, "edited"))
+
+	// Changing it to another reserved token is refused, and changing it back afterwards is checked too
+	loaded.Token.Set("signout")
+	require.True(t, derp.IsBadRequest(service.Save(session, &loaded, "reserved")))
+
+	// A second save of the same copy compares against what the first one stored
+	loaded.Token.Set("contact")
+	require.NoError(t, service.Save(session, &loaded, "changed"))
+	loaded.Label = "Edited again"
+	require.NoError(t, service.Save(session, &loaded, "unchanged"))
+	require.False(t, loaded.Token.IsChanged())
 }

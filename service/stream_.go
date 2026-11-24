@@ -160,7 +160,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 
 		// Place the Stream beneath its parent, when the theme names one
 		if err := service.setStartupParent(&stream, data.GetString(startupParentToken), created); err != nil {
-			return derp.Wrap(err, location, "Placing startup stream", stream.Token)
+			return derp.Wrap(err, location, "Placing startup stream", stream.Token.Value())
 		}
 
 		// Save the new Stream to the database.  Save is the single validation gate: it
@@ -172,7 +172,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 			return derp.Wrap(err, location, "Saving startup stream", stream)
 		}
 
-		created[stream.Token] = stream
+		created[stream.Token.Value()] = stream
 	}
 
 	return nil
@@ -231,7 +231,7 @@ func (service *Stream) setStartupParent(stream *model.Stream, parentToken string
 	parent, exists := created[parentToken]
 
 	if !exists {
-		return derp.Internal(location, "Startup stream names a parent that is not listed before it", stream.Token, parentToken)
+		return derp.Internal(location, "Startup stream names a parent that is not listed before it", stream.Token.Value(), parentToken)
 	}
 
 	// A top-level startup Stream has no NavigationID of its own, so its children take its ID
@@ -399,7 +399,7 @@ func (service *Stream) newDefaultChild(entry mapof.Any) (model.Stream, model.Tem
 // New returns a new Stream that uses the named template.
 func (service *Stream) New() model.Stream {
 	result := model.NewStream()
-	result.URL = service.host + "/" + result.Token
+	result.URL = service.host + "/" + result.Token.Value()
 	return result
 }
 
@@ -646,6 +646,17 @@ func (service *Stream) SetOutboxReplyPolicy(session data.Session, userID primiti
 
 // Save adds/updates an Stream in the database
 func (service *Stream) Save(session data.Session, stream *model.Stream, note string) error {
+	return service.save(session, stream, note, true)
+}
+
+// SaveWithoutOutbox adds/updates a Stream without queueing its outbox task.  It is for changes that
+// followers never receive, such as a refreshed counter.
+func (service *Stream) SaveWithoutOutbox(session data.Session, stream *model.Stream, note string) error {
+	return service.save(session, stream, note, false)
+}
+
+// save adds/updates a Stream in the database, and queues its outbox task when the caller asks for it
+func (service *Stream) save(session data.Session, stream *model.Stream, note string, queueOutbox bool) error {
 
 	const location = "service.Stream.Save"
 
@@ -683,8 +694,8 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	}
 
 	// RULE: Default Token
-	if stream.Token == "" {
-		stream.Token = stream.StreamID.Hex()
+	if stream.Token.Value() == "" {
+		stream.Token.Set(stream.StreamID.Hex())
 	}
 
 	// Geocode the Location (if needed)
@@ -727,6 +738,9 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	service.calcDefaultAllow(&template, stream)
 
+	// RULE: A Stream whose State changed takes that State's "outbox" flag
+	calcOutbox(&template, stream, wasNew)
+
 	// RULE: Extract and linkify #hashtags for Templates that configure tagging.  This runs
 	// BEFORE Normalize so the injected anchors pass through the same schema sanitization as
 	// any other content HTML.  @mentions are extracted from the same paths and resolved here
@@ -768,6 +782,14 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	if err := service.collection(session).Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Saving Stream", "StreamID: "+stream.StreamID.Hex())
 	}
+
+	// Queue the task that brings followers up to date, once this transaction commits
+	if queueOutbox {
+		service.queueOutbox(session, stream)
+	}
+
+	// The database now holds this State and flag, so the next save of this copy compares against them
+	stream.MarkSaved()
 
 	// Stamp the new sharing on every child, after the parent is saved so that each child reads it
 	if shareWithChildren {
@@ -1068,33 +1090,21 @@ func (service *Stream) QueryByPrivilege(session data.Session, privilegeIDs ...pr
 	return service.Query(session, criteria)
 }
 
-// validateChangedToken applies ValidateToken to a Stream's token when it differs from the stored copy.
+// validateChangedToken applies ValidateToken to a Stream's token when it has changed since the Stream was loaded.
 // The default token, which is the Stream's own ID, is never checked.
 func (service *Stream) validateChangedToken(session data.Session, stream *model.Stream, wasNew bool) error {
 
-	const location = "service.Stream.validateChangedToken"
-
 	// No other Stream can hold this Stream's ID
-	if stream.Token == stream.StreamID.Hex() {
+	if stream.Token.Value() == stream.StreamID.Hex() {
 		return nil
 	}
 
 	// RULE: An unchanged token is not re-checked, so a token saved before these rules still saves
-	if !wasNew {
-
-		saved := model.NewStream()
-		err := service.Load(session, exp.Equal("_id", stream.StreamID), &saved, option.Fields("token"))
-
-		if (err != nil) && !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Loading saved Stream", stream.StreamID)
-		}
-
-		if (err == nil) && (saved.Token == stream.Token) {
-			return nil
-		}
+	if !wasNew && stream.Token.NotChanged() {
+		return nil
 	}
 
-	return service.ValidateToken(session, stream.StreamID, stream.Token)
+	return service.ValidateToken(session, stream.StreamID, stream.Token.Value())
 }
 
 // ValidateToken returns an error if the provided token cannot be assigned to the identified Stream
@@ -1690,7 +1700,7 @@ func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.
 
 	// Find the default action/roles for this Stream
 	defaultAction := template.Default()
-	defaultRoles := defaultAction.AllowedRoles(stream.StateID)
+	defaultRoles := defaultAction.AllowedRoles(stream.StateID.Value())
 
 	// Calculate the GroupIDs and PrivilegeIDs for these roles
 	groupIDs := stream.RolesToGroupIDs(defaultRoles...)
@@ -2037,7 +2047,7 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	// Zero out (almost) all other fields in this stream
 	stream.TemplateID = ""
 	stream.ParentTemplateID = ""
-	stream.StateID = ""
+	stream.StateID.Set("")
 	stream.SocialRole = ""
 	stream.Groups = mapof.NewObject[id.Slice]()
 	stream.Circles = mapof.NewObject[id.Slice]()

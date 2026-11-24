@@ -268,7 +268,7 @@ func (service *LookupProvider) getDefaultPages() form.LookupGroup {
 	tokens := make([]string, 0)
 
 	for stream := range streams {
-		tokens = append(tokens, stream.Token)
+		tokens = append(tokens, stream.Token.Value())
 	}
 
 	// Follow the yellow brick road

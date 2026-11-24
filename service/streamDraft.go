@@ -237,7 +237,7 @@ func (service *StreamDraft) Promote(session data.Session, streamID primitive.Obj
 	}
 
 	if omit.NotContains("token") {
-		stream.Token = draft.Token
+		stream.Token.Set(draft.Token.Value())
 	}
 
 	if omit.NotContains("label") {
@@ -276,7 +276,7 @@ func (service *StreamDraft) Promote(session data.Session, streamID primitive.Obj
 		stream.InReplyTo = draft.InReplyTo
 	}
 
-	stream.StateID = stateID
+	stream.StateID.Set(stateID)
 	stream.DeleteDate = 0 // just in case...
 
 	// Try to save the updated stream back to the database

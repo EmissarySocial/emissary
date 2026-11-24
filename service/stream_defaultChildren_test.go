@@ -381,7 +381,7 @@ func TestCreateDefaultChildrenForUser_SavesEveryChild(t *testing.T) {
 
 	for _, stream := range streams {
 		require.Equal(t, "test-collection", stream.TemplateID)
-		require.Equal(t, "default", stream.StateID)
+		require.Equal(t, "default", stream.StateID.Value())
 		require.Equal(t, user.UserID, stream.AttributedTo.UserID)
 		require.Equal(t, "https://example.test/"+stream.StreamID.Hex(), stream.URL)
 		require.Contains(t, stream.DefaultAllow, model.MagicGroupIDAnonymous, "%s must be visible to everyone", stream.Label)

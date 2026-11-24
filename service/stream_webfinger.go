@@ -53,8 +53,8 @@ func (service *Stream) WebFinger(session data.Session, token string) (digit.Reso
 	}
 
 	// The token URL is an alias, unless the token is the default StreamID
-	if stream.Token != streamID {
-		result = result.Alias(service.host + "/" + stream.Token)
+	if stream.Token.Value() != streamID {
+		result = result.Alias(service.host + "/" + stream.Token.Value())
 	}
 
 	// The StreamID URL is the actor id, and always resolves

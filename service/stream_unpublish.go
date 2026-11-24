@@ -44,7 +44,7 @@ func (service *Stream) UnPublish(session data.Session, user *model.User, stream 
 	}
 
 	// Set the new state, and end publication now
-	stream.StateID = stateID
+	stream.StateID.Set(stateID)
 	stream.UnPublishDate = time.Now().Unix()
 
 	// Re-save the Stream with the updated values.

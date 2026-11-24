@@ -90,7 +90,7 @@ func getStreamPipeline(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Build the HTML page (execute the pipeline)
 	if err := build.AsHTML(ctx, factory, streamBuilder, actionMethod); err != nil {
-		return derp.Wrap(err, location, "Building page", stream.Token)
+		return derp.Wrap(err, location, "Building page", stream.Token.Value())
 	}
 
 	// Yusss

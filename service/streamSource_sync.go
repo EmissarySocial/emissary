@@ -177,7 +177,7 @@ func (service *StreamSource) applyFrontMatter(session data.Session, stream *mode
 		return derp.Wrap(err, location, "Front matter 'slug' cannot be used", token)
 	}
 
-	stream.Token = token
+	stream.Token.Set(token)
 
 	return nil
 }

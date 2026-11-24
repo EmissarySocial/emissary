@@ -166,7 +166,7 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 		return &stream.NavigationID, true
 
 	case "stateId":
-		return &stream.StateID, true
+		return stream.StateID.Pointer(), true
 
 	case "templateId":
 		return &stream.TemplateID, true
@@ -175,7 +175,7 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 		return &stream.TemplateID, true
 
 	case "token":
-		return &stream.Token, true
+		return stream.Token.Pointer(), true
 
 	case "isFeatured":
 		return &stream.IsFeatured, true

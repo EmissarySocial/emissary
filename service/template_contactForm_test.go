@@ -188,7 +188,7 @@ func TestContactFormTemplate_SubmitIsScopedToPublished(t *testing.T) {
 
 	// A published form admits an anonymous visitor
 	published := model.NewStream()
-	published.StateID = "published"
+	published.StateID.Set("published")
 	published.AttributedTo = model.PersonLink{UserID: author}
 
 	allowed, err := permissionService.UserCan(nil, &authorization, &template, &published, "submit")
@@ -197,7 +197,7 @@ func TestContactFormTemplate_SubmitIsScopedToPublished(t *testing.T) {
 
 	// The same action on an unpublished form does not
 	draft := model.NewStream()
-	draft.StateID = "default"
+	draft.StateID.Set("default")
 	draft.AttributedTo = model.PersonLink{UserID: author}
 
 	allowed, err = permissionService.UserCan(nil, &authorization, &template, &draft, "submit")

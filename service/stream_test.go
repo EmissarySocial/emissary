@@ -117,7 +117,7 @@ func TestStream_ValidateChangedToken(t *testing.T) {
 	t.Run("the default token is never checked", func(t *testing.T) {
 		service, session := setup()
 		stream := newActorStream("group", "")
-		stream.Token = stream.StreamID.Hex()
+		stream.Token.Set(stream.StreamID.Hex())
 
 		require.NoError(t, service.validateChangedToken(session, &stream, true))
 		require.NoError(t, service.validateChangedToken(session, &stream, false))
@@ -128,29 +128,31 @@ func TestStream_ValidateChangedToken(t *testing.T) {
 	t.Run("an unchanged token is not re-checked", func(t *testing.T) {
 		service, session := setup()
 		stream := shadowed
+		stream.MarkSaved()
 
 		require.NoError(t, service.validateChangedToken(session, &stream, false))
-		require.Equal(t, 1, session.streams.loads, "only the stored copy is loaded")
+		require.Zero(t, session.streams.loads, "the Stream itself says that its token has not changed")
 		require.Zero(t, session.users.loads)
 	})
 
 	t.Run("a changed token is checked", func(t *testing.T) {
 		service, session := setup()
 		stream := mine
+		stream.MarkSaved()
 
-		stream.Token = "their-article"
+		stream.Token.Set("their-article")
 		err := service.validateChangedToken(session, &stream, false)
 		require.True(t, derp.IsBadRequest(err), "another Stream's token")
 
-		stream.Token = "signin"
+		stream.Token.Set("signin")
 		err = service.validateChangedToken(session, &stream, false)
 		require.True(t, derp.IsBadRequest(err), "a server route")
 
-		stream.Token = "alice"
+		stream.Token.Set("alice")
 		err = service.validateChangedToken(session, &stream, false)
 		require.True(t, derp.IsBadRequest(err), "a username, even though another Stream already holds it")
 
-		stream.Token = "something-new"
+		stream.Token.Set("something-new")
 		require.NoError(t, service.validateChangedToken(session, &stream, false))
 	})
 
@@ -161,7 +163,7 @@ func TestStream_ValidateChangedToken(t *testing.T) {
 		err := service.validateChangedToken(session, &stream, true)
 		require.True(t, derp.IsBadRequest(err))
 
-		stream.Token = "something-new"
+		stream.Token.Set("something-new")
 		loads := session.streams.loads
 		require.NoError(t, service.validateChangedToken(session, &stream, true))
 		require.Equal(t, loads+1, session.streams.loads, "only ValidateToken's own lookup by token")

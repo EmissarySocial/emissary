@@ -103,7 +103,7 @@ func TestStream_Startup_DefaultThemeStreams(t *testing.T) {
 		require.NoError(t, err, "startup stream %q must build without error", token)
 
 		// The scalar fields must survive schema application
-		require.Equal(t, token, stream.Token)
+		require.Equal(t, token, stream.Token.Value())
 		require.Equal(t, data.GetString("templateId"), stream.TemplateID)
 		require.Equal(t, data.GetString("label"), stream.Label)
 
@@ -182,7 +182,7 @@ func TestStream_newStartupStream_ExcludesContentObject(t *testing.T) {
 	stream, err := streamService.newStartupStream(data)
 	require.NoError(t, err)
 
-	require.Equal(t, "home", stream.Token)
+	require.Equal(t, "home", stream.Token.Value())
 	require.Equal(t, "Welcome!", stream.Label)
 	require.Equal(t, "article-editorjs", stream.TemplateID)
 	require.Equal(t, model.ContentFormatEditorJS, stream.Content.Format)
