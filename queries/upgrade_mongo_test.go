@@ -68,3 +68,36 @@ func TestUpgradeMongoDB_CopiesTheLegacyOutbox(t *testing.T) {
 	upgradeFrom(37)
 	upgradeFrom(38)
 }
+
+// TestUpgradeMongoDB_FlattensSyndication verifies that a database at version 39 runs slot 40,
+// which rewrites a Stream's legacy syndication document as a plain array, and records the slot
+func TestUpgradeMongoDB_FlattensSyndication(t *testing.T) {
+
+	database := newSyncTestDatabase(t)
+	ctx := context.Background()
+
+	_, err := database.Collection("Domain").InsertOne(ctx, bson.M{"_id": primitive.NilObjectID, "databaseVersion": uint(39)})
+	require.NoError(t, err)
+
+	streamID := primitive.NewObjectID()
+	legacy := bson.M{"_id": streamID, "syndication": bson.M{"values": bson.A{"mastodon", "bluesky"}}}
+
+	_, err = database.Collection("Stream").InsertOne(ctx, legacy)
+	require.NoError(t, err)
+
+	require.NoError(t, UpgradeMongoDB(ctx, database, 39))
+
+	stored := bson.M{}
+	require.NoError(t, database.Collection("Stream").FindOne(ctx, bson.M{"_id": streamID}).Decode(&stored))
+	require.Equal(t, bson.A{"mastodon", "bluesky"}, stored["syndication"])
+
+	var domain struct {
+		DatabaseVersion uint `bson:"databaseVersion"`
+	}
+
+	require.NoError(t, database.Collection("Domain").FindOne(ctx, bson.M{"_id": primitive.NilObjectID}).Decode(&domain))
+	require.GreaterOrEqual(t, domain.DatabaseVersion, uint(40))
+
+	// A database that already recorded slot 40 is left alone
+	require.NoError(t, UpgradeMongoDB(ctx, database, domain.DatabaseVersion))
+}

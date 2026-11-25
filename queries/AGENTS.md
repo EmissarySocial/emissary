@@ -26,7 +26,15 @@ A slot runs the first time any server boots with it, including a dev server runn
 
 ## Slot 38 is empty for good
 
-Dev branches gave slot 38 to several migrations and released none of them: the slot later folded into 37, I18N's languages on `dev-Eugene`, and, in their plans, RELAYS and BUG-304. On 2026-11-22 four local databases had recorded version 38, and only one held I18N's data. A slot a database has recorded never runs there again, so any migration placed at 38 would be skipped on those databases. [upgrades/v038.go](upgrades/v038.go) is therefore an empty stub, I18N's migration moves to slot 40, and BUG-304's repair takes the next free slot after that (Ben, 2026-11-22). Never give slot 38 a body. `TestUpgradeMongoDB_CopiesTheLegacyOutbox` upgrades a database from 37 and from 38, and fails if the copy moves into slot 38.
+Dev branches gave slot 38 to several migrations and released none of them: the slot later folded into 37, I18N's languages on `dev-Eugene`, and, in their plans, RELAYS and BUG-304. On 2026-11-22 four local databases had recorded version 38, and only one held I18N's data. A slot a database has recorded never runs there again, so any migration placed at 38 would be skipped on those databases. [upgrades/v038.go](upgrades/v038.go) is therefore an empty stub (Ben, 2026-11-22). I18N's migration was then planned for slot 40 and BUG-304's repair for the slot after it, but slot 40 went to the syndication upgrade below (Ben, 2026-11-25), so each of those takes the next free slot when its branch merges. A local database that ran `dev-Eugene`'s slot 40 has recorded version 40 and skips the syndication upgrade; its Streams still load, and are converted as they are saved. Never give slot 38 a body. `TestUpgradeMongoDB_CopiesTheLegacyOutbox` upgrades a database from 37 and from 38, and fails if the copy moves into slot 38.
+
+## Version40 turns a Stream's syndication document into a plain array
+
+`Stream.Syndication` was rosetta's `delta.Slice`, which the driver stored as `{values: [...]}`. It is now `benpate/delta`'s `Slice`, which stores a plain array and still reads the old document. [upgrades/v040.go](upgrades/v040.go) converts every stored record, in both `Stream` and `StreamDraft`, with one pipeline `UpdateMany` per collection, so no record passes through Go and the upgrade does not depend on the model. The plan is `emissary-specs/projects/DELTA-CONSOLIDATION.md`.
+
+- **The filter is `{syndication: {$type: "object"}}`, and that is what makes a second run safe.** `$type` also matches an array that holds the type, so this is correct only because the list holds strings. Do not reuse the filter for a list of documents.
+- **A query on the list names `syndication`, never `syndication.values`.** The bandwagon templates `bandwagon-search-tracks` and `bandwagon-search-albums` filter on it, and changed with this upgrade. A record the upgrade has not reached yet is missing from those searches until it has.
+- **The upgrade does not make the legacy decoder removable by itself.** Upgrades run in the background after the Domain starts serving, so a Stream can be read before its record is converted.
 
 ## Version39 copies the legacy outbox, and its objects stay URLs
 
