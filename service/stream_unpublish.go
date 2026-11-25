@@ -20,11 +20,8 @@ func (service *Stream) UnPublish(session data.Session, _ *model.User, stream *mo
 
 	const location = "service.Stream.UnPublish"
 
-	// Tell the webhooks and syndication targets first, before the Stream is modified
+	// Tell the syndication targets first, before the Stream is modified
 	if outbox {
-
-		// Send stream:publish:undo Webhooks
-		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
 		// Queue a syndication.delete message for each target
 		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Value()); err != nil {

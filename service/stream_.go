@@ -64,7 +64,6 @@ type Stream struct {
 	followerService       *Follower
 	ruleService           *Rule
 	userService           *User
-	webhookService        *Webhook
 	host                  string
 	mediaserver           mediaserver.MediaServer
 	queue                 *queue.Queue
@@ -107,7 +106,6 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.streamSourceService = factory.StreamSource()
 	service.templateService = factory.Template()
 	service.userService = factory.User()
-	service.webhookService = factory.Webhook()
 	service.mediaserver = factory.MediaServer()
 	service.queue = factory.Queue()
 	service.newSession = factory.Session
@@ -181,7 +179,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 // newStartupStream builds a single published Stream from one theme.StartupStreams
 // entry.  It is separated from Startup so the schema-application step -- the part that
 // silently failed for every startup stream -- can be exercised directly by tests without
-// a database, template registry, or webhook service.  The returned Stream is NOT yet
+// a database or template registry.  The returned Stream is NOT yet
 // normalized or persisted; Startup passes it to Save, which is the single validation gate.
 func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 
@@ -539,12 +537,7 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		return derp.Wrap(err, location, "Deleting Stream from database", stream, note)
 	}
 
-	// Send Webhooks (if configured)
-	service.webhookService.Send(stream, model.WebhookEventStreamDelete)
-
 	if wasPublished {
-		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
-
 		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Value()); err != nil {
 			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
 		}
@@ -799,10 +792,6 @@ func (service *Stream) save(session data.Session, stream *model.Stream, note str
 
 	// Send SSE notifications to `InReplyTo` streams (if possible)
 	service.NotifyInReplyTo(session, stream.InReplyTo)
-
-	// Send stream:create and stream:update Webhooks
-	eventName := iif(wasNew, model.WebhookEventStreamCreate, model.WebhookEventStreamUpdate)
-	service.webhookService.Send(stream, eventName)
 
 	return nil
 }

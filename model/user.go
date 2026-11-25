@@ -710,26 +710,6 @@ func (user User) GetRank() int64 {
 }
 
 /******************************************
- * Webhook Interface
- ******************************************/
-
-// GetWebhookData returns the data for this User that will be sent to a webhook
-func (user User) GetWebhookData() mapof.Any {
-	return mapof.Any{
-		"userId":     user.UserID.Hex(),
-		"name":       user.DisplayName,
-		"email":      user.EmailAddress,
-		"username":   user.Username,
-		"url":        user.ProfileURL,
-		"iconUrl":    user.ActivityPubIconURL(),
-		"imageUrl":   user.ActivityPubImageURL(),
-		"createDate": user.CreateDate,
-		"updateDate": user.UpdateDate,
-		"deleteDate": user.DeleteDate,
-	}
-}
-
-/******************************************
  * Activity Intent Data
  ******************************************/
 

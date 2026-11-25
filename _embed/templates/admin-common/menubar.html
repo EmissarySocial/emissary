@@ -18,7 +18,7 @@
 
 		{{- /* Only People, Search, and External have pages of their own, so only they draw tabs.  On mobile, every
 		       section draws the bar, because its back arrow is the only way to the admin menu. */ -}}
-		{{- $hasTabs := in $token "users" "groups" "search" "followers" "following" "tags" "connections" "mls" "webhooks" "syndication" "sso" -}}
+		{{- $hasTabs := in $token "users" "groups" "search" "followers" "following" "tags" "connections" "mls" "syndication" "sso" -}}
 		{{- if or $hasTabs .IsMobile -}}
 		<div id="menu-bar" hx-push-url="true">
 			<div class="left">
@@ -39,11 +39,10 @@
 					<a href="/admin/followers/index" hx-boost="true" class="turboclick {{if eq `followers` $token}}selected{{end}}">Followers</a>
 					<a href="/admin/search/index" hx-boost="true" class="turboclick {{if eq `search` $token}}selected{{end}}">Indexes</a>
 
-				{{- else if in $token "connections" "mls" "webhooks" "syndication" "sso" -}}
+				{{- else if in $token "connections" "mls" "syndication" "sso" -}}
 
 					<a href="/admin/connections/index" hx-boost="true" class="turboclick {{if eq `connections` $token}}selected{{end}}">API Keys</a>
 					<a href="/admin/mls/index" hx-boost="true" class="turboclick {{if eq `mls` $token}}selected{{end}}">Encrypted Messaging</a>
-					<a href="/admin/webhooks/index" hx-boost="true" class="turboclick {{if eq `webhooks` $token}}selected{{end}}">Webhooks</a>
 					<a href="/admin/sso/index" hx-boost="true" class="turboclick {{if eq `sso` $token}}selected{{end}}">Single Sign On</a>
 					<a href="/admin/syndication/index" hx-boost="true" class="turboclick {{if eq `syndication` $token}}selected{{end}}">Syndication</a>
 

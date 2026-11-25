@@ -41,7 +41,7 @@ func newOutboxSaveTest(t *testing.T) (*Stream, data.Session, *postcommit.Tasks) 
 	session, err := mongodb.NewServer(database).Session(postcommit.WithContext(t.Context(), tasks))
 	require.NoError(t, err)
 
-	service, _ := newStreamTokenService()
+	service := newStreamTokenService()
 	setOutboxTestStates(service, outboxTestStates())
 
 	return service, session, tasks

@@ -77,7 +77,6 @@ func TestFieldProjections(t *testing.T) {
 		{"SearchTag", SearchTag{}, SearchTag{}.Fields()},
 		{"StreamSummary", StreamSummary{}, StreamSummaryFields()},
 		{"UserSummary", UserSummary{}, UserSummaryFields()},
-		{"Webhook", Webhook{}, WebhookFields()},
 	}
 
 	for _, item := range table {

@@ -2569,7 +2569,6 @@
 				"displayName (text, schema.String)",
 				"emailAddress (text, schema.String)",
 				"groupIds (multiselect, schema.Array)",
-				"inboxTemplate (select, schema.String)",
 				"isBridgeBluesky (toggle, schema.Boolean)",
 				"isIndexable (toggle, schema.Boolean)",
 				"isOwner (toggle, schema.Boolean)",
@@ -2584,7 +2583,6 @@
 						"displayName": "string",
 						"emailAddress": "string",
 						"groupIds": "*id.Slice",
-						"inboxTemplate": "string",
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
@@ -2599,7 +2597,6 @@
 						"displayName": "string",
 						"emailAddress": "string",
 						"groupIds": "*id.Slice",
-						"inboxTemplate": "string",
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
@@ -2612,14 +2609,12 @@
 				"hostile": {
 					"changes": {
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
-						"inboxTemplate": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
 						"outboxTemplate": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"displayName": "string",
 						"emailAddress": "string",
 						"groupIds": "*id.Slice",
-						"inboxTemplate": "string",
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
@@ -2636,7 +2631,6 @@
 						"groupIds": "removed",
 						"groupIds[0]": "objectId 0123456789abcdef01234567",
 						"groupIds[1]": "objectId 0123456789abcdef01234567",
-						"inboxTemplate": "string Sample inboxTemplate",
 						"isBridgeBluesky": "bool true",
 						"isIndexable": "bool true",
 						"isOwner": "bool true",
@@ -2649,7 +2643,6 @@
 						"displayName": "string",
 						"emailAddress": "string",
 						"groupIds": "*id.Slice",
-						"inboxTemplate": "string",
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
@@ -2725,7 +2718,6 @@
 				"displayName (text, schema.String)",
 				"emailAddress (text, schema.String)",
 				"groupIds (multiselect, schema.Array)",
-				"inboxTemplate (select, schema.String)",
 				"isBridgeBluesky (toggle, schema.Boolean)",
 				"isIndexable (toggle, schema.Boolean)",
 				"isOwner (toggle, schema.Boolean)",
@@ -2740,7 +2732,6 @@
 						"displayName": "string",
 						"emailAddress": "string",
 						"groupIds": "*id.Slice",
-						"inboxTemplate": "string",
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
@@ -2755,7 +2746,6 @@
 						"displayName": "string",
 						"emailAddress": "string",
 						"groupIds": "*id.Slice",
-						"inboxTemplate": "string",
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
@@ -2768,14 +2758,12 @@
 				"hostile": {
 					"changes": {
 						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
-						"inboxTemplate": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)",
 						"outboxTemplate": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
 					},
 					"types": {
 						"displayName": "string",
 						"emailAddress": "string",
 						"groupIds": "*id.Slice",
-						"inboxTemplate": "string",
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
@@ -2792,7 +2780,6 @@
 						"groupIds": "removed",
 						"groupIds[0]": "objectId 0123456789abcdef01234567",
 						"groupIds[1]": "objectId 0123456789abcdef01234567",
-						"inboxTemplate": "string Sample inboxTemplate",
 						"isBridgeBluesky": "bool true",
 						"isIndexable": "bool true",
 						"isOwner": "bool true",
@@ -2805,7 +2792,6 @@
 						"displayName": "string",
 						"emailAddress": "string",
 						"groupIds": "*id.Slice",
-						"inboxTemplate": "string",
 						"isBridgeBluesky": "bool",
 						"isIndexable": "bool",
 						"isOwner": "bool",
@@ -2813,108 +2799,6 @@
 						"isPublic": "bool",
 						"outboxTemplate": "string",
 						"username": "string"
-					}
-				}
-			}
-		},
-		"template:admin-webhooks/add/0:as-modal.SubSteps/0:edit": {
-			"fields": [
-				"events (multiselect, schema.Array)",
-				"label (text, schema.String)",
-				"targetUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"events": "*sliceof.String",
-						"label": "string",
-						"targetUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"events": "removed",
-						"events[0]": "string "
-					},
-					"types": {
-						"events": "*sliceof.String",
-						"label": "string",
-						"targetUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"label": "string alert(1)‮\txxxxxxxxxxxxxx"
-					},
-					"types": {
-						"events": "*sliceof.String",
-						"label": "string",
-						"targetUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"events": "removed",
-						"events[0]": "string stream:create",
-						"events[1]": "string stream:create",
-						"label": "string Sample label",
-						"targetUrl": "string https://example.com/targetUrl"
-					},
-					"types": {
-						"events": "*sliceof.String",
-						"label": "string",
-						"targetUrl": "string"
-					}
-				}
-			}
-		},
-		"template:admin-webhooks/edit/0:as-modal.SubSteps/0:edit": {
-			"fields": [
-				"events (multiselect, schema.Array)",
-				"label (text, schema.String)",
-				"targetUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"events": "*sliceof.String",
-						"label": "string",
-						"targetUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"events": "removed",
-						"events[0]": "string "
-					},
-					"types": {
-						"events": "*sliceof.String",
-						"label": "string",
-						"targetUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"label": "string alert(1)‮\txxxxxxxxxxxxxx"
-					},
-					"types": {
-						"events": "*sliceof.String",
-						"label": "string",
-						"targetUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"events": "removed",
-						"events[0]": "string stream:create",
-						"events[1]": "string stream:create",
-						"label": "string Sample label",
-						"targetUrl": "string https://example.com/targetUrl"
-					},
-					"types": {
-						"events": "*sliceof.String",
-						"label": "string",
-						"targetUrl": "string"
 					}
 				}
 			}

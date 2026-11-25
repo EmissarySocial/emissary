@@ -219,9 +219,5 @@ func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONA
 		derp.Report(err)
 	}
 
-	if err := sync.Webhook(ctx, session); err != nil {
-		derp.Report(err)
-	}
-
 	log.Debug().Msg("Finished syncing indexes for: " + session.Name())
 }

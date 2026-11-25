@@ -29,8 +29,7 @@ Common                                    request · session · factory · autho
 │    ├── Stream
 │    │    └── Widget                      sub-builder; embeds *Stream, scopes a pipeline to one widget
 │    ├── Syndication
-│    ├── User
-│    └── Webhook
+│    └── User
 │
 ├── Theme                                 handler-rendered theme pages (no Template action)
 │    ├── (used directly)                  user-signin · user-signout · guest-signin

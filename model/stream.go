@@ -647,12 +647,11 @@ func (stream Stream) ActorLink() PersonLink {
 }
 
 /******************************************
- * Webhook Interface
+ * Syndication
  ******************************************/
 
-// GetWebhookData returns the data for this
-// Stream that will be sent to a webhook
-func (stream Stream) GetWebhookData() mapof.Any {
+// SyndicationData returns the summary of this Stream that is sent to each syndication target
+func (stream Stream) SyndicationData() mapof.Any {
 	return mapof.Any{
 		"streamId":     stream.StreamID.Hex(),
 		"url":          stream.URL,

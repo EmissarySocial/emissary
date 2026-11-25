@@ -49,9 +49,6 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 		return derp.Wrap(err, location, "Saving stream", stream)
 	}
 
-	// Send stream:publish Webhooks
-	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
-
 	// Send syndication messages to all targets
 	switch {
 

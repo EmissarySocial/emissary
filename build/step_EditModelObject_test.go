@@ -84,28 +84,7 @@ func TestEditModelObject_Multiselect_Circle(t *testing.T) {
 	require.Equal(t, []string{"000000000000000000000002"}, circle.ProductIDs.SliceOfString())
 }
 
-// TestEditModelObject_Multiselect_SliceOfString guards the other half of the multiselect
-// story: paths backed by sliceof.String rather than id.Slice.
-func TestEditModelObject_Multiselect_SliceOfString(t *testing.T) {
-
-	widget.UseAll()
-
-	element := form.Element{
-		Type: "layout-vertical",
-		Children: []form.Element{
-			{Type: "multiselect", Path: "events", Options: map[string]any{"provider": "webhook-types"}},
-		},
-	}
-
-	editForm := form.New(schema.New(model.WebhookSchema()), element)
-	webhook := model.NewWebhook()
-	values := url.Values{"events": []string{model.WebhookEventUserCreate}}
-
-	require.NoError(t, editForm.SetURLValues(&webhook, values, nil))
-	require.Equal(t, []string{model.WebhookEventUserCreate}, []string(webhook.Events))
-}
-
-// TestEditModelObject_Multiselect_DeltaSlice covers the third and last slice type behind a
+// TestEditModelObject_Multiselect_DeltaSlice covers the other slice type behind a
 // multiselect: delta.Slice, which backs Stream.Syndication and the "Distribute to Streaming
 // Stations" control in the bandwagon-album template.  delta.Slice was missed when id.Slice
 // was taught to accept the *sliceof.String that multi-value widgets post, so every

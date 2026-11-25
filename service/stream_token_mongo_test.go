@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -25,23 +24,14 @@ import (
 // These tests run Stream.Save against a real MongoDB, with the indexes a server builds at startup,
 // because the rule they guard spans the service check and the database's unique index.
 
-// newStreamTokenService returns a Stream service that can save Streams on the test Templates, and the
-// counter of the webhooks its saves start
-func newStreamTokenService() (*Stream, *atomic.Int32) {
-
-	webhooks := &atomic.Int32{}
+// newStreamTokenService returns a Stream service that can save Streams on the test Templates
+func newStreamTokenService() *Stream {
 
 	service := newDefaultChildService()
 	service.userService = &User{}
 	service.sseUpdateChannel = make(chan realtime.Message, 100)
-	service.webhookService = &Webhook{
-		newSession: func(time.Duration) (data.Session, context.CancelFunc, error) {
-			webhooks.Add(1)
-			return nil, nil, derp.Internal("test", "Webhooks are not delivered in this test")
-		},
-	}
 
-	return service, webhooks
+	return service
 }
 
 // newStreamTokenDatabase returns a throwaway database in the local replica set, with the Stream indexes built
@@ -82,7 +72,7 @@ func TestStream_Save_RefusesATakenToken(t *testing.T) {
 
 	database := newStreamTokenDatabase(t)
 	session := newStreamTokenSession(t, database)
-	service, webhooks := newStreamTokenService()
+	service := newStreamTokenService()
 
 	first := newTokenStream("about")
 	require.NoError(t, service.Save(session, &first, "first"))
@@ -110,8 +100,6 @@ func TestStream_Save_RefusesATakenToken(t *testing.T) {
 	second.Token.Set("about")
 	err = service.Save(session, &second, "changed")
 	require.True(t, derp.IsBadRequest(err))
-
-	requireCount(t, webhooks, 2, "stream:create webhooks")
 }
 
 // TestStream_Save_KeepsAnUnchangedToken confirms that a token saved before these rules still saves,
@@ -120,7 +108,7 @@ func TestStream_Save_KeepsAnUnchangedToken(t *testing.T) {
 
 	database := newStreamTokenDatabase(t)
 	session := newStreamTokenSession(t, database)
-	service, webhooks := newStreamTokenService()
+	service := newStreamTokenService()
 
 	// A User and an older Stream already share the handle "alice"
 	_, err := database.Collection("User").InsertOne(t.Context(), bson.M{"_id": primitive.NewObjectID(), "username": "alice", "deleteDate": 0})
@@ -144,8 +132,6 @@ func TestStream_Save_KeepsAnUnchangedToken(t *testing.T) {
 	stream.Token.Set("alice")
 	err = service.Save(session, &stream, "back again")
 	require.True(t, derp.IsBadRequest(err))
-
-	requireCount(t, webhooks, 2, "stream:update webhooks")
 }
 
 // TestStream_Save_TwoServersShareOneToken races two servers that share nothing but the database, and
@@ -167,8 +153,8 @@ func TestStream_Save_TwoServersShareOneToken(t *testing.T) {
 		session data.Session
 	}
 
-	firstService, firstWebhooks := newStreamTokenService()
-	secondService, secondWebhooks := newStreamTokenService()
+	firstService := newStreamTokenService()
+	secondService := newStreamTokenService()
 
 	servers := []server{
 		{service: firstService, session: newStreamTokenSession(t, database)},
@@ -208,11 +194,6 @@ func TestStream_Save_TwoServersShareOneToken(t *testing.T) {
 
 		require.Equal(t, 1, successes, "exactly one server takes %q", token)
 	}
-
-	// Wait for every stream:create webhook, so their goroutines do not outlive the test
-	require.Eventually(t, func() bool {
-		return firstWebhooks.Load()+secondWebhooks.Load() == rounds
-	}, 5*time.Second, 10*time.Millisecond)
 }
 
 // TestStream_Save_ChecksATokenOnlyWhenItChanges confirms that Save reads the change from the Stream itself:
@@ -221,7 +202,7 @@ func TestStream_Save_ChecksATokenOnlyWhenItChanges(t *testing.T) {
 
 	database := newStreamTokenDatabase(t)
 	session := newStreamTokenSession(t, database)
-	service, _ := newStreamTokenService()
+	service := newStreamTokenService()
 
 	stream := newTokenStream("about")
 	require.NoError(t, service.Save(session, &stream, "created"))

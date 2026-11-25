@@ -25,12 +25,11 @@ import (
 )
 
 // streamDeleteTest holds a Stream service wired for Delete against a real MongoDB, and counts
-// the signing-key loads and webhook sends that Delete starts
+// the signing-key loads that Delete starts
 type streamDeleteTest struct {
 	service  Stream
 	session  data.Session
 	keyLoads *atomic.Int32
-	webhooks *atomic.Int32
 	tasks    *postcommit.Tasks
 }
 
@@ -43,15 +42,7 @@ func newStreamDeleteTest(t *testing.T) streamDeleteTest {
 	_, session := newReplicaSetSession(t)
 
 	keyLoads := &atomic.Int32{}
-	webhooks := &atomic.Int32{}
 	tasks := postcommit.NewTasks()
-
-	webhookService := &Webhook{
-		newSession: func(time.Duration) (data.Session, context.CancelFunc, error) {
-			webhooks.Add(1)
-			return nil, nil, derp.Internal("test", "Webhooks are not delivered in this test")
-		},
-	}
 
 	keyService := &EncryptionKey{}
 	locator := &Locator{host: "https://example.test"}
@@ -71,7 +62,6 @@ func newStreamDeleteTest(t *testing.T) streamDeleteTest {
 		outbox2Service:      outbox2,
 		searchResultService: &SearchResult{},
 		streamSourceService: &StreamSource{},
-		webhookService:      webhookService,
 		sseUpdateChannel:    make(chan realtime.Message, 100),
 	}
 
@@ -79,7 +69,6 @@ func newStreamDeleteTest(t *testing.T) streamDeleteTest {
 		service:  service,
 		session:  keyFailSession{Session: session, keyLoads: keyLoads, tasks: tasks},
 		keyLoads: keyLoads,
-		webhooks: webhooks,
 		tasks:    tasks,
 	}
 }
@@ -387,8 +376,8 @@ func TestStream_UnpublishOutboxStream_ErrorNamesTheStream(t *testing.T) {
 	secretcheck.RequireAbsent(t, err, stream.Label)
 }
 
-// TestStreamDelete_UndoesPublication verifies that deleting a published Stream sends the
-// publish:undo webhook and queues a syndication delete, which the delete itself used to hide
+// TestStreamDelete_UndoesPublication verifies that deleting a published Stream queues a
+// syndication delete, which the delete itself used to hide
 func TestStreamDelete_UndoesPublication(t *testing.T) {
 
 	// BUG-241: the published check ran after the delete marked the Stream deleted, so it never passed
@@ -416,7 +405,6 @@ func TestStreamDelete_UndoesPublication(t *testing.T) {
 		stream.Syndication.Set([]string{"bluesky"})
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.webhooks, 2, "stream:delete and stream:publish:undo")
 		require.Equal(t, 1, countSyndication(test))
 	})
 
@@ -427,7 +415,6 @@ func TestStreamDelete_UndoesPublication(t *testing.T) {
 		stream.Syndication.Set([]string{"bluesky"})
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		requireCount(t, test.webhooks, 1, "stream:delete only")
 		require.Zero(t, countSyndication(test))
 	})
 }

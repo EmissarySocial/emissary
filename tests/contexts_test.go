@@ -69,7 +69,7 @@ func isStreamModel(name string) bool {
 	switch name {
 	case "User", "Outbox", "Inbox", "Settings", "Conversations", "Notifications",
 		"Domain", "Search", "SSO", "Followers", "Following", "Syndication",
-		"Group", "Identity", "Rule", "Tag", "Webhook":
+		"Group", "Identity", "Rule", "Tag":
 		return false
 	}
 	return true

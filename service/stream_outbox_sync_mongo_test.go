@@ -69,7 +69,7 @@ func newOutboxSyncTestOn(t *testing.T, database *mongo.Database) outboxSyncTest 
 	removals := &removalRecorder{}
 	outbox2 := &Outbox2{locator: locator, host: host, legacyOutbox: removals, objectCache: removals}
 
-	service, _ := newStreamTokenService()
+	service := newStreamTokenService()
 	setOutboxTestStates(service, outboxTestStates())
 	service.activityService = &activityService
 	service.attachmentService = &Attachment{}

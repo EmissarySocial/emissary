@@ -1,9 +1,7 @@
 package service
 
 import (
-	"context"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -11,7 +9,6 @@ import (
 	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/set"
-	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -352,22 +349,11 @@ func TestCreateDefaultChildrenForUser_StopsAtABadEntry(t *testing.T) {
 func TestCreateDefaultChildrenForUser_SavesEveryChild(t *testing.T) {
 
 	_, session := newReplicaSetSession(t)
-	webhooks := &atomic.Int32{}
-
 	service := newDefaultChildService(articlesEntry(), notesEntry())
-	service.webhookService = &Webhook{
-		newSession: func(time.Duration) (data.Session, context.CancelFunc, error) {
-			webhooks.Add(1)
-			return nil, nil, derp.Internal("test", "Webhooks are not delivered in this test")
-		},
-	}
 	service.sseUpdateChannel = make(chan realtime.Message, 100)
 
 	user := newDefaultChildUser()
 	require.NoError(t, service.CreateDefaultChildrenForUser(session, &user))
-
-	// Wait for both stream:create webhooks, so their goroutines do not outlive the test
-	requireCount(t, webhooks, 2, "stream:create webhooks")
 
 	streams := make([]model.Stream, 0)
 	require.NoError(t, session.Collection("Stream").Query(&streams, exp.Equal("parentId", user.UserID), option.SortAsc("rank")))
@@ -568,15 +554,7 @@ func TestCreateDefaultChildrenForStream_MissingParentTemplate(t *testing.T) {
 func TestCreateDefaultChildrenForStream_SavesEveryChild(t *testing.T) {
 
 	_, session := newReplicaSetSession(t)
-	webhooks := &atomic.Int32{}
-
 	service := newDefaultChildStreamService(itemEntry("First"), itemEntry("Second"))
-	service.webhookService = &Webhook{
-		newSession: func(time.Duration) (data.Session, context.CancelFunc, error) {
-			webhooks.Add(1)
-			return nil, nil, derp.Internal("test", "Webhooks are not delivered in this test")
-		},
-	}
 	service.sseUpdateChannel = make(chan realtime.Message, 100)
 
 	// The collection shares with its children, and an item lists an item, which must not be created
@@ -600,9 +578,6 @@ func TestCreateDefaultChildrenForStream_SavesEveryChild(t *testing.T) {
 	require.NoError(t, service.Save(session, &parent, "test setup"))
 
 	require.NoError(t, service.CreateDefaultChildrenForStream(session, &parent))
-
-	// Wait for the three stream:create webhooks, so their goroutines do not outlive the test
-	requireCount(t, webhooks, 3, "stream:create webhooks")
 
 	children := make([]model.Stream, 0)
 	require.NoError(t, session.Collection("Stream").Query(&children, exp.Equal("parentId", parent.StreamID), option.SortAsc("rank")))

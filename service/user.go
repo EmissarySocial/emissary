@@ -56,7 +56,6 @@ type User struct {
 	streamService         *Stream
 	userConnectionService *UserConnection
 	templateService       *Template
-	webhookService        *Webhook
 	queue                 *queue.Queue
 	sseUpdateChannel      chan<- realtime.Message
 	host                  string
@@ -94,7 +93,6 @@ func (service *User) Refresh(factory *Factory) {
 	service.streamService = factory.Stream()
 	service.userConnectionService = factory.UserConnection()
 	service.templateService = factory.Template()
-	service.webhookService = factory.Webhook()
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 	service.queue = factory.Queue()
 
@@ -325,10 +323,6 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		return derp.Wrap(err, location, "Recording the primary user", user.UserID)
 	}
 
-	// Send Webhooks (if configured)
-	eventName := iif(isNew, model.WebhookEventUserCreate, model.WebhookEventUserUpdate)
-	service.webhookService.Send(user, eventName)
-
 	// Notify SSE clients that this User has been updated
 	service.sseUpdateChannel <- realtime.NewMessage_Updated(user.UserID)
 
@@ -421,9 +415,6 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 	if err := service.recordPrimaryUser(session, user); err != nil {
 		return derp.Wrap(err, location, "Recording the primary user", user.UserID)
 	}
-
-	// Send user:delete webhooks
-	service.webhookService.Send(user, model.WebhookEventUserDelete)
 
 	// Farewell, sweet prince
 	return nil

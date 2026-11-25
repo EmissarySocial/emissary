@@ -437,7 +437,6 @@ var templateModelRegistry = map[string]templateModel{
 	"Identity": {schema: IdentitySchema, newObject: newObjectPointer(NewIdentity)},
 	"Rule":     {schema: RuleSchema, newObject: newObjectPointer(NewRule)},
 	"Tag":      {schema: SearchTagSchema, newObject: newObjectPointer(NewSearchTag)},
-	"Webhook":  {schema: WebhookSchema, newObject: newObjectPointer(NewWebhook)},
 }
 
 // templateModelStreamDefault is the entry used for "Stream", "None", the empty string,
