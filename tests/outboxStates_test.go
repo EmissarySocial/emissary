@@ -7,6 +7,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -138,5 +139,74 @@ func TestOutboxStates_SongWaitsForItsAlbum(t *testing.T) {
 		require.True(t, exists, actionID)
 		require.NotContains(t, action.AccessList["default"], "anonymous", actionID)
 		require.Contains(t, action.AccessList["published"], "anonymous", actionID)
+	}
+}
+
+// openPageStates pins every State that anyone may view and that is not sent to followers, as
+// "templateId:stateId".  Each is a page that is meant to be public.  Nothing but a State's `view`
+// roles hides a Stream now, so a draft State must never join this list.
+var openPageStates = map[string][]string{
+	"emissary": {
+		"contact-form:published",
+		"redirect:published",
+	},
+	"atlas": {
+		"atlas-search:default",
+	},
+	"bandwagon": {
+		"bandwagon-search-albums:default",
+		"bandwagon-search-events:default",
+		"bandwagon-search-news:default",
+		"bandwagon-search-news:published",
+		"bandwagon-search-tracks:default",
+		"bandwagon-search-users:default",
+		"bandwagon-search:default",
+	},
+	"qwertylicious": {},
+}
+
+// TestOutboxStates_OpenPagesArePinned confirms that the only States anyone may view, apart from the
+// ones that are sent to followers, are the pages listed in openPageStates.  No query filters on a
+// publish date any more, so a new State that anyone may view shows every Stream in it at once.
+func TestOutboxStates_OpenPagesArePinned(t *testing.T) {
+
+	for _, group := range templateGroups {
+		t.Run(group.Name, func(t *testing.T) {
+
+			loaded := loadGroup(t, group)
+
+			expected := slices.Clone(openPageStates["emissary"])
+			if group.Name != "emissary" {
+				expected = append(expected, openPageStates[group.Name]...)
+			}
+			slices.Sort(expected)
+
+			actual := make([]string, 0)
+
+			for _, templateID := range loaded.Templates.Names() {
+				template, err := loaded.Templates.Load(templateID)
+				require.NoError(t, err)
+
+				// RULE: Only a Stream is listed by the queries that lost the date window
+				if _, isStream := template.NewObject().(*model.Stream); !isStream {
+					continue
+				}
+
+				view, exists := template.Actions["view"]
+
+				if !exists {
+					continue
+				}
+
+				for stateID, state := range template.States {
+					if !state.IsOutbox && slices.Contains(view.AccessList[stateID], "anonymous") {
+						actual = append(actual, templateID+":"+stateID)
+					}
+				}
+			}
+
+			slices.Sort(actual)
+			require.Equal(t, expected, actual)
+		})
 	}
 }

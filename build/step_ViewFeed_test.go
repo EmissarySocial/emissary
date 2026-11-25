@@ -13,7 +13,7 @@ import (
 )
 
 // These tests pin the permission gate that StepViewFeed applies to the RSS/Atom/JSON
-// feed. The feed query is `parentId AND defaultAllowed() AND withinPublishDate()`
+// feed. The feed query is `parentId AND defaultAllowed()`
 // (build/step_ViewFeed.go), mirroring the HTML view (build.Stream.Children). The
 // security-critical piece is Common.defaultAllowed(): without it the feed leaked
 // gated (circle/paid/non-anonymous) children to anonymous callers. These tests prove

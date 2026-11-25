@@ -76,8 +76,7 @@ type Builder interface {
 	getIdentity() (*model.Identity, error) // Retrieves the currently-logged-in user
 	lookupProvider() form.LookupProvider   // Retrieves the LookupProvider for this user
 
-	defaultAllowed() exp.Expression    // Criteria fragment restricting a Stream query to records the viewer is permitted to VIEW
-	withinPublishDate() exp.Expression // Criteria fragment restricting a Stream query to the current publish window
+	defaultAllowed() exp.Expression // Criteria fragment restricting a Stream query to records the viewer is permitted to VIEW
 
 	actionID() string                     // Token that identifies the action requested via the URL.
 	actions() map[string]model.Action     // Map of actions that are available for this object

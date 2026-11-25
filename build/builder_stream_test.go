@@ -44,69 +44,33 @@ func TestStream_WidgetIDsByLocation(t *testing.T) {
 	require.Equal(t, "", Stream{_stream: &empty}.WidgetIDsByLocation("TOP"))
 }
 
-// TestStream_ChildrenWithDrafts_Author verifies that a Stream's author sees every child, including
-// unpublished ones, while the permission filter still applies (QWERTY-COLLECTIONS §1.2).
-func TestStream_ChildrenWithDrafts_Author(t *testing.T) {
-
-	authorID := primitive.NewObjectID()
-	parent := newChildrenTestStream(authorID, authorID)
-
-	predicates := collectPredicates(parent.ChildrenWithDrafts().criteria)
-
-	parentPredicate, hasParent := findPredicate(predicates, "parentId", exp.OperatorEqual)
-	require.True(t, hasParent, "must list only this Stream's children")
-	require.Equal(t, parent._stream.StreamID, parentPredicate.Value)
-
-	_, hasPermissions := findPredicate(predicates, "defaultAllow", exp.OperatorIn)
-	require.True(t, hasPermissions, "the author still sees only the children their permissions allow")
-
-	_, hasPublishDate := findPredicate(predicates, "publishDate", exp.OperatorLessThan)
-	require.False(t, hasPublishDate, "the author must see unpublished children")
-
-	_, hasUnpublishDate := findPredicate(predicates, "unpublishDate", exp.OperatorGreaterThan)
-	require.False(t, hasUnpublishDate, "the author must see expired children")
-}
-
-// TestStream_ChildrenWithDrafts_NotAuthor verifies that anyone but the author gets exactly the
-// published children that Children returns, so a template cannot leak a draft or an expired item
-// by calling ChildrenWithDrafts in a public view.
-func TestStream_ChildrenWithDrafts_NotAuthor(t *testing.T) {
+// TestStream_Children_FiltersOnPermissionsAlone verifies that a list of children is limited to the
+// parent and to what the viewer may view, and never by a publish date: a child shows whenever
+// its state lets this viewer see it (emissary-specs PUBLICATION §1.12).
+func TestStream_Children_FiltersOnPermissionsAlone(t *testing.T) {
 
 	authorID := primitive.NewObjectID()
 
 	for name, viewerID := range map[string]primitive.ObjectID{
+		"author":     authorID,
 		"anonymous":  primitive.NilObjectID,
 		"other user": primitive.NewObjectID(),
 	} {
 		parent := newChildrenTestStream(authorID, viewerID)
-		predicates := collectPredicates(parent.ChildrenWithDrafts().criteria)
+		predicates := collectPredicates(parent.Children().criteria)
+
+		parentPredicate, hasParent := findPredicate(predicates, "parentId", exp.OperatorEqual)
+		require.True(t, hasParent, name+" must list only this Stream's children")
+		require.Equal(t, parent._stream.StreamID, parentPredicate.Value, name)
 
 		_, hasPermissions := findPredicate(predicates, "defaultAllow", exp.OperatorIn)
-		require.True(t, hasPermissions, name)
+		require.True(t, hasPermissions, name+" sees only the children their permissions allow")
 
-		_, hasPublishDate := findPredicate(predicates, "publishDate", exp.OperatorLessThan)
-		require.True(t, hasPublishDate, name+" must not see unpublished children")
-
-		_, hasUnpublishDate := findPredicate(predicates, "unpublishDate", exp.OperatorGreaterThan)
-		require.True(t, hasUnpublishDate, name+" must not see expired children")
-
-		require.Equal(t, len(collectPredicates(parent.Children().criteria)), len(predicates), name+" gets exactly Children's criteria")
+		for _, predicate := range predicates {
+			require.NotEqual(t, "publishDate", predicate.Field, name)
+			require.NotEqual(t, "unpublishDate", predicate.Field, name)
+		}
 	}
-}
-
-// TestStream_Children_HidesDrafts pins that Children hides unpublished and expired children from
-// everyone, the author included, which is why ChildrenWithDrafts exists.
-func TestStream_Children_HidesDrafts(t *testing.T) {
-
-	authorID := primitive.NewObjectID()
-	parent := newChildrenTestStream(authorID, authorID)
-	predicates := collectPredicates(parent.Children().criteria)
-
-	_, hasPublishDate := findPredicate(predicates, "publishDate", exp.OperatorLessThan)
-	require.True(t, hasPublishDate)
-
-	_, hasUnpublishDate := findPredicate(predicates, "unpublishDate", exp.OperatorGreaterThan)
-	require.True(t, hasUnpublishDate)
 }
 
 // TestStream_ParentSummary_AppliesPermissions pins that ParentSummary reads only this Stream's
@@ -329,10 +293,10 @@ func TestNextAfterParent(t *testing.T) {
 
 }
 
-// TestStream_ChildrenWithDrafts_TemplateSort pins that the children query sorts as the Template's
+// TestStream_Children_TemplateSort pins that the children query sorts as the Template's
 // childSortType and childSortDirection say.  Both were dropped until 2026-10-15, because QueryBuilder's
 // By and Reverse return a new value, and the old code discarded it, so every list sorted by rank.
-func TestStream_ChildrenWithDrafts_TemplateSort(t *testing.T) {
+func TestStream_Children_TemplateSort(t *testing.T) {
 
 	authorID := primitive.NewObjectID()
 	parent := newChildrenTestStream(authorID, authorID)
@@ -340,12 +304,12 @@ func TestStream_ChildrenWithDrafts_TemplateSort(t *testing.T) {
 	parent._template.ChildSortType = "label"
 	parent._template.ChildSortDirection = "desc"
 
-	query := parent.ChildrenWithDrafts()
+	query := parent.Children()
 	require.Equal(t, "label", query.sortField)
 	require.Equal(t, option.SortDirectionDescending, query.sortDirection)
 
 	parent._template.ChildSortDirection = "asc"
-	require.Equal(t, "asc", parent.ChildrenWithDrafts().sortDirection)
+	require.Equal(t, "asc", parent.Children().sortDirection)
 }
 
 // TestStream_RepliesClosed pins a method that only templates call (qwertylicious' collection menu and

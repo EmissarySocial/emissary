@@ -875,12 +875,6 @@ func (w Common) DatasetValue(name string, value string) form.LookupCode {
 	return form.LookupCode{}
 }
 
-// withinPublishDate returns the criteria fragment limiting a query to the current publish window. Implements the Builder interface.
-func (w Common) withinPublishDate() exp.Expression {
-	return exp.LessThan("publishDate", time.Now().Unix()).
-		AndGreaterThan("unpublishDate", time.Now().Unix())
-}
-
 // defaultAllowed augments a query criteria to include the
 // group authorizations of the currently signed in user.
 func (w Common) defaultAllowed() exp.Expression {
@@ -979,7 +973,6 @@ func (w Common) getIdentity() (*model.Identity, error) {
 // Navigation returns an array of Streams that have a Zero ParentID
 func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 	criteria := w.defaultAllowed().
-		And(w.withinPublishDate()).
 		AndEqual("parentId", primitive.NilObjectID)
 
 	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)

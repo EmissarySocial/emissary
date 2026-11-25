@@ -1906,7 +1906,7 @@ Renders a template file and serves it as a stylesheet.
 
 ## view-feed
 
-Renders the Stream's children — or a search query — as RSS, Atom, or JSONFeed. The format comes from the `format` query parameter (`json`, `atom`, `rss`), falling back to `Accept` header negotiation. Child Streams are filtered by the *viewer's* permissions as well as the publish-date window, so gated content is never leaked through a feed.
+Renders the Stream's children — or a search query — as RSS, Atom, or JSONFeed. The format comes from the `format` query parameter (`json`, `atom`, `rss`), falling back to `Accept` header negotiation. Child Streams are filtered by the *viewer's* permissions, so gated content is never leaked through a feed.
 
 **Attributes**
 

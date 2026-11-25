@@ -16,9 +16,9 @@ import (
 // article live, on every variant, and that its `promote-draft` really does publish.
 //
 // RULE: promoting is the ONLY path to `save-and-publish`, and `save-and-publish` is the only thing
-// that moves a Stream inside withinPublishDate() -- which Common.Navigation ANDs in with NO
-// domain-owner bypass.  A variant that overrides `promote-draft` away therefore cannot reach
-// auto-generated navigation at all, for anyone, and nothing else reports that.
+// that moves an article into the state its viewers may see -- which Common.Navigation filters on
+// with NO domain-owner bypass.  A variant that overrides `promote-draft` away therefore cannot
+// reach auto-generated navigation at all, for anyone, and nothing else reports that.
 func TestEmbeddedTemplates_MenubarActions(t *testing.T) {
 
 	const root = "../_embed/templates"

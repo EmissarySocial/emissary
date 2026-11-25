@@ -906,17 +906,6 @@ func (service *Stream) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// RangePublished returns a RangeFunc over all streams that are currently published
-func (service *Stream) RangePublished(session data.Session) (iter.Seq[model.Stream], error) {
-
-	now := time.Now().Unix()
-
-	criteria := exp.LessOrEqual("publishDate", now).
-		AndGreaterOrEqual("unpublishDate", now)
-
-	return service.Range(session, criteria)
-}
-
 // ListNavigation returns all Streams of type FOLDER at the top of the hierarchy
 func (service *Stream) ListNavigation(session data.Session) (data.Iterator, error) {
 	return service.List(
@@ -931,17 +920,14 @@ func (service *Stream) RangeByParent(session data.Session, parentID primitive.Ob
 	return service.Range(session, exp.Equal("parentId", parentID))
 }
 
-// RangePublishedByParent returns an iterator over the currently-published child streams of the
-// provided parentID. It applies the publish-date window (a Stream's own lifecycle state, not a
-// permission check) in the query so unpublished/scheduled children never leave the database.
-// Per-viewer permission filtering (Stream.IsVisibleTo) is intentionally left to the caller.
-func (service *Stream) RangePublishedByParent(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
-
-	now := time.Now().Unix()
+// RangeOutboxByParent returns an iterator over the child streams of the provided parentID that
+// are in their author's outbox. The flag is tested in the query, so a child that followers were
+// never sent does not leave the database. Per-viewer permission filtering (Stream.IsVisibleTo)
+// is intentionally left to the caller.
+func (service *Stream) RangeOutboxByParent(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
 
 	criteria := exp.Equal("parentId", parentID).
-		AndLessOrEqual("publishDate", now).
-		AndGreaterOrEqual("unpublishDate", now)
+		AndEqual("isOutbox", true)
 
 	return service.Range(session, criteria)
 }
@@ -964,25 +950,6 @@ func (service *Stream) RangeByPrivileges(session data.Session, privileges ...pri
 	criteria := exp.In("privilegeIds", privileges)
 
 	return service.Range(session, criteria)
-}
-
-// ListPublishedByParent returns all Streams that match a particular parentID
-func (service *Stream) ListPublishedByParent(session data.Session, parentID primitive.ObjectID) (data.Iterator, error) {
-
-	const location = "service.Stream.ListPublishedByParent"
-
-	// RULE: ParentID is required
-	if parentID.IsZero() {
-		return nil, derp.BadRequest(location, "ParentID is required")
-	}
-
-	now := time.Now().Unix()
-
-	criteria := exp.LessOrEqual("publishDate", now).
-		AndGreaterOrEqual("unpublishDate", now).
-		AndEqual("parentId", parentID)
-
-	return service.List(session, criteria, option.SortDesc("publishDate"))
 }
 
 // ListByTemplate returns all `Streams` that use a particular `Template`
