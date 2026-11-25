@@ -139,16 +139,21 @@ func TestStream_FillFingerprints_SkipsAStreamItCannotBuild(t *testing.T) {
 	require.Len(t, test.fingerprint(t, healthy.StreamID), 64)
 }
 
-// TestStream_FillFingerprint_KeepsARecordedFingerprint confirms that the fill never writes over a
+// TestStream_ClaimFingerprint_KeepsARecordedFingerprint confirms that the fill never writes over a
 // fingerprint that the outbox task recorded after the page was read
-func TestStream_FillFingerprint_KeepsARecordedFingerprint(t *testing.T) {
+func TestStream_ClaimFingerprint_KeepsARecordedFingerprint(t *testing.T) {
 
 	test := newOutboxSyncTest(t)
 
 	stream := test.savePending(t, "published")
+
+	// `stream` still holds the placeholder it was read with
+	stale := storedStream(t, test.service, test.session, stream.StreamID)
 	test.setFingerprint(t, stream.StreamID, "recorded-meanwhile")
 
-	require.NoError(t, test.service.fillFingerprint(test.session, stream.StreamID, "from-a-stale-page"))
+	claimed, err := test.service.claimFingerprint(test.session, &stale, "from-a-stale-page")
+	require.NoError(t, err)
+	require.False(t, claimed)
 	require.Equal(t, "recorded-meanwhile", test.fingerprint(t, stream.StreamID))
 }
 

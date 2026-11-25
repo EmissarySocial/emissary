@@ -2,12 +2,10 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -50,28 +48,13 @@ func (service *Stream) FillFingerprints(session data.Session, afterID primitive.
 			continue
 		}
 
-		if err := service.fillFingerprint(session, stream.StreamID, fingerprint); err != nil {
+		// RULE: The claim matches the placeholder, so a fingerprint that the outbox task has
+		// recorded since this page was read is never written over
+		if _, err := service.claimFingerprint(session, stream, fingerprint); err != nil {
 			return afterID, false, derp.Wrap(err, location, "Recording fingerprint", stream.StreamID)
 		}
 	}
 
 	// A short page is the last one
 	return afterID, len(streams) < fillFingerprintsPageSize, nil
-}
-
-// fillFingerprint replaces a Stream's placeholder fingerprint, and does nothing if it holds any other
-func (service *Stream) fillFingerprint(session data.Session, streamID primitive.ObjectID, fingerprint string) error {
-
-	const location = "service.Stream.fillFingerprint"
-
-	// RULE: Match the placeholder, so that a fingerprint the outbox task has recorded
-	// since this page was read is never written over
-	criteria := exp.Equal("_id", streamID).AndEqual("fingerprint", model.StreamFingerprintPending)
-	update := bson.M{"$set": bson.M{"fingerprint": fingerprint}}
-
-	if err := queries.RawUpdate(session.Context(), service.collection(session), criteria, update); err != nil {
-		return derp.Wrap(err, location, "Updating Stream", streamID)
-	}
-
-	return nil
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -169,9 +168,16 @@ func (service *Stream) syncOutboxSend(session data.Session, author *model.User, 
 	// fetch, so it stays out of the fingerprint, where a failed fetch would read as an edit.
 	service.addReplyAuthor(stream, object)
 
-	// Record what followers hold.  This shares the task's transaction with the send below.
-	if err := service.setFingerprint(session, stream.StreamID, fingerprint); err != nil {
+	// RULE: Claim the send before making it.  Another server that ran this task for the same
+	// Stream has already sent, and moved the fingerprint away from the value read here.
+	claimed, err := service.claimFingerprint(session, stream, fingerprint)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Recording fingerprint", stream.StreamID)
+	}
+
+	if !claimed {
+		return nil
 	}
 
 	if err := service.publish_outbox(session, author, stream, activityType, object); err != nil {
@@ -191,9 +197,15 @@ func (service *Stream) syncOutboxRemove(session data.Session, stream *model.Stre
 		return nil
 	}
 
-	// Record that followers hold nothing.  This shares the task's transaction with the sends below.
-	if err := service.setFingerprint(session, stream.StreamID, ""); err != nil {
+	// RULE: Claim the Delete before sending it, as a Create or an Update is claimed
+	claimed, err := service.claimFingerprint(session, stream, "")
+
+	if err != nil {
 		return derp.Wrap(err, location, "Clearing fingerprint", stream.StreamID)
+	}
+
+	if !claimed {
+		return nil
 	}
 
 	// Send the Delete to the author's followers
@@ -210,24 +222,22 @@ func (service *Stream) syncOutboxRemove(session data.Session, stream *model.Stre
 	return nil
 }
 
-// setFingerprint records what followers hold of a Stream, without saving the rest of it
-func (service *Stream) setFingerprint(session data.Session, streamID primitive.ObjectID, fingerprint string) error {
+// claimFingerprint records what followers now hold of a Stream, and returns FALSE when the stored
+// fingerprint is no longer the one this copy of the Stream was loaded with
+func (service *Stream) claimFingerprint(session data.Session, stream *model.Stream, fingerprint string) (bool, error) {
 
-	const location = "service.Stream.setFingerprint"
+	const location = "service.Stream.claimFingerprint"
 
-	// RULE: Never through Stream.Save, which would write the whole Stream over an edit
-	// made meanwhile, and queue this task again
-	update := bson.M{"$set": bson.M{"fingerprint": fingerprint}}
+	// RULE: Never through Stream.Save, which would write the whole Stream over an edit made
+	// meanwhile, and queue this task again.  The claim shares the task's transaction with the
+	// send that follows it, so a send that fails takes its claim back.
+	claimed, err := queries.ClaimStreamFingerprint(session, stream.StreamID, stream.Fingerprint.Value(), fingerprint)
 
-	if fingerprint == "" {
-		update = bson.M{"$unset": bson.M{"fingerprint": ""}}
+	if err != nil {
+		return false, derp.Wrap(err, location, "Updating Stream", stream.StreamID)
 	}
 
-	if err := queries.RawUpdate(session.Context(), service.collection(session), exp.Equal("_id", streamID), update); err != nil {
-		return derp.Wrap(err, location, "Updating Stream", streamID)
-	}
-
-	return nil
+	return claimed, nil
 }
 
 // outboxObject returns the object that followers are sent for a Stream, and its fingerprint

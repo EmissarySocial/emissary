@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // These tests run the outbox task against a real MongoDB, because the task reads the Stream that a
@@ -32,12 +34,19 @@ type outboxSyncTest struct {
 // newOutboxSyncTest returns a Stream service on a throwaway database, with outboxTestStates on its
 // test collection and one stored User to write as
 func newOutboxSyncTest(t *testing.T) outboxSyncTest {
+	t.Helper()
+	return newOutboxSyncTestOn(t, newStreamTokenDatabase(t))
+}
+
+// newOutboxSyncTestOn returns an outboxSyncTest on the provided database, as one more server
+// that shares nothing with the others but that database
+func newOutboxSyncTestOn(t *testing.T, database *mongo.Database) outboxSyncTest {
 
 	t.Helper()
 
 	const host = "https://example.test"
 
-	server := mongodb.NewServer(newStreamTokenDatabase(t))
+	server := mongodb.NewServer(database)
 	tasks := postcommit.NewTasks()
 
 	session, err := server.Session(postcommit.WithContext(t.Context(), tasks))
@@ -313,4 +322,68 @@ func TestStream_Publish_SendsThroughTheTask(t *testing.T) {
 	stream = storedStream(t, test.service, test.session, stream.StreamID)
 	require.NoError(t, test.service.UnPublish(test.session, &test.author, &stream, "default", true))
 	require.Equal(t, []string{vocab.ActivityTypeDelete}, test.sync(t))
+}
+
+// TestStream_SyncOutbox_TwoServersSendOnce runs the outbox task for one Stream on several servers
+// at once, and confirms that the database lets only one of them send
+func TestStream_SyncOutbox_TwoServersSendOnce(t *testing.T) {
+
+	const servers = 8
+
+	// race runs the task on every server at the same moment, and returns everything they sent
+	race := func(t *testing.T, tests []outboxSyncTest, streamID primitive.ObjectID) []string {
+
+		t.Helper()
+
+		start := make(chan struct{})
+		errs := make([]error, len(tests))
+		group := sync.WaitGroup{}
+
+		for index := range tests {
+			group.Go(func() {
+				<-start
+				errs[index] = tests[index].service.SyncOutbox(tests[index].session, streamID)
+			})
+		}
+
+		close(start)
+		group.Wait()
+
+		sent := make([]string, 0)
+
+		for index := range tests {
+			require.NoError(t, errs[index])
+			sent = append(sent, tests[index].sync(t)...)
+		}
+
+		return sent
+	}
+
+	database := newStreamTokenDatabase(t)
+	tests := make([]outboxSyncTest, servers)
+
+	for index := range tests {
+		tests[index] = newOutboxSyncTestOn(t, database)
+	}
+
+	first := tests[0]
+
+	// A Create
+	stream := first.newStream("published")
+	require.NoError(t, first.service.Save(first.session, &stream, "published"))
+	first.tasks.Drain()
+	require.Equal(t, []string{vocab.ActivityTypeCreate}, race(t, tests, stream.StreamID))
+
+	// An Update
+	loaded := storedStream(t, first.service, first.session, stream.StreamID)
+	loaded.Label = "No Fate"
+	require.NoError(t, first.service.Save(first.session, &loaded, "edited"))
+	first.tasks.Drain()
+	require.Equal(t, []string{vocab.ActivityTypeUpdate}, race(t, tests, stream.StreamID))
+
+	// A Delete
+	loaded = storedStream(t, first.service, first.session, stream.StreamID)
+	require.NoError(t, first.service.Delete(first.session, &loaded, "deleted"))
+	first.tasks.Drain()
+	require.Equal(t, []string{vocab.ActivityTypeDelete}, race(t, tests, stream.StreamID))
 }
