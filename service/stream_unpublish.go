@@ -38,7 +38,7 @@ func (service *Stream) UnPublish(session data.Session, user *model.User, stream 
 		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
 		// Queue a syndication.delete message for each target
-		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
+		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Value()); err != nil {
 			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
 		}
 	}

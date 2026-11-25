@@ -3861,8 +3861,7 @@
 					"changes": {
 						"data.color": "document {}",
 						"data.links": "document {}",
-						"syndication.values": "removed",
-						"syndication.values[0]": "string "
+						"syndication[0]": "string "
 					},
 					"types": {
 						"data.color.body": "unreadable",
@@ -3896,10 +3895,9 @@
 						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"summary": "string \"\u003cimg src=\\\"x\\\"\u003e\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxx\"... (2015 bytes, sha256 b20ccdf3f808)",
-						"syndication.values": "removed",
-						"syndication.values[0]": "string x",
-						"syndication.values[1]": "string ",
-						"syndication.values[2]": "string not-an-objectid"
+						"syndication[0]": "string x",
+						"syndication[1]": "string ",
+						"syndication[2]": "string not-an-objectid"
 					},
 					"types": {
 						"data.color.body": "unreadable",
@@ -3950,9 +3948,8 @@
 						"isFeatured": "bool true",
 						"label": "string Sample label",
 						"summary": "string \u003cp\u003eSample \u003cb\u003esummary\u003c/b\u003e\u003c/p\u003e",
-						"syndication.values": "removed",
-						"syndication.values[0]": "string Sample syndication.0",
-						"syndication.values[1]": "string Sample syndication.1"
+						"syndication[0]": "string Sample syndication.0",
+						"syndication[1]": "string Sample syndication.1"
 					},
 					"types": {
 						"data.color.body": "string",
@@ -3998,8 +3995,7 @@
 				},
 				"empty": {
 					"changes": {
-						"syndication.values": "removed",
-						"syndication.values[0]": "string "
+						"syndication[0]": "string "
 					},
 					"types": {
 						"data.license": "unreadable",
@@ -4010,10 +4006,9 @@
 				"hostile": {
 					"changes": {
 						"data.license": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"syndication.values": "removed",
-						"syndication.values[0]": "string x",
-						"syndication.values[1]": "string ",
-						"syndication.values[2]": "string not-an-objectid"
+						"syndication[0]": "string x",
+						"syndication[1]": "string ",
+						"syndication[2]": "string not-an-objectid"
 					},
 					"types": {
 						"data.license": "string",
@@ -4025,9 +4020,8 @@
 					"changes": {
 						"data.license": "string Sample data.license",
 						"isFeatured": "bool true",
-						"syndication.values": "removed",
-						"syndication.values[0]": "string Sample syndication.0",
-						"syndication.values[1]": "string Sample syndication.1"
+						"syndication[0]": "string Sample syndication.0",
+						"syndication[1]": "string Sample syndication.1"
 					},
 					"types": {
 						"data.license": "string",
@@ -4053,8 +4047,7 @@
 				},
 				"empty": {
 					"changes": {
-						"syndication.values": "removed",
-						"syndication.values[0]": "string "
+						"syndication[0]": "string "
 					},
 					"types": {
 						"data.license": "unreadable",
@@ -4065,10 +4058,9 @@
 				"hostile": {
 					"changes": {
 						"data.license": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
-						"syndication.values": "removed",
-						"syndication.values[0]": "string x",
-						"syndication.values[1]": "string ",
-						"syndication.values[2]": "string not-an-objectid"
+						"syndication[0]": "string x",
+						"syndication[1]": "string ",
+						"syndication[2]": "string not-an-objectid"
 					},
 					"types": {
 						"data.license": "string",
@@ -4080,9 +4072,8 @@
 					"changes": {
 						"data.license": "string Sample data.license",
 						"isFeatured": "bool true",
-						"syndication.values": "removed",
-						"syndication.values[0]": "string Sample syndication.0",
-						"syndication.values[1]": "string Sample syndication.1"
+						"syndication[0]": "string Sample syndication.0",
+						"syndication[1]": "string Sample syndication.1"
 					},
 					"types": {
 						"data.license": "string",

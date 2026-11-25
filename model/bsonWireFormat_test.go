@@ -44,6 +44,8 @@ var (
 	_ bson.ValueUnmarshaler = &delta.Bool{}
 	_ bson.ValueMarshaler   = delta.ObjectID{}
 	_ bson.ValueUnmarshaler = &delta.ObjectID{}
+	_ bson.ValueMarshaler   = delta.Slice[string]{}
+	_ bson.ValueUnmarshaler = &delta.Slice[string]{}
 )
 
 // updateGolden rewrites the checked-in fixture instead of asserting against it.
@@ -53,13 +55,14 @@ var updateGolden = flag.Bool("update-golden", false, "rewrite the testdata/golde
 // bsonWireRecord stands in for a stored document that carries every
 // custom-marshalled field type at once, so one fixture pins them all.
 type bsonWireRecord struct {
-	StartDate datetime.DateTime `bson:"startDate"`
-	Location  geo.Point         `bson:"location"`
-	Area      geo.Polygon       `bson:"area"`
-	Where     geo.Address       `bson:"where"`
-	IsBridged delta.Bool        `bson:"isBridged"`
-	FolderID  delta.ObjectID    `bson:"folderId"`
-	Data      mapof.Any         `bson:"data"`
+	StartDate datetime.DateTime   `bson:"startDate"`
+	Location  geo.Point           `bson:"location"`
+	Area      geo.Polygon         `bson:"area"`
+	Where     geo.Address         `bson:"where"`
+	IsBridged delta.Bool          `bson:"isBridged"`
+	FolderID  delta.ObjectID      `bson:"folderId"`
+	Targets   delta.Slice[string] `bson:"targets"`
+	Data      mapof.Any           `bson:"data"`
 }
 
 // fullBSONWireRecord returns a record whose every field carries a distinctive
@@ -91,6 +94,7 @@ func fullBSONWireRecord(t *testing.T) bsonWireRecord {
 		},
 		IsBridged: delta.NewBool(true),
 		FolderID:  delta.NewObjectID(folderID),
+		Targets:   delta.NewSlice("mastodon", "bluesky"),
 		Data: mapof.Any{
 			"scalar": "hello",
 			"number": int64(42),

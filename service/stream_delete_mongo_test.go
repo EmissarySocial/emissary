@@ -476,7 +476,7 @@ func TestStreamDelete_UndoesPublication(t *testing.T) {
 		test := newStreamDeleteTest(t)
 		withTarget(test)
 		stream := test.saveStream(t, primitive.NewObjectID(), primitive.NewObjectID(), true)
-		stream.Syndication.Values = []string{"bluesky"}
+		stream.Syndication.Set([]string{"bluesky"})
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
 		requireCount(t, test.webhooks, 2, "stream:delete and stream:publish:undo")
@@ -487,7 +487,7 @@ func TestStreamDelete_UndoesPublication(t *testing.T) {
 		test := newStreamDeleteTest(t)
 		withTarget(test)
 		stream := test.saveStream(t, primitive.NewObjectID(), primitive.NewObjectID(), false)
-		stream.Syndication.Values = []string{"bluesky"}
+		stream.Syndication.Set([]string{"bluesky"})
 
 		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
 		requireCount(t, test.webhooks, 1, "stream:delete only")

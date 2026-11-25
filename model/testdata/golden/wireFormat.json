@@ -62,6 +62,10 @@
       "$numberLong": "1700000000000"
     }
   },
+  "targets": [
+    "mastodon",
+    "bluesky"
+  ],
   "where": {
     "country": "US",
     "formatted": "3317 E Colfax Ave, Denver, CO 80206",

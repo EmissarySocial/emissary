@@ -19,13 +19,13 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/delta"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/delta"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -545,7 +545,7 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	if wasPublished {
 		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
-		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
+		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Value()); err != nil {
 			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
 		}
 	}

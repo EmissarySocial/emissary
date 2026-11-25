@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/benpate/delta"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -230,6 +231,9 @@ func TestStream_JSON(t *testing.T) {
 	}, `"endDate":"2009-11-17T20:34:58.651387237Z"`)
 }
 
+// Stream.Syndication must be a list to the schema package, through its pointer
+var _ schema.ArrayGetterSetter = (*delta.Slice[string])(nil)
+
 // TestStreamSchema_Syndication pins how Stream.Syndication is written.  It is a delta.Slice,
 // which the schema package reaches through ValueSetter rather than the per-index setters
 // that back the other slice fields, so it is written as a whole array and is deliberately
@@ -243,9 +247,9 @@ func TestStreamSchema_Syndication(t *testing.T) {
 		posted := sliceof.String{"bandwagon", "spotify"}
 
 		require.NoError(t, s.Set(&stream, "syndication", &posted))
-		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Values)
-		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Added)
-		require.Empty(t, stream.Syndication.Deleted)
+		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Value())
+		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Added())
+		require.Empty(t, stream.Syndication.Deleted())
 	}
 
 	{ // RULE: The schema's "token" format is enforced, and a rejected value never lands
@@ -253,7 +257,7 @@ func TestStreamSchema_Syndication(t *testing.T) {
 		posted := sliceof.String{"not a token"}
 
 		require.Error(t, s.Set(&stream, "syndication", &posted))
-		require.Empty(t, stream.Syndication.Values)
+		require.Empty(t, stream.Syndication.Value())
 	}
 
 	// A single element is NOT addressable by path: delta.Slice implements neither

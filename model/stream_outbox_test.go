@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/benpate/delta"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
@@ -150,6 +151,55 @@ func TestStream_MarkSaved(t *testing.T) {
 	require.False(t, stream.StateID.IsChanged())
 	require.False(t, stream.IsOutbox.IsChanged())
 	require.True(t, stream.IsOutbox.Original())
+}
+
+// TestStream_MarkSaved_KeepsSyndicationChanges confirms that a save does not empty the lists
+// that Publish reads after it
+func TestStream_MarkSaved_KeepsSyndicationChanges(t *testing.T) {
+
+	stream := NewStream()
+	stream.Syndication = delta.NewSlice("mastodon", "bluesky")
+	stream.Syndication.Set([]string{"bluesky", "threads"})
+
+	stream.MarkSaved()
+
+	require.True(t, stream.Syndication.IsChanged())
+	require.Equal(t, []string{"threads"}, stream.Syndication.Added())
+	require.Equal(t, []string{"mastodon"}, stream.Syndication.Deleted())
+	require.Equal(t, []string{"bluesky"}, stream.Syndication.Unchanged())
+}
+
+// TestStream_Syndication_LegacyBSON confirms that a Stream stored by the old rosetta type,
+// as {values: [...]}, loads unchanged and is saved back as a plain array
+func TestStream_Syndication_LegacyBSON(t *testing.T) {
+
+	stored, err := bson.Marshal(bson.M{"syndication": bson.M{"values": bson.A{"mastodon", "bluesky"}}})
+	require.NoError(t, err)
+
+	stream := NewStream()
+	require.NoError(t, bson.Unmarshal(stored, &stream))
+	require.Equal(t, []string{"mastodon", "bluesky"}, stream.Syndication.Value())
+	require.False(t, stream.Syndication.IsChanged())
+
+	saved, err := bson.Marshal(stream)
+	require.NoError(t, err)
+	require.Equal(t, bson.A{"mastodon", "bluesky"}, readBSONField(t, saved, "syndication"))
+
+	// An empty list is left out of the document
+	stream.Syndication.Clear()
+	saved, err = bson.Marshal(stream)
+	require.NoError(t, err)
+	require.Nil(t, readBSONField(t, saved, "syndication"))
+}
+
+// readBSONField decodes a BSON document into a map, and returns one of its properties
+func readBSONField(t *testing.T, document []byte, name string) any {
+	t.Helper()
+
+	result := bson.M{}
+	require.NoError(t, bson.Unmarshal(document, &result))
+
+	return result[name]
 }
 
 // TestStream_StateID_TracksItsLoadedValue confirms that a Stream read from BSON or JSON knows the State it was read in
