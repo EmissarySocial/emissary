@@ -348,3 +348,16 @@ func TestPrimaryPost_MentionTagNotDropped(t *testing.T) {
 	require.Nil(t, err)
 	require.False(t, dropped)
 }
+
+// TestQuoteURLs_AfterHashtag finds a FEP-e232 quote link that follows other tags
+func TestQuoteURLs_AfterHashtag(t *testing.T) {
+
+	document := streams.NewDocument(map[string]any{
+		vocab.PropertyTag: []any{
+			map[string]any{vocab.PropertyType: vocab.LinkTypeHashtag, vocab.PropertyName: "#cats"},
+			map[string]any{vocab.PropertyType: vocab.CoreTypeLink, vocab.PropertyHref: "https://remote.example/notes/1", vocab.PropertyRel: "https://misskey-hub.net/ns#_misskey_quote"},
+		},
+	})
+
+	require.Equal(t, []string{"https://remote.example/notes/1"}, quoteURLs(document))
+}
