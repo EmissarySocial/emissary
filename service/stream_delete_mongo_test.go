@@ -126,27 +126,6 @@ func (test streamDeleteTest) saveStream(t *testing.T, authorID primitive.ObjectI
 	return stream
 }
 
-// saveCreate stores the outbox row that a Create of this Stream leaves in the actor's outbox
-func (test streamDeleteTest) saveCreate(t *testing.T, actorID primitive.ObjectID, stream model.Stream) {
-	t.Helper()
-	test.saveActivity(t, actorID, stream, vocab.ActivityTypeCreate)
-}
-
-// saveActivity stores a legacy outbox row of the given activity type for this Stream
-func (test streamDeleteTest) saveActivity(t *testing.T, actorID primitive.ObjectID, stream model.Stream, activityType string) {
-
-	t.Helper()
-
-	message := model.NewOutboxMessage()
-	message.ActorType = model.FollowerTypeUser
-	message.ActorID = actorID
-	message.ActorURL = "https://example.test/@" + actorID.Hex()
-	message.ActivityType = activityType
-	message.ObjectID = stream.URL
-
-	require.NoError(t, test.session.Collection("Outbox").Save(&message, "test setup"))
-}
-
 // saveOutbox2Activity stores an Outbox2 row of the given activity type for this object, and returns it
 func (test streamDeleteTest) saveOutbox2Activity(t *testing.T, actorType string, actorID primitive.ObjectID, objectID string, activityType string) model.OutboxItem {
 

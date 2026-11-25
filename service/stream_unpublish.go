@@ -33,32 +33,6 @@ func (service *Stream) UnPublish(session data.Session, stream *model.Stream, sta
 	return nil
 }
 
-// isFederated returns TRUE if the author's legacy outbox or Outbox2 still holds an activity that publishes the object
-func (service *Stream) isFederated(session data.Session, authorID primitive.ObjectID, objectID string) (bool, error) {
-
-	const location = "service.Stream.isFederated"
-
-	// Ask the legacy outbox, which holds every Stream published so far
-	published, err := service.outboxService.HasObject(session, model.ActorTypeUser, authorID, objectID)
-
-	if err != nil {
-		return false, derp.Wrap(err, location, "Checking the legacy outbox", objectID)
-	}
-
-	if published {
-		return true, nil
-	}
-
-	// Ask Outbox2 too, because both outboxes are read until the migration moves every row
-	published, err = service.outbox2Service.HasObject(session, model.ActorTypeUser, authorID, objectID)
-
-	if err != nil {
-		return false, derp.Wrap(err, location, "Checking Outbox2", objectID)
-	}
-
-	return published, nil
-}
-
 // unpublish_outbox_user sends a Delete for this Stream from the User's outbox
 func (service *Stream) unpublish_outbox_user(session data.Session, userID primitive.ObjectID, stream *model.Stream) error {
 

@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /******************************************
@@ -112,27 +111,6 @@ func (service *Stream) addReplyAuthor(stream *model.Stream, object mapof.Any) {
 	if cc := object.GetSliceOfString(vocab.PropertyCC); !slices.Contains(cc, authorURL) {
 		object[vocab.PropertyCC] = append(cc, authorURL)
 	}
-}
-
-// outboxActivityType returns Update when the author's outbox already publishes the object, and Create otherwise
-func (service *Stream) outboxActivityType(session data.Session, authorID primitive.ObjectID, objectURL string) (string, error) {
-
-	const location = "service.Stream.outboxActivityType"
-
-	// RULE: An object's first arrival in the author's outbox is a Create, and every later one is an
-	// Update (FUNKWHALE §1.5). Asking the outbox, not the Stream, also covers a Stream that was
-	// published without being sent, and one whose Create was removed when it was unpublished.
-	federated, err := service.isFederated(session, authorID, objectURL)
-
-	if err != nil {
-		return "", derp.Wrap(err, location, "Checking the author's outbox", objectURL)
-	}
-
-	if federated {
-		return vocab.ActivityTypeUpdate, nil
-	}
-
-	return vocab.ActivityTypeCreate, nil
 }
 
 // publish_outbox_user publishes this stream to the User's outbox
