@@ -550,10 +550,9 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		}
 	}
 
-	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259)
-	if err := service.federateDelete(session, stream); err != nil {
-		derp.Report(derp.Wrap(err, location, "Federating Delete", stream.StreamID))
-	}
+	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259).
+	// The outbox task sends the Delete after commit, and only if followers still hold the Stream.
+	service.queueOutbox(session, stream)
 
 	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
 	// the index is a projection of the Stream, so it holds no ID that a Stream can name.

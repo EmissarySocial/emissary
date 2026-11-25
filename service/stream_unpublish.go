@@ -14,25 +14,14 @@ import (
  * UnPublish Methods
  ******************************************/
 
-// UnPublish ends this Stream's publication, and tells its followers and syndication targets when `outbox` is TRUE
-func (service *Stream) UnPublish(session data.Session, user *model.User, stream *model.Stream, stateID string, outbox bool) error {
+// UnPublish moves this Stream into the provided state, and tells its syndication targets when `outbox` is TRUE.
+// The save queues the outbox task, which is what tells followers.
+func (service *Stream) UnPublish(session data.Session, _ *model.User, stream *model.Stream, stateID string, outbox bool) error {
 
 	const location = "service.Stream.UnPublish"
 
-	// Unpublish from the outboxes first, before the Stream is modified
+	// Tell the webhooks and syndication targets first, before the Stream is modified
 	if outbox {
-
-		// Send a Delete to the User's followers
-		if !user.IsNew() {
-			if err := service.unpublish_outbox_user(session, user.UserID, stream); err != nil {
-				return derp.Wrap(err, location, "Unpublishing from the User's outbox", stream)
-			}
-		}
-
-		// Send a Delete to the parent Stream's followers
-		if err := service.unpublish_outbox_stream(session, stream); err != nil {
-			return derp.Wrap(err, location, "Unpublishing from parent Stream's outbox", stream)
-		}
 
 		// Send stream:publish:undo Webhooks
 		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
@@ -53,45 +42,6 @@ func (service *Stream) UnPublish(session data.Session, user *model.User, stream 
 	}
 
 	// Done.
-	return nil
-}
-
-// federateDelete sends a Delete for a deleted Stream wherever its author's outbox published it
-func (service *Stream) federateDelete(session data.Session, stream *model.Stream) error {
-
-	const location = "service.Stream.federateDelete"
-
-	// RULE: A Stream with no author was never published to a User's outbox
-	authorID := stream.AttributedTo.UserID
-
-	if authorID.IsZero() {
-		return nil
-	}
-
-	// RULE: Send a Delete only while the author's outbox still holds a Create or Update of the Stream.
-	// Unpublishing removes those and leaves only its own Delete, and deleting the author removes
-	// every row, so neither one sends a second Delete.
-	federated, err := service.isFederated(session, authorID, stream.URL)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Checking the author's outbox", stream.URL)
-	}
-
-	if !federated {
-		return nil
-	}
-
-	// Send the Delete to the author's followers
-	if err := service.unpublish_outbox_user(session, authorID, stream); err != nil {
-		return derp.Wrap(err, location, "Unpublishing from the User's outbox", stream.URL)
-	}
-
-	// Send the Delete to the parent Stream's followers
-	if err := service.unpublish_outbox_stream(session, stream); err != nil {
-		return derp.Wrap(err, location, "Unpublishing from the parent Stream's outbox", stream.URL)
-	}
-
-	// Gone with the wind
 	return nil
 }
 

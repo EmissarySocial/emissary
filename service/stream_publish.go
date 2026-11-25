@@ -20,8 +20,9 @@ import (
  * Publish Methods
  ******************************************/
 
-// Publish marks this stream as "published"
-func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, outbox bool, republish bool) error {
+// Publish moves this Stream into the provided state, with the User as its author.
+// The save queues the outbox task, which is what sends to followers.
+func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, _ bool, republish bool) error {
 
 	const location = "service.Stream.Publish"
 
@@ -48,13 +49,6 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 		return derp.Wrap(err, location, "Saving stream", stream)
 	}
 
-	// Publish to user/stream outboxes
-	if outbox {
-		if err := service.publish_outbox(session, user, stream); err != nil {
-			return derp.Wrap(err, location, "Publishing to outbox", stream)
-		}
-	}
-
 	// Send stream:publish Webhooks
 	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
 
@@ -78,25 +72,14 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 	return nil
 }
 
-// publish_outbox sends a Create (or Update) activity for the Stream to its author's Outbox
-func (service *Stream) publish_outbox(session data.Session, user *model.User, stream *model.Stream) error {
+// publish_outbox sends the Stream's object to its author's Outbox, as the provided Create or Update
+func (service *Stream) publish_outbox(session data.Session, user *model.User, stream *model.Stream, activityType string, object mapof.Any) error {
 
 	const location = "service.Stream.publish_outbox"
-
-	// Build the object, addressed to everyone who receives it. @mentions were already extracted and
-	// resolved by Stream.Save (CalculateMentions), so the object arrives fully tagged.
-	object := service.addressedJSONLD(session, stream)
 
 	// Save the object to the ActivityStream cache
 	if err := service.activityService.Save(streams.NewDocument(object)); err != nil {
 		return derp.Wrap(err, location, "Saving object to ActivityStream cache", object)
-	}
-
-	// Send a Create the first time, and an Update after that
-	activityType, err := service.outboxActivityType(session, user.UserID, stream.URL)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Choosing the activity type", stream.URL)
 	}
 
 	// Create the Activity to send to Followers.
@@ -129,21 +112,21 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 	return nil
 }
 
-// addressedJSONLD returns the Stream's JSON-LD with the author of the post it replies to added to `cc`
-func (service *Stream) addressedJSONLD(session data.Session, stream *model.Stream) mapof.Any {
-
-	object := service.JSONLD(session, stream)
+// addReplyAuthor adds the author of the post that the Stream replies to into the `cc` of its object
+func (service *Stream) addReplyAuthor(stream *model.Stream, object mapof.Any) {
 
 	// RULE: A reply must reach the AUTHOR of the post it replies to, so they receive it (and a Reply
 	// notification) even when they do not follow the replier. JSONLD leaves this out because finding
 	// the author can mean a fetch, and JSONLD also serves every page view.
-	if authorURL := service.inReplyToAuthorURL(stream); authorURL != "" {
-		if cc := object.GetSliceOfString(vocab.PropertyCC); !slices.Contains(cc, authorURL) {
-			object[vocab.PropertyCC] = append(cc, authorURL)
-		}
+	authorURL := service.inReplyToAuthorURL(stream)
+
+	if authorURL == "" {
+		return
 	}
 
-	return object
+	if cc := object.GetSliceOfString(vocab.PropertyCC); !slices.Contains(cc, authorURL) {
+		object[vocab.PropertyCC] = append(cc, authorURL)
+	}
 }
 
 // outboxActivityType returns Update when the author's outbox already publishes the object, and Create otherwise
