@@ -327,14 +327,14 @@ func TestStream_Publish_SendsThroughTheTask(t *testing.T) {
 	require.NoError(t, test.service.Save(test.session, &stream, "created"))
 
 	// Publish makes the User the author, and the task sends the one Create
-	require.NoError(t, test.service.Publish(test.session, &test.author, &stream, "published", true, false))
+	require.NoError(t, test.service.Publish(test.session, &test.author, &stream, "published", false))
 	require.Equal(t, test.author.UserID, stream.AttributedTo.UserID)
 	require.Equal(t, []string{vocab.ActivityTypeCreate}, test.sync(t))
 
 	// UnPublish moves the Stream out, and the task sends the one Delete.  The next request
 	// loads the Stream again, which is how it learns the fingerprint that the task recorded.
 	stream = storedStream(t, test.service, test.session, stream.StreamID)
-	require.NoError(t, test.service.UnPublish(test.session, &test.author, &stream, "default", true))
+	require.NoError(t, test.service.UnPublish(test.session, &stream, "default"))
 	require.Equal(t, []string{vocab.ActivityTypeDelete}, test.sync(t))
 }
 
@@ -450,17 +450,17 @@ func TestStream_SyncOutbox_Syndication(t *testing.T) {
 
 	// Publishing again with `republish` sends every target an Update, and no follower
 	loaded = storedStream(t, test.service, test.session, stream.StreamID)
-	require.NoError(t, test.service.Publish(test.session, &test.author, &loaded, "published", true, true))
+	require.NoError(t, test.service.Publish(test.session, &test.author, &loaded, "published", true))
 	require.ElementsMatch(t, []string{"syndication.update bandwagon", "syndication.update tidal"}, test.sync(t))
 
 	// Publishing again without it sends nothing
 	loaded = storedStream(t, test.service, test.session, stream.StreamID)
-	require.NoError(t, test.service.Publish(test.session, &test.author, &loaded, "published", true, false))
+	require.NoError(t, test.service.Publish(test.session, &test.author, &loaded, "published", false))
 	require.Empty(t, test.sync(t))
 
 	// Leaving the outbox sends each target a Delete
 	loaded = storedStream(t, test.service, test.session, stream.StreamID)
-	require.NoError(t, test.service.UnPublish(test.session, &test.author, &loaded, "hidden", true))
+	require.NoError(t, test.service.UnPublish(test.session, &loaded, "hidden"))
 	require.ElementsMatch(t, []string{vocab.ActivityTypeDelete, "syndication.delete bandwagon", "syndication.delete tidal"}, test.sync(t))
 
 	// ...and only once

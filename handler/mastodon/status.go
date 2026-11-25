@@ -92,14 +92,8 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		contentService := factory.Content()
 		stream.Content = contentService.New(model.ContentFormatText, transaction.Status)
 
-		// Save the stream
-		streamService := factory.Stream()
-		if err := streamService.Save(session, &stream, "Created via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Saving stream")
-		}
-
-		// Publish the Stream to the User's outbox
-		if err := streamService.Publish(session, &user, &stream, "published", true, false); err != nil {
+		// Save the Stream into its published state, which is what sends it to followers
+		if err := factory.Stream().Publish(session, &user, &stream, "published", false); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Publishing stream")
 		}
 

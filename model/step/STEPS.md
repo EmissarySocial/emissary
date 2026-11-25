@@ -1141,15 +1141,14 @@ Saves the current object to the database. The optional `on-error` pipeline runs 
 
 ## save-and-publish
 
-Saves the object, stamps its publish date, moves it into `state`, and optionally fans it out to the User's outbox and syndication targets.
+Makes the signed-in User the author, stamps the publish date, moves the Stream into `state`, and saves it. Followers and syndication targets are sent the Stream when that state carries the `outbox` flag, by a task that runs after the save commits.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | state | State to move into. Defaults to `published`, and must be defined in the Template's `states` |
-| outbox | Also send updates to this User's outbox |
-| republish | Republish this Stream to its syndication targets |
+| republish | Send this Stream to every syndication target again, even when nothing changed |
 
 <br>
 
@@ -1159,7 +1158,6 @@ Saves the object, stamps its publish date, moves it into `state`, and optionally
 {
 	do: "save-and-publish"
 	state: "published"
-	outbox: true
 }
 ```
 
@@ -1782,14 +1780,13 @@ Fires one named HX-Trigger event with a template-evaluated value, on `POST`. Use
 
 ## unpublish
 
-Retracts a published Stream and returns it to `state`. The inverse of [`save-and-publish`](#save-and-publish). Requires the `Stream` model.
+Moves a Stream into `state`, ends its publication, and saves it. The inverse of [`save-and-publish`](#save-and-publish). Followers and syndication targets are told the Stream is gone when that state has no `outbox` flag, by a task that runs after the save commits. Requires the `Stream` model.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | state | State to return to. Defaults to `default`, and must be defined in the Template's `states` |
-| outbox | Also send the retraction to this User's outbox |
 
 <br>
 
@@ -1798,7 +1795,7 @@ Retracts a published Stream and returns it to `state`. The inverse of [`save-and
 ```hjson
 {
 	do: "unpublish"
-	outbox: true
+	state: "default"
 }
 ```
 

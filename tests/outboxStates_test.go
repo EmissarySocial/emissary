@@ -1,11 +1,12 @@
 package tests
 
 import (
+	"os"
+	"path/filepath"
+	"regexp"
 	"slices"
 	"testing"
 
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/stretchr/testify/require"
 )
 
@@ -72,37 +73,32 @@ func TestOutboxStates_ArePinned(t *testing.T) {
 	}
 }
 
-// TestOutboxStates_PublishStepsEnterFlaggedStates confirms that every "save-and-publish" step that turns the
-// outbox on enters a State that carries the flag
-func TestOutboxStates_PublishStepsEnterFlaggedStates(t *testing.T) {
+// TestOutboxStates_PublishStepsCarryNoOutboxAttribute confirms that no "save-and-publish" or "unpublish"
+// step still sets `outbox`, which the State's flag has replaced and the steps no longer read
+func TestOutboxStates_PublishStepsCarryNoOutboxAttribute(t *testing.T) {
+
+	stepPattern := regexp.MustCompile(`do:\s*"?(save-and-publish|unpublish)"?[^}\n]*outbox`)
 
 	for _, group := range templateGroups {
 		t.Run(group.Name, func(t *testing.T) {
 
-			loaded := loadGroup(t, group)
 			found := 0
 
-			for _, templateID := range loaded.Templates.Names() {
-				template, err := loaded.Templates.Load(templateID)
+			for _, location := range group.Locations {
+
+				files, err := filepath.Glob(filepath.Join(location, "*", "*.hjson"))
 				require.NoError(t, err)
 
-				// RULE: Only a Stream is sent to followers
-				if _, isStream := template.NewObject().(*model.Stream); !isStream {
-					continue
-				}
-
-				for actionID, action := range template.Actions {
-					for _, publish := range outboxPublishSteps(action.Steps) {
-						found++
-						state, exists := template.States[publish.StateID]
-						require.True(t, exists, "%s/%s publishes into undefined state %q", templateID, actionID, publish.StateID)
-						require.True(t, state.IsOutbox, "%s/%s publishes to the outbox in state %q, which has no outbox flag", templateID, actionID, publish.StateID)
-					}
+				for _, file := range files {
+					found++
+					content, err := os.ReadFile(file) // #nosec G304 -- a template file found by the glob above
+					require.NoError(t, err)
+					require.False(t, stepPattern.Match(content), "%s still sets `outbox` on a publish step", file)
 				}
 			}
 
 			// A silent zero would pass without checking anything
-			require.NotZero(t, found, "no outbox publish steps found for %s", group.Name)
+			require.NotZero(t, found, "no template files found for %s", group.Name)
 		})
 	}
 }
@@ -143,23 +139,4 @@ func TestOutboxStates_SongWaitsForItsAlbum(t *testing.T) {
 		require.NotContains(t, action.AccessList["default"], "anonymous", actionID)
 		require.Contains(t, action.AccessList["published"], "anonymous", actionID)
 	}
-}
-
-// outboxPublishSteps returns every "save-and-publish" step in the list, at any depth, that turns the outbox on
-func outboxPublishSteps(steps []step.Step) []step.SaveAndPublish {
-
-	result := make([]step.SaveAndPublish, 0)
-
-	for _, current := range steps {
-
-		if publish, isPublish := current.(step.SaveAndPublish); isPublish && publish.Outbox {
-			result = append(result, publish)
-		}
-
-		for _, subSteps := range nestedSteps(current) {
-			result = append(result, outboxPublishSteps(subSteps)...)
-		}
-	}
-
-	return result
 }

@@ -22,7 +22,7 @@ import (
 
 // Publish moves this Stream into the provided state, with the User as its author.
 // The save queues the outbox task, which is what sends to followers and syndication targets.
-func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, _ bool, republish bool) error {
+func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, republish bool) error {
 
 	const location = "service.Stream.Publish"
 

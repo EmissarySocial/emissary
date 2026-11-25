@@ -16,7 +16,7 @@ import (
 
 // UnPublish moves this Stream into the provided state.  The save queues the outbox task,
 // which is what tells followers and syndication targets.
-func (service *Stream) UnPublish(session data.Session, _ *model.User, stream *model.Stream, stateID string, _ bool) error {
+func (service *Stream) UnPublish(session data.Session, stream *model.Stream, stateID string) error {
 
 	const location = "service.Stream.UnPublish"
 

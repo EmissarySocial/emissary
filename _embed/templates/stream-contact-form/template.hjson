@@ -186,7 +186,7 @@
 						"endpoint:/{{.StreamID}}/edit-form"
 					]
 				}
-				{do:"save-and-publish", state:"published", outbox:"false"}
+				{do:"save-and-publish", state:"published"}
 				{do:"refresh-page"}
 				{do:"inline-save-button", form:"edit-form"}
 			]
@@ -216,7 +216,7 @@
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"unpublish", state:"default", outbox:"false"}
+				{do:"unpublish", state:"default"}
 				{do:"delete", title:"Delete '{{.Label}}'?", message:"This contact form will be permanently removed.  There is NO UNDO."}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]

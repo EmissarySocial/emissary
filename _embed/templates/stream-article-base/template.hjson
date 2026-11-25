@@ -85,7 +85,7 @@
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"unpublish", state:"default", outbox:"true"}
+				{do:"unpublish", state:"default"}
 				{do:"delete", title:"Delete '{{.Label}}'?", message:"All content and comments will be lost.  There is NO UNDO."}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
@@ -176,7 +176,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"as-confirmation", title:"Publish this Stream?", message:"Viewers will be able to see this stream on your website immediately.", submit:"Publish"}
-				{do:"save-and-publish", state:"published", outbox:"false"}
+				{do:"save-and-publish", state:"published"}
 				{do:"search-index"}
 				{do:"refresh-page"}
 			]
@@ -187,7 +187,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"as-confirmation", title:"Un-Publish this Stream?", message:"Viewers will no longer be able to see this stream on your website.", submit:"Un-Publish"}
-				{do:"unpublish", state:"default", outbox:"false"}
+				{do:"unpublish", state:"default"}
 				{do:"refresh-page"}
 			]
 		}
@@ -197,7 +197,7 @@
 			steps: [
 				{do:"as-confirmation", title:"Promote this Draft?", message:"The live page will be replaced with this content.", submit:"Promote"}
 				{do:"promote-draft"}
-				{do:"save-and-publish", state:"published", outbox:"false"}
+				{do:"save-and-publish", state:"published"}
 				{do:"search-index"}
 				{do:"refresh-page"}
 				{do:"forward-to", url:"/{{.Token}}"}

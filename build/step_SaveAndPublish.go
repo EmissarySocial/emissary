@@ -7,10 +7,10 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepSaveAndPublish is a Step that can update a stream's PublishDate with the current time.
+// StepSaveAndPublish is a Step that makes the signed-in User the author of a Stream, moves
+// it into a state, and saves it
 type StepSaveAndPublish struct {
 	StateID   string
-	Outbox    bool
 	Republish bool
 }
 
@@ -19,7 +19,7 @@ func (step StepSaveAndPublish) Get(builder Builder, _ io.Writer) PipelineBehavio
 	return nil
 }
 
-// Post updates the stream with the current date as the "PublishDate"
+// Post moves the Stream into the step's state, with the signed-in User as its author
 func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepSaveAndPublish.Post"
@@ -52,7 +52,7 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Move the Stream into its new state.  The save gives a Stream that enters the outbox its
 	// context and its place in a local parent's Replies, and queues the task that sends it.
-	if err := streamService.Publish(session, &user, stream, step.StateID, step.Outbox, step.Republish); err != nil {
+	if err := streamService.Publish(session, &user, stream, step.StateID, step.Republish); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Publishing Stream", stream.StreamID))
 	}
 

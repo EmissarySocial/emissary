@@ -11574,7 +11574,6 @@
 		"template:bandwagon-album/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:bandwagon-album/delete-paid-attachment/1:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:bandwagon-album/delete-upload/1:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
-		"template:bandwagon-album/delete/0:if.Then/0:with-children.SubSteps": "not pinned: the sub-builder's template belongs to a related Stream, known only at runtime",
 		"template:bandwagon-album/edit-products/0:set-privileges": "not pinned: reads privilege IDs that must exist in the database",
 		"template:bandwagon-album/edit/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:bandwagon-album/like-button/0:set-response": "not pinned: writes a Response record through service.Response",

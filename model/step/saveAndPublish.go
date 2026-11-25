@@ -4,11 +4,11 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SaveAndPublish is a Step that can update a stream's SaveAndPublishDate with the current time.
+// SaveAndPublish is a Step that makes the signed-in User the author of a Stream, moves it
+// into a state, and saves it.  The state's "outbox" flag decides whether followers are sent it.
 type SaveAndPublish struct {
-	StateID   string // The ID of the state that this step will update.
-	Outbox    bool   // If TRUE, also send updates to this User's outbox.
-	Republish bool   // If TRUE, republishes this stream to syndication targets.
+	StateID   string // The ID of the state that this step moves the Stream into.
+	Republish bool   // If TRUE, sends this Stream to every syndication target again.
 }
 
 // NewSaveAndPublish returns a fully initialized SaveAndPublish object
@@ -16,7 +16,6 @@ func NewSaveAndPublish(stepInfo mapof.Any) (SaveAndPublish, error) {
 
 	result := SaveAndPublish{
 		StateID:   first(stepInfo.GetString("state"), "published"),
-		Outbox:    stepInfo.GetBool("outbox"),
 		Republish: stepInfo.GetBool("republish"),
 	}
 

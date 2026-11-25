@@ -3,13 +3,11 @@ package build
 import (
 	"io"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 )
 
-// StepUnPublish is a Step that can update a stream's PublishDate with the current time.
+// StepUnPublish is a Step that moves a Stream into a state and saves it
 type StepUnPublish struct {
-	Outbox  bool
 	StateID string
 }
 
@@ -18,14 +16,14 @@ func (step StepUnPublish) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
-// Post updates the stream with the current date as the "PublishDate"
+// Post moves the Stream into the step's state
 func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepUnPublish.Post"
 
 	// RULE: Require authentication to publish content
 	if !builder.IsAuthenticated() {
-		return Halt().WithError(derp.Unauthorized(location, "User must be authenticated to publish content"))
+		return Halt().WithError(derp.Unauthorized(location, "User must be authenticated to unpublish content"))
 	}
 
 	streamBuilder := builder.(Stream)
@@ -38,19 +36,11 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		return Halt().WithError(derp.Wrap(err, location, "Deleting search result", streamBuilder._stream.URL))
 	}
 
-	// Try to load the User from the Database
-	userService := factory.User()
-	user := model.NewUser()
-
-	if err := userService.LoadByID(builder.session(), streamBuilder.AuthenticatedID(), &user); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Loading user", streamBuilder.AuthenticatedID()))
-	}
-
-	// Try to UnPublish the Stream from ActivityPub
+	// Move the Stream into its new state.  The save queues the task that tells followers.
 	streamService := factory.Stream()
 
-	if err := streamService.UnPublish(builder.session(), &user, streamBuilder._stream, step.StateID, step.Outbox); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Publishing stream", streamBuilder._stream))
+	if err := streamService.UnPublish(builder.session(), streamBuilder._stream, step.StateID); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Unpublishing stream", streamBuilder._stream.StreamID))
 	}
 
 	return nil

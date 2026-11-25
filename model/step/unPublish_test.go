@@ -10,10 +10,9 @@ import (
 // TestUnPublish verifies that an "unpublish" step parses its configuration
 func TestUnPublish(t *testing.T) {
 
-	step, err := NewUnPublish(mapof.Any{"state": "archived", "outbox": true})
+	step, err := NewUnPublish(mapof.Any{"state": "archived"})
 	require.Nil(t, err)
 	require.Equal(t, "archived", step.StateID)
-	require.True(t, step.Outbox)
 	require.Equal(t, []string{"archived"}, step.RequiredStates())
 
 	// "state" defaults to "default".
