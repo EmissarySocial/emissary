@@ -559,7 +559,7 @@ func (stream Stream) Toot(host string) object.Status {
 	return object.Status{
 		ID:          stream.StreamID.Hex(),
 		URI:         stream.ActivityPubURL(),
-		CreatedAt:   MastodonDate(time.Unix(stream.PublishDate, 0)),
+		CreatedAt:   MastodonDate(time.Unix(stream.tootDate(), 0)),
 		Account:     stream.AttributedTo.Toot(host),
 		Content:     stream.Content.HTML,
 		Visibility:  "public",
@@ -574,6 +574,18 @@ func (stream Stream) Toot(host string) object.Status {
 		ReblogsCount:    stream.ShareCount,
 		RepliesCount:    stream.ReplyCount,
 	}
+}
+
+// tootDate returns the date (Unix seconds) that a Mastodon client shows for this Stream:
+// its publish date, or its create date when it has never been published.
+func (stream Stream) tootDate() int64 {
+
+	// A new Stream holds the largest date there is until it is published
+	if (stream.PublishDate > 0) && (stream.PublishDate < math.MaxInt64) {
+		return stream.PublishDate
+	}
+
+	return stream.CreateDate / 1000
 }
 
 // GetRank returns this Stream's sort order within its parent

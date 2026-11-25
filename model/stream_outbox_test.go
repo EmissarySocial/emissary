@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 
 	"github.com/benpate/delta"
@@ -223,4 +224,30 @@ func TestStream_StateID_TracksItsLoadedValue(t *testing.T) {
 	require.True(t, loaded.StateID.IsChanged())
 	require.Equal(t, "published", loaded.StateID.Original())
 	require.Equal(t, "default", loaded.State())
+}
+
+// TestStream_Toot_Date confirms that a status shows the publish date, and the create date for
+// a Stream that has none, so that no client is sent the year 292277026596
+func TestStream_Toot_Date(t *testing.T) {
+
+	const created = int64(1_700_000_000_000)
+
+	for name, test := range map[string]struct {
+		publishDate int64
+		expected    string
+	}{
+		"published":       {publishDate: 1_750_000_000, expected: "2025-06-15T15:06:40.000Z"},
+		"never published": {publishDate: math.MaxInt64, expected: "2023-11-14T22:13:20.000Z"},
+		"no date":         {publishDate: 0, expected: "2023-11-14T22:13:20.000Z"},
+		"negative date":   {publishDate: -1, expected: "2023-11-14T22:13:20.000Z"},
+	} {
+		t.Run(name, func(t *testing.T) {
+
+			stream := NewStream()
+			stream.CreateDate = created
+			stream.PublishDate = test.publishDate
+
+			require.Equal(t, test.expected, stream.Toot("https://example.com").CreatedAt)
+		})
+	}
 }
