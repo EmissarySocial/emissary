@@ -153,19 +153,10 @@ func (service *Stream) syncOutboxSend(session data.Session, author *model.User, 
 
 	const location = "service.Stream.syncOutboxSend"
 
-	// RULE: The Template supplies the hashtag URLs and the social mapping, so nothing is sent
-	// without it.  JSONLD would report the error and return an object with neither.
-	if _, err := service.templateService.Load(stream.TemplateID); err != nil {
-		return derp.Wrap(err, location, "Loading Template", stream.TemplateID)
-	}
-
-	// RULE: Fingerprint the whole object, social mapping included, so that a change to any
-	// custom field the mapping reads is sent to followers
-	object := service.JSONLD(session, stream)
-	fingerprint, err := outboxFingerprint(object)
+	object, fingerprint, err := service.outboxObject(session, stream)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Calculating fingerprint", stream.StreamID)
+		return derp.Wrap(err, location, "Building object", stream.StreamID)
 	}
 
 	activityType := outboxAction(true, stream.Fingerprint.Value(), fingerprint)
@@ -237,6 +228,29 @@ func (service *Stream) setFingerprint(session data.Session, streamID primitive.O
 	}
 
 	return nil
+}
+
+// outboxObject returns the object that followers are sent for a Stream, and its fingerprint
+func (service *Stream) outboxObject(session data.Session, stream *model.Stream) (mapof.Any, string, error) {
+
+	const location = "service.Stream.outboxObject"
+
+	// RULE: The Template supplies the hashtag URLs and the social mapping, so nothing is built
+	// without it.  JSONLD would report the error and return an object with neither.
+	if _, err := service.templateService.Load(stream.TemplateID); err != nil {
+		return nil, "", derp.Wrap(err, location, "Loading Template", stream.TemplateID)
+	}
+
+	// RULE: Fingerprint the whole object, social mapping included, so that a change to any
+	// custom field the mapping reads is sent to followers
+	object := service.JSONLD(session, stream)
+	fingerprint, err := outboxFingerprint(object)
+
+	if err != nil {
+		return nil, "", derp.Wrap(err, location, "Calculating fingerprint", stream.StreamID)
+	}
+
+	return object, fingerprint, nil
 }
 
 // outboxFingerprint returns a hash of an object's JSON-LD, which is equal for equal objects

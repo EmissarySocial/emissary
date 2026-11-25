@@ -88,6 +88,10 @@ func PreProcessor(task *queue.Task) error {
 	case "MakeStreamArchive":
 		task.Priority = 256
 
+	// A one-time repair that sends nothing, so it waits behind everything a person is waiting for
+	case service.StreamFillFingerprintsTaskName:
+		task.Priority = 256
+
 	case "Outbox:SendToAllRecipients":
 		task.Priority = 256
 

@@ -3,6 +3,7 @@ package service
 import (
 	"testing"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
@@ -24,6 +25,8 @@ func TestOutboxAction(t *testing.T) {
 		{"not wanted, and followers hold a copy", false, "abc", "", vocab.ActivityTypeDelete},
 		{"not wanted, and followers hold the current copy", false, "abc", "abc", vocab.ActivityTypeDelete},
 		{"not wanted, and followers hold nothing", false, "", "", ""},
+		{"wanted, and followers hold a copy from before fingerprints", true, model.StreamFingerprintPending, "abc", vocab.ActivityTypeUpdate},
+		{"not wanted, and followers hold a copy from before fingerprints", false, model.StreamFingerprintPending, "", vocab.ActivityTypeDelete},
 		{"not wanted, with a current copy that nobody holds", false, "", "abc", ""},
 	}
 

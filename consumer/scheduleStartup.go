@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -31,6 +32,24 @@ func ScheduleStartup(serverFactory ServerFactory) queue.Result {
 
 		if err := serverFactory.Queue().Publish(task); err != nil {
 			derp.Report(derp.Wrap(err, location, "Queueing Stripe Connect repair", hostname))
+		}
+	}
+
+	// Fill the fingerprint of every Stream that followers received before fingerprints were
+	// recorded.  This runs on every boot, and does nothing once no placeholder is left.
+	for factory := range serverFactory.RangeDomains() {
+
+		// RULE: Signed per domain, so that the servers booting together queue one fill between them
+		hostname := factory.Hostname()
+
+		task := queue.NewTask(
+			service.StreamFillFingerprintsTaskName,
+			mapof.Any{"hostname": hostname},
+			queue.WithSignature(service.StreamFillFingerprintsTaskName+":"+hostname),
+		)
+
+		if err := serverFactory.Queue().Publish(task); err != nil {
+			derp.Report(derp.Wrap(err, location, "Queueing fingerprint fill", hostname))
 		}
 	}
 
