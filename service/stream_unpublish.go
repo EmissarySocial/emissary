@@ -14,20 +14,11 @@ import (
  * UnPublish Methods
  ******************************************/
 
-// UnPublish moves this Stream into the provided state, and tells its syndication targets when `outbox` is TRUE.
-// The save queues the outbox task, which is what tells followers.
-func (service *Stream) UnPublish(session data.Session, _ *model.User, stream *model.Stream, stateID string, outbox bool) error {
+// UnPublish moves this Stream into the provided state.  The save queues the outbox task,
+// which is what tells followers and syndication targets.
+func (service *Stream) UnPublish(session data.Session, _ *model.User, stream *model.Stream, stateID string, _ bool) error {
 
 	const location = "service.Stream.UnPublish"
-
-	// Tell the syndication targets first, before the Stream is modified
-	if outbox {
-
-		// Queue a syndication.delete message for each target
-		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Value()); err != nil {
-			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
-		}
-	}
 
 	// Set the new state, and end publication now
 	stream.StateID.Set(stateID)
@@ -35,7 +26,7 @@ func (service *Stream) UnPublish(session data.Session, _ *model.User, stream *mo
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(session, stream, "UnPublish"); err != nil {
-		return derp.Wrap(err, location, "Saving the Stream", stream)
+		return derp.Wrap(err, location, "Saving the Stream", stream.StreamID)
 	}
 
 	// Done.

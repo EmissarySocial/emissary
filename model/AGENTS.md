@@ -64,11 +64,11 @@ The `MerchantAccount` vault fails the second question, so it never travels. `han
 
 It extends `http.DetectContentType`, which cannot sniff FLAC, M4A, Ogg audio, bare MP3, ADTS AAC, WMA, or AMR — all of which came back as `application/octet-stream` and failed an `audio/*` upload gate. The contract is that **the filename argument can never promote bytes into a media type**; it only picks audio-versus-video *inside a byte-confirmed container* (EBML `.weba`, ASF `.wma`/`.wmv`, ISO-BMFF `.m4a`/`.m4b`/`.3ga`). Byte-first sniffing stays the security boundary, because the serve-side inline decision is built on it. `TestDetectContentType_FilenameCannotPromote` pins this; do not relax it into a filename fallback. Known edge: `CanServeInline` also needs `mime.TypeByExtension` to recognize the extension, and `.amr`/`.3ga` return empty, so those download rather than playing inline.
 
-## `Stream.Syndication` is a `delta.Slice`, and `MarkSaved` does not reset it
+## `Stream.Syndication` is a `delta.Slice`, and `MarkSaved` resets it
 
 `Stream.Syndication` is a `benpate/delta` `Slice[string]`, stored as a plain array. It replaced rosetta's `delta.Slice` on 2026-11-25, which stored `{values: [...]}`; the new type reads both shapes and writes only the array, so a legacy Stream heals when it is saved. `TestStream_Syndication_LegacyBSON` pins that. The plan for converting the stored records and then removing the legacy reader is `emissary-specs/projects/DELTA-CONSOLIDATION.md`.
 
-**`Stream.MarkSaved` resets the four scalar values and leaves `Syndication` alone, on purpose.** `service.Stream.Publish` saves the Stream first and reads `Syndication.Added()`, `Unchanged()`, and `Deleted()` afterwards, and the bandwagon-album template runs `edit` and then `save-and-publish` in one request. A reset inside the save would empty all three lists before they are read, and no syndication message would be sent. `TestStream_MarkSaved_KeepsSyndicationChanges` pins it. The lists compare against the value the Stream was loaded with, for as long as that copy lives.
+**`Stream.MarkSaved` resets `Syndication` with the four scalar values.** `service.Stream.Save` reads `Syndication.Added()` and `Deleted()` when it queues the outbox task, and passes them to the task as arguments, because a task that loads the Stream again cannot see them. `MarkSaved` then makes the saved list the baseline, so a second save of the same copy does not report the same changes twice. `TestStream_MarkSaved_ResetsSyndication` pins it. Until 2026-11-25 `MarkSaved` left `Syndication` alone, because `Publish` read the lists after its save.
 
 ## A custom BSON marshaller that stops satisfying its interface fails silently
 

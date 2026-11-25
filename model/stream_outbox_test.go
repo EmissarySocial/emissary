@@ -153,20 +153,22 @@ func TestStream_MarkSaved(t *testing.T) {
 	require.True(t, stream.IsOutbox.Original())
 }
 
-// TestStream_MarkSaved_KeepsSyndicationChanges confirms that a save does not empty the lists
-// that Publish reads after it
-func TestStream_MarkSaved_KeepsSyndicationChanges(t *testing.T) {
+// TestStream_MarkSaved_ResetsSyndication confirms that a save makes the saved targets the
+// baseline, so that a second save of the same copy does not report the same changes again
+func TestStream_MarkSaved_ResetsSyndication(t *testing.T) {
 
 	stream := NewStream()
 	stream.Syndication = delta.NewSlice("mastodon", "bluesky")
 	stream.Syndication.Set([]string{"bluesky", "threads"})
+	require.Equal(t, []string{"threads"}, stream.Syndication.Added())
+	require.Equal(t, []string{"mastodon"}, stream.Syndication.Deleted())
 
 	stream.MarkSaved()
 
-	require.True(t, stream.Syndication.IsChanged())
-	require.Equal(t, []string{"threads"}, stream.Syndication.Added())
-	require.Equal(t, []string{"mastodon"}, stream.Syndication.Deleted())
-	require.Equal(t, []string{"bluesky"}, stream.Syndication.Unchanged())
+	require.False(t, stream.Syndication.IsChanged())
+	require.Empty(t, stream.Syndication.Added())
+	require.Empty(t, stream.Syndication.Deleted())
+	require.Equal(t, []string{"bluesky", "threads"}, stream.Syndication.Value())
 }
 
 // TestStream_Syndication_LegacyBSON confirms that a Stream stored by the old rosetta type,

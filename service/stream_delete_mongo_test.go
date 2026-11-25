@@ -15,11 +15,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/form"
 	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -344,7 +342,7 @@ func TestStream_SyncOutbox_ErrorNamesTheStream(t *testing.T) {
 	// The Delete fails before it is queued, when the legacy outbox's rows cannot be removed
 	test.service.outbox2Service.legacyOutbox = failingRemover{}
 
-	err := test.service.SyncOutbox(test.session, stream.StreamID)
+	err := test.service.SyncOutbox(test.session, stream.StreamID, OutboxChanges{})
 	require.Error(t, err)
 	secretcheck.RequireAbsent(t, err, stream.Label)
 
@@ -374,49 +372,6 @@ func TestStream_UnpublishOutboxStream_ErrorNamesTheStream(t *testing.T) {
 	require.Error(t, err)
 	require.Zero(t, test.deletesSent(t), "a Delete that fails is not queued")
 	secretcheck.RequireAbsent(t, err, stream.Label)
-}
-
-// TestStreamDelete_UndoesPublication verifies that deleting a published Stream queues a
-// syndication delete, which the delete itself used to hide
-func TestStreamDelete_UndoesPublication(t *testing.T) {
-
-	// BUG-241: the published check ran after the delete marked the Stream deleted, so it never passed
-
-	countSyndication := func(test streamDeleteTest) int {
-		result := 0
-		for _, task := range test.tasks.Drain() {
-			if task.Name == "syndication.delete" {
-				result++
-			}
-		}
-		return result
-	}
-
-	withTarget := func(test streamDeleteTest) {
-		domain := model.NewWritableDomain()
-		domain.Syndication = sliceof.Object[form.LookupCode]{{Value: "bluesky", Href: "https://example.test/syndicate"}}
-		test.service.domainService.cache.Store(&domain)
-	}
-
-	t.Run("published", func(t *testing.T) {
-		test := newStreamDeleteTest(t)
-		withTarget(test)
-		stream := test.saveStream(t, primitive.NewObjectID(), primitive.NewObjectID(), true)
-		stream.Syndication.Set([]string{"bluesky"})
-
-		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		require.Equal(t, 1, countSyndication(test))
-	})
-
-	t.Run("unpublished", func(t *testing.T) {
-		test := newStreamDeleteTest(t)
-		withTarget(test)
-		stream := test.saveStream(t, primitive.NewObjectID(), primitive.NewObjectID(), false)
-		stream.Syndication.Set([]string{"bluesky"})
-
-		require.NoError(t, test.service.Delete(test.session, &stream, "test"))
-		require.Zero(t, countSyndication(test))
-	})
 }
 
 // TestStream_UnpublishOutboxStream_RemovesTheAnnounce verifies that unpublishing a child removes the

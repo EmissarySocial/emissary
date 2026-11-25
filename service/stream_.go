@@ -528,24 +528,15 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 
 	const location = "service.Stream.Delete"
 
-	// RULE: Read the published state first.  Deleting marks the Stream deleted, which IsPublished
-	// then reports as unpublished, so a check after the delete can never pass (BUG-241).
-	wasPublished := stream.IsPublished() //nolint:scopeguard // must be read before the delete below
-
 	// Delete this Stream
 	if err := service.collection(session).Delete(stream, note); err != nil {
 		return derp.Wrap(err, location, "Deleting Stream from database", stream, note)
 	}
 
-	if wasPublished {
-		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Value()); err != nil {
-			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
-		}
-	}
-
-	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259).
-	// The outbox task sends the Delete after commit, and only if followers still hold the Stream.
-	service.queueOutbox(session, stream)
+	// RULE: Tell followers and syndication targets who received this Stream that it is gone,
+	// whichever path deleted it (BUG-259).  The outbox task sends the Deletes after commit, and
+	// only if followers still hold the Stream (BUG-241).
+	service.queueOutbox(session, stream, false)
 
 	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
 	// the index is a projection of the Stream, so it holds no ID that a Stream can name.
@@ -638,17 +629,17 @@ func (service *Stream) SetOutboxReplyPolicy(session data.Session, userID primiti
 
 // Save adds/updates an Stream in the database
 func (service *Stream) Save(session data.Session, stream *model.Stream, note string) error {
-	return service.save(session, stream, note, true)
+	return service.save(session, stream, note, outboxModeQueue)
 }
 
 // SaveWithoutOutbox adds/updates a Stream without queueing its outbox task.  It is for changes that
 // followers never receive, such as a refreshed counter.
 func (service *Stream) SaveWithoutOutbox(session data.Session, stream *model.Stream, note string) error {
-	return service.save(session, stream, note, false)
+	return service.save(session, stream, note, outboxModeSkip)
 }
 
-// save adds/updates a Stream in the database, and queues its outbox task when the caller asks for it
-func (service *Stream) save(session data.Session, stream *model.Stream, note string, queueOutbox bool) error {
+// save adds/updates a Stream in the database, and queues its outbox task as the mode asks
+func (service *Stream) save(session data.Session, stream *model.Stream, note string, mode outboxMode) error {
 
 	const location = "service.Stream.Save"
 
@@ -733,6 +724,12 @@ func (service *Stream) save(session data.Session, stream *model.Stream, note str
 	// RULE: A Stream whose State changed takes that State's "outbox" flag
 	calcOutbox(&template, stream, wasNew)
 
+	// RULE: A Stream that enters the outbox joins its conversation before it is stored, because
+	// its context is part of the object that followers are sent
+	if err := service.joinConversation(session, stream); err != nil {
+		return derp.Wrap(err, location, "Joining conversation", stream.StreamID)
+	}
+
 	// RULE: Extract and linkify #hashtags for Templates that configure tagging.  This runs
 	// BEFORE Normalize so the injected anchors pass through the same schema sanitization as
 	// any other content HTML.  @mentions are extracted from the same paths and resolved here
@@ -776,8 +773,8 @@ func (service *Stream) save(session data.Session, stream *model.Stream, note str
 	}
 
 	// Queue the task that brings followers up to date, once this transaction commits
-	if queueOutbox {
-		service.queueOutbox(session, stream)
+	if mode != outboxModeSkip {
+		service.queueOutbox(session, stream, mode == outboxModeRepublish)
 	}
 
 	// The database now holds this State and flag, so the next save of this copy compares against them

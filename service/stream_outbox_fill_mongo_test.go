@@ -78,7 +78,7 @@ func TestStream_FillFingerprints(t *testing.T) {
 	require.Equal(t, model.StreamFingerprintPending, test.fingerprint(t, deleted.StreamID))
 
 	// A filled Stream is up to date, so the outbox task sends nothing for it
-	require.NoError(t, test.service.SyncOutbox(test.session, pending.StreamID))
+	require.NoError(t, test.service.SyncOutbox(test.session, pending.StreamID, OutboxChanges{}))
 	require.Empty(t, test.sync(t))
 
 	// A second fill finds nothing to do

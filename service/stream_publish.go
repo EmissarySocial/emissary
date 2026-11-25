@@ -21,13 +21,10 @@ import (
  ******************************************/
 
 // Publish moves this Stream into the provided state, with the User as its author.
-// The save queues the outbox task, which is what sends to followers.
+// The save queues the outbox task, which is what sends to followers and syndication targets.
 func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, _ bool, republish bool) error {
 
 	const location = "service.Stream.Publish"
-
-	// Read before the Stream is changed and saved below, which would make every Stream look published
-	wasPublished := stream.IsPublished() // nolint:scopeguard (must be read before the Stream changes)
 
 	// RULE: IF this stream is not yet published, then set the publish date
 	if (stream.PublishDate > time.Now().Unix()) || (stream.StateID.Value() != stateID) {
@@ -44,26 +41,17 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 	// RULE: Set the new state ID
 	stream.StateID.Set(stateID)
 
-	// Re-save the Stream with the updated values.
-	if err := service.Save(session, stream, "Publishing"); err != nil {
-		return derp.Wrap(err, location, "Saving stream", stream)
+	// RULE: `republish` asks the outbox task to send every syndication target again,
+	// even when followers are already up to date
+	mode := outboxModeQueue
+
+	if republish {
+		mode = outboxModeRepublish
 	}
 
-	// Send syndication messages to all targets
-	switch {
-
-	// If the stream is being published for the first time, then only send "Create" activities
-	case !wasPublished:
-		if err := service.sendSyndicationMessages(session, stream, stream.Syndication.Value(), nil, nil); err != nil {
-			return derp.Wrap(err, location, "Sending syndication messages", stream)
-		}
-
-	// If the syndication settings have been changed (or is being republished) then send "Update" activities
-	case stream.Syndication.IsChanged() || republish:
-
-		if err := service.sendSyndicationMessages(session, stream, stream.Syndication.Added(), stream.Syndication.Unchanged(), stream.Syndication.Deleted()); err != nil {
-			return derp.Wrap(err, location, "Sending syndication messages", stream)
-		}
+	// Re-save the Stream with the updated values.
+	if err := service.save(session, stream, "Publishing", mode); err != nil {
+		return derp.Wrap(err, location, "Saving stream", stream.StreamID)
 	}
 
 	return nil

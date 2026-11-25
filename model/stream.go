@@ -193,9 +193,7 @@ func (stream *Stream) MarkSaved() {
 	stream.Token.Reset()
 	stream.IsOutbox.Reset()
 	stream.Fingerprint.Reset()
-
-	// RULE: Syndication is NOT reset here, because Stream.Publish saves the Stream
-	// first and reads the Syndication changes afterwards
+	stream.Syndication.Reset()
 }
 
 /******************************************

@@ -9,8 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StreamOutbox brings a Stream's followers up to date after a save, by sending the
-// Create, Update, or Delete that they are missing
+// StreamOutbox brings a Stream's followers and syndication targets up to date after a save,
+// by sending the Create, Update, or Delete that they are missing
 func StreamOutbox(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.StreamOutbox"
@@ -27,7 +27,13 @@ func StreamOutbox(factory *service.Factory, session data.Session, args mapof.Any
 	}
 
 	// Send whatever followers are missing.  An error is retried, and the transaction takes back any partial send.
-	if err := factory.Stream().SyncOutbox(session, streamID); err != nil {
+	changes := service.OutboxChanges{
+		SyndicationAdded:   args.GetSliceOfString("syndicationAdded"),
+		SyndicationDeleted: args.GetSliceOfString("syndicationDeleted"),
+		Republish:          args.GetBool("republish"),
+	}
+
+	if err := factory.Stream().SyncOutbox(session, streamID, changes); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Sending to followers", streamID))
 	}
 

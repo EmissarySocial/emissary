@@ -7,13 +7,17 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
 	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/hannibal/delivery"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -112,11 +116,21 @@ func (test outboxSyncTest) sync(t *testing.T) []string {
 		case StreamOutboxTaskName:
 			streamID, err := primitive.ObjectIDFromHex(task.Arguments.GetString("streamId"))
 			require.NoError(t, err)
-			require.NoError(t, test.service.SyncOutbox(test.session, streamID))
+			changes := OutboxChanges{
+				SyndicationAdded:   task.Arguments.GetSliceOfString("syndicationAdded"),
+				SyndicationDeleted: task.Arguments.GetSliceOfString("syndicationDeleted"),
+				Republish:          task.Arguments.GetBool("republish"),
+			}
+
+			require.NoError(t, test.service.SyncOutbox(test.session, streamID, changes))
 			result = append(result, test.sync(t)...)
 
 		case delivery.TaskFanOut:
 			result = append(result, task.Arguments.GetMap("activity").GetString(vocab.PropertyType))
+
+		// A message to a syndication target, named by its type and its endpoint
+		case "syndication.create", "syndication.update", "syndication.delete":
+			result = append(result, task.Name+" "+task.Arguments.GetString("endpoint"))
 		}
 	}
 
@@ -154,7 +168,7 @@ func TestStream_SyncOutbox_FollowsTheStream(t *testing.T) {
 	require.Len(t, created, 64)
 
 	// Running the task again sends nothing
-	require.NoError(t, test.service.SyncOutbox(test.session, stream.StreamID))
+	require.NoError(t, test.service.SyncOutbox(test.session, stream.StreamID, OutboxChanges{}))
 	require.Empty(t, test.sync(t))
 
 	// A save that changes nothing followers see sends nothing
@@ -201,7 +215,7 @@ func TestStream_SyncOutbox_Delete(t *testing.T) {
 	require.Empty(t, test.fingerprint(t, stream.StreamID))
 
 	// Running the task again sends nothing
-	require.NoError(t, test.service.SyncOutbox(test.session, stream.StreamID))
+	require.NoError(t, test.service.SyncOutbox(test.session, stream.StreamID, OutboxChanges{}))
 	require.Empty(t, test.sync(t))
 }
 
@@ -234,7 +248,7 @@ func TestStream_SyncOutbox_SendsNothing(t *testing.T) {
 
 	t.Run("a Stream that does not exist", func(t *testing.T) {
 		test := newOutboxSyncTest(t)
-		require.NoError(t, test.service.SyncOutbox(test.session, primitive.NewObjectID()))
+		require.NoError(t, test.service.SyncOutbox(test.session, primitive.NewObjectID(), OutboxChanges{}))
 		require.Empty(t, test.sync(t))
 	})
 
@@ -277,11 +291,11 @@ func TestStream_SyncOutbox_IncludesTheSocialMapping(t *testing.T) {
 	template.SocialRole = vocab.ObjectTypeArticle
 	test.service.templateService.templates["test-collection"] = template
 
-	require.NoError(t, test.service.SyncOutbox(test.session, stream.StreamID))
+	require.NoError(t, test.service.SyncOutbox(test.session, stream.StreamID, OutboxChanges{}))
 	require.Equal(t, []string{vocab.ActivityTypeUpdate}, test.sync(t))
 
 	// The new mapping is now what followers hold
-	require.NoError(t, test.service.SyncOutbox(test.session, stream.StreamID))
+	require.NoError(t, test.service.SyncOutbox(test.session, stream.StreamID, OutboxChanges{}))
 	require.Empty(t, test.sync(t))
 }
 
@@ -297,7 +311,7 @@ func TestStream_SyncOutbox_TemplateMissing(t *testing.T) {
 
 	delete(test.service.templateService.templates, "test-collection")
 
-	require.Error(t, test.service.SyncOutbox(test.session, stream.StreamID))
+	require.Error(t, test.service.SyncOutbox(test.session, stream.StreamID, OutboxChanges{}))
 	require.Empty(t, test.sync(t))
 	require.Empty(t, test.fingerprint(t, stream.StreamID))
 }
@@ -342,7 +356,7 @@ func TestStream_SyncOutbox_TwoServersSendOnce(t *testing.T) {
 		for index := range tests {
 			group.Go(func() {
 				<-start
-				errs[index] = tests[index].service.SyncOutbox(tests[index].session, streamID)
+				errs[index] = tests[index].service.SyncOutbox(tests[index].session, streamID, OutboxChanges{})
 			})
 		}
 
@@ -386,4 +400,170 @@ func TestStream_SyncOutbox_TwoServersSendOnce(t *testing.T) {
 	require.NoError(t, first.service.Delete(first.session, &loaded, "deleted"))
 	first.tasks.Drain()
 	require.Equal(t, []string{vocab.ActivityTypeDelete}, race(t, tests, stream.StreamID))
+}
+
+// withSyndicationTargets gives the test's Domain the named syndication targets
+func (test outboxSyncTest) withSyndicationTargets(names ...string) {
+
+	domain := model.NewWritableDomain()
+
+	for _, name := range names {
+		domain.Syndication = append(domain.Syndication, form.LookupCode{Value: name, Href: name})
+	}
+
+	test.service.domainService.cache.Store(&domain)
+}
+
+// TestStream_SyncOutbox_Syndication walks one Stream through the outbox, and confirms that its
+// syndication targets are told what its followers are told
+func TestStream_SyncOutbox_Syndication(t *testing.T) {
+
+	test := newOutboxSyncTest(t)
+	test.withSyndicationTargets("bandwagon", "spotify", "tidal")
+
+	// A Stream outside the outbox syndicates nothing
+	stream := test.newStream("default")
+	stream.Syndication.Set([]string{"bandwagon", "spotify"})
+	require.NoError(t, test.service.Save(test.session, &stream, "created"))
+	require.Empty(t, test.sync(t))
+
+	// Entering the outbox sends each target a Create
+	stream.StateID.Set("published")
+	require.NoError(t, test.service.Save(test.session, &stream, "published"))
+	require.ElementsMatch(t, []string{vocab.ActivityTypeCreate, "syndication.create bandwagon", "syndication.create spotify"}, test.sync(t))
+
+	// An edit sends each target an Update, which only the publish action used to do
+	loaded := storedStream(t, test.service, test.session, stream.StreamID)
+	loaded.Label = "No Fate"
+	require.NoError(t, test.service.Save(test.session, &loaded, "edited"))
+	require.ElementsMatch(t, []string{vocab.ActivityTypeUpdate, "syndication.update bandwagon", "syndication.update spotify"}, test.sync(t))
+
+	// Changing the targets alone tells only the targets that changed, and no follower
+	loaded = storedStream(t, test.service, test.session, stream.StreamID)
+	loaded.Syndication.Set([]string{"bandwagon", "tidal"})
+	require.NoError(t, test.service.Save(test.session, &loaded, "retargeted"))
+	require.ElementsMatch(t, []string{"syndication.create tidal", "syndication.delete spotify"}, test.sync(t))
+
+	// A second save of the same copy does not report the same changes again
+	require.NoError(t, test.service.Save(test.session, &loaded, "saved again"))
+	require.Empty(t, test.sync(t))
+
+	// Publishing again with `republish` sends every target an Update, and no follower
+	loaded = storedStream(t, test.service, test.session, stream.StreamID)
+	require.NoError(t, test.service.Publish(test.session, &test.author, &loaded, "published", true, true))
+	require.ElementsMatch(t, []string{"syndication.update bandwagon", "syndication.update tidal"}, test.sync(t))
+
+	// Publishing again without it sends nothing
+	loaded = storedStream(t, test.service, test.session, stream.StreamID)
+	require.NoError(t, test.service.Publish(test.session, &test.author, &loaded, "published", true, false))
+	require.Empty(t, test.sync(t))
+
+	// Leaving the outbox sends each target a Delete
+	loaded = storedStream(t, test.service, test.session, stream.StreamID)
+	require.NoError(t, test.service.UnPublish(test.session, &test.author, &loaded, "hidden", true))
+	require.ElementsMatch(t, []string{vocab.ActivityTypeDelete, "syndication.delete bandwagon", "syndication.delete tidal"}, test.sync(t))
+
+	// ...and only once
+	loaded = storedStream(t, test.service, test.session, stream.StreamID)
+	require.NoError(t, test.service.Delete(test.session, &loaded, "deleted"))
+	require.Empty(t, test.sync(t))
+}
+
+// TestStream_SyncOutbox_SyndicationDelete confirms that deleting a Stream which followers hold
+// sends each syndication target a Delete, which the delete itself used to hide (BUG-241)
+func TestStream_SyncOutbox_SyndicationDelete(t *testing.T) {
+
+	test := newOutboxSyncTest(t)
+	test.withSyndicationTargets("bandwagon")
+
+	stream := test.newStream("published")
+	stream.Syndication.Set([]string{"bandwagon"})
+	require.NoError(t, test.service.Save(test.session, &stream, "published"))
+	require.ElementsMatch(t, []string{vocab.ActivityTypeCreate, "syndication.create bandwagon"}, test.sync(t))
+
+	loaded := storedStream(t, test.service, test.session, stream.StreamID)
+	require.NoError(t, test.service.Delete(test.session, &loaded, "deleted"))
+	require.ElementsMatch(t, []string{vocab.ActivityTypeDelete, "syndication.delete bandwagon"}, test.sync(t))
+}
+
+// newPublicStream returns an unsaved Stream by the test's author that anyone may view in every State
+func (test outboxSyncTest) newPublicStream(stateID string) model.Stream {
+
+	// Let the "viewer" role see the test collection in each State
+	template := test.service.templateService.templates["test-collection"]
+	action := template.Actions["view"]
+	action.AccessList = mapof.Object[sliceof.String]{}
+
+	for name := range template.States {
+		action.AccessList[name] = sliceof.String{"author", "viewer"}
+	}
+
+	template.Actions["view"] = action
+	test.service.templateService.templates["test-collection"] = template
+
+	stream := test.newStream(stateID)
+	stream.Groups["viewer"] = id.Slice{model.MagicGroupIDAnonymous}
+	return stream
+}
+
+// TestStream_Save_JoinsItsConversation confirms that the save which moves a Stream into the outbox
+// gives it a context and records it in a local parent's Replies, whichever caller made that save
+func TestStream_Save_JoinsItsConversation(t *testing.T) {
+
+	replyCount := func(t *testing.T, test outboxSyncTest, parent model.Stream) int {
+		t.Helper()
+		return storedStream(t, test.service, test.session, parent.StreamID).ReplyCount
+	}
+
+	t.Run("a draft has no context", func(t *testing.T) {
+		test := newOutboxSyncTest(t)
+		stream := test.newPublicStream("default")
+		require.NoError(t, test.service.Save(test.session, &stream, "created"))
+		require.Empty(t, stream.Context)
+	})
+
+	t.Run("entering the outbox", func(t *testing.T) {
+		test := newOutboxSyncTest(t)
+
+		parent := test.newPublicStream("published")
+		require.NoError(t, test.service.Save(test.session, &parent, "parent"))
+		require.NotEmpty(t, parent.Context, "an original post starts a context of its own")
+		require.Equal(t, parent.Context, storedStream(t, test.service, test.session, parent.StreamID).Context)
+
+		// Sending the parent puts its object in the cache, where the reply's save reads its context
+		require.Equal(t, []string{vocab.ActivityTypeCreate}, test.sync(t))
+
+		// A reply written as a draft is not recorded until it is sent
+		reply := test.newPublicStream("default")
+		reply.InReplyTo = parent.ActivityPubURL()
+		require.NoError(t, test.service.Save(test.session, &reply, "draft reply"))
+		require.Zero(t, replyCount(t, test, parent))
+
+		reply.StateID.Set("published")
+		require.NoError(t, test.service.Save(test.session, &reply, "sent reply"))
+		require.Equal(t, 1, replyCount(t, test, parent))
+
+		// The reply joins its parent's context, and the object that followers are sent carries it
+		require.Equal(t, parent.Context, reply.Context)
+		require.Contains(t, test.sync(t), vocab.ActivityTypeCreate)
+		object := test.service.JSONLD(test.session, &reply)
+		require.Equal(t, parent.Context, object.GetString(vocab.PropertyContext))
+	})
+
+	t.Run("a later save does not record the reply again", func(t *testing.T) {
+		test := newOutboxSyncTest(t)
+
+		parent := test.newPublicStream("published")
+		require.NoError(t, test.service.Save(test.session, &parent, "parent"))
+		require.Equal(t, []string{vocab.ActivityTypeCreate}, test.sync(t))
+
+		reply := test.newPublicStream("published")
+		reply.InReplyTo = parent.ActivityPubURL()
+		require.NoError(t, test.service.Save(test.session, &reply, "sent reply"))
+
+		loaded := storedStream(t, test.service, test.session, reply.StreamID)
+		loaded.Label = "No Fate"
+		require.NoError(t, test.service.Save(test.session, &loaded, "edited"))
+		require.Equal(t, 1, replyCount(t, test, parent))
+	})
 }

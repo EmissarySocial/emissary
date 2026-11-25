@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"math"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -20,6 +21,15 @@ import (
 
 // StreamOutboxTaskName names the queue task that brings a Stream's followers up to date
 const StreamOutboxTaskName = "Stream-Outbox"
+
+// outboxMode says what a save does about the Stream's outbox task
+type outboxMode int
+
+const (
+	outboxModeQueue     outboxMode = iota // Queue the task, which is what every ordinary save does
+	outboxModeSkip                        // Queue nothing, for a change that followers never receive
+	outboxModeRepublish                   // Queue the task, and send every syndication target again
+)
 
 // calcOutbox copies the "outbox" flag of the Stream's State onto the Stream when its State has changed
 func calcOutbox(template *model.Template, stream *model.Stream, wasNew bool) {
@@ -61,16 +71,99 @@ func applyOutboxState(template *model.Template, stream *model.Stream) {
 	}
 }
 
-// queueOutbox queues the task that decides, after commit, what this Stream's followers should be sent
-func (service *Stream) queueOutbox(session data.Session, stream *model.Stream) {
+// queueOutbox queues the task that decides, after commit, what this Stream's followers and
+// syndication targets should be sent
+func (service *Stream) queueOutbox(session data.Session, stream *model.Stream, republish bool) {
 
 	// RULE: Only a Stream that is, was, or is still held to be in the outbox can need a send
 	if stream.IsOutbox.IsFalse() && !stream.IsOutbox.Original() && stream.Fingerprint.IsZero() {
 		return
 	}
 
-	postcommit.Publish(session, service.queue, StreamOutboxTaskName, mapof.Any{
+	args := mapof.Any{
 		"streamId": stream.StreamID.Hex(),
+	}
+
+	// RULE: The changes to the syndication targets exist only in this copy of the Stream,
+	// so the task is told what they were
+	if added := stream.Syndication.Added(); len(added) > 0 {
+		args["syndicationAdded"] = added
+	}
+
+	if deleted := stream.Syndication.Deleted(); len(deleted) > 0 {
+		args["syndicationDeleted"] = deleted
+	}
+
+	if republish {
+		args["republish"] = true
+	}
+
+	postcommit.Publish(session, service.queue, StreamOutboxTaskName, args)
+}
+
+// joinConversation gives a Stream that is entering the outbox its context, and records it as a
+// reply in the Replies collection of a local parent
+func (service *Stream) joinConversation(session data.Session, stream *model.Stream) error {
+
+	const location = "service.Stream.joinConversation"
+
+	// RULE: Only the save that moves a Stream into the outbox does this
+	if stream.IsOutbox.IsFalse() || stream.IsOutbox.Original() {
+		return nil
+	}
+
+	// Guarantee this Stream has a context collection
+	if err := service.CalcContext(session, stream); err != nil {
+		return derp.Wrap(err, location, "Calculating context", stream.StreamID)
+	}
+
+	// A parent with closed replies simply leaves it out, and the save still goes ahead
+	if err := service.AddReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
+		return derp.Wrap(err, location, "Adding reply to parent's collection", stream.StreamID)
+	}
+
+	return nil
+}
+
+// syndicationPlan returns the syndication targets that are sent a Create, an Update, and a Delete.
+// `action` is the activity that followers were sent, or "" when they were sent nothing, and
+// `wanted` is TRUE when the author wants the Stream in the outbox.
+func syndicationPlan(action string, wanted bool, current []string, changes OutboxChanges) (created []string, updated []string, deleted []string) {
+
+	switch {
+
+	// Followers were told the Stream is gone, so every target that holds it is told too
+	case action == vocab.ActivityTypeDelete:
+		return nil, nil, append(heldTargets(current, changes), changes.SyndicationDeleted...)
+
+	// A Stream outside the outbox, which followers do not hold, was never syndicated
+	case !wanted:
+		return nil, nil, nil
+
+	// Followers were sent the Stream for the first time, so every target is too
+	case action == vocab.ActivityTypeCreate:
+		return slices.Clone(current), nil, nil
+	}
+
+	// A target that the same save added has received nothing yet, so it is sent a Create
+	added := slices.DeleteFunc(slices.Clone(current), func(target string) bool {
+		return !slices.Contains(changes.SyndicationAdded, target)
+	})
+
+	// Followers were sent a new copy, or every target is to be sent again
+	if (action == vocab.ActivityTypeUpdate) || changes.Republish {
+		return added, heldTargets(current, changes), changes.SyndicationDeleted
+	}
+
+	// Followers are up to date, and so is every target that did not change
+	return added, nil, changes.SyndicationDeleted
+}
+
+// heldTargets returns the current syndication targets that held the Stream before the save
+// that queued this task, which leaves out the ones that save added
+func heldTargets(current []string, changes OutboxChanges) []string {
+	return slices.DeleteFunc(slices.Clone(current), func(target string) bool {
+		return slices.Contains(changes.SyndicationAdded, target)
 	})
 }
 
@@ -101,8 +194,9 @@ func outboxAction(wanted bool, held string, current string) string {
 }
 
 // SyncOutbox sends the Create, Update, or Delete that brings a Stream's followers up to date,
-// and records what they now hold.  It sends nothing when they are already up to date.
-func (service *Stream) SyncOutbox(session data.Session, streamID primitive.ObjectID) error {
+// records what they now hold, and tells its syndication targets the same.  `changes` is what
+// the save that queued this task passed on.
+func (service *Stream) SyncOutbox(session data.Session, streamID primitive.ObjectID, changes OutboxChanges) error {
 
 	const location = "service.Stream.SyncOutbox"
 
@@ -141,14 +235,14 @@ func (service *Stream) SyncOutbox(session data.Session, streamID primitive.Objec
 
 	// The author wants a Stream in the outbox when it is flagged and not deleted
 	if stream.IsOutbox.IsFalse() || stream.IsDeleted() {
-		return service.syncOutboxRemove(session, &stream)
+		return service.syncOutboxRemove(session, &stream, changes)
 	}
 
-	return service.syncOutboxSend(session, &author, &stream)
+	return service.syncOutboxSend(session, &author, &stream, changes)
 }
 
 // syncOutboxSend sends a Create or an Update when followers do not hold the Stream as it is now
-func (service *Stream) syncOutboxSend(session data.Session, author *model.User, stream *model.Stream) error {
+func (service *Stream) syncOutboxSend(session data.Session, author *model.User, stream *model.Stream, changes OutboxChanges) error {
 
 	const location = "service.Stream.syncOutboxSend"
 
@@ -160,8 +254,9 @@ func (service *Stream) syncOutboxSend(session data.Session, author *model.User, 
 
 	activityType := outboxAction(true, stream.Fingerprint.Value(), fingerprint)
 
+	// Followers are up to date.  Syndication targets may still have changed, or be sent again.
 	if activityType == "" {
-		return nil
+		return service.syncOutboxSyndication(session, stream, "", true, changes)
 	}
 
 	// Address the object to the author of the post it replies to.  That lookup can mean a
@@ -185,11 +280,11 @@ func (service *Stream) syncOutboxSend(session data.Session, author *model.User, 
 	}
 
 	// Engage
-	return nil
+	return service.syncOutboxSyndication(session, stream, activityType, true, changes)
 }
 
 // syncOutboxRemove sends a Delete when followers still hold a Stream that has left the outbox
-func (service *Stream) syncOutboxRemove(session data.Session, stream *model.Stream) error {
+func (service *Stream) syncOutboxRemove(session data.Session, stream *model.Stream, changes OutboxChanges) error {
 
 	const location = "service.Stream.syncOutboxRemove"
 
@@ -219,6 +314,20 @@ func (service *Stream) syncOutboxRemove(session data.Session, stream *model.Stre
 	}
 
 	// Gone with the wind
+	return service.syncOutboxSyndication(session, stream, vocab.ActivityTypeDelete, false, changes)
+}
+
+// syncOutboxSyndication tells a Stream's syndication targets what its followers were just sent
+func (service *Stream) syncOutboxSyndication(session data.Session, stream *model.Stream, action string, wanted bool, changes OutboxChanges) error {
+
+	const location = "service.Stream.syncOutboxSyndication"
+
+	created, updated, deleted := syndicationPlan(action, wanted, stream.Syndication.Value(), changes)
+
+	if err := service.sendSyndicationMessages(session, stream, created, updated, deleted); err != nil {
+		return derp.Wrap(err, location, "Sending syndication messages", stream.StreamID)
+	}
+
 	return nil
 }
 
