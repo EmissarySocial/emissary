@@ -52,6 +52,17 @@ func User(ctx context.Context, database *mongo.Database) error {
 				}),
 		},
 
+		// idx_User_FollowerCount serves the Mastodon API's follow suggestions (most-followed first)
+		"idx_User_FollowerCount": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "followerCount", Value: -1},
+			},
+			Options: options.Index().
+				SetPartialFilterExpression(bson.M{
+					"deleteDate": 0,
+				}),
+		},
+
 		// idx_User_Primary allows one live primary user per domain, whichever server writes it
 		"idx_User_Primary": mongo.IndexModel{
 			Keys: bson.D{

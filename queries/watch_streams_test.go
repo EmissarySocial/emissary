@@ -29,7 +29,10 @@ func TestWatchStreams_SendsUpdatedAndChildUpdated(t *testing.T) {
 	})
 
 	require.Equal(t, realtime.NewMessage_Updated(streamID), first)
-	require.Equal(t, realtime.NewMessage_ChildUpdated(parentID), nextMessage(t, messages))
+
+	childUpdated := realtime.NewMessage_ChildUpdated(parentID)
+	childUpdated.RecordID = streamID
+	require.Equal(t, childUpdated, nextMessage(t, messages), "the parent's message names the child that changed")
 }
 
 // TestWatchStreams_SkipsUnusableRecords pins that zero and undecodable Streams send nothing

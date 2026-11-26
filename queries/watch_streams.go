@@ -35,9 +35,13 @@ func WatchStreams(ctx context.Context, server data.Server, result chan<- realtim
 				return
 			}
 
-			// Refresh pages showing this Stream, and pages listing its parent's children
+			// Refresh pages showing this Stream, and pages listing its parent's children.  The
+			// parent's message names the child too, so the Mastodon streaming API can load it.
+			childUpdated := realtime.NewMessage_ChildUpdated(stream.ParentID)
+			childUpdated.RecordID = stream.StreamID
+
 			sendMessage(ctx, result, realtime.NewMessage_Updated(stream.StreamID))
-			sendMessage(ctx, result, realtime.NewMessage_ChildUpdated(stream.ParentID))
+			sendMessage(ctx, result, childUpdated)
 		},
 	}
 

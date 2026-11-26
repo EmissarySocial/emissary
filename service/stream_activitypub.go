@@ -61,6 +61,11 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		result[vocab.PropertyPublished] = published
 	}
 
+	// Receiving servers apply an Update as an edit when the post says when it was edited
+	if stream.EditDate > 0 {
+		result[vocab.PropertyUpdated] = datetime.FromUnixSeconds(stream.EditDate)
+	}
+
 	if stream.Label != "" {
 		result[vocab.PropertyName] = stream.Label
 	}

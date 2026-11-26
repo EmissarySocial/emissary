@@ -52,6 +52,9 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case "DeleteStream":
 		return WithSession(consumer.serverFactory, args, DeleteStream)
 
+	case service.TaskFetchLinkPreview:
+		return WithFactory(consumer.serverFactory, args, FetchLinkPreview)
+
 	case "Geocode":
 		return WithStream(consumer.serverFactory, args, Geocode)
 
