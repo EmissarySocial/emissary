@@ -380,7 +380,7 @@ func (w Stream) UpdateDate() int64 {
 	return w._stream.UpdateDate
 }
 
-// IsPublished returns TRUE if the stream being built has been published
+// IsPublished returns TRUE if the stream being built is in the outbox
 func (w Stream) IsPublished() bool {
 	return w._stream.IsPublished()
 }

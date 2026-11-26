@@ -2059,8 +2059,9 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 
 	result := model.NewSearchResult()
 
-	// If the stream has been published, then try to generate a SearchResult for it.
-	if stream.IsPublished() {
+	// RULE: A deleted Stream is not searchable. One that is on the site and not in the
+	// outbox, as an article is, still is.
+	if stream.DeleteDate == 0 {
 
 		// Only create a search result if the stream is visible by ALL people
 		if stream.DefaultAllowAnonymous() {

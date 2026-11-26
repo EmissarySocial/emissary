@@ -76,7 +76,7 @@ func TestStreamSchema(t *testing.T) {
 		{"widgets.0.location", "TOP", nil},
 		{"widgets.0.label", "Markdown", nil},
 
-		// note: "isPublished" is a read-only virtual field (computed from publishDate/unpublishDate),
+		// note: "isPublished" is a read-only virtual field (computed from the outbox flag),
 		// and "syndication" is a delta.Slice written as a WHOLE array rather than by element path
 		// (see TestStreamSchema_Syndication).  Neither round-trips through this table helper.
 		{"attributedTo.name", "DOC-AUTHOR-NAME", nil},

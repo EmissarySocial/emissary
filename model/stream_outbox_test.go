@@ -251,3 +251,46 @@ func TestStream_Toot_Date(t *testing.T) {
 		})
 	}
 }
+
+// TestStream_IsPublished confirms that "published" means in the outbox and not deleted, whatever the dates say
+func TestStream_IsPublished(t *testing.T) {
+
+	for name, test := range map[string]struct {
+		isOutbox    bool
+		publishDate int64
+		deleteDate  int64
+		expected    bool
+	}{
+		"in the outbox":                  {isOutbox: true, publishDate: 100, expected: true},
+		"in the outbox, with no date":    {isOutbox: true, publishDate: math.MaxInt64, expected: true},
+		"on the site, not in the outbox": {isOutbox: false, publishDate: 100, expected: false},
+		"a new Stream":                   {isOutbox: false, publishDate: math.MaxInt64, expected: false},
+		"deleted":                        {isOutbox: true, publishDate: 100, deleteDate: 200, expected: false},
+	} {
+		t.Run(name, func(t *testing.T) {
+
+			stream := NewStream()
+			stream.IsOutbox.Set(test.isOutbox)
+			stream.PublishDate = test.publishDate
+			stream.DeleteDate = test.deleteDate
+
+			require.Equal(t, test.expected, stream.IsPublished())
+
+			// The virtual field and the syndication payload give the same answer
+			value, ok := stream.GetBoolOK("isPublished")
+			require.True(t, ok)
+			require.Equal(t, test.expected, value)
+			require.Equal(t, test.expected, stream.SyndicationData()["isPublished"])
+		})
+	}
+}
+
+// TestStreamSummary_IsPublished confirms that a summary is published when it is in the outbox, whatever the dates say
+func TestStreamSummary_IsPublished(t *testing.T) {
+
+	summary := StreamSummary{PublishDate: 100, UnPublishDate: math.MaxInt64}
+	require.False(t, summary.IsPublished(), "an open window is not publication")
+
+	summary = StreamSummary{IsOutbox: true, PublishDate: math.MaxInt64}
+	require.True(t, summary.IsPublished(), "the flag alone is publication")
+}

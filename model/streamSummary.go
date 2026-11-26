@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/benpate/geo"
 	"github.com/benpate/rosetta/mapof"
@@ -107,9 +105,7 @@ func (summary StreamSummary) ContentRaw() string {
 	return summary.Content.Raw
 }
 
-// IsPublished returns TRUE if this Stream is inside its publication window right now
+// IsPublished returns TRUE if this Stream is in the outbox, which means it is sent to its author's followers
 func (summary StreamSummary) IsPublished() bool {
-	now := time.Now().Unix()
-	return (summary.PublishDate < now) && (summary.UnPublishDate > now)
-
+	return summary.IsOutbox
 }

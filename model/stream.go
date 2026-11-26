@@ -536,7 +536,7 @@ func (stream Stream) ActivityPubSharesURL() string {
  * Publishing MetaData
  ******************************************/
 
-// IsPublished returns TRUE if this Stream is currently published
+// IsPublished returns TRUE if this Stream is in the outbox, which means it is sent to its author's followers
 func (stream Stream) IsPublished() bool {
 
 	// RULE: Deleted streams are not published
@@ -544,9 +544,7 @@ func (stream Stream) IsPublished() bool {
 		return false
 	}
 
-	// Otherwise, check that "now" is in between the Publish and UnPublish dates
-	now := time.Now().Unix()
-	return (stream.PublishDate <= now) && (stream.UnPublishDate > now)
+	return stream.IsOutbox.Value()
 }
 
 /******************************************
