@@ -1,13 +1,14 @@
 package build
 
 import (
+	"cmp"
 	"encoding/json"
 	"io"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/convert"
-	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -57,12 +58,14 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 			return Halt().WithError(derp.Wrap(err, location, "Querying child streams"))
 		}
 
+		streams := feedOrder(iterator.Slice(children, model.NewStream))
+
 		// Special case for JSONFeed
 		if mimeType == model.MimeTypeJSONFeed {
-			return step.asJSONFeed(builder, buffer, children)
+			return step.asJSONFeed(builder, buffer, streams)
 		}
 
-		result.Items = slice.Map(iterator.Slice(children, model.NewStream), convert.StreamToGorillaFeed)
+		result.Items = slice.Map(streams, convert.StreamToGorillaFeed)
 
 	// This IS a search builder
 	case true:
@@ -137,18 +140,31 @@ func (step StepViewFeed) detectMimeType(builder Builder) string {
 	return model.MimeTypeRSS
 }
 
-// feedListOptions returns the query options for a feed's child streams: the newest
-// feedMaxItems, loading only the fields the feed converters read
+// feedListOptions returns the query options for a feed's child streams: the feedMaxItems
+// created most recently, loading only the fields the feed converters read
 func feedListOptions() []option.Option {
+
+	// RULE: Every Stream has a create date, and a page that was never sent to followers has
+	// no publish date, so the newest are chosen by "createDate" and put in order by feedOrder
 	return []option.Option{
-		option.SortDesc("publishDate"),
+		option.SortDesc("createDate"),
 		option.MaxRows(feedMaxItems),
 		option.Fields(convert.StreamFeedFields()...),
 	}
 }
 
+// feedOrder sorts a feed's Streams by the date each one shows, newest first
+func feedOrder(streams []model.Stream) []model.Stream {
+
+	slices.SortStableFunc(streams, func(a model.Stream, b model.Stream) int {
+		return cmp.Compare(b.DisplayDate(), a.DisplayDate())
+	})
+
+	return streams
+}
+
 // asJSONFeed renders the provided children as a JSONFeed document
-func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children data.Iterator) PipelineBehavior {
+func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children []model.Stream) PipelineBehavior {
 
 	const location = "build.StepViewFeed.asJSONFeed"
 
@@ -160,7 +176,7 @@ func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children 
 		Description: builder.Summary(),
 	}
 
-	feed.Items = slice.Map(iterator.Slice(children, model.NewStream), convert.StreamToJsonFeed)
+	feed.Items = slice.Map(children, convert.StreamToJsonFeed)
 
 	builder.response().Header().Add("Content-Type", model.MimeTypeJSONFeed)
 

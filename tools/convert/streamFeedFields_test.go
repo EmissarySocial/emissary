@@ -37,14 +37,41 @@ func TestStreamFeedFields_ProjectionKeepsFeedOutput(t *testing.T) {
 	require.Empty(t, projected.Hashtags)
 	require.Empty(t, projected.Content.Raw)
 
-	// Every listed field is read by a converter, so leaving any one out changes a feed item
+	// A page that never entered the outbox has no publish date, and is dated by its create date
+	undated := stream
+	undated.PublishDate = 0
+	undated.CreateDate = 1_600_000_000_000
+
+	require.True(t, sameFeedItems(undated, projectStream(t, undated, StreamFeedFields())))
+
+	// Every listed field is read by a converter, so leaving any one out changes a feed item,
+	// for a Stream with a publish date or for one without
 	for _, field := range StreamFeedFields() {
 
 		without := slices.DeleteFunc(StreamFeedFields(), func(name string) bool { return name == field })
-		partial := projectStream(t, stream, without)
 
-		require.False(t, sameFeedItems(stream, partial), "field %q is listed but no converter reads it", field)
+		isRead := !sameFeedItems(stream, projectStream(t, stream, without)) ||
+			!sameFeedItems(undated, projectStream(t, undated, without))
+
+		require.True(t, isRead, "field %q is listed but no converter reads it", field)
 	}
+}
+
+// TestStreamFeed_DatesAnUnsentPage confirms that a feed item shows the create date of a page
+// that has no publish date, and never the start of 1970
+func TestStreamFeed_DatesAnUnsentPage(t *testing.T) {
+
+	stream := model.NewStream()
+	stream.CreateDate = 1_600_000_000_000
+
+	require.Equal(t, int64(1_600_000_000), StreamToGorillaFeed(stream).Created.Unix())
+	require.Equal(t, int64(1_600_000_000), StreamToJsonFeed(stream).DatePublished.Unix())
+
+	// A publish date wins when there is one
+	stream.PublishDate = 1_700_000_000
+
+	require.Equal(t, int64(1_700_000_000), StreamToGorillaFeed(stream).Created.Unix())
+	require.Equal(t, int64(1_700_000_000), StreamToJsonFeed(stream).DatePublished.Unix())
 }
 
 // sameFeedItems returns TRUE if both Streams convert to equal RSS/Atom and JSON Feed items

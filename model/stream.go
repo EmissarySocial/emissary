@@ -561,7 +561,7 @@ func (stream Stream) Toot(host string) object.Status {
 	return object.Status{
 		ID:          stream.StreamID.Hex(),
 		URI:         stream.ActivityPubURL(),
-		CreatedAt:   MastodonDate(time.Unix(stream.PublishDate, 0)),
+		CreatedAt:   MastodonDate(time.Unix(stream.tootDate(), 0)),
 		EditedAt:    editedAt,
 		Account:     stream.AttributedTo.Toot(host),
 		Content:     stream.Content.HTML,
@@ -579,14 +579,20 @@ func (stream Stream) Toot(host string) object.Status {
 	}
 }
 
-// tootDate returns the date (Unix seconds) that a Mastodon client shows for this Stream:
-// its publish date, or its create date when it has never been published.
+// tootDate returns the date (Unix seconds) that a Mastodon client shows for this Stream
 func (stream Stream) tootDate() int64 {
+	return stream.DisplayDate()
+}
+
+// DisplayDate returns the date (Unix seconds) to show for this Stream: its publish date, or its
+// create date when it has never entered the outbox
+func (stream Stream) DisplayDate() int64 {
 
 	if stream.PublishDate > 0 {
 		return stream.PublishDate
 	}
 
+	// CreateDate is a journal field, stored in milliseconds
 	return stream.CreateDate / 1000
 }
 

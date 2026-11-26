@@ -157,8 +157,8 @@ func TestFeedListOptions(t *testing.T) {
 		}
 	}
 
-	require.Equal(t, "publishDate", sort.FieldName)
-	require.True(t, sort.IsDescending(), "a feed lists the newest children first")
+	require.Equal(t, "createDate", sort.FieldName, "every Stream has a create date, and an unsent page has no publish date")
+	require.True(t, sort.IsDescending(), "a feed loads the newest children")
 	require.Equal(t, int64(60), maxRows.MaxRows())
 	require.Equal(t, convert.StreamFeedFields(), fields.Fields())
 }

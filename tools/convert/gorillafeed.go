@@ -16,7 +16,7 @@ func StreamToGorillaFeed(stream model.Stream) *feeds.Item {
 		Link: &feeds.Link{
 			Href: stream.URL,
 		},
-		Created:   time.Unix(stream.PublishDate, 0),
+		Created:   time.Unix(stream.DisplayDate(), 0),
 		Enclosure: gorillaEnclosure(stream),
 	}
 

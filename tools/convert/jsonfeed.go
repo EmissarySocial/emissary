@@ -34,7 +34,7 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 		ContentHTML:   first.String(stream.Content.HTML, " "),
 		Summary:       stream.Summary,
 		Image:         stream.IconURL,
-		DatePublished: time.Unix(stream.PublishDate, 0),
+		DatePublished: time.Unix(stream.DisplayDate(), 0),
 		DateModified:  time.UnixMilli(stream.UpdateDate),
 	}
 

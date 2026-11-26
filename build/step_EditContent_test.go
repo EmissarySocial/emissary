@@ -2,7 +2,6 @@ package build
 
 import (
 	"io"
-	"math"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -165,7 +164,7 @@ func TestMarkEdited(t *testing.T) {
 	published := func() *model.Stream {
 		stream := model.NewStream()
 		stream.PublishDate = now.Add(-time.Hour).Unix()
-		stream.UnPublishDate = math.MaxInt64
+		stream.IsOutbox.Set(true)
 		stream.Content = model.Content{Raw: "first version"}
 		return &stream
 	}

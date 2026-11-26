@@ -53,7 +53,7 @@ func (rss RSS) Feed(session data.Session, criteria ...exp.Expression) (*feeds.JS
 // Item converts a single model.Stream into a feeds.JSONItem
 func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 
-	publishDate := time.Unix(stream.PublishDate, 0)   // PublishDate is seconds (set via time.Now().Unix())
+	publishDate := time.Unix(stream.DisplayDate(), 0) // The publish date, or the create date for a page that has none
 	modifiedDate := time.UnixMilli(stream.UpdateDate) // UpdateDate is milliseconds (journal UnixMilli)
 
 	result := &feeds.JSONItem{

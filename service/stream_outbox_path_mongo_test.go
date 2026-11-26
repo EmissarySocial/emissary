@@ -146,6 +146,7 @@ func TestStreamOutboxPath_FingerprintFields(t *testing.T) {
 		"context":      {changes: true, edit: func(stream *model.Stream) { stream.Context = "https://example.test/context" }},
 		"inReplyTo":    {changes: true, edit: func(stream *model.Stream) { stream.InReplyTo = "https://example.test/parent" }},
 		"publishDate":  {changes: true, edit: func(stream *model.Stream) { stream.PublishDate++ }},
+		"editDate":     {changes: true, edit: func(stream *model.Stream) { stream.EditDate = 1_800_000_000 }},
 		"replyPolicy":  {changes: true, edit: func(stream *model.Stream) { stream.ReplyPolicy = model.ReplyPolicyNobody }},
 		"defaultAllow": {changes: true, edit: func(stream *model.Stream) { stream.DefaultAllow = model.NewPermissions() }},
 		"attributedTo": {changes: true, edit: func(stream *model.Stream) { stream.AttributedTo.ProfileURL = "https://example.test/@other" }},

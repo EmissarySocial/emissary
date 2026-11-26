@@ -362,17 +362,10 @@ func (w Stream) CreateDate() int64 {
 	return w._stream.CreateDate
 }
 
-// PublishDate returns the PublishDate of the stream being built, in SECONDS.
-// When the stream has no explicit PublishDate, it falls back to the creation time. CreateDate is a
-// journal field stored in MILLISECONDS, so it is divided down to seconds to match this method's unit
-// (returning it raw would yield a value ~1000x too large — a year-58000 date once formatted).
+// PublishDate returns the date to show for the Stream being built, in SECONDS: its publish
+// date, or its create date when it has never entered the outbox
 func (w Stream) PublishDate() int64 {
-
-	if w._stream.PublishDate > 0 {
-		return w._stream.PublishDate
-	}
-
-	return w._stream.CreateDate / 1000
+	return w._stream.DisplayDate()
 }
 
 // UpdateDate returns the UpdateDate of the stream being built
