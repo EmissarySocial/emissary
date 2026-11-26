@@ -117,6 +117,17 @@ It is a virtual string over `Stream.PublishDate` (Unix seconds), so a `datetime`
 
 `0` is the only special value of `PublishDate`. Until 2026-11-25 a new Stream held `math.MaxInt64` in it and in `unpublishDate`, a field that no longer exists; `emissary-specs/projects/PUBLICATION.md` §1.17 clears both from stored records.
 
+## `Stream.IsOutbox` and `Stream.Fingerprint` are written by the server, never by a caller
+
+`State.IsOutbox` is the Template's `outbox` flag on a state. `Stream.IsOutbox` is its copy on the Stream, and `Stream.Fingerprint` is a hash of the object that followers last received, empty when they hold nothing. The service decides both ([../service/AGENTS.md](../service/AGENTS.md)); these are the rules the model keeps.
+
+- **Neither is in `StreamSchema`,** so no form and no `set-data` step can write them. `TestStream_OutboxFields_NoFormCanWrite` pins it.
+- **The flag is always stored, and the fingerprint only when set.** `isOutbox` is written even when false, so a query can match it. `fingerprint` is `omitempty`.
+- **The fingerprint never leaves the server.** Its JSON tag is `-`, so an export carries none and an import cannot forge one. `isOutbox` is in the JSON, but a save takes the flag from the Template's state, not from the caller.
+- **Both are `delta` values, and `MarkSaved` resets them** with `StateID`, `Token`, and `Syndication`. The save compares each with the value it was loaded with, so assign through `Set`, never to the struct.
+- **`IsPublished` returns the flag,** and FALSE for a deleted Stream, on both `Stream` and `StreamSummary`. It never reads a date.
+- **`StreamFingerprintPending` is a placeholder, not a hash.** Upgrade 41 writes it on Streams that followers received before fingerprints were recorded.
+
 ## Every `schema.Array` that a request can write into needs a `MaxLength`
 
 Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An Array with no `MaxLength` lets one path such as `tags.5000000` build a list of 5,000,001 items. Set `MaxLength` on any Array that a form post, request key, or socialRules mapping can reach. Apart from `ActivityStreamSchema`, whose every Array has one, `UserSchema`'s `links` (6) and `DomainSchema`'s `startupTasks` (16) are the only two that set one today (BUG-244).
