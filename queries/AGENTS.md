@@ -24,13 +24,41 @@ In [upgrade.go](upgrade.go) the slice index is the stored `databaseVersion` (slo
 
 A slot runs the first time any server boots with it, including a dev server running whatever is on disk in a worktree. Slot 37 was edited in place on 2026-10-11 while uncommitted, but local dev databases had already recorded it, so a slot 38 had to repair both versions. Once a slot exists on disk, treat it as run and correct it in the next slot. Folding a correction back is possible only before release, and only by also resetting `databaseVersion` on every local database that ran the later slot, as when slot 38 was merged into 37.
 
+## Slot 38 is empty for good
+
+Dev branches gave slot 38 to several migrations and released none of them: the slot later folded into 37, I18N's languages on `dev-Eugene`, and, in their plans, RELAYS and BUG-304. On 2026-11-22 four local databases had recorded version 38, and only one held I18N's data. A slot a database has recorded never runs there again, so any migration placed at 38 would be skipped on those databases. [upgrades/v038.go](upgrades/v038.go) is therefore an empty stub (Ben, 2026-11-22). I18N's migration was then planned for slot 40 and BUG-304's repair for the slot after it, but slot 40 went to the syndication upgrade below (Ben, 2026-11-25), so each of those takes the next free slot when its branch merges. A local database that ran `dev-Eugene`'s slot 40 has recorded version 40 and skips the syndication upgrade; its Streams still load, and are converted as they are saved. Never give slot 38 a body. `TestUpgradeMongoDB_CopiesTheLegacyOutbox` upgrades a database from 37 and from 38, and fails if the copy moves into slot 38.
+
+## Version40 turns a Stream's syndication document into a plain array
+
+`Stream.Syndication` was rosetta's `delta.Slice`, which the driver stored as `{values: [...]}`. It is now `benpate/delta`'s `Slice`, which stores a plain array and still reads the old document. [upgrades/v040.go](upgrades/v040.go) converts every stored record, in both `Stream` and `StreamDraft`, with one pipeline `UpdateMany` per collection, so no record passes through Go and the upgrade does not depend on the model. The plan is `emissary-specs/projects/DELTA-CONSOLIDATION.md`.
+
+- **The filter is `{syndication: {$type: "object"}}`, and that is what makes a second run safe.** `$type` also matches an array that holds the type, so this is correct only because the list holds strings. Do not reuse the filter for a list of documents.
+- **A query on the list names `syndication`, never `syndication.values`.** The bandwagon templates `bandwagon-search-tracks` and `bandwagon-search-albums` filter on it, and changed with this upgrade. A record the upgrade has not reached yet is missing from those searches until it has.
+- **The upgrade does not make the legacy decoder removable by itself.** Upgrades run in the background after the Domain starts serving, so a Stream can be read before its record is converted.
+
+## Version41 flags the Streams that followers hold, from the outbox rows
+
+[upgrades/v041.go](upgrades/v041.go) moves existing Streams to the `isOutbox` flag (emissary-specs PUBLICATION §1.17). It plans first, logs one line per Template and State, and then writes. `PlanVersion41` is exported and writes nothing, so it is the dry run; no command calls it yet.
+
+- **The flag comes from the outbox rows, never from the State's name.** A Stream is held when its author's outbox has a live `Create` or `Update` whose `objectId` is the Stream's URL. A `Delete` does not count, because unpublishing stores one under the same object. The upgrade cannot read Templates, so it cannot say which States carry the flag.
+- **A held Stream gets `isOutbox: true` and the fingerprint `PENDING` together, and only while its fingerprint is empty.** That is what makes a second run safe: a fingerprint the outbox task or the fill task wrote is never replaced. A deleted Stream gets neither.
+- **It reads `OutboxItem`, `Outbox2`, and `Outbox`.** Slot 39 copies the legacy rows first, but the index sync that empties `Outbox2` runs after the upgrades on the same boot.
+- **Moves are written by Template ID,** in `version41Moves`. An unsent `bandwagon-song` leaves `published` for `default` only when its album is not in `published`, so a song whose row was lost stays visible beneath an album that visitors can see.
+- **Every other Stream stores `isOutbox: false`,** the end-of-time `publishDate` becomes `0` and `unpublishDate` is removed in `Stream` and `StreamDraft`, and the `Webhook` collection is dropped.
+- **The fill task can run before this slot does.** `ScheduleStartup` queues `Stream-FillFingerprints` while the upgrade runs in the background, so on the boot that runs this slot the placeholders may wait for the next start. The outbox task reads a placeholder as an older copy, so a Stream saved meanwhile sends one Update.
+- **A Stream that changes State between the boot and this slot can be flagged wrongly.** One unpublished in that window sends no Delete, keeps its rows, and is then flagged as held. The window is the few seconds the earlier slots take.
+
+## Version39 copies the legacy outbox, and its objects stay URLs
+
+[upgrades/v039.go](upgrades/v039.go) copies the legacy `Outbox` collection into `OutboxItem` (OUTBOX2-OMNIBUS §1.21). It reads three shapes of row: the current one, v0.7.0's (`parentId`, `parentType`, and `url` for the object), and rows with an empty `actorUrl` (BUG-146), whose URL it looks up from the User or Stream. BUG-304's repair will take a later slot, so this one cannot rely on it. A row with no permissions was public, as slot 19 recorded, but a null list was served to no one and stays private. The object stays a URL, as the legacy outbox served it (Ben, 2026-11-19), so Funkwhale cannot import an older song from these rows.
+
 ## A new unique index must ship with the reconcile that clears its violations
 
 `indexer.Sync` builds indexes at boot, so a unique index over duplicate legacy data fails with E11000 on every start and never builds until code changes. Either clean the data in an upgrade slot before the index first ships (v027/v028), or dedupe in the sync function just before `indexer.Sync` (`deduplicateAnnotations`, `deduplicateFollowing`, `deduplicateResponses` in [sync](sync/)), reporting a failed dedupe rather than returning it, so the other indexes still build.
 
 A failed build also costs the index it replaced: `indexer.Sync` drops a changed or renamed index before creating the new one, and only reports a failed create, so until the dedupe succeeds every lookup on those keys scans the collection, without an error.
 
-`idx_OutboxItem_URL` ([sync/outboxItem.go](sync/outboxItem.go)) needs no reconcile only while every writer derives `url` from the row's own `_id` through `Locator.ActivityURL`, as `Outbox2.Save` does (`TestOutboxItemIndex_BuildsOverExistingRows`). Its partial filter (`url > ""`) leaves out the empty string that `ActivityURL` returns for an unknown actor type. OUTBOX2-MIGRATION's move of legacy rows stores each row's old `ActivityPubURL()` as `url`, which is not derived from its `_id`, so it must report URLs shared between legacy rows before writing them.
+`idx_OutboxItem_URL` ([sync/outboxItem.go](sync/outboxItem.go)) needs no reconcile only while every writer derives `url` from the row's own `_id` through `Locator.ActivityURL`, as `Outbox2.Save` does (`TestOutboxItemIndex_BuildsOverExistingRows`). Its partial filter (`url > ""`) leaves out the empty string that `ActivityURL` returns for an unknown actor type. `Version39` stores each legacy row's old `ActivityPubURL()` as `url`, which is the row's `activityUrl` when it has one, not a URL derived from its `_id`. So the slot keeps the oldest row for each URL itself and reports the rest, because on a database upgrading from v0.7.0 this index is built only after the slot runs (`TestVersion39_SharedURLWithoutTheIndex`).
 
 The `OutboxItem` collection has no recycle index and is not in `factory.Collections()`, because `service.Outbox2` only hard-deletes. If anything ever soft-deletes an `OutboxItem`, add `deleteDate: 0` to the unique index's partial filter and the collection to `Collections()`.
 
@@ -65,6 +93,10 @@ An update pipeline whose new value references the field it replaces (`{$set: {lo
 ## A Stream's rank starts at 1, and 0 means "not set"
 
 `build.StepSort` never assigns 0, and `Stream.Save` gives any Stream ranked 0 the rank `MaxRank` returns: one after its highest-ranked sibling, or 1 for a parent with no children. Bandwagon publishes `rank` as a song's `position` and ID3 track number, so a first child ranked 0 federated as track 0 and moved after its siblings on its next save. Keep ranks counting from 1 (`TestMaxRank`).
+
+## The Mastodon API's lists read two partial indexes, and must name the flag
+
+`idx_Stream_OutboxByAuthor` (`attributedTo.userId`, then `createDate` descending) serves `Stream.QueryByUser`, and `idx_Stream_OutboxByDate` (`createDate` descending) serves `Stream.QueryPublic`. Both hold only Streams where `deleteDate` is 0 and `isOutbox` is TRUE, so MongoDB uses them only for a query that sends both terms as equalities. `visibilityCriteria` and `notDeleted` send them today. Both lists sort on `createDate`, not `publishDate`; before these indexes the local timeline sorted every matching Stream in memory. `TestStreamIndex_Outbox*` in [sync](sync/stream_outbox_mongo_test.go) run `explain` on the same terms, and one confirms that a query without the flag cannot use either index. `idx_Stream_PublishDate` stays, because the RSS feed, the feed step, and the child lists still sort on `publishDate`.
 
 ## The hourly unread scan depends on a partial index, and on sending both of its terms
 

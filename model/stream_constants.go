@@ -14,3 +14,7 @@ const (
 	ReplyPolicyEveryone = "everyone"
 	ReplyPolicyNobody   = "nobody"
 )
+
+// StreamFingerprintPending is the fingerprint of a Stream that followers received before
+// fingerprints were recorded.  It is no hash, so it never matches what a Stream would send.
+const StreamFingerprintPending = "PENDING"

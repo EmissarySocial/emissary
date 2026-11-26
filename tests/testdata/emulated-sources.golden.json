@@ -14,8 +14,6 @@
 	"../build/builder_admin_tags.go SearchTag.schema (used by templateContexts, subContext, widgetContext)": "b189fb0a1c9538c6",
 	"../build/builder_admin_users.go User.object (used by templateContexts, subContext, widgetContext)": "970680621093fecc",
 	"../build/builder_admin_users.go User.schema (used by templateContexts, subContext, widgetContext)": "c06470bec119e6f0",
-	"../build/builder_admin_webhooks.go Webhook.object (used by templateContexts, subContext, widgetContext)": "763982e7beb230ec",
-	"../build/builder_admin_webhooks.go Webhook.schema (used by templateContexts, subContext, widgetContext)": "b998727b3a87ae69",
 	"../build/builder_attachment.go Attachment.object (used by templateContexts, subContext, widgetContext)": "72ad3dea2de06e4c",
 	"../build/builder_attachment.go Attachment.schema (used by templateContexts, subContext, widgetContext)": "656eea68c5231b65",
 	"../build/builder_follower.go Follower.object (used by templateContexts, subContext, widgetContext)": "96d2a2c9df83733c",
@@ -136,12 +134,12 @@
 	"../build/step_WithUserConnection.go StepWithUserConnection.load (used by subContext)": "ac78298954e4e588",
 	"../build/utilities.go executeTemplate (used by renderLiteral)": "5f5d5ae105752a1e",
 	"../build/widget_save.go executeWidgetSaveSteps (used by widgetContext)": "939cee866f44dd89",
-	"../handler/admin.go buildAdmin_GetBuilder (used by templateContexts)": "4c68fd818d25a9b8",
+	"../handler/admin.go buildAdmin_GetBuilder (used by templateContexts)": "63ae92304d44eb29",
 	"../model/step/step.go New (used by nestedSteps, newPostCase, unpinnedPostReaders)": "0e81ac679c62c36f",
 	"../model/template.go Template.BaseSchema (used by templateContexts, isStreamModel)": "66b5ee5e9a18d8f4",
 	"../model/template.go Template.NewObject (used by templateContexts, isStreamModel)": "a321cc325ebba897",
 	"../model/template.go templateModelForName (used by templateContexts, isStreamModel)": "65ce549ef158fd29",
-	"../model/template.go templateModelRegistry (used by templateContexts, isStreamModel)": "e8dcbeb1ba3f9f0a",
+	"../model/template.go templateModelRegistry (used by templateContexts, isStreamModel)": "9bccfadc5dc94518",
 	"../server/factory_core.go factoryCore.EditorJS (used by loadGroup, editorJS)": "ecfca2b1d5d6c3c7",
 	"module:github.com/benpate/rosetta/schema/schema_set.go Schema.SetURLValues (used by setURLValuesInOrder)": "4a50354d467bea66"
 }

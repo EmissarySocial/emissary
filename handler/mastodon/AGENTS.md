@@ -19,7 +19,7 @@ The two gates answer different questions and are deliberately separate ([utils.g
 
 ## List endpoints must filter visibility inside the query, not per-object.
 
-A list handler can't call `userCanStream` on results it already fetched — by then the leak is the query itself. `Stream.QueryByUser` ([service/stream_mastodon.go](../../service/stream_mastodon.go)) is the choke point for Mastodon list reads: it takes the caller's `Authorization` and ANDs in `visibilityCriteria` (owner/domain-owner see all; everyone else gets `publishDate < now < unpublishDate` plus `defaultAllow ∈ caller's permissions`, failing closed). Any new list query must either go through it or apply the same predicate — filtering on `ownerId` alone is the IDOR that hit `GetAccount_Statuses`.
+A list handler can't call `userCanStream` on results it already fetched — by then the leak is the query itself. `Stream.QueryByUser` ([service/stream_mastodon.go](../../service/stream_mastodon.go)) is the choke point for Mastodon list reads: it takes the caller's `Authorization` and ANDs in `visibilityCriteria` (every caller gets `isOutbox = true`, so a draft never reaches a client, even its owner's; everyone but the owner and a domain owner also gets `defaultAllow ∈ caller's permissions`, failing closed). Any new list query must either go through it or apply the same predicate — filtering on `ownerId` alone is the IDOR that hit `GetAccount_Statuses`.
 
 ## `getStreamFromURL` resolves the domain from the *stream URL's* host — known gap.
 
@@ -46,7 +46,7 @@ Template `view` audit (2026-07-04): the restriction machinery itself is sound. `
 ## Open follow-ups (not yet done)
 
 - **`PostStatus` visibility mapping** (or explicit rejection), per the section above.
-- **`UserCan` has no publish-window check.** By-ID reads (`GetStatus`, source, translate) of an anonymous-`view` stream pass even when the stream is unpublished or expired; only list queries filter `publishDate`/`unpublishDate`. Low exposure today (the create flows publish immediately), but add the window to `userCanStream` for non-owners for defense in depth.
+- **`UserCan` has no outbox check.** By-ID reads (`GetStatus`, source, translate) answer for any Stream the caller may view, in the outbox or not; only list queries filter on `isOutbox`. So a published article, which is on the site and never sent to followers, is left out of every list and still loads by ID, where `applyArticle` turns it into a link card.
 - **`getStreamFromURL` hostname trust**, per the section above.
 - **`GetAccount` ignores `user.IsPublic`.** Any token can resolve any local profile URL to public-field data (`User.Toot()` exposes no email). This matches Mastodon semantics, but revisit if Emissary ever promises non-discoverable profiles.
 - **`PostStatus` ignores `ScheduledAt` semantics.** It sets `PublishDate` from the field, then publishes immediately anyway. Feature gap, not a security issue.

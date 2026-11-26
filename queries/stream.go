@@ -56,3 +56,46 @@ func SetAttributedTo(ctx context.Context, collection data.Collection, personLink
 
 	return RawUpdate(ctx, collection, criteria, update)
 }
+
+// ClaimStreamFingerprint moves a Stream's outbox fingerprint from one value to another, and
+// returns FALSE when the stored fingerprint is not the one named, so the database decides which
+// of two senders wins.  An empty fingerprint means "followers hold nothing".
+func ClaimStreamFingerprint(session data.Session, streamID primitive.ObjectID, from string, to string) (bool, error) {
+
+	const location = "queries.ClaimStreamFingerprint"
+
+	// Guarantee that we're using MongoDB
+	collection := mongoCollection(session.Collection("Stream"))
+
+	if collection == nil {
+		return false, derp.Internal(location, "Collection must be a MongoDB collection")
+	}
+
+	// RULE: No `deleteDate` in the filter, because the Delete for a deleted Stream is claimed too
+	filter := bson.M{"_id": streamID, "fingerprint": from}
+
+	// An empty fingerprint is stored as a missing property, and older records may hold "" or null
+	if from == "" {
+		filter["fingerprint"] = bson.M{"$in": bson.A{nil, ""}}
+	}
+
+	// RULE: One field, never a whole-record save, which would overwrite an edit made meanwhile
+	update := bson.M{"$set": bson.M{"fingerprint": to}}
+
+	if to == "" {
+		update = bson.M{"$unset": bson.M{"fingerprint": ""}}
+	}
+
+	result, err := collection.UpdateOne(session.Context(), filter, update)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Moving outbox fingerprint", streamID)
+	}
+
+	// A missing result claims nothing, so nothing is sent
+	if result == nil {
+		return false, nil
+	}
+
+	return result.MatchedCount == 1, nil
+}

@@ -84,28 +84,7 @@ func TestEditModelObject_Multiselect_Circle(t *testing.T) {
 	require.Equal(t, []string{"000000000000000000000002"}, circle.ProductIDs.SliceOfString())
 }
 
-// TestEditModelObject_Multiselect_SliceOfString guards the other half of the multiselect
-// story: paths backed by sliceof.String rather than id.Slice.
-func TestEditModelObject_Multiselect_SliceOfString(t *testing.T) {
-
-	widget.UseAll()
-
-	element := form.Element{
-		Type: "layout-vertical",
-		Children: []form.Element{
-			{Type: "multiselect", Path: "events", Options: map[string]any{"provider": "webhook-types"}},
-		},
-	}
-
-	editForm := form.New(schema.New(model.WebhookSchema()), element)
-	webhook := model.NewWebhook()
-	values := url.Values{"events": []string{model.WebhookEventUserCreate}}
-
-	require.NoError(t, editForm.SetURLValues(&webhook, values, nil))
-	require.Equal(t, []string{model.WebhookEventUserCreate}, []string(webhook.Events))
-}
-
-// TestEditModelObject_Multiselect_DeltaSlice covers the third and last slice type behind a
+// TestEditModelObject_Multiselect_DeltaSlice covers the other slice type behind a
 // multiselect: delta.Slice, which backs Stream.Syndication and the "Distribute to Streaming
 // Stations" control in the bandwagon-album template.  delta.Slice was missed when id.Slice
 // was taught to accept the *sliceof.String that multi-value widgets post, so every
@@ -128,9 +107,9 @@ func TestEditModelObject_Multiselect_DeltaSlice(t *testing.T) {
 		values := url.Values{"syndication": []string{"bandwagon", "spotify"}}
 
 		require.NoError(t, editForm.SetURLValues(&stream, values, nil))
-		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Values)
-		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Added)
-		require.Empty(t, stream.Syndication.Deleted)
+		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Value())
+		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Added())
+		require.Empty(t, stream.Syndication.Deleted())
 	}
 
 	{ // Un-checking every target clears the Stream, and records the removals
@@ -139,8 +118,8 @@ func TestEditModelObject_Multiselect_DeltaSlice(t *testing.T) {
 		stream.Syndication.Reset()
 
 		require.NoError(t, editForm.SetURLValues(&stream, url.Values{}, nil))
-		require.Empty(t, stream.Syndication.Values)
-		require.Equal(t, []string{"bandwagon"}, stream.Syndication.Deleted)
+		require.Empty(t, stream.Syndication.Value())
+		require.Equal(t, []string{"bandwagon"}, stream.Syndication.Deleted())
 	}
 
 	// RULE: Re-saving a Stream with the SAME targets ticked is not a change.  Stream.publish
@@ -154,9 +133,9 @@ func TestEditModelObject_Multiselect_DeltaSlice(t *testing.T) {
 		values := url.Values{"syndication": []string{"bandwagon", "spotify"}}
 		require.NoError(t, editForm.SetURLValues(&stream, values, nil))
 
-		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Values)
-		require.Empty(t, stream.Syndication.Added)
-		require.Empty(t, stream.Syndication.Deleted)
+		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Value())
+		require.Empty(t, stream.Syndication.Added())
+		require.Empty(t, stream.Syndication.Deleted())
 		require.False(t, stream.Syndication.IsChanged())
 	}
 }

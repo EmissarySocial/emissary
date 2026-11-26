@@ -36,7 +36,7 @@ func newSharedStream(service *Stream, authorID primitive.ObjectID, setup func(*m
 
 	stream := model.NewStream()
 	stream.StreamID = primitive.NewObjectID()
-	stream.StateID = "published"
+	stream.StateID.Set("published")
 	stream.AttributedTo.UserID = authorID
 
 	setup(&stream)

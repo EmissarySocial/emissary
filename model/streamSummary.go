@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/benpate/geo"
 	"github.com/benpate/rosetta/mapof"
@@ -30,11 +28,11 @@ type StreamSummary struct {
 	StartDate      datetime.DateTime  `json:"startDate,omitempty"    bson:"startDate,omitempty"`    // Date when this stream was published
 	EndDate        datetime.DateTime  `json:"endDate,omitempty"      bson:"endDate,omitempty"`      // Date when this stream ends, for templates that use one (an event's end)
 	PublishDate    int64              `json:"publishDate"            bson:"publishDate"`            // Unix epoch SECONDS when this stream was published (mirrors Stream.PublishDate)
-	UnPublishDate  int64              `json:"unpublishDate"          bson:"unpublishDate"`          // Unix epoch SECONDS when this stream should be removed from public view (mirrors Stream.UnPublishDate)
 	Rank           int                `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	Shuffle        int64              `json:"shuffle"                bson:"shuffle"`                // Random value used to shuffle the order of Streams in a list
 	Location       geo.Address        `json:"location"               bson:"location"`               // Physical location associated with this document
 	IsFeatured     bool               `json:"isFeatured"             bson:"isFeatured"`             // If this Stream is "featured" then it will be displayed in a special location on the page.
+	IsOutbox       bool               `json:"isOutbox"               bson:"isOutbox"`               // TRUE if this Stream is sent to its author's followers (mirrors Stream.IsOutbox)
 	CreateDate     int64              `json:"createDate"             bson:"createDate"`             // Unix epoch MILLISECONDS when this stream was created (journal field; mirrors Stream.CreateDate)
 	ReplyPolicy    string             `json:"replyPolicy,omitempty"  bson:"replyPolicy,omitempty"`  // Who may reply (mirrors Stream.ReplyPolicy), so a list can pass a collection's policy on
 }
@@ -53,7 +51,7 @@ func NewStreamSummary() StreamSummary {
 
 // StreamSummaryFields returns the database columns that must be loaded to populate a StreamSummary
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "tags", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "startDate", "endDate", "createDate", "location", "replyPolicy"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "tags", "attributedTo", "inReplyTo", "publishDate", "rank", "shuffle", "isFeatured", "isOutbox", "startDate", "endDate", "createDate", "location", "replyPolicy"}
 }
 
 // Fields returns the database columns that must be loaded to populate a StreamSummary
@@ -106,9 +104,7 @@ func (summary StreamSummary) ContentRaw() string {
 	return summary.Content.Raw
 }
 
-// IsPublished returns TRUE if this Stream is inside its publication window right now
+// IsPublished returns TRUE if this Stream is in the outbox, which means it is sent to its author's followers
 func (summary StreamSummary) IsPublished() bool {
-	now := time.Now().Unix()
-	return (summary.PublishDate < now) && (summary.UnPublishDate > now)
-
+	return summary.IsOutbox
 }

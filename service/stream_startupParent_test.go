@@ -31,7 +31,7 @@ func newStartupParentService() *Stream {
 func newStartupParent() (model.Stream, map[string]model.Stream) {
 
 	parent := model.NewStream()
-	parent.Token = "albums"
+	parent.Token.Set("albums")
 	parent.TemplateID = "search-page"
 
 	return parent, map[string]model.Stream{"albums": parent}
@@ -44,7 +44,7 @@ func TestStream_setStartupParent_PlacesChild(t *testing.T) {
 	parent, created := newStartupParent()
 
 	child := model.NewStream()
-	child.Token = "artists"
+	child.Token.Set("artists")
 	child.TemplateID = "search-page"
 
 	require.NoError(t, streamService.setStartupParent(&child, "albums", created))
@@ -121,7 +121,7 @@ func TestStream_newStartupStream_ExcludesParentToken(t *testing.T) {
 
 	stream, err := streamService.newStartupStream(data)
 	require.NoError(t, err)
-	require.Equal(t, "artists", stream.Token)
+	require.Equal(t, "artists", stream.Token.Value())
 	require.True(t, stream.ParentID.IsZero(), "the builder places nothing; Startup does")
 	require.Contains(t, data, "parentToken", "the shared Theme map is not changed")
 }

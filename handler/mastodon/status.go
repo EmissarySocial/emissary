@@ -92,23 +92,16 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		contentService := factory.Content()
 		stream.Content = contentService.New(model.ContentFormatText, transaction.Status)
 
-		// RULE: Attach the media first.  Publish builds the federated Create from the attachments
-		// the Stream has at that moment, so media attached afterward never reached followers.
-		// Refused media also stops here, before anything is saved or published.
+		// RULE: Attach the media first, so that the Create which the outbox task sends carries it.
+		// Refused media also stops here, before anything is saved.
 		if len(transaction.MediaIDs) > 0 {
 			if err := setStatusMedia(factory, session, authorization, &stream, transaction.MediaIDs); err != nil {
 				return object.Status{}, derp.Wrap(err, location, "Attaching media")
 			}
 		}
 
-		// Save the stream
-		streamService := factory.Stream()
-		if err := streamService.Save(session, &stream, "Created via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Saving stream")
-		}
-
-		// Publish the Stream to the User's outbox
-		if err := streamService.Publish(session, &user, &stream, "published", true, false); err != nil {
+		// Save the Stream into its published state, which is what sends it to followers
+		if err := factory.Stream().Publish(session, &user, &stream, "published", false); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Publishing stream")
 		}
 
@@ -773,9 +766,9 @@ func saveStatusEdit(factory *service.Factory, session data.Session, auth model.A
 		return derp.Wrap(err, location, "Loading author", authorID)
 	}
 
-	// Publish saves the Stream, so there is no separate save.  Keeping the current state
-	// keeps the publish date, which a change of state would reset.
-	if err := streamService.Publish(session, &author, stream, stream.StateID, true, false); err != nil {
+	// Publish saves the Stream, so there is no separate save.  Keeping the current state keeps
+	// the Stream in the outbox, and the outbox task sends followers an Update when the post changed.
+	if err := streamService.Publish(session, &author, stream, stream.StateID.Value(), false); err != nil {
 		return derp.Wrap(err, location, "Republishing stream", stream.StreamID)
 	}
 

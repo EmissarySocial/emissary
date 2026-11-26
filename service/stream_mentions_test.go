@@ -284,7 +284,7 @@ func TestStream_JSONLD_NoTags(t *testing.T) {
 }
 
 // TestStream_JSONLD_CCIsPlainStringSlice pins the concrete type of `cc` as a plain []string, so code
-// that appends to it, as addressedJSONLD does with a reply's author, gets the slice it expects.
+// that appends to it, as addReplyAuthor does with a reply's author, gets the slice it expects.
 func TestStream_JSONLD_CCIsPlainStringSlice(t *testing.T) {
 	streamService := newMentionStreamService()
 	stream := newTagStream("Hey @sarah@mastodon.social")
@@ -299,7 +299,7 @@ func TestStream_JSONLD_CCIsPlainStringSlice(t *testing.T) {
 	cc, ok := document[vocab.PropertyCC].([]string)
 	require.True(t, ok, "cc must be a plain []string")
 
-	// Append to it, as addressedJSONLD does
+	// Append to it, as addReplyAuthor does
 	cc = append(cc, "https://example.com/@author")
 	require.Equal(t, []string{"https://mastodon.social/users/sarah", "https://example.com/@author"}, cc)
 }

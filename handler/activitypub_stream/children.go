@@ -24,10 +24,10 @@ func GetChildrenCollection(ctx *steranko.Context, factory *service.Factory, sess
 		return derp.Wrap(err, location, "Invalid HTTP Signature")
 	}
 
-	// Get an iterator of the currently-published child streams. The publish-date
-	// window is applied in the query; per-child permissions are applied below.
+	// Get an iterator of the child streams that are in their author's outbox.  The flag
+	// is tested in the query; per-child permissions are applied below.
 	streamService := factory.Stream()
-	children, err := streamService.RangePublishedByParent(session, parent.StreamID)
+	children, err := streamService.RangeOutboxByParent(session, parent.StreamID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Loading children")

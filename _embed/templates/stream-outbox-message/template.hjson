@@ -28,11 +28,13 @@
 		default: {
 			label:Default
 			description:This item only has one state
+			outbox: true
 		}
 
 		published: {
 			label:Published
 			description:This item has been published and is visible to the public.
+			outbox: true
 		}
 	}
 	roles: {}
@@ -47,7 +49,7 @@
 				// A note holds photos only, as its editor does
 				{do:"upload-attachments", maximum:10, accept-type:"image/*"}
 				{do:"set-thumbnail", path:"iconUrl"}
-				{do:"save-and-publish", state:"default", outbox:true}
+				{do:"save-and-publish", state:"default"}
 				{do:"search-index"}
 			]
 		}
@@ -104,7 +106,7 @@
 					// New photos join the ones already here; "fill" never deletes one to make room
 					{do:"upload-attachments", maximum:10, action:"fill", accept-type:"image/*"}
 					{do:"set-thumbnail", path:"iconUrl"}
-					{do:"save-and-publish", state:"default", outbox:true}
+					{do:"save-and-publish", state:"default"}
 				]}
 				// Saving returns to the updated note in its modal; the 303 makes the browser GET it
 				{do:"remove-event", event:"closeModal"}
@@ -118,14 +120,14 @@
 			steps: [
 				{do:"delete-attachments"}
 				{do:"set-thumbnail", path:"iconUrl"}
-				{do:"save-and-publish", state:"default", outbox:true}
+				{do:"save-and-publish", state:"default"}
 			]
 		}
 
 		delete: {
 			roles:["author"]
 			steps: [
-				{do:"unpublish", state:"default", outbox:true}
+				{do:"unpublish", state:"default"}
 				{do:"delete", title:"Delete this Post?", message:"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."}
 				{do:"refresh-page"}
 			]

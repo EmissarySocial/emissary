@@ -63,7 +63,6 @@ type Factory interface {
 	Template() *service.Template
 	Theme() *service.Theme
 	User() *service.User
-	Webhook() *service.Webhook
 	WebPush() *service.WebPush
 	Widget() *service.Widget
 

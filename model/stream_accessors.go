@@ -48,7 +48,6 @@ func StreamSchema() schema.Element {
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
 			"publishDateTime":  schema.String{MaxLength: 64},
-			"unpublishDate":    schema.Integer{BitSize: 64},
 			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
 			"replyPolicy":      schema.String{Enum: []string{"", ReplyPolicyEveryone, ReplyPolicyNobody}},
@@ -156,9 +155,6 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "publishDate":
 		return &stream.PublishDate, true
 
-	case "unpublishDate":
-		return &stream.UnPublishDate, true
-
 	case "socialRole":
 		return &stream.SocialRole, true
 
@@ -166,7 +162,7 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 		return &stream.NavigationID, true
 
 	case "stateId":
-		return &stream.StateID, true
+		return stream.StateID.Pointer(), true
 
 	case "templateId":
 		return &stream.TemplateID, true
@@ -175,7 +171,7 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 		return &stream.TemplateID, true
 
 	case "token":
-		return &stream.Token, true
+		return stream.Token.Pointer(), true
 
 	case "isFeatured":
 		return &stream.IsFeatured, true
@@ -269,8 +265,8 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 	case "endDate":
 		return stream.EndDate.String(), true
 
-	// A virtual field over PublishDate, so a datetime widget can edit it.  Empty while unpublished
-	// or unscheduled (math.MaxInt64), and past year 9999, which RFC 3339 cannot write.
+	// A virtual field over PublishDate, so a datetime widget can edit it.  Empty while the Stream
+	// has no date, and past year 9999, which RFC 3339 cannot write.
 	case "publishDateTime":
 		if (stream.PublishDate <= 0) || (stream.PublishDate > maxPublishDateTime) {
 			return "", true

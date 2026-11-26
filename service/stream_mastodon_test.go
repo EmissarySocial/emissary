@@ -2,7 +2,6 @@ package service
 
 import (
 	"testing"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -19,7 +18,7 @@ func testStreamService() *Stream {
 	return &streamService
 }
 
-// TestStream_VisibilityCriteria_Owner verifies that a User sees every Stream they own
+// TestStream_VisibilityCriteria_Owner verifies that a User sees everything in their own outbox, and nothing else
 func TestStream_VisibilityCriteria_Owner(t *testing.T) {
 
 	streamService := testStreamService()
@@ -28,12 +27,12 @@ func TestStream_VisibilityCriteria_Owner(t *testing.T) {
 	authorization := model.NewAuthorization()
 	authorization.UserID = ownerID
 
-	// Owners see all of their own Streams, so no additional criteria apply
+	// Owners skip the permission test, but not the outbox flag
 	criteria := streamService.visibilityCriteria(authorization, ownerID)
-	require.Equal(t, exp.Expression(exp.All()), criteria)
+	requireOutboxPredicate(t, criteria)
 }
 
-// TestStream_VisibilityCriteria_DomainOwner verifies that a domain owner sees every Stream
+// TestStream_VisibilityCriteria_DomainOwner verifies that a domain owner sees everything in every outbox, and nothing else
 func TestStream_VisibilityCriteria_DomainOwner(t *testing.T) {
 
 	streamService := testStreamService()
@@ -43,12 +42,12 @@ func TestStream_VisibilityCriteria_DomainOwner(t *testing.T) {
 	authorization.UserID = primitive.NewObjectID()
 	authorization.DomainOwner = true
 
-	// Domain owners see every Stream, so no additional criteria apply
+	// Domain owners skip the permission test, but not the outbox flag
 	criteria := streamService.visibilityCriteria(authorization, ownerID)
-	require.Equal(t, exp.Expression(exp.All()), criteria)
+	requireOutboxPredicate(t, criteria)
 }
 
-// TestStream_VisibilityCriteria_OtherUser verifies that another User sees only the Streams their Groups allow
+// TestStream_VisibilityCriteria_OtherUser verifies that another User sees only the outbox Streams their Groups allow
 func TestStream_VisibilityCriteria_OtherUser(t *testing.T) {
 
 	streamService := testStreamService()
@@ -60,15 +59,10 @@ func TestStream_VisibilityCriteria_OtherUser(t *testing.T) {
 	authorization.UserID = callerID
 	authorization.GroupIDs = id.Slice{groupID}
 
-	before := time.Now().Unix()
 	criteria := streamService.visibilityCriteria(authorization, ownerID)
-	after := time.Now().Unix()
 
-	// Another authenticated user only sees published Streams shared with their groups
-	predicates := requirePublishedCriteria(t, criteria, before, after)
-
-	permissions, ok := predicates[2].Value.(model.Permissions)
-	require.True(t, ok, "defaultAllow value should be a model.Permissions slice")
+	// Another authenticated user only sees outbox Streams shared with their groups
+	permissions := requireSharedOutboxCriteria(t, criteria)
 	require.Contains(t, permissions, model.MagicGroupIDAnonymous)
 	require.Contains(t, permissions, model.MagicGroupIDAuthenticated)
 	require.Contains(t, permissions, callerID)
@@ -76,7 +70,7 @@ func TestStream_VisibilityCriteria_OtherUser(t *testing.T) {
 	require.NotContains(t, permissions, ownerID)
 }
 
-// TestStream_VisibilityCriteria_Anonymous verifies that an anonymous caller sees only public Streams
+// TestStream_VisibilityCriteria_Anonymous verifies that an anonymous caller sees only public outbox Streams
 func TestStream_VisibilityCriteria_Anonymous(t *testing.T) {
 
 	streamService := testStreamService()
@@ -84,61 +78,104 @@ func TestStream_VisibilityCriteria_Anonymous(t *testing.T) {
 
 	authorization := model.NewAuthorization()
 
-	before := time.Now().Unix()
 	criteria := streamService.visibilityCriteria(authorization, ownerID)
-	after := time.Now().Unix()
 
-	// Anonymous callers only see published Streams shared with the anonymous group
-	predicates := requirePublishedCriteria(t, criteria, before, after)
-
-	permissions, ok := predicates[2].Value.(model.Permissions)
-	require.True(t, ok, "defaultAllow value should be a model.Permissions slice")
+	// Anonymous callers only see outbox Streams shared with the anonymous group
+	permissions := requireSharedOutboxCriteria(t, criteria)
 	require.Equal(t, model.Permissions{model.MagicGroupIDAnonymous}, permissions)
 }
 
-// requirePublishedCriteria asserts that criteria is the three-predicate expression
-// (publishDate, unpublishDate, defaultAllow) used for non-owner callers, and returns
-// the predicates for further inspection.
-func requirePublishedCriteria(t *testing.T, criteria exp.Expression, before int64, after int64) []exp.Predicate {
+// TestStream_VisibilityCriteria_NeverReadsTheDates verifies that no caller's criteria names a publish date
+func TestStream_VisibilityCriteria_NeverReadsTheDates(t *testing.T) {
 
-	t.Helper()
+	streamService := testStreamService()
+	ownerID := primitive.NewObjectID()
 
-	andExpression, ok := criteria.(exp.AndExpression)
-	require.True(t, ok, "criteria should be an exp.AndExpression")
-	require.Len(t, andExpression, 3)
+	owner := model.NewAuthorization()
+	owner.UserID = ownerID
 
-	predicates := make([]exp.Predicate, len(andExpression))
+	domainOwner := model.NewAuthorization()
+	domainOwner.DomainOwner = true
 
-	for index, expression := range andExpression {
-		predicate, ok := expression.(exp.Predicate)
-		require.True(t, ok, "each sub-expression should be an exp.Predicate")
-		predicates[index] = predicate
+	for name, authorization := range map[string]model.Authorization{
+		"owner":        owner,
+		"domain owner": domainOwner,
+		"anonymous":    model.NewAuthorization(),
+	} {
+		for _, predicate := range flattenPredicates(t, streamService.visibilityCriteria(authorization, ownerID)) {
+			require.NotEqual(t, "publishDate", predicate.Field, name)
+			require.NotEqual(t, "unpublishDate", predicate.Field, name)
+		}
 	}
-
-	// The Stream must currently be published...
-	require.Equal(t, "publishDate", predicates[0].Field)
-	require.Equal(t, exp.OperatorLessThan, predicates[0].Operator)
-	requireTimestampBetween(t, before, after, predicates[0].Value)
-
-	// ...and not yet un-published...
-	require.Equal(t, "unpublishDate", predicates[1].Field)
-	require.Equal(t, exp.OperatorGreaterThan, predicates[1].Operator)
-	requireTimestampBetween(t, before, after, predicates[1].Value)
-
-	// ...and shared with the caller
-	require.Equal(t, "defaultAllow", predicates[2].Field)
-	require.Equal(t, exp.OperatorIn, predicates[2].Operator)
-
-	return predicates
 }
 
-// requireTimestampBetween asserts that value is an int64 Unix timestamp inside [before, after].
-func requireTimestampBetween(t *testing.T, before int64, after int64, value any) {
+// TestUserPostsCriteria verifies that a User's posts are the Streams attributed to them
+func TestUserPostsCriteria(t *testing.T) {
+
+	ownerID := primitive.NewObjectID()
+
+	predicates := flattenPredicates(t, userPostsCriteria(ownerID))
+	require.Len(t, predicates, 1)
+	require.Equal(t, "attributedTo.userId", predicates[0].Field)
+	require.Equal(t, exp.OperatorEqual, predicates[0].Operator)
+	require.Equal(t, ownerID, predicates[0].Value)
+}
+
+// requireOutboxPredicate asserts that criteria tests the outbox flag and nothing else
+func requireOutboxPredicate(t *testing.T, criteria exp.Expression) {
 
 	t.Helper()
 
-	timestamp, ok := value.(int64)
-	require.True(t, ok, "timestamp should be an int64")
-	require.GreaterOrEqual(t, timestamp, before)
-	require.LessOrEqual(t, timestamp, after)
+	predicates := flattenPredicates(t, criteria)
+	require.Len(t, predicates, 1)
+	require.Equal(t, "isOutbox", predicates[0].Field)
+	require.Equal(t, exp.OperatorEqual, predicates[0].Operator)
+	require.Equal(t, true, predicates[0].Value)
+}
+
+// requireSharedOutboxCriteria asserts that criteria tests the outbox flag and then the
+// caller's permissions, and returns those permissions
+func requireSharedOutboxCriteria(t *testing.T, criteria exp.Expression) model.Permissions {
+
+	t.Helper()
+
+	predicates := flattenPredicates(t, criteria)
+	require.Len(t, predicates, 2)
+
+	// The Stream must be in the outbox...
+	require.Equal(t, "isOutbox", predicates[0].Field)
+	require.Equal(t, exp.OperatorEqual, predicates[0].Operator)
+	require.Equal(t, true, predicates[0].Value)
+
+	// ...and shared with the caller
+	require.Equal(t, "defaultAllow", predicates[1].Field)
+	require.Equal(t, exp.OperatorIn, predicates[1].Operator)
+
+	permissions, ok := predicates[1].Value.(model.Permissions)
+	require.True(t, ok, "defaultAllow value should be a model.Permissions slice")
+
+	return permissions
+}
+
+// flattenPredicates returns the predicates of a criteria that is one predicate, or an AND of them
+func flattenPredicates(t *testing.T, criteria exp.Expression) []exp.Predicate {
+
+	t.Helper()
+
+	if predicate, ok := criteria.(exp.Predicate); ok {
+		return []exp.Predicate{predicate}
+	}
+
+	andExpression, ok := criteria.(exp.AndExpression)
+	require.True(t, ok, "criteria should be an exp.Predicate or an exp.AndExpression")
+
+	result := make([]exp.Predicate, 0, len(andExpression))
+
+	for _, expression := range andExpression {
+		predicate, ok := expression.(exp.Predicate)
+		require.True(t, ok, "each sub-expression should be an exp.Predicate")
+		result = append(result, predicate)
+	}
+
+	return result
 }

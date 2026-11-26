@@ -430,6 +430,9 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 		// RULE: Every default child must be one that can be created, or every new User or Stream of this Template fails to save
 		errors.Append(service.invalidDefaultChildren(&template)...)
 
+		// RULE: Only a Stream can be sent to followers, so the flag on any other Template would silently do nothing
+		errors.Append(invalidOutboxStates(&template)...)
+
 		// RULE: No action may include itself, directly or through others, or its first request overflows the stack
 		errors.Append(includeCycles(&template)...)
 
@@ -745,6 +748,38 @@ func (service *Template) invalidDefaultChildren(template *model.Template) []derp
 				derp.WithWrappedValue(err),
 			))
 		}
+	}
+
+	return result
+}
+
+// invalidOutboxStates returns one error for each State that sets "outbox" in a Template that does not
+// build a Stream, ordered by StateID.
+func invalidOutboxStates(template *model.Template) []derp.Error {
+
+	result := make([]derp.Error, 0)
+
+	// A Stream Template may send any of its States to followers
+	if _, isStream := template.NewObject().(*model.Stream); isStream {
+		return result
+	}
+
+	// Sort the States, so that the errors read the same on every load
+	stateIDs := template.States.Keys()
+	slices.Sort(stateIDs)
+
+	for _, stateID := range stateIDs {
+
+		if !template.States[stateID].IsOutbox {
+			continue
+		}
+
+		result = append(result, derp.Validation(
+			"Only a Stream Template can set 'outbox' on a State",
+			"template: "+template.TemplateID,
+			"model: "+template.Model,
+			"state: "+stateID,
+		))
 	}
 
 	return result

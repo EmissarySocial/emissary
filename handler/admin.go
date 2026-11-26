@@ -143,17 +143,6 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, sess
 
 		return build.NewUser(factory, session, ctx.Request(), ctx.Response(), template, &user, actionID)
 
-	case "Webhook":
-		webhook := model.NewWebhook()
-
-		if !objectID.IsZero() {
-			if err := factory.Webhook().LoadByID(session, objectID, &webhook); err != nil {
-				return nil, derp.Wrap(err, location, "Loading Webhook", objectID)
-			}
-		}
-
-		return build.NewWebhook(factory, session, ctx.Request(), ctx.Response(), template, &webhook, actionID)
-
 	default:
 		return nil, derp.NotFound(location, "Template MODEL must be one of: 'Rule', 'Domain', 'Syndication', 'Group', 'Stream', 'Tag', or 'User'", template.Model)
 	}

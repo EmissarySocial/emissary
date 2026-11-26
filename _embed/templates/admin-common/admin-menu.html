@@ -7,4 +7,4 @@
 <a href="/admin/rules/index" hx-boost="true" class="turboclick menu-item ellipsis {{if eq . `rules`}}selected{{end}}">{{icon "filter"}} Rules</a>
 <a href="/admin/users/index" hx-boost="true" class="turboclick menu-item ellipsis {{if in . `users` `groups`}}selected{{end}}">{{icon "people"}} People</a>
 <a href="/admin/tags/index" hx-boost="true" class="turboclick menu-item ellipsis {{if in . `search` `followers` `following` `tags`}}selected{{end}}">{{icon "search"}} Search</a>
-<a href="/admin/connections/index" hx-boost="true" class="turboclick menu-item ellipsis {{if in . `connections` `mls` `webhooks` `syndication` `sso`}}selected{{end}}">{{icon "cloud"}} External</a>
+<a href="/admin/connections/index" hx-boost="true" class="turboclick menu-item ellipsis {{if in . `connections` `mls` `syndication` `sso`}}selected{{end}}">{{icon "cloud"}} External</a>

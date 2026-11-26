@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/benpate/uri"
@@ -22,7 +23,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 	streamService := factory.Stream()
 
 	// Get a RangeFunc containing all Streams in the database
-	streams, err := streamService.RangePublished(session)
+	streams, err := streamService.Range(session, exp.All())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Retrieving Streams")

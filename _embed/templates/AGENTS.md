@@ -165,6 +165,18 @@ The Outbox builder validates against `model.UserSchemaForTemplate`, which is `Us
 
 `hx-vals` holds JSON inside an HTML attribute. `html/template` escapes a value there for HTML only, so a `"` becomes `&#34;`, the browser decodes it back, and htmx parses JSON in which the value has closed its own string. A remote post whose ID held `","type":"Announce","url":"…` turned a reader's Like into a Boost of a URL the sender chose (found 2026-11-10). Put the value in the link, as `?url={{$url | urlquery}}`, and keep `hx-vals` to constants. `set-response` reads `url` from the link or the body. `TestTemplates_NoFederatedValueInHxVals` checks the folders that draw federated content.
 
+## A state's `outbox` flag decides what followers are sent, and no step does
+
+A Stream is sent to its author's followers while it sits in a state that sets `outbox: true`. Emissary copies the flag onto the Stream when its state changes, and a background task then sends a Create, an Update, or a Delete (emissary-specs PUBLICATION, and [service/AGENTS.md](../../service/AGENTS.md)). Five rules follow for a Template.
+
+- **`save-and-publish`, `unpublish`, and `delete` take no `outbox` attribute.** One written there is ignored. `save-and-publish` and `unpublish` only move the Stream to a state and save it, and `delete` sends a Delete for any Stream that followers hold, so no action runs `unpublish` before `delete`.
+- **Every save of a Stream in a flagged state can send an Update,** a plain `save` step included, whenever what followers see has changed.
+- **A state that redeclares its parent's takes none of the parent's flags.** `stream-outbox-reply` sets `outbox: true` on its own `default` for that reason.
+- **A state that anyone may view is a published state.** No publish date hides a Stream any more, so a state whose `view` roles include `anonymous` must mean "finished".
+- **A page that is on the site and not sent gets no flag.** An article is one. It has no publish date, `.IsPublished` is false for it, and it is left out of the Mastodon API's lists. Never gate something such a page needs on `.IsPublished`.
+
+`tests/outboxStates_test.go` pins the list of flagged states. Editing a flag moves no existing Stream: each keeps its flag until its state next changes.
+
 ## Bump `?v=` when a global bundle changes
 
 The global stylesheet, JavaScript, and hyperscript bundles are served for an hour (`model.Bundle.GetCacheControl`), and a rolling deploy serves old and new pages side by side. A page that pairs a new bundle with a cached old one breaks without an error: the new JavaScript calls a hyperscript function the old bundle no longer has. So every theme's `includes-head.html` and `includes-foot.html` put one `?v=` number on all three, and a release that changes any file under `theme-global/stylesheet`, `javascript`, or `hyperscript` raises it in the same commit. Themes in other repositories carry their own copy of the number.

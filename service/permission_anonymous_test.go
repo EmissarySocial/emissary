@@ -51,7 +51,7 @@ func anonymousTemplate(t *testing.T, actionID string, states []string, roles ...
 // publishedStream builds a Stream in the "published" state with no group, circle, or product grants
 func publishedStream() model.Stream {
 	stream := model.NewStream()
-	stream.StateID = "published"
+	stream.StateID.Set("published")
 	return stream
 }
 
@@ -140,7 +140,7 @@ func TestUserCan_Anonymous_StillHonorsStates(t *testing.T) {
 
 	// The SAME action, on a Stream in an undeclared state, is refused
 	draft := model.NewStream()
-	draft.StateID = "default"
+	draft.StateID.Set("default")
 	allowed, err = permissionService.UserCan(nil, &authorization, &template, &draft, "submit")
 	require.Nil(t, err)
 	require.False(t, allowed, "an anonymous action must NOT run in a state it does not declare")

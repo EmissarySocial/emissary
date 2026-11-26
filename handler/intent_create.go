@@ -91,8 +91,8 @@ func PostIntent_Create(ctx *steranko.Context, factory *service.Factory, session 
 	stream.InReplyTo = transaction.InReplyTo
 	stream.Content = model.NewHTMLContent(transaction.Content)
 
-	// Save the new Stream to the database
-	if err := streamService.Publish(session, user, &stream, "published", true, false); err != nil {
+	// Save the new Stream into its published state, which is what sends it to followers
+	if err := streamService.Publish(session, user, &stream, "published", false); err != nil {
 		return derp.Wrap(err, location, "Publishing stream")
 	}
 

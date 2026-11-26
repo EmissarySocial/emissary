@@ -1,9 +1,7 @@
 package service
 
 import (
-	"math"
 	"slices"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -13,90 +11,49 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /******************************************
  * Publish Methods
  ******************************************/
 
-// Publish marks this stream as "published"
-func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, outbox bool, republish bool) error {
+// Publish moves this Stream into the provided state, with the User as its author.  The save
+// dates the Stream when the state puts it in the outbox for the first time.
+// The save queues the outbox task, which is what sends to followers and syndication targets.
+func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, republish bool) error {
 
 	const location = "service.Stream.Publish"
-
-	// Read before the Stream is changed and saved below, which would make every Stream look published
-	wasPublished := stream.IsPublished() // nolint:scopeguard (must be read before the Stream changes)
-
-	// RULE: IF this stream is not yet published, then set the publish date
-	if (stream.PublishDate > time.Now().Unix()) || (stream.StateID != stateID) {
-		stream.PublishDate = time.Now().Unix()
-	}
-
-	// RULE: Move unpublish date all the way to the end of time.
-	// TODO: LOW: May want to set automatic unpublish dates later...
-	stream.UnPublishDate = math.MaxInt64
 
 	// RULE: Set Author to the currently logged in user.
 	stream.SetAttributedTo(user.PersonLink())
 
 	// RULE: Set the new state ID
-	stream.StateID = stateID
+	stream.StateID.Set(stateID)
+
+	// RULE: `republish` asks the outbox task to send every syndication target again,
+	// even when followers are already up to date
+	mode := outboxModeQueue
+
+	if republish {
+		mode = outboxModeRepublish
+	}
 
 	// Re-save the Stream with the updated values.
-	if err := service.Save(session, stream, "Publishing"); err != nil {
-		return derp.Wrap(err, location, "Saving stream", stream)
-	}
-
-	// Publish to user/stream outboxes
-	if outbox {
-		if err := service.publish_outbox(session, user, stream); err != nil {
-			return derp.Wrap(err, location, "Publishing to outbox", stream)
-		}
-	}
-
-	// Send stream:publish Webhooks
-	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
-
-	// Send syndication messages to all targets
-	switch {
-
-	// If the stream is being published for the first time, then only send "Create" activities
-	case !wasPublished:
-		if err := service.sendSyndicationMessages(session, stream, stream.Syndication.Values, nil, nil); err != nil {
-			return derp.Wrap(err, location, "Sending syndication messages", stream)
-		}
-
-	// If the syndication settings have been changed (or is being republished) then send "Update" activities
-	case stream.Syndication.IsChanged() || republish:
-
-		if err := service.sendSyndicationMessages(session, stream, stream.Syndication.Added, stream.Syndication.Unchanged(), stream.Syndication.Deleted); err != nil {
-			return derp.Wrap(err, location, "Sending syndication messages", stream)
-		}
+	if err := service.save(session, stream, "Publishing", mode); err != nil {
+		return derp.Wrap(err, location, "Saving stream", stream.StreamID)
 	}
 
 	return nil
 }
 
-// publish_outbox sends a Create (or Update) activity for the Stream to its author's Outbox
-func (service *Stream) publish_outbox(session data.Session, user *model.User, stream *model.Stream) error {
+// publish_outbox sends the Stream's object to its author's Outbox, as the provided Create or Update
+func (service *Stream) publish_outbox(session data.Session, user *model.User, stream *model.Stream, activityType string, object mapof.Any) error {
 
 	const location = "service.Stream.publish_outbox"
-
-	// Build the object, addressed to everyone who receives it. @mentions were already extracted and
-	// resolved by Stream.Save (CalculateMentions), so the object arrives fully tagged.
-	object := service.addressedJSONLD(session, stream)
 
 	// Save the object to the ActivityStream cache
 	if err := service.activityService.Save(streams.NewDocument(object)); err != nil {
 		return derp.Wrap(err, location, "Saving object to ActivityStream cache", object)
-	}
-
-	// Send a Create the first time, and an Update after that
-	activityType, err := service.outboxActivityType(session, user.UserID, stream.URL)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Choosing the activity type", stream.URL)
 	}
 
 	// Create the Activity to send to Followers.
@@ -129,42 +86,21 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 	return nil
 }
 
-// addressedJSONLD returns the Stream's JSON-LD with the author of the post it replies to added to `cc`
-func (service *Stream) addressedJSONLD(session data.Session, stream *model.Stream) mapof.Any {
-
-	object := service.JSONLD(session, stream)
+// addReplyAuthor adds the author of the post that the Stream replies to into the `cc` of its object
+func (service *Stream) addReplyAuthor(stream *model.Stream, object mapof.Any) {
 
 	// RULE: A reply must reach the AUTHOR of the post it replies to, so they receive it (and a Reply
 	// notification) even when they do not follow the replier. JSONLD leaves this out because finding
 	// the author can mean a fetch, and JSONLD also serves every page view.
-	if authorURL := service.inReplyToAuthorURL(stream); authorURL != "" {
-		if cc := object.GetSliceOfString(vocab.PropertyCC); !slices.Contains(cc, authorURL) {
-			object[vocab.PropertyCC] = append(cc, authorURL)
-		}
+	authorURL := service.inReplyToAuthorURL(stream)
+
+	if authorURL == "" {
+		return
 	}
 
-	return object
-}
-
-// outboxActivityType returns Update when the author's outbox already publishes the object, and Create otherwise
-func (service *Stream) outboxActivityType(session data.Session, authorID primitive.ObjectID, objectURL string) (string, error) {
-
-	const location = "service.Stream.outboxActivityType"
-
-	// RULE: An object's first arrival in the author's outbox is a Create, and every later one is an
-	// Update (FUNKWHALE §1.5). Asking the outbox, not the Stream, also covers a Stream that was
-	// published without being sent, and one whose Create was removed when it was unpublished.
-	federated, err := service.isFederated(session, authorID, objectURL)
-
-	if err != nil {
-		return "", derp.Wrap(err, location, "Checking the author's outbox", objectURL)
+	if cc := object.GetSliceOfString(vocab.PropertyCC); !slices.Contains(cc, authorURL) {
+		object[vocab.PropertyCC] = append(cc, authorURL)
 	}
-
-	if federated {
-		return vocab.ActivityTypeUpdate, nil
-	}
-
-	return vocab.ActivityTypeCreate, nil
 }
 
 // publish_outbox_user publishes this stream to the User's outbox

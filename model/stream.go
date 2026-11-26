@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"math"
 	"net/url"
 	"regexp"
 	"time"
@@ -11,9 +10,9 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/delta"
 	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/delta"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
@@ -31,7 +30,7 @@ type Stream struct {
 	NavigationID     string                  `json:"navigationId,omitzero"     bson:"navigationId"`           // Unique identifier of the "top-level" Stream that this record falls within.
 	TemplateID       string                  `json:"templateId,omitzero"       bson:"templateId"`             // Unique identifier (name) of the Template to use when building this Stream in HTML.
 	ParentTemplateID string                  `json:"parentTemplateId,omitzero" bson:"parentTemplateId"`       // Unique identifier (name) of the parent's Template.
-	StateID          string                  `json:"stateId,omitzero"          bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
+	StateID          delta.String            `json:"stateId,omitzero"          bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	SocialRole       string                  `json:"socialRole,omitzero"       bson:"socialRole,omitempty"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
 	Groups           mapof.Object[id.Slice]  `json:"groups,omitzero"           bson:"groups,omitempty"`       // Groups maps roles into GroupIDs for this Stream.  This is used to determine access rights for the Stream.
 	Circles          mapof.Object[id.Slice]  `json:"circles,omitzero"          bson:"circles,omitempty"`      // Circles maps roles into CircleIDs for this Stream.  This is used to determine access rights for the Stream.
@@ -39,7 +38,7 @@ type Stream struct {
 	PrivilegeIDs     Permissions             `json:"privilegeIds,omitzero"     bson:"privilegeIds,omitempty"` // List of ALL Privilege IDs that grant ANY permissions to this Stream (denormalized from the Products and Circles maps)
 	DefaultAllow     Permissions             `json:"defaultAllow,omitzero"     bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	URL              string                  `json:"url,omitzero"              bson:"url,omitempty"`          // URL of the original document
-	Token            string                  `json:"token,omitzero"            bson:"token,omitempty"`        // Unique value that identifies this element in the URL
+	Token            delta.String            `json:"token,omitzero"            bson:"token,omitempty"`        // Unique value that identifies this element in the URL
 	Label            string                  `json:"label,omitzero"            bson:"label,omitempty"`        // Label/Title of the document
 	Summary          string                  `json:"summary,omitzero"          bson:"summary,omitempty"`      // Brief summary of the document
 	Icon             string                  `json:"icon,omitzero"             bson:"icon,omitempty"`         // Icon CSS/Token for the document
@@ -58,8 +57,7 @@ type Stream struct {
 	Syndication      delta.Slice[string]     `json:"syndication,omitzero"      bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
 	MovedTo          string                  `json:"movedTo"                   bson:"movedTo,omitempty"`      // If present, then this stream has been moved to a new location.
 	Shuffle          int64                   `json:"shuffle,omitzero"          bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
-	PublishDate      int64                   `json:"publishDate,omitzero"      bson:"publishDate"`            // Unix epoch SECONDS when this document is/was/will be first available on the domain (0 = unpublished; math.MaxInt64 = not yet scheduled).
-	UnPublishDate    int64                   `json:"unpublishDate,omitzero"    bson:"unpublishDate"`          // Unix epoch SECONDS when this document will no longer be available on the domain (math.MaxInt64 = never).
+	PublishDate      int64                   `json:"publishDate,omitzero"      bson:"publishDate"`            // Unix epoch SECONDS when this document is/was/will be first available on the domain (0 = never entered the outbox).
 	EditDate         int64                   `json:"editDate,omitzero"         bson:"editDate,omitempty"`     // Unix epoch SECONDS when the author last edited this document after publishing it (0 = never edited).
 	IsFeatured       bool                    `json:"isFeatured,omitzero"       bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `json:"isSubscribable,omitzero"   bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
@@ -68,6 +66,10 @@ type Stream struct {
 	LikeCount        int                     `json:"likeCount"                 bson:"likeCount"`              // Denormalized count of "Like" responses to this Stream (maintained by the Response service).
 	DislikeCount     int                     `json:"dislikeCount"              bson:"dislikeCount"`           // Denormalized count of "Dislike" responses to this Stream (maintained by the Response service).
 	ShareCount       int                     `json:"shareCount"                bson:"shareCount"`             // Denormalized count of "Announce" (share) responses to this Stream (maintained by the Response service).
+
+	// Outbox fields are written by the Stream service alone.  No form can set them.
+	IsOutbox    delta.Bool   `json:"isOutbox,omitzero" bson:"isOutbox"`              // TRUE if this Stream is sent to its author's followers.  Copied from the "outbox" flag of its Template's State.
+	Fingerprint delta.String `json:"-"                 bson:"fingerprint,omitempty"` // Hash of the JSON-LD that followers last received.  Empty when followers hold nothing.
 
 	// Deprecated: Permissions maps UserIDs/GroupIDs into Roles for this Stream.
 	// Permissions mapof.Object[sliceof.String] `json:"" bson:"permissions,omitempty"`
@@ -81,24 +83,22 @@ func NewStream() Stream {
 	streamID := primitive.NewObjectID()
 
 	return Stream{
-		StreamID:      streamID,
-		Token:         streamID.Hex(),
-		ParentID:      primitive.NilObjectID,
-		ParentIDs:     id.NewSlice(),
-		StateID:       "default",
-		Groups:        mapof.NewObject[id.Slice](),
-		Circles:       mapof.NewObject[id.Slice](),
-		Products:      mapof.NewObject[id.Slice](),
-		Location:      geo.NewAddress(),
-		DefaultAllow:  NewPermissions(),
-		PrivilegeIDs:  NewPermissions(),
-		Widgets:       NewStreamWidgets(),
-		Data:          mapof.NewAny(),
-		Hashtags:      sliceof.NewString(),
-		Tags:          NewTagList(),
-		PublishDate:   math.MaxInt64,
-		UnPublishDate: math.MaxInt64,
-		Syndication:   delta.NewSlice[string](),
+		StreamID:     streamID,
+		Token:        delta.NewString(streamID.Hex()),
+		ParentID:     primitive.NilObjectID,
+		ParentIDs:    id.NewSlice(),
+		StateID:      delta.NewString("default"),
+		Groups:       mapof.NewObject[id.Slice](),
+		Circles:      mapof.NewObject[id.Slice](),
+		Products:     mapof.NewObject[id.Slice](),
+		Location:     geo.NewAddress(),
+		DefaultAllow: NewPermissions(),
+		PrivilegeIDs: NewPermissions(),
+		Widgets:      NewStreamWidgets(),
+		Data:         mapof.NewAny(),
+		Hashtags:     sliceof.NewString(),
+		Tags:         NewTagList(),
+		Syndication:  delta.NewSlice[string](),
 	}
 }
 
@@ -180,7 +180,17 @@ func (stream Stream) GetSort(fieldName string) any {
 // SetState moves this Stream into a different workflow state
 // It is part of the StateSetter interface
 func (stream *Stream) SetState(stateID string) {
-	stream.StateID = stateID
+	stream.StateID.Set(stateID)
+}
+
+// MarkSaved records the Stream's tracked values as the ones the database holds,
+// so that the next save compares against them
+func (stream *Stream) MarkSaved() {
+	stream.StateID.Reset()
+	stream.Token.Reset()
+	stream.IsOutbox.Reset()
+	stream.Fingerprint.Reset()
+	stream.Syndication.Reset()
 }
 
 /******************************************
@@ -190,7 +200,7 @@ func (stream *Stream) SetState(stateID string) {
 // State returns the current state of this Stream.
 // It is part of the AccessLister interface
 func (stream Stream) State() string {
-	return stream.StateID
+	return stream.StateID.Value()
 }
 
 // IsAuthor returns TRUE if the provided UserID the author of this Stream
@@ -442,8 +452,8 @@ var handlePattern = regexp.MustCompile(`^[A-Za-z0-9_]+([.-]+[A-Za-z0-9_]+)*$`)
 func (stream Stream) ActivityPubUsername() string {
 
 	// RULE: A token outside Mastodon's username grammar would make every remote server reject the actor
-	if handlePattern.MatchString(stream.Token) {
-		return stream.Token
+	if handlePattern.MatchString(stream.Token.Value()) {
+		return stream.Token.Value()
 	}
 
 	return stream.StreamID.Hex()
@@ -523,7 +533,7 @@ func (stream Stream) ActivityPubSharesURL() string {
  * Publishing MetaData
  ******************************************/
 
-// IsPublished returns TRUE if this Stream is currently published
+// IsPublished returns TRUE if this Stream is in the outbox, which means it is sent to its author's followers
 func (stream Stream) IsPublished() bool {
 
 	// RULE: Deleted streams are not published
@@ -531,9 +541,7 @@ func (stream Stream) IsPublished() bool {
 		return false
 	}
 
-	// Otherwise, check that "now" is in between the Publish and UnPublish dates
-	now := time.Now().Unix()
-	return (stream.PublishDate <= now) && (stream.UnPublishDate > now)
+	return stream.IsOutbox.Value()
 }
 
 /******************************************
@@ -569,6 +577,17 @@ func (stream Stream) Toot(host string) object.Status {
 		ReblogsCount:    stream.ShareCount,
 		RepliesCount:    stream.ReplyCount,
 	}
+}
+
+// tootDate returns the date (Unix seconds) that a Mastodon client shows for this Stream:
+// its publish date, or its create date when it has never been published.
+func (stream Stream) tootDate() int64 {
+
+	if stream.PublishDate > 0 {
+		return stream.PublishDate
+	}
+
+	return stream.CreateDate / 1000
 }
 
 // GetRank returns this Stream's sort order within its parent
@@ -640,12 +659,11 @@ func (stream Stream) ActorLink() PersonLink {
 }
 
 /******************************************
- * Webhook Interface
+ * Syndication
  ******************************************/
 
-// GetWebhookData returns the data for this
-// Stream that will be sent to a webhook
-func (stream Stream) GetWebhookData() mapof.Any {
+// SyndicationData returns the summary of this Stream that is sent to each syndication target
+func (stream Stream) SyndicationData() mapof.Any {
 	return mapof.Any{
 		"streamId":     stream.StreamID.Hex(),
 		"url":          stream.URL,
@@ -715,8 +733,9 @@ func (stream *Stream) Update(other Stream) {
 	stream.Data = other.Data
 	stream.Syndication = other.Syndication
 	stream.PublishDate = other.PublishDate
-	stream.UnPublishDate = other.UnPublishDate
 	stream.IsFeatured = other.IsFeatured
+	stream.IsOutbox = other.IsOutbox
+	stream.Fingerprint = other.Fingerprint
 	stream.ReplyPolicy = other.ReplyPolicy
 	stream.Journal = other.Journal
 }

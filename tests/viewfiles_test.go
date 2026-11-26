@@ -15,7 +15,6 @@ import (
 // lacks, with the bug each waits on. A fixed one must leave the list.
 var knownMissingViewFiles = map[string]string{
 	"admin-navigation/view":                    "BUG-346",
-	"admin-webhooks/list":                      "BUG-346",
 	"user-settings/merchantAccounts":           "BUG-346",
 	"user-settings/merchantAccounts-list":      "BUG-346",
 	"atlas-search/view-suggestions":            "BUG-346",

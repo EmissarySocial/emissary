@@ -1,13 +1,10 @@
 package service
 
 import (
-	"time"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/vocab"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,19 +12,13 @@ import (
  * Mastodon API
  ******************************************/
 
-// userPostsCriteria selects a User's own posts: the Streams in their outbox (stored with the User
-// as "parentId", see PostStatus), plus the published articles they wrote elsewhere on the site.
+// userPostsCriteria selects the Streams attributed to a User. Every list adds visibilityCriteria,
+// which keeps only the ones in the outbox.
 func userPostsCriteria(ownerID primitive.ObjectID) exp.Expression {
-
-	return exp.Or(
-		exp.Equal("parentId", ownerID),
-		exp.Equal("attributedTo.userId", ownerID).
-			AndEqual("socialRole", vocab.ObjectTypeArticle).
-			AndEqual("stateId", "published"),
-	)
+	return exp.Equal("attributedTo.userId", ownerID)
 }
 
-// QueryByUser returns the Streams owned by the designated User that the
+// QueryByUser returns the Streams in the designated User's outbox that the
 // caller (identified by the Authorization) is allowed to view.
 func (service *Stream) QueryByUser(session data.Session, authorization model.Authorization, ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
 
@@ -127,7 +118,7 @@ func (service *Stream) QueryPublic(session data.Session, authorization model.Aut
 func (service *Stream) QueryByHashtag(session data.Session, authorization model.Authorization, names []string, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
 
 	// RULE: the same visibility rule as QueryByUser, with no single owner -- an anonymous
-	// or ordinary caller sees only published, shared posts.
+	// or ordinary caller sees only posts in the outbox that are shared with them.
 	criteria = exp.And(
 		criteria,
 		exp.In("tags.name", names),
@@ -156,28 +147,27 @@ func (service *Stream) QueryReplies(session data.Session, authorization model.Au
 	return service.Query(session, criteria, options...)
 }
 
-// visibilityCriteria returns an expression that restricts a Stream query to the
-// records that the caller is allowed to view: owners and domain owners see all of
-// the owner's Streams, while everyone else sees only published, shared Streams.
+// visibilityCriteria returns an expression that restricts a Stream query to the records a
+// Mastodon client may list: Streams in the outbox, which the caller is allowed to view.
 func (service *Stream) visibilityCriteria(authorization model.Authorization, ownerID primitive.ObjectID) exp.Expression {
 
-	// RULE: Owners can always see their own Streams, published or not
+	// RULE: Every caller sees only Streams that are in the outbox. A Mastodon client
+	// has no place for a draft, so the owner's own drafts are left out too.
+	result := exp.Equal("isOutbox", true)
+
+	// RULE: Owners can see everything in their own outbox
 	if authorization.IsAuthenticated() {
 		if authorization.UserID == ownerID {
-			return exp.All()
+			return result
 		}
 	}
 
-	// RULE: Domain owners can see every Stream on the domain
+	// RULE: Domain owners can see everything in every outbox
 	if authorization.DomainOwner {
-		return exp.All()
+		return result
 	}
 
-	// RULE: Everyone else sees only Streams that are currently published...
-	now := time.Now().Unix()
-	result := exp.LessThan("publishDate", now).AndGreaterThan("unpublishDate", now)
-
-	// RULE: ...and shared with a group in the caller's permission list.
+	// RULE: Everyone else sees only Streams shared with a group in their permission list.
 	// Mastodon API calls carry no guest Identity, so guest privileges are not included.
 	permissions := service.permissionService.Permissions(&authorization, nil)
 	return result.AndIn("defaultAllow", permissions)

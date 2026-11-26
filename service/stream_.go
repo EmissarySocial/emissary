@@ -19,13 +19,13 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/delta"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/delta"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -64,7 +64,6 @@ type Stream struct {
 	followerService       *Follower
 	ruleService           *Rule
 	userService           *User
-	webhookService        *Webhook
 	host                  string
 	mediaserver           mediaserver.MediaServer
 	queue                 *queue.Queue
@@ -107,7 +106,6 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.streamSourceService = factory.StreamSource()
 	service.templateService = factory.Template()
 	service.userService = factory.User()
-	service.webhookService = factory.Webhook()
 	service.mediaserver = factory.MediaServer()
 	service.queue = factory.Queue()
 	service.newSession = factory.Session
@@ -160,7 +158,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 
 		// Place the Stream beneath its parent, when the theme names one
 		if err := service.setStartupParent(&stream, data.GetString(startupParentToken), created); err != nil {
-			return derp.Wrap(err, location, "Placing startup stream", stream.Token)
+			return derp.Wrap(err, location, "Placing startup stream", stream.Token.Value())
 		}
 
 		// Save the new Stream to the database.  Save is the single validation gate: it
@@ -172,7 +170,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 			return derp.Wrap(err, location, "Saving startup stream", stream)
 		}
 
-		created[stream.Token] = stream
+		created[stream.Token.Value()] = stream
 	}
 
 	return nil
@@ -181,7 +179,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 // newStartupStream builds a single published Stream from one theme.StartupStreams
 // entry.  It is separated from Startup so the schema-application step -- the part that
 // silently failed for every startup stream -- can be exercised directly by tests without
-// a database, template registry, or webhook service.  The returned Stream is NOT yet
+// a database or template registry.  The returned Stream is NOT yet
 // normalized or persisted; Startup passes it to Save, which is the single validation gate.
 func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 
@@ -206,9 +204,6 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 		return stream, derp.Wrap(err, location, "Setting stream data", values)
 	}
 
-	// Set this Stream as "Published"
-	stream.PublishDate = 0
-
 	// If we have default content, then add that too.
 	if content, ok := data["content"].(model.Content); ok {
 		stream.Content = content
@@ -231,7 +226,7 @@ func (service *Stream) setStartupParent(stream *model.Stream, parentToken string
 	parent, exists := created[parentToken]
 
 	if !exists {
-		return derp.Internal(location, "Startup stream names a parent that is not listed before it", stream.Token, parentToken)
+		return derp.Internal(location, "Startup stream names a parent that is not listed before it", stream.Token.Value(), parentToken)
 	}
 
 	// A top-level startup Stream has no NavigationID of its own, so its children take its ID
@@ -399,7 +394,7 @@ func (service *Stream) newDefaultChild(entry mapof.Any) (model.Stream, model.Tem
 // New returns a new Stream that uses the named template.
 func (service *Stream) New() model.Stream {
 	result := model.NewStream()
-	result.URL = service.host + "/" + result.Token
+	result.URL = service.host + "/" + result.Token.Value()
 	return result
 }
 
@@ -530,30 +525,15 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 
 	const location = "service.Stream.Delete"
 
-	// RULE: Read the published state first.  Deleting marks the Stream deleted, which IsPublished
-	// then reports as unpublished, so a check after the delete can never pass (BUG-241).
-	wasPublished := stream.IsPublished() //nolint:scopeguard // must be read before the delete below
-
 	// Delete this Stream
 	if err := service.collection(session).Delete(stream, note); err != nil {
 		return derp.Wrap(err, location, "Deleting Stream from database", stream, note)
 	}
 
-	// Send Webhooks (if configured)
-	service.webhookService.Send(stream, model.WebhookEventStreamDelete)
-
-	if wasPublished {
-		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
-
-		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
-			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
-		}
-	}
-
-	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259)
-	if err := service.federateDelete(session, stream); err != nil {
-		derp.Report(derp.Wrap(err, location, "Federating Delete", stream.StreamID))
-	}
+	// RULE: Tell followers and syndication targets who received this Stream that it is gone,
+	// whichever path deleted it (BUG-259).  The outbox task sends the Deletes after commit, and
+	// only if followers still hold the Stream (BUG-241).
+	service.queueOutbox(session, stream, false)
 
 	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
 	// the index is a projection of the Stream, so it holds no ID that a Stream can name.
@@ -646,6 +626,17 @@ func (service *Stream) SetOutboxReplyPolicy(session data.Session, userID primiti
 
 // Save adds/updates an Stream in the database
 func (service *Stream) Save(session data.Session, stream *model.Stream, note string) error {
+	return service.save(session, stream, note, outboxModeQueue)
+}
+
+// SaveWithoutOutbox adds/updates a Stream without queueing its outbox task.  It is for changes that
+// followers never receive, such as a refreshed counter.
+func (service *Stream) SaveWithoutOutbox(session data.Session, stream *model.Stream, note string) error {
+	return service.save(session, stream, note, outboxModeSkip)
+}
+
+// save adds/updates a Stream in the database, and queues its outbox task as the mode asks
+func (service *Stream) save(session data.Session, stream *model.Stream, note string, mode outboxMode) error {
 
 	const location = "service.Stream.Save"
 
@@ -683,8 +674,8 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	}
 
 	// RULE: Default Token
-	if stream.Token == "" {
-		stream.Token = stream.StreamID.Hex()
+	if stream.Token.Value() == "" {
+		stream.Token.Set(stream.StreamID.Hex())
 	}
 
 	// Geocode the Location (if needed)
@@ -726,6 +717,18 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	service.calcDefaultAllow(&template, stream)
+
+	// RULE: A Stream whose State changed takes that State's "outbox" flag
+	calcOutbox(&template, stream, wasNew)
+
+	// RULE: A Stream that enters the outbox joins its conversation before it is stored, because
+	// its context is part of the object that followers are sent.  An import keeps the context
+	// it arrives with, so that a parent which cannot be loaded never loses the User a post.
+	if mode != outboxModeImport {
+		if err := service.joinConversation(session, stream); err != nil {
+			return derp.Wrap(err, location, "Joining conversation", stream.StreamID)
+		}
+	}
 
 	// RULE: Extract and linkify #hashtags for Templates that configure tagging.  This runs
 	// BEFORE Normalize so the injected anchors pass through the same schema sanitization as
@@ -769,6 +772,14 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		return derp.Wrap(err, location, "Saving Stream", "StreamID: "+stream.StreamID.Hex())
 	}
 
+	// Queue the task that brings followers up to date, once this transaction commits
+	if (mode == outboxModeQueue) || (mode == outboxModeRepublish) {
+		service.queueOutbox(session, stream, mode == outboxModeRepublish)
+	}
+
+	// The database now holds this State and flag, so the next save of this copy compares against them
+	stream.MarkSaved()
+
 	// Stamp the new sharing on every child, after the parent is saved so that each child reads it
 	if shareWithChildren {
 		if err := service.saveChildPermissions(session, stream.StreamID); err != nil {
@@ -778,10 +789,6 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// Send SSE notifications to `InReplyTo` streams (if possible)
 	service.NotifyInReplyTo(session, stream.InReplyTo)
-
-	// Send stream:create and stream:update Webhooks
-	eventName := iif(wasNew, model.WebhookEventStreamCreate, model.WebhookEventStreamUpdate)
-	service.webhookService.Send(stream, eventName)
 
 	return nil
 }
@@ -899,17 +906,6 @@ func (service *Stream) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// RangePublished returns a RangeFunc over all streams that are currently published
-func (service *Stream) RangePublished(session data.Session) (iter.Seq[model.Stream], error) {
-
-	now := time.Now().Unix()
-
-	criteria := exp.LessOrEqual("publishDate", now).
-		AndGreaterOrEqual("unpublishDate", now)
-
-	return service.Range(session, criteria)
-}
-
 // ListNavigation returns all Streams of type FOLDER at the top of the hierarchy
 func (service *Stream) ListNavigation(session data.Session) (data.Iterator, error) {
 	return service.List(
@@ -924,17 +920,14 @@ func (service *Stream) RangeByParent(session data.Session, parentID primitive.Ob
 	return service.Range(session, exp.Equal("parentId", parentID))
 }
 
-// RangePublishedByParent returns an iterator over the currently-published child streams of the
-// provided parentID. It applies the publish-date window (a Stream's own lifecycle state, not a
-// permission check) in the query so unpublished/scheduled children never leave the database.
-// Per-viewer permission filtering (Stream.IsVisibleTo) is intentionally left to the caller.
-func (service *Stream) RangePublishedByParent(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
-
-	now := time.Now().Unix()
+// RangeOutboxByParent returns an iterator over the child streams of the provided parentID that
+// are in their author's outbox. The flag is tested in the query, so a child that followers were
+// never sent does not leave the database. Per-viewer permission filtering (Stream.IsVisibleTo)
+// is intentionally left to the caller.
+func (service *Stream) RangeOutboxByParent(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
 
 	criteria := exp.Equal("parentId", parentID).
-		AndLessOrEqual("publishDate", now).
-		AndGreaterOrEqual("unpublishDate", now)
+		AndEqual("isOutbox", true)
 
 	return service.Range(session, criteria)
 }
@@ -957,25 +950,6 @@ func (service *Stream) RangeByPrivileges(session data.Session, privileges ...pri
 	criteria := exp.In("privilegeIds", privileges)
 
 	return service.Range(session, criteria)
-}
-
-// ListPublishedByParent returns all Streams that match a particular parentID
-func (service *Stream) ListPublishedByParent(session data.Session, parentID primitive.ObjectID) (data.Iterator, error) {
-
-	const location = "service.Stream.ListPublishedByParent"
-
-	// RULE: ParentID is required
-	if parentID.IsZero() {
-		return nil, derp.BadRequest(location, "ParentID is required")
-	}
-
-	now := time.Now().Unix()
-
-	criteria := exp.LessOrEqual("publishDate", now).
-		AndGreaterOrEqual("unpublishDate", now).
-		AndEqual("parentId", parentID)
-
-	return service.List(session, criteria, option.SortDesc("publishDate"))
 }
 
 // ListByTemplate returns all `Streams` that use a particular `Template`
@@ -1068,33 +1042,21 @@ func (service *Stream) QueryByPrivilege(session data.Session, privilegeIDs ...pr
 	return service.Query(session, criteria)
 }
 
-// validateChangedToken applies ValidateToken to a Stream's token when it differs from the stored copy.
+// validateChangedToken applies ValidateToken to a Stream's token when it has changed since the Stream was loaded.
 // The default token, which is the Stream's own ID, is never checked.
 func (service *Stream) validateChangedToken(session data.Session, stream *model.Stream, wasNew bool) error {
 
-	const location = "service.Stream.validateChangedToken"
-
 	// No other Stream can hold this Stream's ID
-	if stream.Token == stream.StreamID.Hex() {
+	if stream.Token.Value() == stream.StreamID.Hex() {
 		return nil
 	}
 
 	// RULE: An unchanged token is not re-checked, so a token saved before these rules still saves
-	if !wasNew {
-
-		saved := model.NewStream()
-		err := service.Load(session, exp.Equal("_id", stream.StreamID), &saved, option.Fields("token"))
-
-		if (err != nil) && !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Loading saved Stream", stream.StreamID)
-		}
-
-		if (err == nil) && (saved.Token == stream.Token) {
-			return nil
-		}
+	if !wasNew && stream.Token.NotChanged() {
+		return nil
 	}
 
-	return service.ValidateToken(session, stream.StreamID, stream.Token)
+	return service.ValidateToken(session, stream.StreamID, stream.Token.Value())
 }
 
 // ValidateToken returns an error if the provided token cannot be assigned to the identified Stream
@@ -1690,7 +1652,7 @@ func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.
 
 	// Find the default action/roles for this Stream
 	defaultAction := template.Default()
-	defaultRoles := defaultAction.AllowedRoles(stream.StateID)
+	defaultRoles := defaultAction.AllowedRoles(stream.StateID.Value())
 
 	// Calculate the GroupIDs and PrivilegeIDs for these roles
 	groupIDs := stream.RolesToGroupIDs(defaultRoles...)
@@ -2037,7 +1999,7 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	// Zero out (almost) all other fields in this stream
 	stream.TemplateID = ""
 	stream.ParentTemplateID = ""
-	stream.StateID = ""
+	stream.StateID.Clear()
 	stream.SocialRole = ""
 	stream.Groups = mapof.NewObject[id.Slice]()
 	stream.Circles = mapof.NewObject[id.Slice]()
@@ -2060,7 +2022,6 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	stream.EndDate = datetime.New()
 	stream.Syndication = delta.NewSlice[string]()
 	stream.Shuffle = 0
-	stream.UnPublishDate = time.Now().Unix()
 	stream.IsFeatured = false
 	stream.IsSubscribable = false
 
@@ -2069,6 +2030,11 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	// stream.Token
 	// stream.AttributedTo
 	// stream.PublishDate
+
+	// RULE: A moved Stream is out of the outbox, and its followers are sent no Delete.
+	// The raw save below skips the outbox rules, so the flag and the fingerprint are cleared here.
+	stream.IsOutbox.Clear()
+	stream.Fingerprint.Clear()
 
 	// Update the Stream with the new "movedTo" value but skip all other business rules.
 	if err := service.collection(session).Save(stream, "moved"); err != nil {
@@ -2097,8 +2063,9 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 
 	result := model.NewSearchResult()
 
-	// If the stream has been published, then try to generate a SearchResult for it.
-	if stream.IsPublished() {
+	// RULE: A deleted Stream is not searchable. One that is on the site and not in the
+	// outbox, as an article is, still is.
+	if stream.DeleteDate == 0 {
 
 		// Only create a search result if the stream is visible by ALL people
 		if stream.DefaultAllowAnonymous() {

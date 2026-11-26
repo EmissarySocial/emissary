@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -14,10 +13,10 @@ import (
 )
 
 // These tests pin the query-side half of the /pub/children access-control fix
-// (see handler/activitypub_stream/children.go): RangePublishedByParent must apply
-// the publish-date window in the QUERY so unpublished/scheduled children never
+// (see handler/activitypub_stream/children.go): RangeOutboxByParent must test
+// the outbox flag in the QUERY so children that followers were never sent never
 // leave the database, while per-viewer permissions stay out of the query. They use
-// a fake data.Collection that captures the criteria RangePublishedByParent builds,
+// a fake data.Collection that captures the criteria RangeOutboxByParent builds,
 // then walk it with exp.Expression.Match to assert which predicates are present.
 
 /******************************************
@@ -115,8 +114,8 @@ func hasPredicate(predicates []exp.Predicate, field string, operator string) boo
 	return false
 }
 
-// TestStream_RangePublishedByParent_Criteria verifies the exact query that RangePublishedByParent issues
-func TestStream_RangePublishedByParent_Criteria(t *testing.T) {
+// TestStream_RangeOutboxByParent_Criteria verifies the exact query that RangeOutboxByParent issues
+func TestStream_RangeOutboxByParent_Criteria(t *testing.T) {
 
 	parentID := primitive.NewObjectID()
 
@@ -124,9 +123,7 @@ func TestStream_RangePublishedByParent_Criteria(t *testing.T) {
 	session := criteriaSession{collection: collection}
 	service := &Stream{}
 
-	before := time.Now().Unix()
-	iterator, err := service.RangePublishedByParent(session, parentID)
-	after := time.Now().Unix()
+	iterator, err := service.RangeOutboxByParent(session, parentID)
 
 	require.Nil(t, err)
 	require.NotNil(t, iterator)
@@ -142,23 +139,22 @@ func TestStream_RangePublishedByParent_Criteria(t *testing.T) {
 	// RULE: The query must scope to the requested parent.
 	require.True(t, hasPredicate(predicates, "parentId", exp.OperatorEqual), "must filter by parentId")
 
-	// RULE: The publish-date window (publishDate <= now <= unpublishDate) must be in the QUERY,
-	// so unpublished/scheduled children never leave the database.
-	require.True(t, hasPredicate(predicates, "publishDate", exp.OperatorLessOrEqual), "must bound publishDate")
-	require.True(t, hasPredicate(predicates, "unpublishDate", exp.OperatorGreaterOrEqual), "must bound unpublishDate")
+	// RULE: The outbox flag must be in the QUERY, so a child that followers were never sent
+	// does not leave the database
+	require.True(t, hasPredicate(predicates, "isOutbox", exp.OperatorEqual), "must filter by the outbox flag")
+
+	for _, predicate := range predicates {
+		if predicate.Field == "isOutbox" {
+			require.Equal(t, true, predicate.Value)
+		}
+
+		// RULE: Nothing filters on a publish date any more (emissary-specs PUBLICATION §1.12)
+		require.NotEqual(t, "publishDate", predicate.Field)
+		require.NotEqual(t, "unpublishDate", predicate.Field)
+	}
 
 	// RULE: service.List always excludes soft-deleted records.
 	require.True(t, hasPredicate(predicates, "deleteDate", exp.OperatorEqual), "must exclude deleted streams")
-
-	// RULE: The "now" bound must be a sane timestamp captured at call time.
-	for _, predicate := range predicates {
-		if predicate.Field == "publishDate" {
-			now, ok := predicate.Value.(int64)
-			require.True(t, ok, "publishDate bound must be an int64 unix timestamp")
-			require.GreaterOrEqual(t, now, before)
-			require.LessOrEqual(t, now, after)
-		}
-	}
 
 	// RULE: Permissions are intentionally NOT part of the query -- per-viewer gating is
 	// left to the handler (Stream.IsVisibleTo). Guard against a regression that pushes

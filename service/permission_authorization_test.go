@@ -27,7 +27,7 @@ import (
 // only to the "author" role in the stream's current state.
 func authorStream(authorID primitive.ObjectID) model.Stream {
 	stream := model.NewStream()
-	stream.StateID = "default"
+	stream.StateID.Set("default")
 	stream.AttributedTo = model.PersonLink{UserID: authorID}
 	return stream
 }

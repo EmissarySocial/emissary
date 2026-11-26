@@ -112,7 +112,7 @@
 			steps: [
 				{do:"as-confirmation", title:"Promote this Draft?", message:"This publishes the article to your website. Its body still comes from the remote file.", submit:"Promote"}
 				{do:"promote-draft", omit:["content"]}
-				{do:"save-and-publish", state:"published", outbox:"false"}
+				{do:"save-and-publish", state:"published"}
 				{do:"search-index"}
 				{do:"refresh-page"}
 				{do:"forward-to", url:"/{{.Token}}"}
@@ -139,7 +139,7 @@
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"unpublish", state:"default", outbox:"true"}
+				{do:"unpublish", state:"default"}
 				{do:"delete", title:"Delete '{{.Label}}'?", message:"This removes the article from your website. The remote file is untouched. There is NO UNDO."}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]

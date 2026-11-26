@@ -1,31 +1,17 @@
 package service
 
 import (
-	"context"
 	"testing"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/data"
-	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// newUserDeleteTestService returns a User service wired with every service that Delete calls.
-// The webhook session refuses to open, and closes the returned channel when Delete asks for it.
-func newUserDeleteTestService() (User, <-chan struct{}) {
-
-	webhookCalled := make(chan struct{})
-
-	webhookService := &Webhook{
-		newSession: func(time.Duration) (data.Session, context.CancelFunc, error) {
-			close(webhookCalled)
-			return nil, nil, derp.Internal("test", "Webhooks are not delivered in this test")
-		},
-	}
+// newUserDeleteTestService returns a User service wired with every service that Delete calls
+func newUserDeleteTestService() User {
 
 	return User{
 		annotationService:     &Annotation{},
@@ -42,8 +28,7 @@ func newUserDeleteTestService() (User, <-chan struct{}) {
 		searchResultService:   &SearchResult{},
 		streamService:         &Stream{},
 		userConnectionService: &UserConnection{},
-		webhookService:        webhookService,
-	}, webhookCalled
+	}
 }
 
 // TestUserDelete_DeletesOnlyTheOwnersAnnotations runs Delete against a real MongoDB, and confirms
@@ -51,7 +36,7 @@ func newUserDeleteTestService() (User, <-chan struct{}) {
 func TestUserDelete_DeletesOnlyTheOwnersAnnotations(t *testing.T) {
 
 	_, session := newReplicaSetSession(t)
-	service, webhookCalled := newUserDeleteTestService()
+	service := newUserDeleteTestService()
 
 	owner := model.NewUser()
 	owner.UserID = primitive.NewObjectID()
@@ -76,13 +61,6 @@ func TestUserDelete_DeletesOnlyTheOwnersAnnotations(t *testing.T) {
 
 	require.NoError(t, service.Delete(session, &owner, "test"))
 
-	// Wait for the user:delete webhook, so its goroutine does not outlive the test
-	select {
-	case <-webhookCalled:
-	case <-time.After(5 * time.Second):
-		t.Fatal("Delete never sent the user:delete webhook")
-	}
-
 	count := func(userID primitive.ObjectID) int64 {
 		result, err := session.Collection("Annotation").Count(exp.Equal("userId", userID).AndEqual("deleteDate", 0))
 		require.NoError(t, err)
@@ -98,7 +76,7 @@ func TestUserDelete_DeletesOnlyTheOwnersAnnotations(t *testing.T) {
 func TestUserDelete_ClearsOutbox2BeforeStreams(t *testing.T) {
 
 	test := newStreamDeleteTest(t)
-	service, webhookCalled := newUserDeleteTestService()
+	service := newUserDeleteTestService()
 	service.streamService = &test.service
 
 	owner := model.NewUser()
@@ -114,13 +92,6 @@ func TestUserDelete_ClearsOutbox2BeforeStreams(t *testing.T) {
 	test.saveOutbox2Activity(t, model.ActorTypeUser, owner.UserID, stream.URL, vocab.ActivityTypeCreate)
 
 	require.NoError(t, service.Delete(test.session, &owner, "test"))
-
-	// Wait for the user:delete webhook, so its goroutine does not outlive the test
-	select {
-	case <-webhookCalled:
-	case <-time.After(5 * time.Second):
-		t.Fatal("Delete never sent the user:delete webhook")
-	}
 
 	require.Zero(t, test.deletesSent(t), "deleting a User sends no Delete for each of their Streams")
 	require.Zero(t, test.countOutbox2(t, model.ActorTypeUser, owner.UserID))

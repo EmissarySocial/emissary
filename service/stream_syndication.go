@@ -12,7 +12,7 @@ import (
 func (service *Stream) sendSyndicationMessages(session data.Session, stream *model.Stream, added []string, changed []string, removed []string) error {
 
 	readOnlyDomain := service.domainService.Cached()
-	object := stream.GetWebhookData()
+	object := stream.SyndicationData()
 
 	for _, target := range readOnlyDomain.Syndication {
 

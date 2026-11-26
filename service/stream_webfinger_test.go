@@ -122,10 +122,10 @@ func matchesStream(criteria exp.Expression, record model.Stream, caseSensitive b
 			}
 
 			if caseSensitive {
-				return record.Token == value
+				return record.Token.Value() == value
 			}
 
-			return strings.EqualFold(record.Token, value)
+			return strings.EqualFold(record.Token.Value(), value)
 
 		case "deleteDate":
 			value, ok := predicate.Value.(int)
@@ -186,7 +186,7 @@ func newActorStream(templateID string, token string) model.Stream {
 	stream.URL = "https://example.com/" + stream.StreamID.Hex()
 
 	if token != "" {
-		stream.Token = token
+		stream.Token.Set(token)
 	}
 
 	return stream
@@ -339,7 +339,7 @@ func TestStreamWebFinger_MatchesActorDocument(t *testing.T) {
 		stream := newActorStream("group", token)
 		service, session := newStreamWebFingerService([]model.Template{template}, stream)
 
-		resource, err := service.WebFinger(session, stream.Token)
+		resource, err := service.WebFinger(session, stream.Token.Value())
 		require.NoError(t, err, "token %q", token)
 
 		preferredUsername := template.Actor.JSONLD(&stream).GetString(vocab.PropertyPreferredUsername)

@@ -60,7 +60,6 @@ func modelSchemas() map[string]schema.Element {
 		"TagSchema":              TagSchema(),
 		"UserSchema":             UserSchema(),
 		"UserConnectionSchema":   UserConnectionSchema(),
-		"WebhookSchema":          WebhookSchema(),
 		"WidgetSchema":           WidgetSchema(),
 		"permissionSchema":       permissionSchema(),
 	}

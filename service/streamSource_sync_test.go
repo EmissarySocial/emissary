@@ -336,7 +336,7 @@ func TestStreamSourceSync_NoFrontMatterChangesNothing(t *testing.T) {
 	writer.stream.Label = "Chosen By A Human"
 	writer.stream.Summary = "Also chosen by a human"
 	writer.stream.Rank = 3
-	writer.stream.Token = "human-token"
+	writer.stream.Token.Set("human-token")
 	service, session, streamSource := newSyncService(adapter, writer)
 
 	require.NoError(t, service.Sync(context.Background(), session, &streamSource))
@@ -345,7 +345,7 @@ func TestStreamSourceSync_NoFrontMatterChangesNothing(t *testing.T) {
 	require.Equal(t, "Chosen By A Human", writer.saved[0].Label)
 	require.Equal(t, "Also chosen by a human", writer.saved[0].Summary)
 	require.Equal(t, 3, writer.saved[0].Rank)
-	require.Equal(t, "human-token", writer.saved[0].Token)
+	require.Equal(t, "human-token", writer.saved[0].Token.Value())
 	require.Empty(t, writer.validated, "no slug means ValidateToken is never consulted")
 }
 
@@ -373,14 +373,14 @@ func TestStreamSourceSync_SlugIsValidated(t *testing.T) {
 
 	adapter := &fakeAdapter{version: `"v1"`, item: markdownItem(t, "---\nslug: getting-started\n---\n\nBody")}
 	writer := &fakeStreamWriter{}
-	writer.stream.Token = "old-token"
+	writer.stream.Token.Set("old-token")
 	service, session, streamSource := newSyncService(adapter, writer)
 
 	require.NoError(t, service.Sync(context.Background(), session, &streamSource))
 
 	require.Equal(t, []string{"getting-started"}, writer.validated)
 	require.Len(t, writer.saved, 1)
-	require.Equal(t, "getting-started", writer.saved[0].Token)
+	require.Equal(t, "getting-started", writer.saved[0].Token.Value())
 }
 
 // TestStreamSourceSync_RejectedSlugFailsTheWholeSync confirms that a token collision stops

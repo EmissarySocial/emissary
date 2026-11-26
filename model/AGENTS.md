@@ -64,9 +64,15 @@ The `MerchantAccount` vault fails the second question, so it never travels. `han
 
 It extends `http.DetectContentType`, which cannot sniff FLAC, M4A, Ogg audio, bare MP3, ADTS AAC, WMA, or AMR — all of which came back as `application/octet-stream` and failed an `audio/*` upload gate. The contract is that **the filename argument can never promote bytes into a media type**; it only picks audio-versus-video *inside a byte-confirmed container* (EBML `.weba`, ASF `.wma`/`.wmv`, ISO-BMFF `.m4a`/`.m4b`/`.3ga`). Byte-first sniffing stays the security boundary, because the serve-side inline decision is built on it. `TestDetectContentType_FilenameCannotPromote` pins this; do not relax it into a filename fallback. Known edge: `CanServeInline` also needs `mime.TypeByExtension` to recognize the extension, and `.amr`/`.3ga` return empty, so those download rather than playing inline.
 
+## `Stream.Syndication` is a `delta.Slice`, and `MarkSaved` resets it
+
+`Stream.Syndication` is a `benpate/delta` `Slice[string]`, stored as a plain array. It replaced rosetta's `delta.Slice` on 2026-11-25, which stored `{values: [...]}`; the new type reads both shapes and writes only the array, so a legacy Stream heals when it is saved. `TestStream_Syndication_LegacyBSON` pins that. The plan for converting the stored records and then removing the legacy reader is `emissary-specs/projects/DELTA-CONSOLIDATION.md`.
+
+**`Stream.MarkSaved` resets `Syndication` with the four scalar values.** `service.Stream.Save` reads `Syndication.Added()` and `Deleted()` when it queues the outbox task, and passes them to the task as arguments, because a task that loads the Stream again cannot see them. `MarkSaved` then makes the saved list the baseline, so a second save of the same copy does not report the same changes twice. `TestStream_MarkSaved_ResetsSyndication` pins it. Until 2026-11-25 `MarkSaved` left `Syndication` alone, because `Publish` read the lists after its save.
+
 ## A custom BSON marshaller that stops satisfying its interface fails silently
 
-`datetime.DateTime`, `geo.Point`, `geo.Polygon`, `delta.Bool`, and `delta.ObjectID` are persisted through custom BSON marshallers. Go satisfies those interfaces *structurally*, so a type whose method signature changes does not fail to compile at its own definition — the driver simply stops recognizing it, falls back to the default struct codec, and writes a different shape. `delta.Bool` and `delta.ObjectID` hold only unexported fields, so their fallback shape is `{}`: a stored `true` becomes an empty document, with no error anywhere. This exact failure already happened once in `geo`, and cost the migration in [../queries/upgrades/v030.go](../queries/upgrades/v030.go) (BUG-139).
+`datetime.DateTime`, `geo.Point`, `geo.Polygon`, `delta.Bool`, `delta.ObjectID`, and `delta.Slice` are persisted through custom BSON marshallers. Go satisfies those interfaces *structurally*, so a type whose method signature changes does not fail to compile at its own definition — the driver simply stops recognizing it, falls back to the default struct codec, and writes a different shape. `delta.Bool` and `delta.ObjectID` hold only unexported fields, so their fallback shape is `{}`: a stored `true` becomes an empty document, with no error anywhere. This exact failure already happened once in `geo`, and cost the migration in [../queries/upgrades/v030.go](../queries/upgrades/v030.go) (BUG-139).
 
 [bsonWireFormat_test.go](bsonWireFormat_test.go) carries both guards: compile-time assertions naming every BSON interface this package depends on, and a checked-in fixture pinning the Extended JSON each type writes **as a struct field**. Every document in that fixture is sorted by key, because the record carries a `mapof.Any` and the driver writes a Go map in a different order on every run — an unsorted fixture failed about one run in six. `TestBSONWireFormat_RenderIsStable` keeps the sorting in place. Marshalling one of these types at the top level proves nothing, because that path takes the marshaller directly and never consults the codec registry. A round trip proves nothing either — it is symmetric, so it passes against a format that moved on both sides at once. After an intended format change, run `go test ./model/ -update-golden` and read the diff.
 
@@ -106,8 +112,21 @@ A property declared in a schema is only as good as its accessors. rosetta skips 
 It is a virtual string over `Stream.PublishDate` (Unix seconds), so a `datetime` widget can edit a publish date. It reads as RFC 3339 in UTC, which is the zone `longDate` and `shortDate` display in. It writes a posted time back as Unix seconds. An edit form posts the field back on every save, so three rules keep that round trip from moving the date:
 
 - **A time in the same minute keeps the stored seconds.** The widget posts whole minutes, so without this rule every save would truncate the date.
-- **A blank leaves the date alone.** An unpublished Stream reads blank, and clearing the field must never unpublish.
-- **The field reads and writes nothing past year 9999.** RFC 3339 cannot write such a year, and the `math.MaxInt64` "unscheduled" sentinel is far beyond it. `FuzzStream_PublishDateTime` found this edge.
+- **A blank leaves the date alone.** A Stream that never entered the outbox has a `PublishDate` of `0` and reads blank, and clearing the field must never remove a date.
+- **The field reads and writes nothing past year 9999.** RFC 3339 cannot write such a year. `FuzzStream_PublishDateTime` found this edge.
+
+`0` is the only special value of `PublishDate`. Until 2026-11-25 a new Stream held `math.MaxInt64` in it and in `unpublishDate`, a field that no longer exists; `emissary-specs/projects/PUBLICATION.md` §1.17 clears both from stored records.
+
+## `Stream.IsOutbox` and `Stream.Fingerprint` are written by the server, never by a caller
+
+`State.IsOutbox` is the Template's `outbox` flag on a state. `Stream.IsOutbox` is its copy on the Stream, and `Stream.Fingerprint` is a hash of the object that followers last received, empty when they hold nothing. The service decides both ([../service/AGENTS.md](../service/AGENTS.md)); these are the rules the model keeps.
+
+- **Neither is in `StreamSchema`,** so no form and no `set-data` step can write them. `TestStream_OutboxFields_NoFormCanWrite` pins it.
+- **The flag is always stored, and the fingerprint only when set.** `isOutbox` is written even when false, so a query can match it. `fingerprint` is `omitempty`.
+- **The fingerprint never leaves the server.** Its JSON tag is `-`, so an export carries none and an import cannot forge one. `isOutbox` is in the JSON, but a save takes the flag from the Template's state, not from the caller.
+- **Both are `delta` values, and `MarkSaved` resets them** with `StateID`, `Token`, and `Syndication`. The save compares each with the value it was loaded with, so assign through `Set`, never to the struct.
+- **`IsPublished` returns the flag,** and FALSE for a deleted Stream, on both `Stream` and `StreamSummary`. It never reads a date.
+- **`StreamFingerprintPending` is a placeholder, not a hash.** Upgrade 41 writes it on Streams that followers received before fingerprints were recorded.
 
 ## Every `schema.Array` that a request can write into needs a `MaxLength`
 

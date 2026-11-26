@@ -110,7 +110,6 @@ type Factory struct {
 	realtimeBroker          *realtime.Broker
 	userConnectionService   UserConnection
 	userService             User
-	webhookService          Webhook
 
 	// real-time watchers
 	refreshContext   context.CancelFunc
@@ -202,7 +201,6 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.privilegeService = NewPrivilege()
 	factory.userConnectionService = NewUserConnection()
 	factory.userService = NewUser()
-	factory.webhookService = NewWebhook()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory.
 	// A factory that fails here already runs a broker, and may hold a database client.  Errors
@@ -286,7 +284,6 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.privilegeService.Refresh(factory)
 	factory.userConnectionService.Refresh(factory)
 	factory.userService.Refresh(factory)
-	factory.webhookService.Refresh(factory)
 
 	// The client that a reconnect replaces, closed once the watchers using it have stopped
 	var previous mongodb.Server
@@ -753,11 +750,6 @@ func (factory *Factory) User() *User {
 // Widget returns a fully populated Widget service
 func (factory *Factory) Widget() *Widget {
 	return factory.widgetService
-}
-
-// Webhook returns a fully populated Webhook service
-func (factory *Factory) Webhook() *Webhook {
-	return &factory.webhookService
 }
 
 /******************************************
@@ -1237,7 +1229,6 @@ func (factory *Factory) Collections() []string {
 		"StreamOutbox",
 		"StreamSource",
 		"User",
-		"Webhook",
 	}
 }
 

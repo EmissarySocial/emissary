@@ -327,20 +327,6 @@ func (service *Outbox) RangeByObjectID(session data.Session, actorType string, a
 	return service.Range(session, criteria)
 }
 
-// HasObject returns TRUE if this Actor's outbox holds an activity that publishes the provided object
-func (service *Outbox) HasObject(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) (bool, error) {
-
-	const location = "service.Outbox.HasObject"
-
-	count, err := service.Count(session, publishedObjectCriteria(actorType, actorID, objectID))
-
-	if err != nil {
-		return false, derp.Wrap(err, location, "Counting outbox messages", actorType, actorID, objectID)
-	}
-
-	return count > 0, nil
-}
-
 // RangeByActivityURL returns every OutboxMessage in this Actor's outbox whose canonical
 // activity URL matches. Used to find-and-remove a first-class activity (e.g. the original
 // Like) when it is undone — the counterpart to RangeByObjectID, which matches by the URL of

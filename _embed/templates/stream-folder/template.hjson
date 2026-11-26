@@ -28,6 +28,7 @@
 		published: {
 			label: Published
 			description: This item is visible to all Viewers
+			outbox: true
 		}
 	}
 	roles: {
@@ -51,7 +52,7 @@
 					data.format:"TABLE"
 					}
 				}
-				{do:"save-and-publish", outbox:"true"}
+				{do:"save-and-publish"}
 				{do:"forward-to", url:"/{{.StreamID}}"}
 			]
 		}
@@ -89,7 +90,7 @@
 								]
 							}
 						}, 
-						{do:"save-and-publish", state:"published", outbox:"true"}
+						{do:"save-and-publish", state:"published"}
 					]
 				}
 				{do:"refresh-page"}
@@ -99,7 +100,7 @@
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"unpublish", state:"default", outbox:"true"}
+				{do:"unpublish", state:"default"}
 				{do:"delete", title:"Delete this Folder?", message:"This will permanently delete this folder and all of its contents"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
