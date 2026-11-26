@@ -46,7 +46,7 @@ func (adapter GeocodeAddress) ManualConfig() form.Form {
 			Children: []form.Element{
 				{
 					Type:        "html",
-					Description: "Configure this service to look up the map coordinates of specific addresses. <a href='https://emissary.social/geocode-address' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
+					Description: "Address Geocoders provide precise latitude/longitude coordinates for a specific address.  Required for all mapping applications. <a href='https://emissary.social/geocode-address' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
 				},
 				{
 					Type:    "hidden",

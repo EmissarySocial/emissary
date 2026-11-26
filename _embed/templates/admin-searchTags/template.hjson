@@ -70,6 +70,7 @@
 						}
 					}
 					{do:"save"}
+					{do:"startup-save-task", value:"/admin/tags"}
 					{do:"refresh-page"}
 				]
 			}]
@@ -127,6 +128,7 @@
 						},
 						{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", accept-type:"image/*",  maximum:1, rules:{width:600, height:600}}
 						{do:"save"}
+						{do:"startup-save-task", value:"/admin/tags"}
 						{do:"refresh-page"}
 					]
 				}

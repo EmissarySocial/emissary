@@ -89,12 +89,13 @@
 					{do:"edit", form:{
 						type:"layout-vertical",
 						children: [
-							{type:"text", path:"defaultAnonymous", label:"Anonymous Visitors", options:{placeholder:"/home"}},
-							{type:"text", path:"defaultAuthenticated", label:"Signed-In Users", options:{placeholder:"/@me/newsfeed"}}
-							{type:"text", path:"defaultOwner", label:"Domain Owners", options:{placeholder:"/admin"}}
+							{type:"text", path:"defaultAnonymous", label:"Anonymous Visitors", options:{placeholder:"/home", provider:"default-pages"}},
+							{type:"text", path:"defaultAuthenticated", label:"Signed-In Users", options:{placeholder:"/@me/newsfeed", provider:"default-pages"}}
+							{type:"text", path:"defaultOwner", label:"Domain Owners", options:{placeholder:"/admin", provider:"default-pages"}}
 						]
 					}}
 					{do:"save"}
+					{do:"startup-save-task", value:"/admin/domain/defaults"}
 					{do:"refresh-page"}
 				]}
 			]

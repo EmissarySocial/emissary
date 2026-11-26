@@ -1,0 +1,33 @@
+{{- $theme := .Theme .ThemeID -}}
+{{- $startupGroups := $theme.StartupGroups -}}
+{{- $startupGroupCount := $startupGroups.Length -}}
+
+<h1>Configure Groups</h1>
+
+<div class="margin-vertical">
+	Groups decide who can see and who can publish each part of your website.
+</div>
+
+{{- if gt $startupGroupCount 0 -}}
+	<div class="margin-vertical">
+		This theme suggests <b>{{ $startupGroupCount }} {{pluralize $startupGroupCount "group" "groups"}}</b> to start with:
+		<ul>
+			{{- range $startupGroups -}}
+				<li>{{.label}}</li>
+			{{- end -}}
+		</ul>
+		If your website already has groups, they are left as they are.
+	</div>
+{{- end -}}
+
+<form hx-post="/startup/groups" hx-push-url="false">
+	<div class="margin-top-lg">
+		{{- if gt $startupGroupCount 0 -}}
+			<button type="submit" class="primary">Create Groups</button>
+		{{- else -}}
+			<button type="submit" class="primary">Mark as Done</button>
+		{{- end -}}
+		<button type="button" script="on click send closeModal">Cancel</button>
+		<a href="/admin/groups" class="margin-left">Manage groups yourself &rarr;</a>
+	</div>
+</form>

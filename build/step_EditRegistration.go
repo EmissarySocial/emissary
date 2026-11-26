@@ -11,6 +11,9 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// editRegistrationDescription is the note between the signup modal's title and its options
+const editRegistrationDescription = "Allow website visitors to create a new account for themselves on this website.  There are several signup styles to choose from.  If you choose 'Not Allowed' then only domain admins can create new users."
+
 // StepEditRegistration is a Step that can update the data.DataMap custom data stored in a Stream
 type StepEditRegistration struct{}
 
@@ -33,12 +36,12 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 
 	b := html.New()
 
-	b.H1().ID("modal-title").InnerText("New User Signups").Close()
+	b.H1().ID("modal-title").InnerHTML(`<i class="bi bi-person"></i> New User Signups`).Close()
+	b.Div().Class("margin-bottom").InnerText(editRegistrationDescription).Close()
 	b.Form("", "").Attr("hx-get", "/admin/domain/signup").Attr("hx-trigger", "change").Attr("hx-push-url", "false")
 	b.Div().Class("layout layout-vertical")
 	b.Div().Class("layout-elements")
 	b.Div().Class("layout-element")
-	b.Label("select-template").InnerText("Registration Method...").Close()
 	b.Select("registrationId").ID("select-template").TabIndex("0")
 
 	if registrationID == "" {

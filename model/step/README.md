@@ -31,7 +31,7 @@ Beyond its own configuration, each step declares what the surrounding Template m
 - **RequiredModel** — the step only works against one kind of model object (`Stream`, `Domain`, `Settings`). A Template with a different `model` cannot use it.
 - **RequiredStates** — states the step names (for example `save-and-publish`'s `state`) must be defined in the Template's `states` map.
 - **RequiredRoles** — roles the step names (for example `set-simple-sharing`'s `role`) must be defined in the Template's `roles` map.
-- **RequiredTemplateRoles** — a narrower restriction than the model: the Template must declare one of these `templateRole` values. Only `startup-create-streams` and `setup-complete` use it today, both requiring `admin`.
+- **RequiredTemplateRoles** — a narrower restriction than the model: the Template must declare one of these `templateRole` values. Only `startup-create-streams`, `startup-create-groups`, and `startup-complete` use it today, all requiring `admin`.
 
 Container steps (`if`, `switch`, `as-modal`, `with-*`, and friends) roll their sub-steps' requirements up into their own, except that the `with-*` steps deliberately drop *state* requirements, since the child object they switch to has its own state machine. `with-draft` is the exception, because a draft shares its Stream's states.
 

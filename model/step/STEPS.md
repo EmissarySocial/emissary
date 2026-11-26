@@ -1657,27 +1657,39 @@ Re-ranks a Stream's widgets and re-assigns them to the Template's widget locatio
 
 ---
 
-## startup-create-streams
+## startup-create-groups
 
-Seeds an empty Domain with the Streams its Theme declares in `startupStreams`, on `POST`. Requires the `Domain` model **and** a Template whose `templateRole` is `admin`. Every precondition failure is a silent no-op, so a Domain that is already live does not fail the surrounding action.
-
-The form POST chooses *which* Streams to create. Every value posted under the `tokens` field is matched against the `token` of each entry in the Theme's `startupStreams`, and an entry whose token was not posted is skipped. The Theme stays the authority on what can be created — a token it does not define matches nothing — so posting no tokens creates no Streams, which is a legitimate choice rather than an error.
+Seeds a Domain that has no Groups with the Groups its Theme declares in `startupGroups`, on `POST`. Requires the `Domain` model **and** a Template whose `templateRole` is `admin`. A Domain that already has Groups is left as it is, so running the step again is safe.
 
 **Attributes**
 
-*No attributes.* The selection arrives with the form POST:
-
-| Form Field | Description |
-| --- | --- |
-| tokens | Repeated field naming the `startupStreams` entries to create. Anything the Theme does not define is ignored |
+*No attributes.* The Theme is the only input.
 
 <br>
 
 **Example**
 
-```html
-<input name="tokens" value="{{.token}}" type="checkbox" checked>
+```hjson
+{do: "startup-create-groups"}
 ```
+
+---
+
+## startup-create-streams
+
+Seeds an empty Domain with every Stream its Theme declares in `startupStreams`, on `POST`, then sets the Domain's three start pages from the Theme's `startupDefaultPages`. Requires the `Domain` model **and** a Template whose `templateRole` is `admin`. A Domain that already has Streams is left as it is: no Stream is created, and no start page is changed.
+
+An entry with `parentToken` is created as a sub-page of the entry with that token, which must come before it in the list and whose Template role must be in the sub-page's `containedBy`. Every other entry is created at the top level.
+
+A start page is stored only when it is a path on this website, such as `/home`. A page the Theme leaves out keeps the Domain's own value.
+
+**Attributes**
+
+*No attributes.* The Theme is the only input.
+
+<br>
+
+**Example**
 
 ```hjson
 {do: "startup-create-streams"}

@@ -12,28 +12,33 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
+// ThemeStartupTemplateID is the admin Template that draws the startup checklist
+const ThemeStartupTemplateID = "admin-startup"
+
 // Theme represents an HTML template used for building all hard-coded application elements (but not dynamic streams)
 type Theme struct {
-	ThemeID        string                          `json:"themeID"        bson:"themeID"`        // Internal name/token other objects (like streams) will use to reference this Theme.
-	Extends        []string                        `json:"extends"        bson:"extends"`        // List of other themes that this theme extends
-	Category       string                          `json:"category"       bson:"category"`       // Category of this theme (for grouping)
-	Label          string                          `json:"label"          bson:"label"`          // Human-readable label for this theme
-	Description    string                          `json:"description"    bson:"description"`    // Human-readable description for this theme
-	Rank           int                             `json:"rank"           bson:"rank"`           // Sort order for this theme
-	HTMLTemplate   *template.Template              `json:"-"              bson:"-"`              // HTML template for this theme
-	Bundles        mapof.Object[Bundle]            `json:"bundles"        bson:"bundles"`        // // Additional resources (JS, HS, CSS) reqired tp remder this Theme.
-	Resources      fs.FS                           `json:"-"              bson:"-"`              // File system containing the template resources
-	Datasets       DatasetMap                      `json:"datasets"       bson:"datasets"`       // Lookup codes defined by this theme
-	StartupTasks   sliceof.Object[form.LookupCode] `json:"startupTasks"   bson:"startupTasks"`   // A list of tasks to be completed at startup
-	StartupStreams sliceof.Object[mapof.Any]       `json:"startupStreams" bson:"startupStreams"` // Dataset of Streams to initialize when this theme is first chosen.
-	StartupGroups  sliceof.Object[mapof.Any]       `json:"startupGroups"  bson:"startupGroups"`  // Dataset of Groups to initialize when this theme is first chosen.
-	DefaultFolders sliceof.Object[mapof.Any]       `json:"defaultFolders" bson:"defaultFolders"` // Dataset of Folders to initialize when a User is added using this Theme.
-	DefaultInbox   string                          `json:"defaultInbox"   bson:"defaultInbox"`   // Default Inbox Template for Users created underneath this theme
-	DefaultOutbox  string                          `json:"defaultOutbox"  bson:"defaultOutbox"`  // Default Outbox Template for Users created underneath this theme
-	Form           form.Element                    `json:"form"           bson:"form"`           // Form used to edit custom data
-	Schema         schema.Schema                   `json:"schema"         bson:"schema"`         // Schema used to validate custom data
-	Data           mapof.String                    `json:"data"           bson:"data"`           // Custom data for this theme
-	IsVisible      bool                            `json:"isVisible"      bson:"isVisible"`      // Is this theme visible to the site owners?
+	ThemeID             string                          `json:"themeID"        bson:"themeID"`                  // Internal name/token other objects (like streams) will use to reference this Theme.
+	Extends             []string                        `json:"extends"        bson:"extends"`                  // List of other themes that this theme extends
+	Category            string                          `json:"category"       bson:"category"`                 // Category of this theme (for grouping)
+	Label               string                          `json:"label"          bson:"label"`                    // Human-readable label for this theme
+	Description         string                          `json:"description"    bson:"description"`              // Human-readable description for this theme
+	Rank                int                             `json:"rank"           bson:"rank"`                     // Sort order for this theme
+	HTMLTemplate        *template.Template              `json:"-"              bson:"-"`                        // HTML template for this theme
+	Bundles             mapof.Object[Bundle]            `json:"bundles"        bson:"bundles"`                  // // Additional resources (JS, HS, CSS) reqired tp remder this Theme.
+	Resources           fs.FS                           `json:"-"              bson:"-"`                        // File system containing the template resources
+	Datasets            DatasetMap                      `json:"datasets"       bson:"datasets"`                 // Lookup codes defined by this theme
+	StartupTasks        sliceof.Object[form.LookupCode] `json:"startupTasks"   bson:"startupTasks"`             // A list of tasks to be completed at startup
+	StartupStreams      sliceof.Object[mapof.Any]       `json:"startupStreams" bson:"startupStreams"`           // Dataset of Streams to initialize when this theme is first chosen.
+	StartupGroups       sliceof.Object[mapof.Any]       `json:"startupGroups"  bson:"startupGroups"`            // Dataset of Groups to initialize when this theme is first chosen.
+	StartupDefaultPages StartupDefaultPages             `json:"startupDefaultPages" bson:"startupDefaultPages"` // Landing pages to set when this theme's startup Streams are created.
+	DefaultFolders      sliceof.Object[mapof.Any]       `json:"defaultFolders" bson:"defaultFolders"`           // Dataset of Folders to initialize when a User is added using this Theme.
+	DefaultInbox        string                          `json:"defaultInbox"   bson:"defaultInbox"`             // Default Inbox Template for Users created underneath this theme
+	DefaultOutbox       string                          `json:"defaultOutbox"  bson:"defaultOutbox"`            // Default Outbox Template for Users created underneath this theme
+	Form                form.Element                    `json:"form"           bson:"form"`                     // Form used to edit custom data
+	StartupForm         form.Element                    `json:"startupForm"    bson:"startupForm"`              // Form that replaces Form inside the startup checklist
+	Schema              schema.Schema                   `json:"schema"         bson:"schema"`                   // Schema used to validate custom data
+	Data                mapof.String                    `json:"data"           bson:"data"`                     // Custom data for this theme
+	IsVisible           bool                            `json:"isVisible"      bson:"isVisible"`                // Is this theme visible to the site owners?
 }
 
 // NewTheme creates a new, fully initialized Theme object
@@ -52,6 +57,7 @@ func NewTheme(templateID string, funcMap template.FuncMap) Theme {
 		DefaultInbox:   "user-inbox",
 		DefaultOutbox:  "user-outbox",
 		Form:           form.NewElement(),
+		StartupForm:    form.NewElement(),
 		Schema:         schema.Schema{},
 		Data:           mapof.NewString(),
 	}
@@ -92,6 +98,17 @@ func SortThemes(a, b Theme) bool {
 	return a.Label < b.Label
 }
 
+// PropertyForm returns the settings form that the named admin Template draws for this Theme
+func (theme Theme) PropertyForm(templateID string) form.Element {
+
+	// RULE: The startup checklist draws the startup form, when the Theme defines one
+	if (templateID == ThemeStartupTemplateID) && !theme.StartupForm.IsEmpty() {
+		return theme.StartupForm
+	}
+
+	return theme.Form
+}
+
 // Inherit fills in this Theme's empty values from a parent Theme
 func (theme *Theme) Inherit(parent *Theme) {
 
@@ -127,6 +144,11 @@ func (theme *Theme) Inherit(parent *Theme) {
 		}
 	}
 
+	// Inherit startup tasks from the parent (if not already defined)
+	if len(theme.StartupTasks) == 0 {
+		theme.StartupTasks = parent.StartupTasks
+	}
+
 	// Inherit startup streams from the parent (if not already defined)
 	if len(theme.StartupStreams) == 0 {
 		theme.StartupStreams = parent.StartupStreams
@@ -135,6 +157,11 @@ func (theme *Theme) Inherit(parent *Theme) {
 	// Inherit startup groups from the parent (if not already defined)
 	if len(theme.StartupGroups) == 0 {
 		theme.StartupGroups = parent.StartupGroups
+	}
+
+	// Inherit startup landing pages from the parent (if not already defined)
+	if theme.StartupDefaultPages.IsEmpty() {
+		theme.StartupDefaultPages = parent.StartupDefaultPages
 	}
 
 	// Inherit default folders from the parent (if not already defined)

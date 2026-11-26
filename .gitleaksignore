@@ -88,3 +88,9 @@ d56c9da5e04e585f668b6213a812652bf707762b:handler/streamSource_test.go:generic-ap
 # integration-tests/replycontrols/run.sh
 # Integration test script: placeholder master key for a throwaway local server
 d3b90abc239a7705a9e679dd6a760ca912f7f824:integration-tests/replycontrols/run.sh:generic-api-key:119
+
+# Reviewed 2026-11-23: demo Docker configuration.
+#
+# .docker/demo.json
+# Demo value: the master key for the demo container's configuration, not a live credential
+1913518e41c0e954d290dd8f01f1688ce2afa912:.docker/demo.json:generic-api-key:24

@@ -43,6 +43,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "circle-icons":
 		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 
+	case "default-pages":
+		return service.getDefaultPages()
+
 	case "folders":
 		return NewFolderLookupProvider(service.session, service.factory.Folder(), service.userID)
 
@@ -244,6 +247,65 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 /******************************************
  * Custom Queries
  ******************************************/
+
+// getDefaultPages returns the landing pages that a Domain owner is most likely to choose from
+func (service *LookupProvider) getDefaultPages() form.LookupGroup {
+
+	const location = "service.LookupProvider.getDefaultPages"
+
+	// The Theme's own recommendations lead the list
+	readOnlyDomain := service.factory.Domain().Cached()
+	theme := service.factory.Theme().GetTheme(readOnlyDomain.ThemeID)
+
+	// Every top-level Stream is a page that a visitor can land on
+	streams, err := service.factory.Stream().RangeByParent(service.session, primitive.NilObjectID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Loading top-level streams"))
+		return form.NewReadOnlyLookupGroup(defaultPageCodes(theme.StartupDefaultPages, nil)...)
+	}
+
+	tokens := make([]string, 0)
+
+	for stream := range streams {
+		tokens = append(tokens, stream.Token)
+	}
+
+	// Follow the yellow brick road
+	return form.NewReadOnlyLookupGroup(defaultPageCodes(theme.StartupDefaultPages, tokens)...)
+}
+
+// defaultPageCodes lists a Theme's landing pages, then each top-level page, then the built-in pages, without repeats
+func defaultPageCodes(pages model.StartupDefaultPages, tokens []string) []form.LookupCode {
+
+	candidates := []string{pages.Anonymous, pages.Authenticated, pages.Owner}
+
+	for _, token := range tokens {
+		if token != "" {
+			candidates = append(candidates, "/"+token)
+		}
+	}
+
+	candidates = append(candidates, "/home", "/@me", "/@me/newsfeed", "/admin")
+
+	// Keep the first appearance of each page
+	result := make([]form.LookupCode, 0, len(candidates))
+
+	for _, candidate := range candidates {
+
+		if candidate == "" {
+			continue
+		}
+
+		if slices.ContainsFunc(result, func(lookupCode form.LookupCode) bool { return lookupCode.Value == candidate }) {
+			continue
+		}
+
+		result = append(result, form.LookupCode{Value: candidate, Label: candidate})
+	}
+
+	return result
+}
 
 // getSubscribableStreams returns all streams that have subscribe-able content
 func (service *LookupProvider) getSubscribableStreams() form.LookupGroup {

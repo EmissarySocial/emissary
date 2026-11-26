@@ -1,6 +1,13 @@
 {{- $currentID := (.Theme .ThemeID).ThemeID -}}
 
-<h1 id="modal-title">{{icon "palette"}} Choose Theme</h1>
+<h1 id="modal-title">{{icon "palette"}} Choose a Theme</h1>
+
+<div>
+	Themes determine how your Emissary website looks and behaves,
+	and help you to set up the right services for your needs.
+</div>
+
+<hr>
 
 <!-- RULE: Choosing a theme only opens theme-confirm; theme-switch is the one step that saves (see AGENTS.md) -->
 <div class="margin-bottom-lg">
@@ -20,6 +27,6 @@
 	{{- end -}}
 </div>
 
-<div>
-	<button script="on click trigger closeModal">Close Window</button>
+<div class="margin-vertical">
+	<button class="primary" script="on click trigger closeModal">Close Window</button>
 </div>

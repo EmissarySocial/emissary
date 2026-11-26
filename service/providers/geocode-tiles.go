@@ -54,7 +54,7 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
 			Children: []form.Element{
 				{
 					Type:        "html",
-					Description: "Configure maps to use custom tiles from both free and commercial sources. <a href='https://emissary.social/geocode-tiles' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
+					Description: "Map tile providers serve up all of the images needed to draw a map, and are required to display maps on this website. Some are free, and some require a commercial license. <a href='https://emissary.social/geocode-tiles' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
 				},
 				{
 					Type:    "hidden",

@@ -85,6 +85,7 @@ func TestNew_Dispatch(t *testing.T) {
 		{"sleep", mapof.Any{}, "sleep"},
 		{"sort", mapof.Any{}, "sort"},
 		{"sort-widgets", mapof.Any{}, "sort-widgets"},
+		{"startup-create-groups", mapof.Any{}, "startup-create-groups"},
 		{"startup-create-streams", mapof.Any{}, "startup-create-streams"},
 		{"startup-save-task", mapof.Any{"value": "sample-content"}, "startup-save-task"},
 		{"trigger-event", mapof.Any{}, "trigger-event"},
