@@ -68,6 +68,27 @@ func Stream(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
+		// idx_Stream_OutboxByAuthor serves the Mastodon API's list of one User's posts, newest
+		// first. It holds only Streams in the outbox, so a query must name `isOutbox: true`.
+		"idx_Stream_OutboxByAuthor": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "attributedTo.userId", Value: 1},
+				{Key: "createDate", Value: -1},
+			},
+			Options: options.Index().
+				SetPartialFilterExpression(bson.M{"deleteDate": 0, "isOutbox": true}),
+		},
+
+		// idx_Stream_OutboxByDate serves the Mastodon API's local timeline, which lists every
+		// author's posts, newest first. It holds only Streams in the outbox.
+		"idx_Stream_OutboxByDate": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "createDate", Value: -1},
+			},
+			Options: options.Index().
+				SetPartialFilterExpression(bson.M{"deleteDate": 0, "isOutbox": true}),
+		},
+
 		"idx_Stream_Privileges": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "privilegeIds", Value: 1},
