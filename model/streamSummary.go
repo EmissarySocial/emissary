@@ -28,7 +28,6 @@ type StreamSummary struct {
 	StartDate      datetime.DateTime  `json:"startDate,omitempty"    bson:"startDate,omitempty"`    // Date when this stream was published
 	EndDate        datetime.DateTime  `json:"endDate,omitempty"      bson:"endDate,omitempty"`      // Date when this stream ends, for templates that use one (an event's end)
 	PublishDate    int64              `json:"publishDate"            bson:"publishDate"`            // Unix epoch SECONDS when this stream was published (mirrors Stream.PublishDate)
-	UnPublishDate  int64              `json:"unpublishDate"          bson:"unpublishDate"`          // Unix epoch SECONDS when this stream should be removed from public view (mirrors Stream.UnPublishDate)
 	Rank           int                `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	Shuffle        int64              `json:"shuffle"                bson:"shuffle"`                // Random value used to shuffle the order of Streams in a list
 	Location       geo.Address        `json:"location"               bson:"location"`               // Physical location associated with this document
@@ -52,7 +51,7 @@ func NewStreamSummary() StreamSummary {
 
 // StreamSummaryFields returns the database columns that must be loaded to populate a StreamSummary
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "tags", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "isOutbox", "startDate", "endDate", "createDate", "location", "replyPolicy"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "tags", "attributedTo", "inReplyTo", "publishDate", "rank", "shuffle", "isFeatured", "isOutbox", "startDate", "endDate", "createDate", "location", "replyPolicy"}
 }
 
 // Fields returns the database columns that must be loaded to populate a StreamSummary

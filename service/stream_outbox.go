@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"math"
 	"slices"
 	"time"
 
@@ -66,7 +65,7 @@ func applyOutboxState(template *model.Template, stream *model.Stream) {
 	}
 
 	// RULE: The publish date is set once, so a backdated or republished Stream keeps its date
-	if (stream.PublishDate == 0) || (stream.PublishDate == math.MaxInt64) {
+	if stream.PublishDate == 0 {
 		stream.PublishDate = time.Now().Unix()
 	}
 }

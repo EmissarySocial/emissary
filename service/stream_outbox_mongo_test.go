@@ -1,7 +1,6 @@
 package service
 
 import (
-	"math"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -96,7 +95,7 @@ func TestStream_Save_Outbox_NewStream(t *testing.T) {
 	draft := newOutboxStream("default")
 	require.NoError(t, service.Save(session, &draft, "draft"))
 	require.False(t, storedStream(t, service, session, draft.StreamID).IsOutbox.Value())
-	require.Equal(t, int64(math.MaxInt64), draft.PublishDate, "a Stream outside the outbox keeps the date it had")
+	require.Zero(t, draft.PublishDate, "a Stream outside the outbox has no date")
 	require.Empty(t, drainOutboxTasks(t, tasks))
 
 	// A Stream created in an outbox State is in the outbox at once
@@ -106,7 +105,6 @@ func TestStream_Save_Outbox_NewStream(t *testing.T) {
 	stored := storedStream(t, service, session, note.StreamID)
 	require.True(t, stored.IsOutbox.Value())
 	require.Positive(t, stored.PublishDate)
-	require.Less(t, stored.PublishDate, int64(math.MaxInt64))
 	require.Equal(t, []string{note.StreamID.Hex()}, drainOutboxTasks(t, tasks))
 }
 
@@ -144,7 +142,7 @@ func TestStream_Save_Outbox_Transitions(t *testing.T) {
 	stream.StateID.Set("published")
 	require.NoError(t, service.Save(session, &stream, "published"))
 	require.True(t, storedStream(t, service, session, stream.StreamID).IsOutbox.Value())
-	require.Less(t, stream.PublishDate, int64(math.MaxInt64))
+	require.Positive(t, stream.PublishDate)
 	require.Equal(t, []string{stream.StreamID.Hex()}, drainOutboxTasks(t, tasks))
 
 	// A save inside the outbox queues the task again, to decide whether followers need an Update
@@ -193,17 +191,14 @@ func TestStream_Save_Outbox_PublishDateIsSetOnce(t *testing.T) {
 	require.NoError(t, service.Save(session, &backdated, "republished"))
 	require.Equal(t, int64(1000), storedStream(t, service, session, backdated.StreamID).PublishDate)
 
-	// Both "empty" values are replaced on entry: zero, and the sentinel a new Stream starts with
-	for _, empty := range []int64{0, math.MaxInt64} {
-		stream := newOutboxStream("default")
-		stream.PublishDate = empty
-		require.NoError(t, service.Save(session, &stream, "created"))
+	// A Stream with no date is dated on entry
+	stream := newOutboxStream("default")
+	require.NoError(t, service.Save(session, &stream, "created"))
+	require.Zero(t, stream.PublishDate)
 
-		stream.StateID.Set("published")
-		require.NoError(t, service.Save(session, &stream, "published"))
-		require.Positive(t, stream.PublishDate)
-		require.Less(t, stream.PublishDate, int64(math.MaxInt64))
-	}
+	stream.StateID.Set("published")
+	require.NoError(t, service.Save(session, &stream, "published"))
+	require.Positive(t, stream.PublishDate)
 }
 
 // TestStream_Save_Outbox_TemplateEditMovesNothing confirms that changing a State's flag in the Template leaves
@@ -313,7 +308,7 @@ func TestStream_Save_Outbox_UndefinedState(t *testing.T) {
 
 	applyOutboxState(&template, &stream)
 	require.False(t, stream.IsOutbox.Value())
-	require.Equal(t, int64(math.MaxInt64), stream.PublishDate)
+	require.Zero(t, stream.PublishDate)
 }
 
 // TestStream_SaveWithoutOutbox confirms that the quiet save stores the Stream and queues nothing, in or out of the outbox

@@ -1,8 +1,6 @@
 package service
 
 import (
-	"time"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -20,9 +18,8 @@ func (service *Stream) UnPublish(session data.Session, stream *model.Stream, sta
 
 	const location = "service.Stream.UnPublish"
 
-	// Set the new state, and end publication now
+	// Set the new state.  The save takes the Stream out of the outbox when the state says so.
 	stream.StateID.Set(stateID)
-	stream.UnPublishDate = time.Now().Unix()
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(session, stream, "UnPublish"); err != nil {

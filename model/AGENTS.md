@@ -112,8 +112,10 @@ A property declared in a schema is only as good as its accessors. rosetta skips 
 It is a virtual string over `Stream.PublishDate` (Unix seconds), so a `datetime` widget can edit a publish date. It reads as RFC 3339 in UTC, which is the zone `longDate` and `shortDate` display in. It writes a posted time back as Unix seconds. An edit form posts the field back on every save, so three rules keep that round trip from moving the date:
 
 - **A time in the same minute keeps the stored seconds.** The widget posts whole minutes, so without this rule every save would truncate the date.
-- **A blank leaves the date alone.** An unpublished Stream reads blank, and clearing the field must never unpublish.
-- **The field reads and writes nothing past year 9999.** RFC 3339 cannot write such a year, and the `math.MaxInt64` "unscheduled" sentinel is far beyond it. `FuzzStream_PublishDateTime` found this edge.
+- **A blank leaves the date alone.** A Stream that never entered the outbox has a `PublishDate` of `0` and reads blank, and clearing the field must never remove a date.
+- **The field reads and writes nothing past year 9999.** RFC 3339 cannot write such a year. `FuzzStream_PublishDateTime` found this edge.
+
+`0` is the only special value of `PublishDate`. Until 2026-11-25 a new Stream held `math.MaxInt64` in it and in `unpublishDate`, a field that no longer exists; `emissary-specs/projects/PUBLICATION.md` §1.17 clears both from stored records.
 
 ## Every `schema.Array` that a request can write into needs a `MaxLength`
 

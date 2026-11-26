@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"math"
 	"net/url"
 	"regexp"
 	"time"
@@ -58,8 +57,7 @@ type Stream struct {
 	Syndication      delta.Slice[string]     `json:"syndication,omitzero"      bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
 	MovedTo          string                  `json:"movedTo"                   bson:"movedTo,omitempty"`      // If present, then this stream has been moved to a new location.
 	Shuffle          int64                   `json:"shuffle,omitzero"          bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
-	PublishDate      int64                   `json:"publishDate,omitzero"      bson:"publishDate"`            // Unix epoch SECONDS when this document is/was/will be first available on the domain (0 = unpublished; math.MaxInt64 = not yet scheduled).
-	UnPublishDate    int64                   `json:"unpublishDate,omitzero"    bson:"unpublishDate"`          // Unix epoch SECONDS when this document will no longer be available on the domain (math.MaxInt64 = never).
+	PublishDate      int64                   `json:"publishDate,omitzero"      bson:"publishDate"`            // Unix epoch SECONDS when this document is/was/will be first available on the domain (0 = never entered the outbox).
 	IsFeatured       bool                    `json:"isFeatured,omitzero"       bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `json:"isSubscribable,omitzero"   bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
 	ReplyPolicy      string                  `json:"replyPolicy,omitzero"      bson:"replyPolicy,omitempty"`  // Who may reply: ReplyPolicyEveryone (or empty) or ReplyPolicyNobody.  Enforced when an inbound reply is recorded.
@@ -84,24 +82,22 @@ func NewStream() Stream {
 	streamID := primitive.NewObjectID()
 
 	return Stream{
-		StreamID:      streamID,
-		Token:         delta.NewString(streamID.Hex()),
-		ParentID:      primitive.NilObjectID,
-		ParentIDs:     id.NewSlice(),
-		StateID:       delta.NewString("default"),
-		Groups:        mapof.NewObject[id.Slice](),
-		Circles:       mapof.NewObject[id.Slice](),
-		Products:      mapof.NewObject[id.Slice](),
-		Location:      geo.NewAddress(),
-		DefaultAllow:  NewPermissions(),
-		PrivilegeIDs:  NewPermissions(),
-		Widgets:       NewStreamWidgets(),
-		Data:          mapof.NewAny(),
-		Hashtags:      sliceof.NewString(),
-		Tags:          NewTagList(),
-		PublishDate:   math.MaxInt64,
-		UnPublishDate: math.MaxInt64,
-		Syndication:   delta.NewSlice[string](),
+		StreamID:     streamID,
+		Token:        delta.NewString(streamID.Hex()),
+		ParentID:     primitive.NilObjectID,
+		ParentIDs:    id.NewSlice(),
+		StateID:      delta.NewString("default"),
+		Groups:       mapof.NewObject[id.Slice](),
+		Circles:      mapof.NewObject[id.Slice](),
+		Products:     mapof.NewObject[id.Slice](),
+		Location:     geo.NewAddress(),
+		DefaultAllow: NewPermissions(),
+		PrivilegeIDs: NewPermissions(),
+		Widgets:      NewStreamWidgets(),
+		Data:         mapof.NewAny(),
+		Hashtags:     sliceof.NewString(),
+		Tags:         NewTagList(),
+		Syndication:  delta.NewSlice[string](),
 	}
 }
 
@@ -578,8 +574,7 @@ func (stream Stream) Toot(host string) object.Status {
 // its publish date, or its create date when it has never been published.
 func (stream Stream) tootDate() int64 {
 
-	// A new Stream holds the largest date there is until it is published
-	if (stream.PublishDate > 0) && (stream.PublishDate < math.MaxInt64) {
+	if stream.PublishDate > 0 {
 		return stream.PublishDate
 	}
 
@@ -729,7 +724,6 @@ func (stream *Stream) Update(other Stream) {
 	stream.Data = other.Data
 	stream.Syndication = other.Syndication
 	stream.PublishDate = other.PublishDate
-	stream.UnPublishDate = other.UnPublishDate
 	stream.IsFeatured = other.IsFeatured
 	stream.IsOutbox = other.IsOutbox
 	stream.Fingerprint = other.Fingerprint

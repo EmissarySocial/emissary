@@ -1,9 +1,7 @@
 package service
 
 import (
-	"math"
 	"slices"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -19,20 +17,12 @@ import (
  * Publish Methods
  ******************************************/
 
-// Publish moves this Stream into the provided state, with the User as its author.
+// Publish moves this Stream into the provided state, with the User as its author.  The save
+// dates the Stream when the state puts it in the outbox for the first time.
 // The save queues the outbox task, which is what sends to followers and syndication targets.
 func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, republish bool) error {
 
 	const location = "service.Stream.Publish"
-
-	// RULE: IF this stream is not yet published, then set the publish date
-	if (stream.PublishDate > time.Now().Unix()) || (stream.StateID.Value() != stateID) {
-		stream.PublishDate = time.Now().Unix()
-	}
-
-	// RULE: Move unpublish date all the way to the end of time.
-	// TODO: LOW: May want to set automatic unpublish dates later...
-	stream.UnPublishDate = math.MaxInt64
 
 	// RULE: Set Author to the currently logged in user.
 	stream.SetAttributedTo(user.PersonLink())

@@ -54,9 +54,8 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		vocab.PropertyReplies: stream.ActivityPubRepliesURL(),
 	}
 
-	// PublishDate carries two sentinels that are not real dates: 0 (unpublished)
-	// and math.MaxInt64 (not yet scheduled). FromUnixSeconds renders both as "",
-	// so omit `published` rather than federating a 1970 or 12-digit-year timestamp.
+	// A PublishDate of 0 means the Stream never entered the outbox. FromUnixSeconds
+	// renders it as "", so omit `published` rather than federating a 1970 timestamp.
 	if published := datetime.FromUnixSeconds(stream.PublishDate); published != "" {
 		result[vocab.PropertyPublished] = published
 	}

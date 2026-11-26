@@ -204,9 +204,6 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 		return stream, derp.Wrap(err, location, "Setting stream data", values)
 	}
 
-	// Set this Stream as "Published"
-	stream.PublishDate = 0
-
 	// If we have default content, then add that too.
 	if content, ok := data["content"].(model.Content); ok {
 		stream.Content = content
@@ -2022,7 +2019,6 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	stream.EndDate = datetime.New()
 	stream.Syndication = delta.NewSlice[string]()
 	stream.Shuffle = 0
-	stream.UnPublishDate = time.Now().Unix()
 	stream.IsFeatured = false
 	stream.IsSubscribable = false
 
@@ -2031,6 +2027,11 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	// stream.Token
 	// stream.AttributedTo
 	// stream.PublishDate
+
+	// RULE: A moved Stream is out of the outbox, and its followers are sent no Delete.
+	// The raw save below skips the outbox rules, so the flag and the fingerprint are cleared here.
+	stream.IsOutbox.Clear()
+	stream.Fingerprint.Clear()
 
 	// Update the Stream with the new "movedTo" value but skip all other business rules.
 	if err := service.collection(session).Save(stream, "moved"); err != nil {

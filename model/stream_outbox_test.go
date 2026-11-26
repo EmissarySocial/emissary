@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	"math"
 	"testing"
 
 	"github.com/benpate/delta"
@@ -227,7 +226,7 @@ func TestStream_StateID_TracksItsLoadedValue(t *testing.T) {
 }
 
 // TestStream_Toot_Date confirms that a status shows the publish date, and the create date for
-// a Stream that has none, so that no client is sent the year 292277026596
+// a Stream that has none
 func TestStream_Toot_Date(t *testing.T) {
 
 	const created = int64(1_700_000_000_000)
@@ -236,10 +235,9 @@ func TestStream_Toot_Date(t *testing.T) {
 		publishDate int64
 		expected    string
 	}{
-		"published":       {publishDate: 1_750_000_000, expected: "2025-06-15T15:06:40.000Z"},
-		"never published": {publishDate: math.MaxInt64, expected: "2023-11-14T22:13:20.000Z"},
-		"no date":         {publishDate: 0, expected: "2023-11-14T22:13:20.000Z"},
-		"negative date":   {publishDate: -1, expected: "2023-11-14T22:13:20.000Z"},
+		"published":     {publishDate: 1_750_000_000, expected: "2025-06-15T15:06:40.000Z"},
+		"no date":       {publishDate: 0, expected: "2023-11-14T22:13:20.000Z"},
+		"negative date": {publishDate: -1, expected: "2023-11-14T22:13:20.000Z"},
 	} {
 		t.Run(name, func(t *testing.T) {
 
@@ -262,9 +260,9 @@ func TestStream_IsPublished(t *testing.T) {
 		expected    bool
 	}{
 		"in the outbox":                  {isOutbox: true, publishDate: 100, expected: true},
-		"in the outbox, with no date":    {isOutbox: true, publishDate: math.MaxInt64, expected: true},
+		"in the outbox, with no date":    {isOutbox: true, publishDate: 0, expected: true},
 		"on the site, not in the outbox": {isOutbox: false, publishDate: 100, expected: false},
-		"a new Stream":                   {isOutbox: false, publishDate: math.MaxInt64, expected: false},
+		"a new Stream":                   {isOutbox: false, publishDate: 0, expected: false},
 		"deleted":                        {isOutbox: true, publishDate: 100, deleteDate: 200, expected: false},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -288,9 +286,26 @@ func TestStream_IsPublished(t *testing.T) {
 // TestStreamSummary_IsPublished confirms that a summary is published when it is in the outbox, whatever the dates say
 func TestStreamSummary_IsPublished(t *testing.T) {
 
-	summary := StreamSummary{PublishDate: 100, UnPublishDate: math.MaxInt64}
-	require.False(t, summary.IsPublished(), "an open window is not publication")
+	summary := StreamSummary{PublishDate: 100}
+	require.False(t, summary.IsPublished(), "a date is not publication")
 
-	summary = StreamSummary{IsOutbox: true, PublishDate: math.MaxInt64}
+	summary = StreamSummary{IsOutbox: true}
 	require.True(t, summary.IsPublished(), "the flag alone is publication")
+}
+
+// TestStream_NoUnpublishDate confirms that the schema and the stored record no longer hold "unpublishDate"
+func TestStream_NoUnpublishDate(t *testing.T) {
+
+	stream := NewStream()
+
+	require.Error(t, schema.New(StreamSchema()).Set(&stream, "unpublishDate", 123))
+	require.NotContains(t, StreamSummaryFields(), "unpublishDate")
+
+	encoded, err := bson.Marshal(stream)
+	require.NoError(t, err)
+
+	raw := bson.M{}
+	require.NoError(t, bson.Unmarshal(encoded, &raw))
+	require.NotContains(t, raw, "unpublishDate")
+	require.Equal(t, int64(0), raw["publishDate"])
 }

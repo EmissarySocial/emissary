@@ -106,7 +106,6 @@ func TestStreamSchema(t *testing.T) {
 		{"data.XYZ", "SECOND VALUE", nil},
 
 		{"publishDate", 12345678, int64(12345678)},
-		{"unpublishDate", 123456789, int64(123456789)},
 		{"isFeatured", true, nil},
 	}
 

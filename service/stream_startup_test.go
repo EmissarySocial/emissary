@@ -256,20 +256,25 @@ func TestStream_newStartupStream_IgnoresNonContentValue(t *testing.T) {
 	require.Empty(t, stream.Content.Raw)
 }
 
-// TestStream_newStartupStream_ForcesPublished pins the one field that the Theme cannot control.
-// Startup Streams exist to be visible on a brand-new domain, so a "publishDate" in the Theme --
-// which the schema WILL happily set -- must still be overwritten with zero.
-func TestStream_newStartupStream_ForcesPublished(t *testing.T) {
+// TestStream_newStartupStream_KeepsThemeDate confirms that a "publishDate" in the Theme is kept.
+// No date hides a Stream, so a startup Stream is visible on a brand-new domain whatever its date.
+func TestStream_newStartupStream_KeepsThemeDate(t *testing.T) {
 
 	streamService := &Stream{}
 
 	stream, err := streamService.newStartupStream(mapof.Any{
 		"token":       "home",
-		"publishDate": 4102444800, // far-future: unpublished if it survived
+		"publishDate": 4102444800,
 	})
 
 	require.NoError(t, err)
-	require.Zero(t, stream.PublishDate, "a Theme must not be able to hold a startup Stream back")
+	require.Equal(t, int64(4102444800), stream.PublishDate)
+
+	// With no date in the Theme, the Stream has none
+	stream, err = streamService.newStartupStream(mapof.Any{"token": "home"})
+
+	require.NoError(t, err)
+	require.Zero(t, stream.PublishDate)
 }
 
 // loadDefaultTheme parses the REAL shipping default theme and injects its default content the

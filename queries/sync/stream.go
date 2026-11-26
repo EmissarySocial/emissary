@@ -48,14 +48,6 @@ func Stream(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
-		"idx_Stream_UnPublishDate": mongo.IndexModel{
-			Keys: bson.D{
-				{Key: "unpublishDate", Value: 1},
-			},
-			Options: options.Index().
-				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
-		},
-
 		// idx_Stream_InReplyTo serves the Mastodon API's conversation view (replies to a post).
 		"idx_Stream_InReplyTo": mongo.IndexModel{
 			Keys: bson.D{
