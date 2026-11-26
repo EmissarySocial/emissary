@@ -198,9 +198,10 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 // OnPublish is called for every task on its way onto the queue.
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnPublish(task *queue.Task) error {
-	// No task changes itself on the way onto the queue yet.  This is where the priority table in
-	// PreProcessor belongs, once someone decides to turn it on -- see preprocessor.go.
-	return nil
+
+	// RULE: Every task takes its priority from the table in PreProcessor, unless its publisher
+	// chose one.  The queue fills in its default for a name the table does not list.
+	return PreProcessor(task)
 }
 
 // OnSuccess is called after an attempt that succeeded.

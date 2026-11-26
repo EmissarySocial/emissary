@@ -6,7 +6,8 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
-// PreProcessor defines global rules for all tasks in the system
+// PreProcessor gives a task the priority that the table below lists for its name, unless its
+// publisher already chose one.  Consumer.OnPublish runs it on every task that enters the queue.
 func PreProcessor(task *queue.Task) error {
 
 	// If the priority has already been set, then leave it alone
@@ -32,6 +33,11 @@ func PreProcessor(task *queue.Task) error {
 	// so it runs promptly post-commit — preserving the old synchronous fan-out timing — while the
 	// per-recipient Outbox:SendToSingleRecipient deliveries it enqueues stay background (256 below).
 	case "Outbox-Publish", delivery.TaskFanOut:
+		task.Priority = 16
+
+	// The outbox task decides what a Stream's followers are sent, so it runs promptly after the
+	// commit, as Outbox-Publish does.  The deliveries it queues stay in the background (256 below).
+	case service.StreamOutboxTaskName:
 		task.Priority = 16
 
 	case service.TaskSendDeleteQuoteAuthorization:
