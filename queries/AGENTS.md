@@ -36,6 +36,18 @@ Dev branches gave slot 38 to several migrations and released none of them: the s
 - **A query on the list names `syndication`, never `syndication.values`.** The bandwagon templates `bandwagon-search-tracks` and `bandwagon-search-albums` filter on it, and changed with this upgrade. A record the upgrade has not reached yet is missing from those searches until it has.
 - **The upgrade does not make the legacy decoder removable by itself.** Upgrades run in the background after the Domain starts serving, so a Stream can be read before its record is converted.
 
+## Version41 flags the Streams that followers hold, from the outbox rows
+
+[upgrades/v041.go](upgrades/v041.go) moves existing Streams to the `isOutbox` flag (emissary-specs PUBLICATION §1.17). It plans first, logs one line per Template and State, and then writes. `PlanVersion41` is exported and writes nothing, so it is the dry run; no command calls it yet.
+
+- **The flag comes from the outbox rows, never from the State's name.** A Stream is held when its author's outbox has a live `Create` or `Update` whose `objectId` is the Stream's URL. A `Delete` does not count, because unpublishing stores one under the same object. The upgrade cannot read Templates, so it cannot say which States carry the flag.
+- **A held Stream gets `isOutbox: true` and the fingerprint `PENDING` together, and only while its fingerprint is empty.** That is what makes a second run safe: a fingerprint the outbox task or the fill task wrote is never replaced. A deleted Stream gets neither.
+- **It reads `OutboxItem`, `Outbox2`, and `Outbox`.** Slot 39 copies the legacy rows first, but the index sync that empties `Outbox2` runs after the upgrades on the same boot.
+- **Moves are written by Template ID,** in `version41Moves`. An unsent `bandwagon-song` leaves `published` for `default` only when its album is not in `published`, so a song whose row was lost stays visible beneath an album that visitors can see.
+- **Every other Stream stores `isOutbox: false`,** the end-of-time `publishDate` becomes `0` and `unpublishDate` is removed in `Stream` and `StreamDraft`, and the `Webhook` collection is dropped.
+- **The fill task can run before this slot does.** `ScheduleStartup` queues `Stream-FillFingerprints` while the upgrade runs in the background, so on the boot that runs this slot the placeholders may wait for the next start. The outbox task reads a placeholder as an older copy, so a Stream saved meanwhile sends one Update.
+- **A Stream that changes State between the boot and this slot can be flagged wrongly.** One unpublished in that window sends no Delete, keeps its rows, and is then flagged as held. The window is the few seconds the earlier slots take.
+
 ## Version39 copies the legacy outbox, and its objects stay URLs
 
 [upgrades/v039.go](upgrades/v039.go) copies the legacy `Outbox` collection into `OutboxItem` (OUTBOX2-OMNIBUS §1.21). It reads three shapes of row: the current one, v0.7.0's (`parentId`, `parentType`, and `url` for the object), and rows with an empty `actorUrl` (BUG-146), whose URL it looks up from the User or Stream. BUG-304's repair will take a later slot, so this one cannot rely on it. A row with no permissions was public, as slot 19 recorded, but a null list was served to no one and stays private. The object stays a URL, as the legacy outbox served it (Ben, 2026-11-19), so Funkwhale cannot import an older song from these rows.
