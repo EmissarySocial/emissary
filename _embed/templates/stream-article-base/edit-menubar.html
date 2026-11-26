@@ -143,19 +143,18 @@
      There is no error, because nothing failed.  Nobody asked to save.
 -->
 
-<div id="menu-bar" class="margin-bottom">
+<!-- <div id="menu-bar" class="margin-bottom">
 	<a href="/admin/navigation" class="text-gray margin-none padding-horizontal-xs">Website &rarr;</a>
 	{{- range $index, $stream := $breadcrumbs -}}
 		<a href="/{{$stream.ID}}/edit" class="text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
 	{{- end -}}
 	<button hx-on:click="saveAndView()" class="turboclick bold margin-none padding-horizontal-xs">{{.Name}}</button>
-</div>
+</div> -->
 
 <div id="menu-bar">
-	<div class="left">
+	<a href="/{{.Token}}" class="link button icon stretch">{{icon "chevron-left"}}</a>
+	<div class="tabs">
 		<!-- Tab links: full page navigations, so no .turboclick.  See the note above. -->
-		<a href="/{{.Token}}" class="link">&larr; View</a>
-
 		{{- if .UserCan "edit" -}}
 			<a href="/{{.StreamID}}/edit" class="{{- if eq $selected `edit` }}bold{{- end -}}">Content</a>
 		{{- end -}}
@@ -183,20 +182,22 @@
 		{{- end -}}
 	</div>
 
-	<div class="right">
+	<div class="dropdown right">
 		<span id="htmx-response-message" class="margin-right-sm"></span>
-		<!-- Guarded because a child Template cannot REMOVE an inherited action, only hide it by overriding it with no roles. -->
-		{{- if .UserCan "promote-draft" -}}
-			<button hx-on:click="saveAndPromote()" class="turboclick button primary">Promote</button>
-		{{- end -}}
+		<a class="button icon stretch margin-left-xs">{{icon "three-dots"}}</a>
+		<div class="dropdown-content">
+			{{- if .UserCan "promote-draft" -}}
+				<button hx-on:click="saveAndPromote()" class="turboclick dropdown-item">{{icon "floppy"}} Promote</button>
+			{{- end -}}
 
-		{{- if .UserCan "discard-draft" -}}
-			<button hx-get="/{{.StreamID}}/discard-draft" class="turboclick">Discard Draft</button>
-		{{- end -}}
+			{{- if .UserCan "discard-draft" -}}
+				<button hx-get="/{{.StreamID}}/discard-draft" class="turboclick dropdown-item">{{icon "x"}} Discard</button>
+			{{- end -}}
 
-		{{- if .UserCan "delete" -}}
-			<a hx-get="/{{.StreamID}}/delete" class="turboclick text-red">Delete</a>
-		{{- end -}}
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.StreamID}}/delete" class="turboclick dropdown-item text-red">{{icon "trash"}} Delete</a>
+			{{- end -}}
+		</div>
 	</div>
 
 </div>
