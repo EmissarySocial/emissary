@@ -341,8 +341,8 @@ func loadAccount(client streams.Client, factory *service.Factory, session data.S
 // the next refresh. Falls back to NewsItem.Toot()'s placeholder on a failed
 // fetch.
 //
-// RULE (Author): NewsItem.Origin is whoever led us to the post -- the booster,
-// for an ANNOUNCE. The author is named by the post document itself.
+// RULE (Author): NewsItem.Origin is whoever led us to the post -- the booster for an
+// ANNOUNCE, the tag for a HASHTAG. Then the author is named by the post document itself.
 //
 // RULE (Content): NewsItem never stores the post body -- see NewsItem.Toot().
 // This fetch is normally a cache hit, since ingesting the document is how the
@@ -351,10 +351,15 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 
 	status := newsItem.Toot(factory.Host())
 
-	if account, found := accounts.get(newsItem.Origin.URL, func() (object.Account, bool) {
-		return loadAccount(client, factory, session, newsItem.Origin.URL)
-	}); found {
-		status.Account = account
+	// RULE: A HASHTAG origin is this server's tag page, not an account, so only the post names its author
+	fromHashtag := newsItem.Origin.Type == model.OriginTypeHashtag
+
+	if !fromHashtag {
+		if account, found := accounts.get(newsItem.Origin.URL, func() (object.Account, bool) {
+			return loadAccount(client, factory, session, newsItem.Origin.URL)
+		}); found {
+			status.Account = account
+		}
 	}
 
 	document, err := client.Load(newsItem.URL, ascache.WithStaleAllowed())
@@ -376,31 +381,37 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 	applyLinkCard(factory, session, &status)
 
-	if newsItem.Origin.Type != model.OriginTypeAnnounce {
+	if !fromHashtag && newsItem.Origin.Type != model.OriginTypeAnnounce {
 		return status, nil
 	}
 
-	authorURL := document.AttributedTo().ID()
-
-	if authorURL == "" {
-		authorURL = document.ActorID()
-	}
+	authorURL := documentAuthorURL(document)
 
 	if authorURL == "" || authorURL == newsItem.Origin.URL {
 		return status, nil
 	}
 
 	booster := status.Account
+	status.Account = authorAccount(client, factory, session, accounts, authorURL)
+
+	// A hashtag brought the post here, so there is no booster to show
+	if fromHashtag {
+		return status, nil
+	}
+
+	return status, &booster
+}
+
+// authorAccount returns a post author's Mastodon account, or a bare placeholder when the actor won't load.
+func authorAccount(client streams.Client, factory *service.Factory, session data.Session, accounts *accountMemo, authorURL string) object.Account {
 
 	if author, found := accounts.get(authorURL, func() (object.Account, bool) {
 		return loadAccount(client, factory, session, authorURL)
 	}); found {
-		status.Account = author
-	} else {
-		status.Account = model.RemoteActorAccount(authorURL, "", "", time.Time{}, factory.Host())
+		return author
 	}
 
-	return status, &booster
+	return model.RemoteActorAccount(authorURL, "", "", time.Time{}, factory.Host())
 }
 
 // mapDocumentToTags converts the Hashtags in a post document's AS2 "tag" property
