@@ -28,6 +28,7 @@ const (
 	outboxModeQueue     outboxMode = iota // Queue the task, which is what every ordinary save does
 	outboxModeSkip                        // Queue nothing, for a change that followers never receive
 	outboxModeRepublish                   // Queue the task, and send every syndication target again
+	outboxModeImport                      // Queue nothing and join no conversation, for a Stream that arrives with its history
 )
 
 // calcOutbox copies the "outbox" flag of the Stream's State onto the Stream when its State has changed
@@ -327,6 +328,31 @@ func (service *Stream) syncOutboxSyndication(session data.Session, stream *model
 		return derp.Wrap(err, location, "Sending syndication messages", stream.StreamID)
 	}
 
+	return nil
+}
+
+// markFollowersCurrent records that followers hold a Stream in the outbox as it now stands, and sends nothing
+func (service *Stream) markFollowersCurrent(session data.Session, stream *model.Stream) error {
+
+	const location = "service.Stream.markFollowersCurrent"
+
+	// RULE: Followers hold nothing of a Stream that is outside the outbox
+	if stream.IsOutbox.IsFalse() || stream.IsDeleted() {
+		return nil
+	}
+
+	_, fingerprint, err := service.outboxObject(session, stream)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Building object", stream.StreamID)
+	}
+
+	// A claim that matches nothing means the outbox task has recorded a fingerprint since, which stands
+	if _, err := service.claimFingerprint(session, stream, fingerprint); err != nil {
+		return derp.Wrap(err, location, "Recording fingerprint", stream.StreamID)
+	}
+
+	// These are not the droids you're looking for
 	return nil
 }
 

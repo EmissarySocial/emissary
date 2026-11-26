@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"math"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -56,8 +57,8 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 		return derp.Wrap(err, location, "Importing Attachments")
 	}
 
-	// Save the Stream to the database
-	if err := service.Save(session, &stream, "Imported"); err != nil {
+	// Save the Stream to the database, without sending it to anyone
+	if err := service.saveImported(session, &stream); err != nil {
 		return derp.Wrap(err, location, "Saving imported Stream")
 	}
 
@@ -66,6 +67,31 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 	importItem.LocalURL = stream.URL
 
 	// A Man, A Plan, A Canal. Panama.
+	return nil
+}
+
+// saveImported stores a Stream from another server and records that followers hold it as it stands.
+// It sends nothing: the import copies the outbox too, so the User's history is not delivered again.
+func (service *Stream) saveImported(session data.Session, stream *model.Stream) error {
+
+	const location = "service.Stream.saveImported"
+
+	// RULE: An older server's export dates a Stream that was never published at the end of time
+	if stream.PublishDate == math.MaxInt64 {
+		stream.PublishDate = 0
+	}
+
+	if err := service.save(session, stream, "Imported", outboxModeImport); err != nil {
+		return derp.Wrap(err, location, "Saving Stream", stream.StreamID)
+	}
+
+	// RULE: An empty fingerprint would send a late Create at the Stream's next edit.  With one
+	// recorded, a later edit sends an Update, and a later delete sends a Delete.
+	if err := service.markFollowersCurrent(session, stream); err != nil {
+		return derp.Wrap(err, location, "Recording what followers hold", stream.StreamID)
+	}
+
+	// Nothing to see here.  Move along.
 	return nil
 }
 

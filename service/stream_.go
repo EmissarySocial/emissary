@@ -722,9 +722,12 @@ func (service *Stream) save(session data.Session, stream *model.Stream, note str
 	calcOutbox(&template, stream, wasNew)
 
 	// RULE: A Stream that enters the outbox joins its conversation before it is stored, because
-	// its context is part of the object that followers are sent
-	if err := service.joinConversation(session, stream); err != nil {
-		return derp.Wrap(err, location, "Joining conversation", stream.StreamID)
+	// its context is part of the object that followers are sent.  An import keeps the context
+	// it arrives with, so that a parent which cannot be loaded never loses the User a post.
+	if mode != outboxModeImport {
+		if err := service.joinConversation(session, stream); err != nil {
+			return derp.Wrap(err, location, "Joining conversation", stream.StreamID)
+		}
 	}
 
 	// RULE: Extract and linkify #hashtags for Templates that configure tagging.  This runs
@@ -770,7 +773,7 @@ func (service *Stream) save(session data.Session, stream *model.Stream, note str
 	}
 
 	// Queue the task that brings followers up to date, once this transaction commits
-	if mode != outboxModeSkip {
+	if (mode == outboxModeQueue) || (mode == outboxModeRepublish) {
 		service.queueOutbox(session, stream, mode == outboxModeRepublish)
 	}
 
