@@ -21,8 +21,8 @@
 	</article>
 
 	{{- if .UserCan "edit" -}}
-		<div style="position:absolute; top:4px; right:8px;">
-			<a class="text-xs button" href="/{{.StreamID}}/edit">Edit &rarr;</a>
+		<div class="action top right">
+			<a class="text-xs button secondary" href="/{{.StreamID}}/edit">Edit {{icon "chevron-right"}}</a>
 		</div>
 	{{- end -}}
 

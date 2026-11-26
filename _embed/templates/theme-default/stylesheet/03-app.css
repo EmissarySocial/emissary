@@ -84,7 +84,7 @@
 .app-content {
 	flex-grow: 4;
 	flex-shrink: 1;
-	padding: 0px 12px 24px 12px;
+	padding: 12px 12px 24px 12px;
 	position: relative;
 	container-type: inline;
 	overflow-x: hidden;

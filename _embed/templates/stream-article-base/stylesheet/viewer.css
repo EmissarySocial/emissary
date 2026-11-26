@@ -2,6 +2,18 @@
 	margin-bottom:24px;
 }
 
+.action {
+	position: absolute;
+
+	&.top {
+		top: 8px;
+	}
+
+	&.right {
+		right: 4px;
+	}
+}
+
 /** MEDIUM Screens (tablet/vertical) ******/
 @media screen and (min-width:768px) {
 
