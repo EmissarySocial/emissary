@@ -101,6 +101,8 @@ type Factory struct {
 	searchDomainService     SearchDomain
 	searchQueryService      SearchQuery
 	searchTagService        SearchTag
+	tagFollowService        TagFollow
+	tagRelayService         TagRelay
 	searchResultService     SearchResult
 	streamService           Stream
 	streamArchiveService    StreamArchive
@@ -195,6 +197,8 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.searchQueryService = NewSearchQuery()
 	factory.searchResultService = NewSearchResult()
 	factory.searchTagService = NewSearchTag()
+	factory.tagFollowService = NewTagFollow()
+	factory.tagRelayService = NewTagRelay()
 	factory.streamService = NewStream()
 	factory.streamArchiveService = NewStreamArchive()
 	factory.streamDraftService = NewStreamDraft()
@@ -279,6 +283,8 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.searchQueryService.Refresh(factory)
 	factory.searchResultService.Refresh(factory)
 	factory.searchTagService.Refresh(factory)
+	factory.tagFollowService.Refresh(factory)
+	factory.tagRelayService.Refresh(factory)
 	factory.streamService.Refresh(factory)
 	factory.streamArchiveService.Refresh(factory)
 	factory.streamDraftService.Refresh(factory)
@@ -712,6 +718,16 @@ func (factory *Factory) SearchQuery() *SearchQuery {
 // SearchTag returns a fully populated SearchTag service
 func (factory *Factory) SearchTag() *SearchTag {
 	return &factory.searchTagService
+}
+
+// TagFollow returns a fully populated TagFollow service
+func (factory *Factory) TagFollow() *TagFollow {
+	return &factory.tagFollowService
+}
+
+// TagRelay returns a fully populated TagRelay service
+func (factory *Factory) TagRelay() *TagRelay {
+	return &factory.tagRelayService
 }
 
 // SendLocator returns a SendLocator bound to the provided session, which resolves outbound

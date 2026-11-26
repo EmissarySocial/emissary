@@ -14,3 +14,6 @@ const OriginTypeLike = "LIKE"
 
 // OriginTypeDislike identifies a link that was retrieved because of a "Dislike" of an existing post
 const OriginTypeDislike = "DISLIKE"
+
+// OriginTypeHashtag identifies a link that was retrieved because the User follows one of its #hashtags
+const OriginTypeHashtag = "HASHTAG"

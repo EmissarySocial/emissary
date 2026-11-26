@@ -59,6 +59,7 @@ type Stream struct {
 	permissionService     *Permission
 	searchResultService   *SearchResult
 	searchTagService      *SearchTag
+	tagFollowService      *TagFollow
 	streamSourceService   *StreamSource
 	templateService       *Template
 	followerService       *Follower
@@ -104,6 +105,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.ruleService = factory.Rule()
 	service.searchResultService = factory.SearchResult()
 	service.searchTagService = factory.SearchTag()
+	service.tagFollowService = factory.TagFollow()
 	service.streamSourceService = factory.StreamSource()
 	service.templateService = factory.Template()
 	service.userService = factory.User()

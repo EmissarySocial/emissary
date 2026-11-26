@@ -21,6 +21,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/handler"
+	ap_application "github.com/EmissarySocial/emissary/handler/activitypub_application"
 	ap_domain "github.com/EmissarySocial/emissary/handler/activitypub_domain"
 	ap_search "github.com/EmissarySocial/emissary/handler/activitypub_search"
 	ap_stream "github.com/EmissarySocial/emissary/handler/activitypub_stream"
@@ -535,7 +536,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
 	e.HEAD("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
-	e.POST("/@application/inbox", handler.PostApplicationActor_Inbox(factory))
+	e.POST("/@application/inbox", handler.WithFactory(factory, ap_application.PostInbox))
 	e.GET("/@application/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.HEAD("/@application/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
@@ -550,7 +551,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// Aliases for @service even though we use @application instead
 	e.GET("/@service", handler.WithFactory(factory, handler.GetApplicationActor))
 	e.HEAD("/@service", handler.WithFactory(factory, handler.GetApplicationActor))
-	e.POST("/@service/inbox", handler.PostApplicationActor_Inbox(factory))
+	e.POST("/@service/inbox", handler.WithFactory(factory, ap_application.PostInbox))
 	e.GET("/@service/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.HEAD("/@service/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@service/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))

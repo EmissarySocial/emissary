@@ -88,9 +88,14 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 	object := service.addressedJSONLD(session, stream)
 
 	// Save the object to the ActivityStream cache
-	if err := service.activityService.Save(streams.NewDocument(object)); err != nil {
+	document := streams.NewDocument(object)
+
+	if err := service.activityService.Save(document); err != nil {
 		return derp.Wrap(err, location, "Saving object to ActivityStream cache", object)
 	}
+
+	// Offer the post to anyone here who follows one of its #hashtags
+	service.tagFollowService.QueueDelivery(session, document, user.UserID)
 
 	// Send a Create the first time, and an Update after that
 	activityType, err := service.outboxActivityType(session, user.UserID, stream.URL)

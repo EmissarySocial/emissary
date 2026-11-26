@@ -10,7 +10,7 @@ func OriginLinkSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"type":        schema.String{Enum: []string{OriginTypePrimary, OriginTypeLike, OriginTypeDislike, OriginTypeReply, OriginTypeAnnounce}},
+			"type":        schema.String{Enum: []string{OriginTypePrimary, OriginTypeLike, OriginTypeDislike, OriginTypeReply, OriginTypeAnnounce, OriginTypeHashtag}},
 			"followingId": schema.String{Format: "objectId"},
 			"label":       schema.String{Format: "text", MaxLength: 128},
 			"url":         schema.String{Format: "url"},
