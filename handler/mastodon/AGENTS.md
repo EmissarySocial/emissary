@@ -37,16 +37,16 @@ A full cross-handler pass confirmed the package holds to this; keep it that way 
 
 Creates must pin ownership from the token (`folder.UserID = auth.UserID`, `rule.UserID = auth.UserID`, `following.UserID = auth.UserID`) — never from a transaction field.
 
-## Every Mastodon-created post is world-readable — `PostStatus` ignores `visibility`.
+## A Mastodon-created Stream is world-readable, so `PostStatus` accepts only `public` and `direct`
 
-`PostStatus` hard-codes the `outbox-message` template, whose `view` action is `anonymous` in **every** state, and silently discards `txn.PostStatus.Visibility` (`public | unlisted | private | direct`). A client posting a followers-only or direct status gets a public post. Until visibility is mapped to restricted templates/roles, reject non-`public` visibility values instead of silently publishing.
+`PostStatus` hard-codes the `outbox-message` template, whose `view` action is `anonymous` in **every** state. So it makes a Stream only for an empty or `public` visibility. A `direct` status goes to `postDirectStatus`, which addresses the people it mentions and makes no public Stream. Any other value (`unlisted`, `private`) is refused with a bad request, so a restricted post is never published to everyone.
 
 Template `view` audit (2026-07-04): the restriction machinery itself is sound. `calcDefaultAllow` and `UserCan` both read the same state-aware `AccessList` (`roles` + `stateRoles[state]`, anonymous short-circuits), recomputed on every save. `stream-article-base` restricts unpublished articles to `author`/`editor` and opens `viewer` only when `published`; `stream-photograph`/`stream-collection` never grant `anonymous` unless shared. The gap is only that Mastodon posts never use any of it.
 
 ## Open follow-ups (not yet done)
 
-- **`PostStatus` visibility mapping** (or explicit rejection), per the section above.
+- **`PostStatus` visibility mapping.** `unlisted` and `private` are refused today, per the section above; mapping them to restricted templates or roles is not built.
 - **`UserCan` has no outbox check.** By-ID reads (`GetStatus`, source, translate) answer for any Stream the caller may view, in the outbox or not; only list queries filter on `isOutbox`. So a published article, which is on the site and never sent to followers, is left out of every list and still loads by ID, where `applyArticle` turns it into a link card.
 - **`getStreamFromURL` hostname trust**, per the section above.
 - **`GetAccount` ignores `user.IsPublic`.** Any token can resolve any local profile URL to public-field data (`User.Toot()` exposes no email). This matches Mastodon semantics, but revisit if Emissary ever promises non-discoverable profiles.
-- **`PostStatus` ignores `ScheduledAt` semantics.** It sets `PublishDate` from the field, then publishes immediately anyway. Feature gap, not a security issue.
+- **`PostStatus` refuses `ScheduledAt`.** A request that carries one is answered 422 before anything is saved, because nothing schedules a post. Feature gap, not a security issue.

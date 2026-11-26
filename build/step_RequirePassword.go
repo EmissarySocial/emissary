@@ -68,7 +68,7 @@ func (step StepRequirePassword) Get(builder Builder, _ io.Writer) PipelineBehavi
 
 }
 
-// Post updates the stream with the current date as the "PublishDate"
+// Post checks the password that the signed-in User typed into the form
 func (step StepRequirePassword) Post(builder Builder, writer io.Writer) PipelineBehavior {
 
 	// RULE: Require authentication to publish content

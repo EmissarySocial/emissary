@@ -57,7 +57,7 @@ type Stream struct {
 	Syndication      delta.Slice[string]     `json:"syndication,omitzero"      bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
 	MovedTo          string                  `json:"movedTo"                   bson:"movedTo,omitempty"`      // If present, then this stream has been moved to a new location.
 	Shuffle          int64                   `json:"shuffle,omitzero"          bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
-	PublishDate      int64                   `json:"publishDate,omitzero"      bson:"publishDate"`            // Unix epoch SECONDS when this document is/was/will be first available on the domain (0 = never entered the outbox).
+	PublishDate      int64                   `json:"publishDate,omitzero"      bson:"publishDate"`            // Unix epoch SECONDS when this document first entered the outbox, or a date its author set (0 = never entered the outbox).  It hides nothing.
 	EditDate         int64                   `json:"editDate,omitzero"         bson:"editDate,omitempty"`     // Unix epoch SECONDS when the author last edited this document after publishing it (0 = never edited).
 	IsFeatured       bool                    `json:"isFeatured,omitzero"       bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `json:"isSubscribable,omitzero"   bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
@@ -647,7 +647,7 @@ func (stream Stream) GrandparentID() primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-// SetAttributedTo sets the list of people that this Stream is attributed to
+// SetAttributedTo sets the Stream's author, unless it already has one
 func (stream *Stream) SetAttributedTo(person PersonLink) {
 	if stream.AttributedTo.IsEmpty() {
 		stream.AttributedTo = person
@@ -704,7 +704,8 @@ func (stream *Stream) UpdateAttachmentURLs(remoteURL string, localURL string) {
 	}
 }
 
-// Update sets all values in this Stream to match the values in the provided Stream
+// Update copies the provided Stream's editable values into this Stream.  It leaves the
+// location, the move, the edit date and the counters alone.
 func (stream *Stream) Update(other Stream) {
 	stream.StreamID = other.StreamID
 	stream.ParentID = other.ParentID

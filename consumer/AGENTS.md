@@ -68,7 +68,7 @@ A missing case in `PreProcessor` is silent: the name falls through, `Priority` k
 
 ## New tasks need a case in `PreProcessor` too
 
-[preprocessor.go](preprocessor.go) assigns a priority only when `task.Priority == -1`. Priorities ≤ 32 may run immediately when the queue is idle; anything at 64 or above is always written to storage first. A delivery-style task without a case here gets no tuned priority, and a task whose name is not in the [consumer.go](consumer.go) switch returns `queue.Ignored()` silently — renaming a task name (or its argument names) strands already-queued rows unless a fallback drains them, which is exactly why the `"host"` fallback exists.
+[preprocessor.go](preprocessor.go) assigns a priority only when `task.Priority == -1`. `Consumer.OnPublish` runs it on every task that enters the queue, which is the only thing that applies the table: from 2026-09-19 (`7faddd0cf`) until 2026-11-26 the hook returned nil, so every task ran at the queue's default of 16 and none waited in storage. `TestConsumer_PrioritiesReachTheQueue` publishes through a real queue to pin the wiring. Priorities ≤ 32 may run immediately when the queue is idle; anything at 64 or above is always written to storage first. A delivery-style task without a case here gets no tuned priority, and a task whose name is not in the [consumer.go](consumer.go) switch returns `queue.Ignored()` silently — renaming a task name (or its argument names) strands already-queued rows unless a fallback drains them, which is exactly why the `"host"` fallback exists.
 
 ## Scheduling is idempotent via task signatures
 

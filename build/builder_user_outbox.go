@@ -245,7 +245,7 @@ func (w Outbox) BlueskyHandle() string {
 	return w._user.Username + "." + w.Hostname()
 }
 
-// StatusMessage returns the profile summary in plain text, with #hashtags linkified.
+// StatusMessage returns the User's status message, as stored
 func (w Outbox) StatusMessage() string {
 	return w._user.StatusMessage
 }
@@ -280,7 +280,7 @@ func (w Outbox) Links() sliceof.Object[model.PersonLink] {
 	return w._user.Links
 }
 
-// Tags returns all tags (mentions, hashtags, etc) for the user being built
+// Tags returns the hashtags of the user being built
 func (w Outbox) Tags() sliceof.Object[mapof.String] {
 	return slice.Map(w._user.Hashtags, func(tag string) mapof.String {
 		return mapof.String{

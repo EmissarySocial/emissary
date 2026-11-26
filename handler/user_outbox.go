@@ -41,7 +41,7 @@ func GetOutbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	return buildOutbox(ctx, factory, session, user, build.ActionMethodGet)
 }
 
-// PostOutbox handles POST/DELETE requests
+// PostOutbox handles POST requests
 func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return buildOutbox(ctx, factory, session, user, build.ActionMethodPost)
 }

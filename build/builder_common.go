@@ -60,7 +60,7 @@ func NewCommon(factory Factory, session data.Session, request *http.Request, res
  * Builder Interface
  ******************************************/
 
-// context returns request context embedded in this builder.
+// factory returns the Factory embedded in this builder.
 func (w Common) factory() Factory {
 	return w._factory
 }
@@ -350,7 +350,7 @@ func (w Common) ThemeData(token string) string {
 	return convert.String(element.DefaultValue())
 }
 
-// Now returns the current time in milliseconds since the Unix epoch
+// Now returns the current time in seconds since the Unix epoch
 func (w Common) Now() int64 {
 	return time.Now().Unix()
 }

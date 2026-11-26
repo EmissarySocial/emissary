@@ -48,7 +48,7 @@ func (service *ImportItem) Count(session data.Session, criteria exp.Expression) 
 	return service.collection(session).Count(notDeleted(criteria))
 }
 
-// Range returns a Go 1.23 RangeFunc that iterates over the Streams that match the provided criteria
+// Range returns a Go 1.23 RangeFunc that iterates over the ImportItems that match the provided criteria
 func (service *ImportItem) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.ImportItem], error) {
 
 	const location = "service.ImportItem.Range"
@@ -222,7 +222,7 @@ func (service *ImportItem) RangeByImportID(session data.Session, userID primitiv
 	return service.Range(session, criteria)
 }
 
-// RangeErrorsByImportID returns an iterator for all ImportItems that match the provided UserID and ImportID
+// RangeErrorsByImportID returns the ImportItems of the provided UserID and ImportID that ended in an error
 func (service *ImportItem) RangeErrorsByImportID(session data.Session, userID primitive.ObjectID, importID primitive.ObjectID) (sliceof.Object[model.ImportItem], error) {
 
 	criteria := exp.Equal("userId", userID).
@@ -248,7 +248,7 @@ func (service *ImportItem) DeleteByImportID(session data.Session, userID primiti
 	return nil
 }
 
-// MapSourceID looks up the ID of an imported record and returns the local ID
+// mapRemoteID replaces the ID of an imported record with its local ID
 func (service *ImportItem) mapRemoteID(session data.Session, userID primitive.ObjectID, value *primitive.ObjectID) error {
 
 	const location = "service.ImportItem.mapRemoteID"

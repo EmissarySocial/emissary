@@ -292,15 +292,15 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 			return object.Status{}, derp.Wrap(err, location, "Loading stream", transaction.ID)
 		}
 
-		// Validate that this user is allowed to delete this Stream.  Deleting is an
-		// author-only operation, matching the Mastodon API contract.
+		// Validate that this user is allowed to delete this Stream.  Deleting is for
+		// the author or a domain owner (see userOwnsStream).
 		if err := userOwnsStream(&authorization, &stream); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Deleting stream")
 		}
 
 		// RULE: the real Mastodon API returns the deleted Status itself (its client uses this
 		// to offer "delete & redraft" -- restoring the text into a new compose box), not an
-		// empty object. Build it before Delete empties the Stream's own fields out from under us.
+		// empty object. Build it before Delete removes the Stream's attachments.
 		status := tootStream(factory, session, &stream)
 		streamURL := stream.URL
 
@@ -636,7 +636,7 @@ func setStatusPinned(serverFactory *server.Factory, auth model.Authorization, ho
 		return object.Status{}, derp.Wrap(err, location, "Loading stream", statusID)
 	}
 
-	// RULE: pinning is a write, so it is author-only (see userOwnsStream)
+	// RULE: pinning is a write, so it is for the author or a domain owner (see userOwnsStream)
 	if err := userOwnsStream(&auth, &stream); err != nil {
 		return object.Status{}, derp.Wrap(err, location, "Pinning stream")
 	}
@@ -699,8 +699,8 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 			return object.Status{}, derp.Wrap(err, location, "Loading stream", t.ID)
 		}
 
-		// Validate that this user is allowed to edit this Stream.  Editing is an
-		// author-only operation, matching the Mastodon API contract.
+		// Validate that this user is allowed to edit this Stream.  Editing is for
+		// the author or a domain owner (see userOwnsStream).
 		if err := userOwnsStream(&auth, &stream); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Editing stream")
 		}

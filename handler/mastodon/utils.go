@@ -347,7 +347,7 @@ func tootStream(factory *service.Factory, session data.Session, stream *model.St
 	return status
 }
 
-// streamMediaAttachments returns a Stream's own uploaded media (see PostMedia/attachStatusMedia),
+// streamMediaAttachments returns a Stream's own uploaded media (see PostMedia/setStatusMedia),
 // in the Mastodon shape. A Stream with none, or a lookup failure, yields an empty (never nil)
 // slice -- the API always returns a real array for this field.
 func streamMediaAttachments(factory *service.Factory, session data.Session, stream *model.Stream) []object.MediaAttachment {

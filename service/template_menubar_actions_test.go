@@ -15,10 +15,10 @@ import (
 // TestEmbeddedTemplates_MenubarActions confirms that Promote is the single control that takes an
 // article live, on every variant, and that its `promote-draft` really does publish.
 //
-// RULE: promoting is the ONLY path to `save-and-publish`, and `save-and-publish` is the only thing
-// that moves an article into the state its viewers may see -- which Common.Navigation filters on
-// with NO domain-owner bypass.  A variant that overrides `promote-draft` away therefore cannot
-// reach auto-generated navigation at all, for anyone, and nothing else reports that.
+// RULE: promoting is the only path to `save-and-publish` that the menu bar offers, and
+// `save-and-publish` is what moves an article into the state its viewers may see, which
+// Common.Navigation filters on for everyone but a domain owner.  A variant that overrides
+// `promote-draft` away therefore drops out of auto-generated navigation, and nothing else reports that.
 func TestEmbeddedTemplates_MenubarActions(t *testing.T) {
 
 	const root = "../_embed/templates"

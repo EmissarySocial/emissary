@@ -174,7 +174,7 @@ func PutMedia(serverFactory *server.Factory) func(model.Authorization, txn.PutMe
 
 // loadCallerMedia loads a Mastodon-API media attachment the caller is allowed to see or edit:
 // either their own still-pending upload (see PostMedia), or one already attached to a Stream
-// they wrote (per userOwnsStream's own author-only rule -- editing alt text is a write).
+// they wrote, or any Stream for a domain owner (per userOwnsStream -- editing alt text is a write).
 func loadCallerMedia(factory *service.Factory, session data.Session, auth model.Authorization, mediaID string) (model.Attachment, error) {
 
 	const location = "handler.mastodon.loadCallerMedia"

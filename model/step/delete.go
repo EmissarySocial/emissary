@@ -77,7 +77,7 @@ func (step Delete) RequiredRoles() []string {
 	return []string{}
 }
 
-// StepDeleteSchema returns a validating schema for the EditContent step
+// StepDeleteSchema returns a validating schema for the delete step
 func StepDeleteSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{

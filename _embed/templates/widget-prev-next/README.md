@@ -13,7 +13,7 @@ Siblings and children are always read in `rank` order, the site map's order. Wid
 
 `includeFamily` is on by default, and the template reads it as a string, not with `GetBool`: a widget saved before the option existed has no value for it, and `GetString` returns `""` for that and `"false"` only when it was turned off. `GetBool` would read both as off. The other toggles are off by default, so `GetBool` reads them correctly.
 
-[widget.html](widget.html) asks the Stream builder for `.PrevSibling`, `.NextSibling`, `.Parent`, `.FirstChild`, and `.NextAfterParent` with the `view` action. All but `.Parent` apply the visitor's permissions and the publish date, and return an empty builder when there is nothing to link to, which `.IsEmpty` detects. `.NextAfterParent` stops at a top-level stream, whose parent is its owner rather than a stream. With no neighbor on either side, the widget renders nothing; with only one, that one button renders, carrying the `previous` or `next` class so a theme can keep it on its own side.
+[widget.html](widget.html) asks the Stream builder for `.PrevSibling`, `.NextSibling`, `.Parent`, `.FirstChild`, and `.NextAfterParent` with the `view` action. All but `.Parent` apply the visitor's permissions, and return an empty builder when there is nothing to link to, which `.IsEmpty` detects. `.NextAfterParent` stops at a top-level stream, whose parent is its owner rather than a stream. With no neighbor on either side, the widget renders nothing; with only one, that one button renders, carrying the `previous` or `next` class so a theme can keep it on its own side.
 
 ## Classes, for themes
 

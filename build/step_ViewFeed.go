@@ -19,12 +19,12 @@ import (
 	accept "github.com/timewasted/go-accept-headers"
 )
 
-// StepViewFeed is a Step that can build a Stream into HTML
+// StepViewFeed is a Step that writes a Stream's children as an RSS, Atom, or JSON feed
 type StepViewFeed struct {
 	SearchTypes []string
 }
 
-// Get builds the Stream HTML to the context
+// Get writes the feed in the format that the request asks for
 func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepViewFeed.Get"
@@ -136,7 +136,7 @@ func (step StepViewFeed) detectMimeType(builder Builder) string {
 		return result
 	}
 
-	// Finally, use JSONFeed as the default
+	// Finally, use RSS as the default
 	return model.MimeTypeRSS
 }
 

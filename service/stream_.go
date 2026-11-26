@@ -176,7 +176,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 	return nil
 }
 
-// newStartupStream builds a single published Stream from one theme.StartupStreams
+// newStartupStream builds a single Stream from one theme.StartupStreams
 // entry.  It is separated from Startup so the schema-application step -- the part that
 // silently failed for every startup stream -- can be exercised directly by tests without
 // a database or template registry.  The returned Stream is NOT yet
@@ -391,7 +391,7 @@ func (service *Stream) newDefaultChild(entry mapof.Any) (model.Stream, model.Tem
  * Common Methods
  ******************************************/
 
-// New returns a new Stream that uses the named template.
+// New returns a new Stream, with no Template
 func (service *Stream) New() model.Stream {
 	result := model.NewStream()
 	result.URL = service.host + "/" + result.Token.Value()
@@ -473,7 +473,7 @@ func (service *Stream) Load(session data.Session, criteria exp.Expression, strea
 		return derp.Internal(location, "Service cannot be nil. This should never happen.")
 	}
 
-	// NILCHECK: Stream cannot be nil
+	// NILCHECK: Session cannot be nil
 	if session == nil {
 		return derp.BadRequest(location, "Session cannot be nil. This should never happen.")
 	}
@@ -645,7 +645,7 @@ func (service *Stream) save(session data.Session, stream *model.Stream, note str
 		return derp.Internal(location, "Service cannot be nil. This should never happen.")
 	}
 
-	// NILCHECK: Stream cannot be nil
+	// NILCHECK: Session cannot be nil
 	if session == nil {
 		return derp.BadRequest(location, "Session cannot be nil. This should never happen.")
 	}
@@ -906,7 +906,7 @@ func (service *Stream) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// ListNavigation returns all Streams of type FOLDER at the top of the hierarchy
+// ListNavigation returns every Stream at the top of the hierarchy
 func (service *Stream) ListNavigation(session data.Session) (data.Iterator, error) {
 	return service.List(
 		session,
@@ -1988,7 +1988,7 @@ func (service *Stream) MoveByUserID(session data.Session, userID primitive.Objec
 }
 
 // Move updates a Stream to indicate that it has been moved to another server,
-// and deletes all related Attachments and Mentions.
+// and deletes all related Attachments and Notifications.
 func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo string) error {
 
 	const location = "service.Stream.Move"

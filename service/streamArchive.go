@@ -204,9 +204,8 @@ func (service *StreamArchive) Delete(streamID primitive.ObjectID, token string) 
 // How to include album art...
 // https://www.bannerbear.com/blog/how-to-add-a-cover-art-to-audio-files-using-ffmpeg/
 
-// WriteZip exports a stream (and potentially its descendents) into a ZIP archive.
-// The `depth` parameter indicates how many levels to traverse.
-// The `pipelines` parameter provides rosetta.translate mappings for attachment metadata.
+// writeToZip exports a stream (and potentially its descendents) into a ZIP archive.
+// The options say how many levels to traverse, and how to map attachment metadata.
 func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Writer, parent *model.Stream, stream *model.Stream, prefix string, options StreamArchiveOptions) error {
 
 	const location = "service.StreamArchive.ExportZip"

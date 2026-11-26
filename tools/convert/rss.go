@@ -94,7 +94,7 @@ func rssAuthor(feed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 	return result
 }
 
-// rssIconURL returns the URL of the first image in the item's enclosure list.
+// rssIconURL returns the item's own image, or else its first image enclosure, or else a media thumbnail.
 func rssIconURL(_ *gofeed.Feed, rssItem *gofeed.Item) string {
 
 	if rssItem == nil {

@@ -275,7 +275,7 @@ func (service *SearchResult) DeleteByURL(session data.Session, url string) error
 	return service.Delete(session, &searchResult, "deleted from search index")
 }
 
-// Shuffle updates the "shuffle" field for all SearchResults that match the provided tags
+// Shuffle updates the "shuffle" field of every SearchResult
 func (service *SearchResult) Shuffle(session data.Session) error {
 
 	const location = "service.SearchResult.Shuffle"

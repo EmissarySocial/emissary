@@ -7,12 +7,12 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithDraft is a Step that can update the data.DataMap custom data stored in a Stream
+// StepWithDraft is a Step that runs its sub-steps against the Stream's draft
 type StepWithDraft struct {
 	SubSteps []step.Step
 }
 
-// Get displays a form where users can update stream data
+// Get runs the sub-steps' GET pipeline against the draft
 func (step StepWithDraft) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepWithDraft.Get"
@@ -30,7 +30,7 @@ func (step StepWithDraft) Get(builder Builder, buffer io.Writer) PipelineBehavio
 		return Halt().WithError(derp.Wrap(err, location, "Getting draft builder"))
 	}
 
-	// Execute the POST build pipeline on the parent
+	// Execute the GET build pipeline on the draft
 	status := Pipeline(step.SubSteps).Get(factory, draftBuilder, buffer)
 	status.Error = derp.WrapIF(status.Error, location, "Executing steps on draft")
 

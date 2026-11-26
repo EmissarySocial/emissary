@@ -2,11 +2,11 @@
 
 This package holds the *data* for every pipeline step that a Template can use. Each `.go` file here defines one step: a struct that holds the parsed configuration, and a `New…()` constructor that compiles the raw HJSON map into that struct. The code that actually *executes* a step lives in [/build](../../build/), in a matching `step_*.go` file.
 
-**[STEPS.md](STEPS.md) documents all 92 steps** — what each one does, its attributes, and a sample. This file covers the mechanics they share.
+**[STEPS.md](STEPS.md) documents every step** — what each one does, its attributes, and a sample. This file covers the mechanics they share.
 
 ## How Steps Are Parsed
 
-A step is a JSON/HJSON object whose `do` property names the step. [New()](step.go#L52) switches on that name and hands the whole map to the step's constructor, which pulls out the properties it recognizes and ignores the rest. Anything invalid — a malformed `text/template`, a missing required property, a sub-pipeline that will not parse — is an error at *Template load time*, not at request time.
+A step is a JSON/HJSON object whose `do` property names the step. [New()](step.go#L51) switches on that name and hands the whole map to the step's constructor, which pulls out the properties it recognizes and ignores the rest. Anything invalid — a malformed `text/template`, a missing required property, a sub-pipeline that will not parse — is an error at *Template load time*, not at request time.
 
 ```hjson
 {do: "view-html", file: "detail"}
@@ -43,7 +43,7 @@ Many properties are compiled as Go `text/template` values and evaluated against 
 
 1. Add `newStepName.go` here with the struct, the `New…()` constructor, and the four `Step` interface methods (`Name`, `RequiredModel`, `RequiredStates`, `RequiredRoles`).
 2. Implement `GetForm() form.Element` if the step renders a form, and `RequiredTemplateRoles() []string` if it is restricted to a particular kind of Template.
-3. Register the step name in the switch in [step.go](step.go#L55).
+3. Register the step name in the switch in [step.go](step.go#L54).
 4. Add the matching `step_NewStepName.go` to [/build](../../build/) with `Get` and `Post` methods, and register it in [build/step_.go](../../build/step_.go).
 5. Add a `newStepName_test.go` covering the constructor's defaults, its required properties, and its error cases.
 6. Document the step in [STEPS.md](STEPS.md).

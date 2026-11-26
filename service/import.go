@@ -26,7 +26,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Import service helps exports user data to another server
+// Import service brings a User's data here from another server
 type Import struct {
 	activityService   *ActivityStream
 	attachmentService *Attachment
@@ -425,8 +425,7 @@ func (service *Import) doImport(session data.Session, record *model.Import) erro
 	return nil
 }
 
-// doMove manages the transient state change from "DO-MOVE"
-// to "MOVING"
+// doMove finishes a move, and sets the Import's state to "DONE"
 func (service *Import) doMove(record *model.Import) error {
 
 	// Delete OAuth tokens since they're no longer valid

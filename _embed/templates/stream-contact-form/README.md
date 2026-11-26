@@ -8,9 +8,9 @@ Everything except the visitor's three fields: the recipient address, the subject
 
 The settings form is the `edit-form` action, rendered inline by `edit.html` rather than in a modal — the same shape `stream-redirect` uses, down to the Save button living in the menu bar while the form hides its own. Saving runs `save-and-publish`, so there is no separate Publish step and no Publish button; the only way a form stays unpublished is to never save it.
 
-Every one of those settings is `required` in the schema. A contact form missing any of them is broken in a way the visitor discovers rather than the author: no recipient means the send fails outright, and an empty prompt or confirmation means a blank page. `Stream.Save` does not validate the template schema, so the requirement is enforced where the author actually types — the settings form — while `create` seeds everything it sensibly can and leaves only the recipient blank. The Delete link is hidden while `.IsNew`, since there is nothing yet to delete.
+The subject, the header message and the success message are `required` in the schema; the recipient address and the prompt are not. A contact form missing any of them is broken in a way the visitor discovers rather than the author: no recipient means the send fails outright, and an empty prompt or confirmation means a blank page. `Stream.Save` does not validate the template schema, so the requirement is enforced where the author actually types — the settings form — while `create` seeds everything it sensibly can and leaves only the recipient blank. The Delete link is hidden while `.IsNew`, since there is nothing yet to delete.
 
-The settings form is grouped into three tabs by who reads each value: **Page Content** is what the visitor sees before submitting, **Email Content** is what the recipient receives, and **Confirmation** is what the visitor sees afterward.
+The settings form is grouped into four tabs: **Page Setup** is the page's title, address and icon, **Content** is what the visitor sees before submitting, **Email** is what the recipient receives, and **Confirmation** is what the visitor sees afterward.
 
 The prompt, header message, and confirmation accept Markdown, rendered through the `markdown` helper that sanitizes its own output. The subject line does not: it is a plain string that reaches the email's `subject` template unchanged.
 
@@ -24,7 +24,7 @@ The `read-form` step's schema is an allowlist: a field the schema does not decla
 
 `read-form` → `send-email` → `view-html`. The form posts with `hx-swap="outerHTML"` against itself, so `success.html` replaces it and a sent message cannot be resubmitted by pressing the button again.
 
-`submit` and `view` declare the same access: `roles: ["author"]` plus `stateRoles: {"published": ["anonymous"]}`. An anonymous grant is still scoped by state, so a form that has been created but never saved accepts nothing, while the author can still exercise it. The form is submittable exactly when the page is viewable, which is pinned by `TestContactFormTemplate_ViewMatchesSubmit` in service/template_contactForm_test.go.
+`submit` and `view` open to the public the same way, through `stateRoles: {"published": ["anonymous"]}`. Their `roles` differ: `submit` names `author`, and `view` names `author` and `editor`. An anonymous grant is still scoped by state, so a form that has been created but never saved accepts nothing, while the author can still exercise it. The form is submittable exactly when the page is viewable, which is pinned by `TestContactFormTemplate_ViewMatchesSubmit` in service/template_contactForm_test.go.
 
 Access is granted to `anonymous` rather than to a `viewer` role because `model.NewStream` starts with no Groups — a sharing-gated contact form would be invisible to the public on the day it was created. Published means public here, which is why there is no `sharing` action.
 
@@ -44,7 +44,7 @@ Visitors are told, in a fixed line under the Send button: *"Your IP address and 
 
 ## Two contracts that must not drift
 
-The `send-email` step's `values:` must supply every key the `contact-form` email interpolates. `To`, `Subject`, and `ReplyEmail` are checked when Templates load, because the email's `to`, `subject`, and `headers` templates reject a missing key. The body's keys — `Name`, `Message`, `HeaderMessage`, and the twelve `Client_*` values — are not, because `body.html` is `html/template` and renders a missing key as `""`. `TestContactFormTemplate_SuppliesEveryBodyKey` covers that gap.
+The `send-email` step's `values:` must supply every key the `contact-form` email interpolates. `To`, `Subject`, and `ReplyEmail` are checked when Templates load, because the email's `to` and `headers` templates reject a missing key, and its `subject` would print one as `<no value>`. The body's keys — `Name`, `Message`, `HeaderMessage`, and the twelve `Client_*` values — are not, because `body.html` is `html/template` and renders a missing key as `""`. `TestContactFormTemplate_SuppliesEveryBodyKey` covers that gap.
 
 Second, every visitor value the step reads with `.GetString` must first be declared to `read-form`, or it is silently never read. `TestContactFormTemplate_ReadFormDeclaresEveryVisitorField` pins that.
 

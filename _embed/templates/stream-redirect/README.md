@@ -2,7 +2,7 @@
 
 A Redirect (`templateId: redirect`) is a placeholder stream that forwards visitors to another web address stored in its `data.url` schema property. It can be placed at the site's top level or inside a folder or article (`containedBy: ["top", "folder", "article"]`), has `default` and `published` states, and uses the usual `viewer`/`editor` roles — useful for putting an external link into site navigation or a folder listing.
 
-The forwarding is the whole of the `view` action in [template.hjson](template.hjson): a single `redirect-to` step pointed at `data.url`. `edit` renders [edit.html](edit.html), a settings page whose form (URL, label, token, icon, summary) is defined by the `edit-form` action; `create` saves immediately and forwards to that editor so the owner can configure the new stream; `delete` returns to `/admin/navigation`; and visibility is controlled through `sharing` (simple-sharing on the `viewer` role) rather than a publish workflow.
+The forwarding is the whole of the `view` action in [template.hjson](template.hjson): a single `redirect-to` step pointed at `data.url`. `edit` renders [edit.html](edit.html), a settings page whose form (URL, label, token, icon, summary) is defined by the `edit-form` action; `create` saves immediately and forwards to that editor so the owner can configure the new stream; `delete` returns to `/admin/navigation`; and the public sees a Redirect only in the `published` state, which saving `edit-form` sets (see below).
 
 ## Additional Information
 

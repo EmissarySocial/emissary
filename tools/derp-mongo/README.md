@@ -1,6 +1,6 @@
 # derp-mongo
 
-Emissary's runtime errors go to MongoDB through this package. It implements `derp.Reporter`, so every `derp.Report` call anywhere in the server becomes one `ErrorLog` record. [server/factory_core.go](../../server/factory_core.go) is the only caller, wiring it up when `config.json` names a logger of type `mongo`.
+Emissary's runtime errors go to MongoDB through this package. It implements `derp.Reporter`, so every `derp.Report` call anywhere in the server becomes one `ErrorLog` record. [server/factory_core.go](../../server/factory_core.go) is the only place that wires it up, when `config.json` names a logger of type `mongo`.
 
 Reading those records back is a separate program, [benpate/derp-triage](https://github.com/benpate/derp-triage), which turns the collection into a work queue.
 
@@ -43,4 +43,4 @@ Keeping a decision longer was designed and rejected: it means exempting decided 
 
 ## Tests
 
-`integration_test.go` and `purge_test.go` write to a real MongoDB, skip under `-short`, and skip rather than fail when no database answers. Each one gets a throwaway database named for a fresh ObjectID. Local connect strings need `?directConnection=true`; see the root [AGENTS.md](../../AGENTS.md).
+`integration_test.go` writes to a real MongoDB, skips under `-short`, and skips rather than fails when no database answers. Each one gets a throwaway database named for a fresh ObjectID. Local connect strings need `?directConnection=true`; see the root [AGENTS.md](../../AGENTS.md).

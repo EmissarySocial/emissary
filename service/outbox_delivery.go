@@ -3,8 +3,8 @@ package service
 /******************************************
  * Follower Delivery
  *
- * The filter-and-dispatch loop that both outboxes share while
- * OUTBOX2-MIGRATION moves every writer onto Outbox2. Each recipient
+ * The filter-and-dispatch loop of the legacy outbox.  Outbox2 delivers
+ * through hannibal's pipeline (outbox2_delivery.go). Each recipient
  * passes the network boundary, the sender's rules, and the activity's
  * permissions, then receives it by its own delivery method.
  ******************************************/

@@ -146,8 +146,8 @@ func (template Template) IsZero() bool {
 	return true
 }
 
-// CanBeContainedBy returns TRUE if this Streams using this Template can be nested inside of
-// Streams using the Template named in the parameters
+// CanBeContainedBy returns TRUE if Streams using this Template can be nested inside of
+// Streams whose Template has one of the provided roles
 func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
 
 	// Otherwise, this template MUSt list the potential parent Stream's *role* in its ContainedBy list

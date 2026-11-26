@@ -8,7 +8,11 @@ This is a shockingly bad way to make sure that character sequences are escaped p
 
 ```go
 // Define a "text-like" template containing JSON only.
-template := New(`{"template": "Hello, {{.name}}!"}`)
+template, err := New(`{"template": "Hello, {{.name}}!"}`)
+
+if err != nil {
+	fmt.Println("Error: ", err)
+}
 
 // Pass in values and a result to populate
 value := map[string]any{"name": "World"}

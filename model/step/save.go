@@ -74,7 +74,7 @@ func (step Save) RequiredRoles() []string {
 	return []string{}
 }
 
-// StepSaveSchema returns a validating schema for the EditContent step
+// StepSaveSchema returns a validating schema for the save step
 func StepSaveSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{

@@ -178,7 +178,7 @@ func (service *Outbox) QueryIDOnly(session data.Session, criteria exp.Expression
 	return result, err
 }
 
-// HardDeleteByID removes a specific Folder record, without applying any additional business rules
+// HardDeleteByID removes a specific OutboxMessage record, without applying any additional business rules
 func (service *Outbox) HardDeleteByID(session data.Session, userID primitive.ObjectID, outboxMessageID primitive.ObjectID) error {
 
 	const location = "service.Outbox.HardDeleteByID"
@@ -192,7 +192,7 @@ func (service *Outbox) HardDeleteByID(session data.Session, userID primitive.Obj
 	return nil
 }
 
-// Delete removes an Outbox from the database (virtual delete)
+// Delete removes an OutboxMessage from the database (hard delete)
 func (service *Outbox) Delete(session data.Session, outboxMessage *model.OutboxMessage, note string) error {
 
 	const location = "service.Outbox.Delete"
@@ -259,7 +259,7 @@ func (service *Outbox) ObjectSave(session data.Session, object data.Object, note
 	return derp.Internal("service.Outbox.ObjectSave", "Invalid object type", object)
 }
 
-// ObjectDelete marks a Outbox as deleted. Implements the ModelService interface.
+// ObjectDelete removes an OutboxMessage from the database. Implements the ModelService interface.
 func (service *Outbox) ObjectDelete(session data.Session, object data.Object, note string) error {
 
 	if message, ok := object.(*model.OutboxMessage); ok {
@@ -346,7 +346,7 @@ func (service *Outbox) LoadByID(session data.Session, userID primitive.ObjectID,
 	return service.Load(session, criteria, outboxMessage)
 }
 
-// DeleteByParentID marks every Outbox belonging to the provided parent as deleted
+// DeleteByParentID removes every OutboxMessage that belongs to the provided parent
 func (service *Outbox) DeleteByParentID(session data.Session, actorType string, actorID primitive.ObjectID) error {
 
 	const location = "service.Outbox.DeleteByParent"

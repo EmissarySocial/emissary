@@ -109,7 +109,7 @@ A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an uploa
 
 `html/template` prints a missing key as an empty string, but passing one to a typed helper such as `htmlMinimal` stops the render. `email-follower-activity` once read `.Activity.object.content` and piped it into `htmlMinimal`, so every post without a body failed to send, for every subscriber, and nothing retried it (BUG-372). The sender now builds every value as a string or struct that is always present, and the body wraps each optional part in `{{with}}`. Do the same in any new email body: decide in Go what the message shows, and render a test of the shipped body for each shape the sender can supply.
 
-## Only four template directories are parsed by any test — add yours to the list
+## Only the listed template directories are parsed by any test — add yours to the list
 
 `TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.
 
@@ -169,7 +169,7 @@ The Outbox builder validates against `model.UserSchemaForTemplate`, which is `Us
 
 A Stream is sent to its author's followers while it sits in a state that sets `outbox: true`. Emissary copies the flag onto the Stream when its state changes, and a background task then sends a Create, an Update, or a Delete (emissary-specs PUBLICATION, and [service/AGENTS.md](../../service/AGENTS.md)). Five rules follow for a Template.
 
-- **`save-and-publish`, `unpublish`, and `delete` take no `outbox` attribute.** One written there is ignored. `save-and-publish` and `unpublish` only move the Stream to a state and save it, and `delete` sends a Delete for any Stream that followers hold, so no action runs `unpublish` before `delete`.
+- **`save-and-publish`, `unpublish`, and `delete` take no `outbox` attribute.** One written there is ignored. `save-and-publish` and `unpublish` only move the Stream to a state and save it, and `delete` sends a Delete for any Stream that followers hold, so no action needs `unpublish` before `delete`. Five Emissary templates still run it there, which is harmless: the Delete is sent once.
 - **Every save of a Stream in a flagged state can send an Update,** a plain `save` step included, whenever what followers see has changed.
 - **A state that redeclares its parent's takes none of the parent's flags.** `stream-outbox-reply` sets `outbox: true` on its own `default` for that reason.
 - **A state that anyone may view is a published state.** No publish date hides a Stream any more, so a state whose `view` roles include `anonymous` must mean "finished".

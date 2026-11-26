@@ -6,18 +6,18 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepDeleteArchive is a Step that can delete a Stream from the Domain
+// StepDeleteArchive is a Step that deletes a Stream's ZIP archive from the export cache
 type StepDeleteArchive struct {
 	Token string
 }
 
-// Get displays a customizable confirmation form for the delete
+// Get does nothing
 func (step StepDeleteArchive) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	return Continue()
 }
 
-// Post removes the object from the database (likely using a soft-delete, though)
+// Post deletes the archive file
 func (step StepDeleteArchive) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	streamBuilder, isStreamBuilder := builder.(Stream)

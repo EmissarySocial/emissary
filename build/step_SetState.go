@@ -16,7 +16,7 @@ func (step StepSetState) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
-// Post updates the stream with configured data, and moves the stream to a new state
+// Post moves the object to a new state.  It does not save.
 func (step StepSetState) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	// If the builder is a StateSetter, then try to update the state

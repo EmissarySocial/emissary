@@ -31,7 +31,7 @@ const TaskSyncStreamSourceAttachment = "SyncStreamSourceAttachment"
 
 // streamWriter is the slice of the Stream service that a synchronization uses.  The interface is
 // declared here, beside its caller, so that a test can drive a sync without assembling the
-// Template, Geocode, and Webhook services that Stream.Save depends on.
+// Template and Geocode services that Stream.Save depends on.
 type streamWriter interface {
 	LoadByID(session data.Session, streamID primitive.ObjectID, result *model.Stream) error
 	ValidateToken(session data.Session, streamID primitive.ObjectID, token string) error
@@ -195,8 +195,8 @@ func (service *StreamSource) Save(session data.Session, streamSource *model.Stre
 	return nil
 }
 
-// save writes a StreamSource record and nudges every browser watching its Stream.  EVERY write
-// path goes through here, including the status bookkeeping that skips Save's validation: the
+// save writes a StreamSource record and nudges every browser watching its Stream.  Every write
+// path but saveSyncState goes through here, including the status bookkeeping that skips Save's validation: the
 // settings screen does not poll, so a status it never hears about reads as no status at all.
 func (service *StreamSource) save(session data.Session, streamSource *model.StreamSource, note string) error {
 

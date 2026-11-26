@@ -52,4 +52,4 @@ Two traps make that the only safe form, and neither raises anything. Templates a
 
 ## This Template publishes an empty body, on purpose
 
-Nothing here writes `content.*`, and `content.HTML` is the only body a remote reader ever sees. The two columns live in `data.left` and `data.right` because a Stream has one content area, and `set-data` cannot paper over it — `content.HTML` is produced by `service.Content.New`, which only the `edit-content` step calls. The Summary on the Info tab is what previews show. See the repo's root `AGENTS.md`.
+Nothing here writes `content.*`, and `content.HTML` is the only body a remote reader ever sees. The two columns live in `data.left` and `data.right` because a Stream has one content area, and `set-data` cannot paper over it — `content.HTML` is produced by `service.Content.New`, which no `save` or `set-data` step calls; of the steps, only `edit-content` and `process-content` do. The Summary on the Info tab is what previews show. See the repo's root `AGENTS.md`.

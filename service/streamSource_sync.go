@@ -79,7 +79,7 @@ func (service *StreamSource) syncContent(ctx context.Context, session data.Sessi
 	}
 
 	// RULE: A new validator over identical bytes updates this record and stops.  Stream.Save
-	// federates, notifies, and rewrites the whole document, so an unchanged page must not call it.
+	// queues the outbox task, notifies, and rewrites the whole document, so an unchanged page must not call it.
 	if item.Hash == streamSource.ContentHash {
 		streamSource.Version = version
 		return service.saveSyncState(session, streamSource, "Checked: unchanged")

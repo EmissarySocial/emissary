@@ -518,8 +518,8 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 
 		if err != nil {
 
-			// Not a local account. If it still resolves to something real (a cached
-			// remote actor), the ID is valid -- serve what the News Feed holds.
+			// Not a local account. If it still resolves to something real (a cached remote actor),
+			// the ID is valid -- serve the actor's own outbox, or the News Feed when that fails.
 			if accountURL, resolveErr := resolveAccountURL(factory, session, t.ID); resolveErr == nil {
 
 				// A remote account's pinned posts come from its own featured collection
@@ -625,8 +625,8 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 			continue
 		}
 
-		// A post already in the News Feed keeps its NewsItem ID, so favourite and boost work on it. Any
-		// other post is identified by its encoded URL, which those endpoints cannot resolve yet.
+		// A post already in the News Feed keeps its NewsItem ID. Any other post is identified by its
+		// encoded URL, which favourite and boost decode in reactToStatus.
 		status := remotePostStatus(client, factory, session, auth, accounts, post, account)
 
 		if t.OnlyMedia && len(status.MediaAttachments) == 0 {
@@ -1321,7 +1321,8 @@ func PostAccount_Unpin(serverFactory *server.Factory) func(model.Authorization, 
 	}
 }
 
-// PostAccount_Note is the Mastodon "set private note" endpoint, which Emissary does not implement
+// PostAccount_Note is the Mastodon "set private note" endpoint. It saves the note on the caller's
+// Following record for the account, and returns the relationship.
 func PostAccount_Note(serverFactory *server.Factory) func(model.Authorization, txn.PostAccount_Note) (object.Relationship, error) {
 
 	const location = "handler.mastodon_PostAccount_Note"
@@ -1368,8 +1369,9 @@ func PostAccount_Note(serverFactory *server.Factory) func(model.Authorization, t
 // GetAccount_Relationships implements the Mastodon "check relationships" endpoint.
 // The client calls this for every account it shows -- profile screens, follow
 // buttons -- and expects a JSON array, so a derp.NotImplemented here breaks those
-// screens. Emissary answers "following" from a Following record and
-// "blocking"/"muting" from an ACTOR Rule; every other flag is reported false.
+// screens. buildRelationship answers "following" and the note from a Following
+// record, "followed_by" from a Follower record, and "blocking", "muting" and "domain_blocking"
+// from Rules; the flags it does not set are reported false.
 func GetAccount_Relationships(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Relationships) ([]object.Relationship, error) {
 
 	const location = "handler.mastodon_GetAccount_Relationships"
@@ -1405,9 +1407,8 @@ func GetAccount_FamiliarFollowers(serverFactory *server.Factory) func(model.Auth
 
 	return func(auth model.Authorization, t txn.GetAccount_FamiliarFollowers) (object.FamiliarFollowers, error) {
 
-		// Emissary doesn't track a followers graph, so an honest empty result is the
-		// correct answer for any t.IDs -- same "honest empty" pattern as
-		// GetAccount_Followers/GetAccount_Following, rather than derp.NotImplemented.
+		// Emissary cannot say which of the caller's follows also follow another account, so an
+		// honest empty result is the correct answer for any t.IDs, rather than derp.NotImplemented.
 		return object.FamiliarFollowers{}, nil
 	}
 }

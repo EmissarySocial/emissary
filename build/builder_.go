@@ -40,7 +40,7 @@ type Builder interface {
 	IsIdentity() bool                        // Returns TRUE if the caller is signed in as a guest Identity
 	IsAuthenticatedOrIdentity() bool         // Returns TRUE if the caller is either an authenticated user or a guest identity
 	NotAuthenticatedOrIdentity() bool        // Returns TRUE if the caller is neither a signed-in User nor a guest Identity
-	IsOwner() bool                           // Returns TRUE if the signed-in user is the owner of this object
+	IsOwner() bool                           // Returns TRUE if the signed-in user is a Domain Owner
 	IsAdminBuilder() bool                    // Returns TRUE if this is an admin route
 	IsPartialRequest() bool                  // Returns TRUE if this is an HTMX request for a page fragment
 	UserCan(string) bool                     // Returns TRUE if the signed-in user has access to the named action

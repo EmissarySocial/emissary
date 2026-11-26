@@ -49,7 +49,7 @@ func NewTheme(templateService *Template, contentService *Content, funcMap templa
  * Data Access Methods
  ******************************************/
 
-// List returns an iterator over the Theme records that match the provided criteria
+// List returns every visible Theme
 func (service *Theme) List() []model.Theme {
 
 	// Lock the data structure
@@ -68,7 +68,7 @@ func (service *Theme) List() []model.Theme {
 	return result
 }
 
-// ListSorted returns every Theme, in display order
+// ListSorted returns every visible Theme, in display order
 func (service *Theme) ListSorted() []model.Theme {
 	result := service.List()
 

@@ -105,7 +105,8 @@ func (c keyFailCollection) Load(exp.Expression, data.Object, ...option.Option) e
 	return derp.Internal("test", "Signing keys are not available in this test")
 }
 
-// saveStream stores a Stream by the given author, published when `published` is TRUE
+// saveStream stores a Stream by the given author, with a past publish date when `published` is
+// TRUE.  The date decides nothing: only saveSentStream puts a Stream in the outbox.
 func (test streamDeleteTest) saveStream(t *testing.T, authorID primitive.ObjectID, parentID primitive.ObjectID, published bool) model.Stream {
 
 	t.Helper()

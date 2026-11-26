@@ -12,7 +12,7 @@ import (
 	"github.com/benpate/uri"
 )
 
-// IndexAllStreams is a handler function that triggers the IndexAllStreams queue task.
+// IndexAllStreams is a handler function that re-saves and re-indexes every Stream within the request.
 // It can only be called by an authenticated administrator.
 func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
@@ -55,7 +55,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 	return ctx.NoContent(http.StatusOK)
 }
 
-// IndexAllUsers is a handler function that triggers the IndexAllUsers queue task.
+// IndexAllUsers is a handler function that re-saves and re-indexes every User within the request.
 // It can only be called by an authenticated administrator.
 func IndexAllUsers(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
@@ -124,7 +124,7 @@ func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session d
 		return derp.Forbidden(location, "Invalid referer", referer)
 	}
 
-	// Load the Stream from the database
+	// Load or create the SearchQuery
 	searchQueryService := factory.SearchQuery()
 	searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
 

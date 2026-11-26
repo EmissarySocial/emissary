@@ -250,7 +250,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		return derp.Wrap(err, location, "Username is invalid", user.UserID)
 	}
 
-	// RULE: Set ProfileURL to the hostname + the username
+	// RULE: Set ProfileURL to the hostname + the UserID
 	user.ProfileURL = service.host + "/@" + user.UserID.Hex()
 
 	// RULE: If password reset has already expired, then clear the reset code
@@ -372,8 +372,8 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 		return derp.Wrap(err, location, "Deleting User's outbox messages", user.UserID, note)
 	}
 
-	// Delete related Outbox2 activities.  Like the legacy outbox, this must run before the User's
-	// Streams are deleted, or each Stream would send its own Delete to followers of a vanishing User.
+	// Delete related Outbox2 activities.  No Stream sends a Delete for a deleted User either way:
+	// the outbox task ends quietly when it cannot load the Stream's author.
 	if err := service.outbox2Service.DeleteByActor(session, model.ActorTypeUser, user.UserID); err != nil {
 		return derp.Wrap(err, location, "Deleting User's Outbox2 activities", user.UserID, note)
 	}
@@ -649,7 +649,7 @@ func (service *User) CalcNewUsername(session data.Session, user *model.User) err
 		return nil
 	}
 
-	// Otherwise, try slug values until we find a unique username (max 32)
+	// Otherwise, try slug values until we find a unique username (31 attempts)
 	for i := 1; i < 32; i++ {
 		slug := random.GenerateInt(1000, 9999)
 

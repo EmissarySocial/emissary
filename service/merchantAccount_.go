@@ -526,7 +526,7 @@ func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userI
 	return merchantAccounts, result, nil
 }
 
-// getProducts lists all of the products configured by a remote service
+// getRemoteProducts lists all of the products configured by a remote service
 func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.MerchantAccount, productIDs ...string) (sliceof.Object[model.Product], error) {
 
 	const location = "service.MerchantAccount.getRemoteProducts"

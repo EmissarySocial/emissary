@@ -222,8 +222,8 @@ func (service *Stream) SyncOutbox(session data.Session, streamID primitive.Objec
 		return nil
 	}
 
-	// RULE: An author who no longer exists sends nothing.  Deleting a User clears their outbox
-	// first, so that it does not send a Delete for every one of their Streams.
+	// RULE: An author who no longer exists sends nothing, so deleting a User does not send a
+	// Delete for every one of their Streams.
 	author := model.NewUser()
 
 	if err := service.userService.LoadByID(session, authorID, &author); err != nil {

@@ -21,7 +21,7 @@ import (
 // guards against a zero-valued struct, and mirrors that package's default.
 const editContentFallbackMaxLength = 64 << 10 // 65,536 runes
 
-// StepEditContent is a Step that can edit/update Container in a streamDraft.
+// StepEditContent is a Step that replaces the Content of the Stream being built
 type StepEditContent struct {
 	Filename       string
 	Fieldname      string

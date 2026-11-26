@@ -72,7 +72,7 @@ func TestUserDelete_DeletesOnlyTheOwnersAnnotations(t *testing.T) {
 }
 
 // TestUserDelete_ClearsOutbox2BeforeStreams verifies that deleting a User removes their Outbox2 activities
-// before their Streams, so that no Stream sends its own Delete to the followers of a vanishing User
+// before their Streams, and that deleting those Streams queues no delivery
 func TestUserDelete_ClearsOutbox2BeforeStreams(t *testing.T) {
 
 	test := newStreamDeleteTest(t)

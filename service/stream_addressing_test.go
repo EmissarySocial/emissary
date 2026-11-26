@@ -30,7 +30,7 @@ func newAddressingTemplate() *model.Template {
 	return &template
 }
 
-// newSharedStream returns a published Stream by authorID, shared as the setup function says, with
+// newSharedStream returns a Stream by authorID, in the State named "published", shared as the setup function says, with
 // DefaultAllow calculated by the same code that runs on every save
 func newSharedStream(service *Stream, authorID primitive.ObjectID, setup func(*model.Stream)) model.Stream {
 

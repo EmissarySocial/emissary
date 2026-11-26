@@ -89,7 +89,7 @@ func TestStream_PublishDateTime_Set(t *testing.T) {
 	sets("2026-10-15T19:00", true, original)
 	sets("2026-10-15T19:00:42Z", true, original)
 
-	// An empty value changes nothing, so clearing the field never unpublishes
+	// An empty value changes nothing, so clearing the field never removes a date
 	sets("", true, original)
 
 	// A value that is not a time, or not after the epoch, is refused and changes nothing

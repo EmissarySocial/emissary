@@ -51,7 +51,7 @@ Two details to preserve. Paging math reads the QUERY results (`len(values)`), ne
 
 ## A User's or Stream's outbox is read from `OutboxItem` alone
 
-Both outbox collections and both single-activity GETs read `service.Outbox2` and nothing else (OUTBOX2-OMNIBUS §1.22, §1.23). A row still in the legacy `Outbox` collection is not served until the §1.21 migration copies it.
+Both outbox collections and both single-activity GETs read `service.Outbox2` and nothing else (OUTBOX2-OMNIBUS §1.22, §1.23). A row in the legacy `Outbox` collection is served once upgrade slot 39 has copied it into `OutboxItem`; a row that the slot could not copy is not served.
 
 - **`totalItems` and `last` apply the reader's permissions,** through `Outbox2.PagingSummary`, the same filter each page uses, so the count never reveals how much private activity an outbox holds. `last` is the `publishDate` cursor that following `next` from `first` ends on, so a crawler that reads either sees the same pages.
 - **`PagedCollection` returns a map, not `streams.OrderedCollection`,** whose `omitempty` drops a zero `totalItems`; Funkwhale refuses a collection without it.

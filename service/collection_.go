@@ -201,7 +201,7 @@ func (service *Collection) ObjectSave(session data.Session, object data.Object, 
 	return derp.Internal("service.Collection.ObjectSave", "Invalid object type", object)
 }
 
-// ObjectDelete marks a Collection as deleted. Implements the ModelService interface.
+// ObjectDelete removes a Collection from the database. Implements the ModelService interface.
 func (service *Collection) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if collection, ok := object.(*model.Collection); ok {
 		return service.Delete(session, collection, note)
@@ -229,7 +229,7 @@ func (service *Collection) LoadByType(session data.Session, parentID primitive.O
 	return service.Load(session, criteria, collection)
 }
 
-// DeleteByURL marks the Collection at the provided URL as deleted, ignoring URLs that are not local
+// DeleteByURL removes the Collection at the provided URL, ignoring URLs that are not local
 func (service *Collection) DeleteByURL(session data.Session, url string) error {
 
 	// Try to parse the Collection URL as a local collection
@@ -262,7 +262,7 @@ func (service *Collection) LoadByID(session data.Session, userID primitive.Objec
 	return service.Load(session, criteria, collection)
 }
 
-// DeleteByUserID deletes all CollectionItems owned by the provided UserID
+// DeleteByUserID deletes every Collection owned by the provided UserID, and its items with it
 func (service *Collection) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
 
 	const location = "service.Collection.DeleteByUserID"

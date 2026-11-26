@@ -122,8 +122,8 @@ func TestEditModelObject_Multiselect_DeltaSlice(t *testing.T) {
 		require.Equal(t, []string{"bandwagon"}, stream.Syndication.Deleted())
 	}
 
-	// RULE: Re-saving a Stream with the SAME targets ticked is not a change.  Stream.publish
-	// broadcasts Syndication.Deleted to every partner, so a phantom diff here would send a
+	// RULE: Re-saving a Stream with the SAME targets ticked is not a change.  The outbox task
+	// sends each target in Syndication.Deleted a Delete, so a phantom diff here would send a
 	// "delete" to services the album is still supposed to be on.
 	{
 		stream := model.NewStream()

@@ -362,7 +362,7 @@ func TestNavigationWidget_FullHierarchy(t *testing.T) {
 }
 
 // TestNavigationWidget_ParentMissingFromAncestors verifies that a parent which is filtered out of
-// the ancestor list by permissions or publish date does not swallow the tiers below it.
+// the ancestor list by permissions does not swallow the tiers below it.
 func TestNavigationWidget_ParentMissingFromAncestors(t *testing.T) {
 
 	context := navFakeBuilder{

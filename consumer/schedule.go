@@ -62,7 +62,7 @@ func scheduler_MakeDailyTasks(serverFactory ServerFactory) error {
 	return nil
 }
 
-// creates 24 new HOURLY tasks beginning at the top of each hour
+// creates an HOURLY task for each of the next 47 hours, beginning at the top of each hour
 func scheduler_MakeHourlyTasks(serverFactory ServerFactory) error {
 
 	const location = "consumer.scheduleDaily_MakeHourlyTasks"

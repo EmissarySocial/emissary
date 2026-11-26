@@ -99,7 +99,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	return checkoutResult.GetString("url"), nil
 }
 
-// stripe_parseCheckoutResponse parses the response from a Stripe Checkout Session.
+// stripe_getPrivilegeFromCheckoutResponse builds a Privilege from the response to a Stripe Checkout Session.
 func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session data.Session, merchantAccount *model.MerchantAccount, product *model.Product, transactionID string, queryParams url.Values) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.stripe_parseCheckoutResponse"

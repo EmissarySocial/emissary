@@ -8,8 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// OutboxMessage represents a single item in a User's inbox or outbox.  It is loosely modelled on the OutboxMessageStreams
-// standard, and can be converted into a strict go-fed streams.Type object.
+// OutboxMessage represents a single item in an actor's legacy outbox.  GetJSONLD returns it as
+// an ActivityStreams activity.
 type OutboxMessage struct {
 	OutboxMessageID primitive.ObjectID `json:"outboxMessageId" bson:"_id"`          // Unique ID of the OutboxMessage
 	ActorID         primitive.ObjectID `json:"actorId"         bson:"actorId"`      // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
@@ -31,12 +31,12 @@ func NewOutboxMessage() OutboxMessage {
 	}
 }
 
-// OutboxMessageFields returns the database columns that must be loaded to populate an OutboxMessage
+// OutboxMessageFields returns the two database columns that a list of OutboxMessages loads
 func OutboxMessageFields() []string {
 	return []string{"objectId", "createDate"}
 }
 
-// Fields returns the database columns that must be loaded to populate an OutboxMessage
+// Fields returns the two database columns that a list of OutboxMessages loads
 // It is part of the FieldLister interface
 func (message OutboxMessage) Fields() []string {
 	return OutboxMessageFields()

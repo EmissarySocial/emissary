@@ -121,7 +121,7 @@ func Version41(ctx context.Context, session *mongo.Database) error {
 		return derp.Wrap(err, location, "Storing the flag on every other Stream")
 	}
 
-	// Both collections store a model.Stream, and a draft's dates are copied onto its Stream
+	// Both collections store a model.Stream, so a draft holds the same two dates
 	for _, name := range []string{"Stream", "StreamDraft"} {
 		if err := version41ClearDates(ctx, session.Collection(name)); err != nil {
 			return derp.Wrap(err, location, "Clearing publish dates", name)

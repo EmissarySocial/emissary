@@ -205,7 +205,7 @@ func (service *Stream) PrivateKey(session data.Session, streamID primitive.Objec
 
 	const location = "service.Stream.PrivateKey"
 
-	// Try to load the user's keys from the database
+	// Try to load the Stream actor's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
 		return nil, derp.Wrap(err, location, "Loading encryption key", streamID)
@@ -229,7 +229,7 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 
 	const location = "service.Stream.ActivityPubActor"
 
-	// Try to load the user's keys from the database
+	// Try to load the Stream actor's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
 		return outbox.Actor{}, derp.Wrap(err, location, "Loading encryption key", streamID)

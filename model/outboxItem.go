@@ -113,6 +113,6 @@ func (item *OutboxItem) CalcRecipients() {
 		recipients[recipient] = true
 	}
 
-	// Set the value back into the Activity
+	// Record the recipients on the item
 	item.Recipients = recipients.Keys()
 }

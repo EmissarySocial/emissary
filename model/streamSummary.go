@@ -25,7 +25,7 @@ type StreamSummary struct {
 	Hashtags       sliceof.String     `json:"hashtags"               bson:"hashtags,omitempty"`     // DEPRECATED: superseded by Tags. See projects/TAGS-UNIFICATION.md
 	Tags           TagList            `json:"tags"                   bson:"tags,omitempty"`         // All tags associated with this document, with their AS2 types
 	InReplyTo      string             `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
-	StartDate      datetime.DateTime  `json:"startDate,omitempty"    bson:"startDate,omitempty"`    // Date when this stream was published
+	StartDate      datetime.DateTime  `json:"startDate,omitempty"    bson:"startDate,omitempty"`    // Start date that the Template defines, such as an event's
 	EndDate        datetime.DateTime  `json:"endDate,omitempty"      bson:"endDate,omitempty"`      // Date when this stream ends, for templates that use one (an event's end)
 	PublishDate    int64              `json:"publishDate"            bson:"publishDate"`            // Unix epoch SECONDS when this stream was published (mirrors Stream.PublishDate)
 	Rank           int                `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.

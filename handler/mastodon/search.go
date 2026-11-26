@@ -211,7 +211,7 @@ func resolveOneAccount(factory *service.Factory, session data.Session, auth mode
 		return object.Account{}, false
 	}
 
-	// A local user -- only when the query is a bare username or an explicit
+	// A local user -- only when the query is a URL, or an explicit
 	// "username@<this domain>", so a remote "name@elsewhere" can never collide
 	// with a local account that happens to share the username.
 	localName := ""

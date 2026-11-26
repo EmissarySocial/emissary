@@ -1546,7 +1546,7 @@ Scans the object's attachments in rank order and writes the first image into `pa
 
 ---
 
-## setup-complete
+## startup-complete
 
 Ends the startup wizard, moving the Domain out of its `STARTUP` state and into production, on `POST`. Requires the `Domain` model **and** a Template whose `templateRole` is `admin` — ending setup opens the whole Domain to the public, so `Domain` alone would still admit a public-facing Template. A Domain that is already live is left alone, so a double submit does not fail the surrounding action.
 
@@ -1559,7 +1559,7 @@ Ends the startup wizard, moving the Domain out of its `STARTUP` state and into p
 **Example**
 
 ```hjson
-{do: "setup-complete"}
+{do: "startup-complete"}
 ```
 
 ---
@@ -2575,4 +2575,33 @@ delete-source: [{do: "with-stream-source", steps: [
 	{do: "delete", title: "Stop syncing this article?"}
 	{do: "refresh-page"}
 ]}]
+```
+
+---
+
+## with-user-connection
+
+Switches to one of the signed-in User's connections to an external service, such as Mailchimp, and runs `steps` against it. The connection is found by `?userConnectionId=`, or by `?type=` when the User has not connected that service yet, in which case a new one is created in memory. Every lookup is scoped to the signed-in User, and an anonymous request is refused.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| steps | **Required.** Sub-pipeline run against the `UserConnection` Builder |
+
+<br>
+
+**Example**
+
+```hjson
+{do: "with-user-connection", steps: [
+	{do: "edit", form: {
+		type: layout-vertical
+		children: [
+			{type: text, path: "vault.apiKey", label: "API Key"}
+			{type: toggle, path: isActive}
+		]
+	}}
+	{do: "save"}
+]}
 ```

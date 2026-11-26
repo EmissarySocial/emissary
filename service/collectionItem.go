@@ -243,7 +243,7 @@ func (service *CollectionItem) ObjectSave(session data.Session, object data.Obje
 	return derp.Internal("service.CollectionItem.ObjectSave", "Invalid object type", object)
 }
 
-// ObjectDelete marks a CollectionItem as deleted. Implements the ModelService interface.
+// ObjectDelete removes a CollectionItem from the database. Implements the ModelService interface.
 func (service *CollectionItem) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if collectionItem, ok := object.(*model.CollectionItem); ok {
 		return service.Delete(session, collectionItem, note)

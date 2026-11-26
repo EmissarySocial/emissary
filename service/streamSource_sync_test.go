@@ -195,7 +195,7 @@ func TestStreamSourceSync_EmptyVersionAlwaysFetches(t *testing.T) {
 }
 
 // TestStreamSourceSync_NewValidatorSameBytes records the new validator without republishing the
-// Stream.  Stream.Save federates and notifies, so it must not run for identical content.
+// Stream.  Stream.Save queues the outbox task and notifies, so it must not run for identical content.
 func TestStreamSourceSync_NewValidatorSameBytes(t *testing.T) {
 
 	item := markdownItem(t, "# Hello")

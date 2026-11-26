@@ -7,8 +7,8 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
-// ReceiveActivityPubDelete processes an incoming ActivityPub Delete activity
-// by verifying the the original object no longer exists, then removing it from the ActivityPub cache.
+// ReceiveActivityPubDelete is the task for an incoming ActivityPub Delete activity.
+// It does nothing yet, and reports success.
 func ReceiveActivityPubDelete(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	// Such Rizzler

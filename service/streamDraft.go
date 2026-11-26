@@ -181,7 +181,7 @@ func (service *StreamDraft) ObjectSave(session data.Session, object data.Object,
 	return derp.Internal("service.StreamDraft.ObjectSave", "Invalid Object Type", object)
 }
 
-// ObjectDelete marks a StreamDraft as deleted. Implements the ModelService interface.
+// ObjectDelete removes a StreamDraft from the database. Implements the ModelService interface.
 func (service *StreamDraft) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Delete(session, stream, comment)
@@ -284,7 +284,7 @@ func (service *StreamDraft) Promote(session data.Session, streamID primitive.Obj
 		return model.Stream{}, derp.Wrap(err, location, "Publishing stream")
 	}
 
-	// Try to save the updated stream back to the database
+	// Remove the draft, now that the Stream holds its values
 	if err := service.Delete(session, &draft, "published"); err != nil {
 		return model.Stream{}, derp.Wrap(err, location, "Deleting draft")
 	}

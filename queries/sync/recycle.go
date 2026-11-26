@@ -16,8 +16,9 @@ import (
 // == 0) never touch this index, so it adds negligible write cost while turning the recycle
 // COLLSCAN into an index scan.
 //
-// Every collection in service.Factory.Collections() is recycled, so every one of those sync
-// definitions includes this index under the key "idx_<Collection>_Recycle".
+// Every collection in service.Factory.Collections() is recycled, so each of their sync
+// definitions includes this index under the key "idx_<Collection>_Recycle".  "StreamOutbox"
+// is listed there with no sync definition, so it alone has no such index.
 func recycleIndex() mongo.IndexModel {
 	return mongo.IndexModel{
 		Keys: bson.D{

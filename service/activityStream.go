@@ -365,7 +365,7 @@ func (service *ActivityStream) looksLikeValidURI(uri string) bool {
 	return false
 }
 
-// QueryReplies returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
+// QueryReplies returns a channel of the cached documents that reply to the specified document
 func (service *ActivityStream) QueryReplies(ctx context.Context, inReplyTo string, done <-chan struct{}) <-chan streams.Document {
 	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", 0, done)
 }

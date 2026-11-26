@@ -82,7 +82,7 @@ A Stream's rendered page is not its published body. [service/stream_activitypub.
 
 So a Template that keeps its text somewhere other than `content.*` -- a custom `data.*` field, because a Stream has only one content area -- publishes a blank body, however complete its page looks. [stream-article-two-column](_embed/templates/stream-article-two-column/) is the worked example and accepts that deliberately: it is a website page, its two Markdown blocks live in `data.left`/`data.right`, and its Summary is what a preview shows. Know which trade a new Template is making before it ships.
 
-Writing `content.raw` through `set-data` does not fix it, which is the part that surprises people. `content.HTML` is produced by `service.Content.New`, and nothing but the `edit-content` step calls it -- no `save` path re-renders content -- so a `set-data` on `content.raw` stores a body that is never converted, never sanitized, and never published.
+Writing `content.raw` through `set-data` does not fix it, which is the part that surprises people. `content.HTML` is produced by `service.Content.New`, which only the content writers call (the `edit-content` and `process-content` steps, the StreamSource sync, and the Mastodon API's post and edit handlers) -- no `save` path re-renders content -- so a `set-data` on `content.raw` stores a body that is never converted, never sanitized, and never published.
 
 ## Repairing federated data takes two steps, and the second one is the cache
 

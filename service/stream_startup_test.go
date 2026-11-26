@@ -107,8 +107,8 @@ func TestStream_Startup_DefaultThemeStreams(t *testing.T) {
 		require.Equal(t, data.GetString("templateId"), stream.TemplateID)
 		require.Equal(t, data.GetString("label"), stream.Label)
 
-		// Startup streams must be published (PublishDate reset to 0)
-		require.Zero(t, stream.PublishDate, "startup stream %q must be published", token)
+		// A startup Stream has no publish date until its save puts it in the outbox
+		require.Zero(t, stream.PublishDate, "startup stream %q must have no publish date", token)
 
 		// The whole-object content must survive as well
 		if content, ok := data["content"].(model.Content); ok {

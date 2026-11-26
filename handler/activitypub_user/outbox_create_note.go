@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
-// outbox_Wildcard handles any ActivityPub activity that doesn't have a specific handler
+// init routes a Create of a Note to the handler that Articles use
 func init() {
 	outboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeNote, outbox_CreateArticle)
 }

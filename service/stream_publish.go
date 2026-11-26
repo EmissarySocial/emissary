@@ -118,7 +118,7 @@ func (service *Stream) publish_outbox_user(session data.Session, user *model.Use
 		return nil
 	}
 
-	// Try to publish via sendNotifications
+	// Publish through Outbox2, which stores the activity and queues its delivery
 	objectID := activity.GetString(vocab.PropertyID)
 	objectType := activity.GetString(vocab.PropertyType)
 	log.Trace().Str("location", location).Str("objectId", objectID).Str("type", objectType).Msg("Publishing to User's outbox")
@@ -170,7 +170,7 @@ func (service *Stream) publish_outbox_stream(session data.Session, stream *model
 
 	document := streams.NewDocument(announce)
 
-	// Try to publish via sendNotifications
+	// Publish through Outbox2, which stores the activity and queues its delivery
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
 	if _, err := service.outbox2Service.Publish(session, model.ActorTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Publishing activity to parent Stream outbox", "streamId: "+stream.StreamID.Hex())

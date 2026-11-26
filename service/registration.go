@@ -358,7 +358,7 @@ func (service *Registration) setUserData(session data.Session, groupService *Gro
 	return nil
 }
 
-// addGroup adds a User to a Group (using either the group.GroupID or the group.Token)
+// addGroups adds a User to each listed Group (using either the group.GroupID or the group.Token)
 func (service *Registration) addGroups(session data.Session, groupService *Group, user *model.User, groupIDs string) error {
 
 	const location = "service.Registration.addGroup"
@@ -383,7 +383,7 @@ func (service *Registration) addGroups(session data.Session, groupService *Group
 	return nil
 }
 
-// removeGroup removes a User from a Group (using either the group.GroupID or the group.Token)
+// removeGroups removes a User from each listed Group (using either the group.GroupID or the group.Token)
 func (service *Registration) removeGroups(session data.Session, groupService *Group, user *model.User, groupIDs string) error {
 
 	const location = "service.Registration.removeGroup"

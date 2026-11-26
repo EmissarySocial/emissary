@@ -247,7 +247,7 @@ func streamCursor(factory *service.Factory, session data.Session) cursorResolver
 func newsItemsToStatuses(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) ([]object.Status, []*object.Account) {
 
 	// A page is at most 40 items, and each spends its time waiting on remote
-	// servers, so let a whole page go at once.
+	// servers, so run them sixteen at a time.
 	const maxConcurrent = 16
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
@@ -600,7 +600,7 @@ func mapDocumentToMediaAttachments(document streams.Document) []object.MediaAtta
 	return result
 }
 
-// mapAttachmentType derives the Mastodon media type [image|gifv|video|audio] for
+// mapAttachmentType derives the Mastodon media type [image|video|audio] for
 // one AS2 attachment. mediaType (a real MIME type) is checked first because it's
 // more reliable in practice than the AS2 object type, which some origins misreport
 // or omit; the object type is only a fallback.

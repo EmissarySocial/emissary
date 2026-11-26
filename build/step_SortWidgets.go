@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepSortWidgets is a Step that can edit/update Container in a streamDraft.
+// StepSortWidgets is a Step that rebuilds a Stream's widget placement from the posted form
 type StepSortWidgets struct{}
 
 // Get renders this step during a GET request. Implements the Step interface.

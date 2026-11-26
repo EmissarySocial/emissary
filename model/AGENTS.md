@@ -125,12 +125,12 @@ It is a virtual string over `Stream.PublishDate` (Unix seconds), so a `datetime`
 - **The flag is always stored, and the fingerprint only when set.** `isOutbox` is written even when false, so a query can match it. `fingerprint` is `omitempty`.
 - **The fingerprint never leaves the server.** Its JSON tag is `-`, so an export carries none and an import cannot forge one. `isOutbox` is in the JSON, but a save takes the flag from the Template's state, not from the caller.
 - **Both are `delta` values, and `MarkSaved` resets them** with `StateID`, `Token`, and `Syndication`. The save compares each with the value it was loaded with, so assign through `Set`, never to the struct.
-- **`IsPublished` returns the flag,** and FALSE for a deleted Stream, on both `Stream` and `StreamSummary`. It never reads a date.
+- **`IsPublished` returns the flag** on both `Stream` and `StreamSummary`, and never reads a date. `Stream.IsPublished` is also FALSE for a deleted Stream; a summary holds no delete date.
 - **`StreamFingerprintPending` is a placeholder, not a hash.** Upgrade 41 writes it on Streams that followers received before fingerprints were recorded.
 
 ## Every `schema.Array` that a request can write into needs a `MaxLength`
 
-Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An Array with no `MaxLength` lets one path such as `tags.5000000` build a list of 5,000,001 items. Set `MaxLength` on any Array that a form post, request key, or socialRules mapping can reach. Apart from `ActivityStreamSchema`, whose every Array has one, `UserSchema`'s `links` (6) and `DomainSchema`'s `startupTasks` (16) are the only two that set one today (BUG-244).
+Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An Array with no `MaxLength` lets one path such as `tags.5000000` build a list of 5,000,001 items. Set `MaxLength` on any Array that a form post, request key, or socialRules mapping can reach. Apart from `ActivityStreamSchema`, whose every Array has one, only three schemas set one today: `UserSchema`'s `links` (6), `DomainSchema`'s `startupTasks` (16), and `OutboxItemSchema`'s `recipients` (1024) and `permissions` (256) (BUG-244).
 
 ## Social rules read through `schema` and write through `SocialTargetSchema`
 

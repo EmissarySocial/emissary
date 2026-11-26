@@ -43,8 +43,8 @@ const (
 
 // https://docs.joinmastodon.org/methods/timelines/#tag
 //
-// Emissary indexes no posts by hashtag, so this asks the servers of the accounts
-// the caller follows for their public posts under the tag, and merges the results.
+// This lists this server's own posts under the tag and the caller's feed, then asks the
+// servers of the accounts the caller follows for their public posts, and merges the results.
 // Those servers hand back their own IDs, so every status is remapped to the IDs
 // this API uses everywhere else (see remapRemoteStatus).
 //
@@ -117,8 +117,8 @@ func GetTimeline_Hashtag(serverFactory *server.Factory) func(model.Authorization
 
 // https://docs.joinmastodon.org/methods/tags/#get
 //
-// Emissary has no local index of posts by hashtag, so history comes from followed servers
-// (mergeHashtagHistories), falling back to a tally of the posts they show if none publish one.
+// History is a tally of this server's own posts merged with the histories that followed servers
+// publish (mergeHashtagHistories), falling back to a tally of the posts they show if that is empty.
 func GetTag(serverFactory *server.Factory) func(model.Authorization, txn.GetTag) (object.Tag, error) {
 
 	const location = "handler.mastodon.GetTag"

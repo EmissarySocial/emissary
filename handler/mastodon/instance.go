@@ -20,8 +20,7 @@ import (
 // entity's "contact_account" (v1) / "contact.account" (v2) field. Real clients
 // fetch this account's profile when the user taps it in server info -- leaving it
 // as a zero-value Account (empty "id") produces a profile request the client can't
-// resolve to anything (see the note on the removed /api/** catch-all in server.go
-// for what that looked like from the outside).
+// resolve to anything.
 func contactAccount(factory *service.Factory, session data.Session) object.Account {
 
 	owners := factory.User().ListOwnersAsSlice(session)
@@ -121,7 +120,7 @@ var instanceMimeTypes = []string{
 // instanceConfiguration returns the v2 configuration block that clients read their posting limits from.
 func instanceConfiguration() object.InstanceConfiguration {
 
-	// Polls are advertised but not implemented yet (GetPoll returns NotImplemented, PostStatus ignores t.Poll)
+	// Polls are advertised but not implemented yet (GetPoll answers 404, and PostStatus refuses a post with a poll)
 	return object.InstanceConfiguration{
 		Statuses: object.InstanceConfigurationStatus{
 			MaxCharacters:            instanceMaxCharacters,

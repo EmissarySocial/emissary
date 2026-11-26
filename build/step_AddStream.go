@@ -351,7 +351,7 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	return UseResult(result).WithEvent("closeModal", "")
 }
 
-// setLocation returns the ParentIDs to use in for the new stream.
+// setLocation writes the new stream's location onto it.
 // It returns an error if the template cannot be placed in the pre-determined location.
 func (step StepAddStream) setLocation(builder Builder, template *model.Template, newStream *model.Stream) error {
 
@@ -424,7 +424,7 @@ func (step StepAddStream) getBestTemplate(templateService *service.Template, con
 	// Query all eligible Templates
 	eligible := templateService.ListByContainerLimited(containedByRole, step.TemplateRoles)
 
-	// If NO Templates are eligible, then return empty string
+	// If NO Templates are eligible, then return an error
 	if len(eligible) == 0 {
 		return []form.LookupCode{}, model.Template{}, derp.Internal(location, "No eligible Templates provided")
 	}

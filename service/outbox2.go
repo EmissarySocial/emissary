@@ -573,7 +573,7 @@ func (service *Outbox2) HasObject(session data.Session, actorType string, actorI
 	return count > 0, nil
 }
 
-// publishedObjectCriteria matches the activities in an actor's legacy outbox or Outbox2 that publish the provided object
+// publishedObjectCriteria matches the activities in an actor's outbox that publish the provided object
 func publishedObjectCriteria(actorType string, actorID primitive.ObjectID, objectID string) exp.Expression {
 
 	// RULE: Only a Create or Update publishes an object. A Delete names the object too, but withdraws it.

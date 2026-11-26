@@ -225,7 +225,7 @@ func (service *Permission) UserHasRole(session data.Session, authorization *mode
 	return false, nil
 }
 
-// HasPrivilege returns TRUE if the user has privileges for the specified role
+// hasPrivilege returns TRUE if the user has privileges for the specified role
 func (service *Permission) hasPrivilege(session data.Session, authorization *model.Authorization, accessLister model.AccessLister, requiredRoles ...string) (bool, error) {
 
 	const location = "service.Permission.HasPrivilege"
@@ -252,12 +252,12 @@ func (service *Permission) hasPrivilege(session data.Session, authorization *mod
 	return identity.HasPrivilege(requiredPrivileges...), nil
 }
 
-// UserInGroup returns TRUE if the user is a member of the specified group
+// UserInGroup is not implemented.  It always returns FALSE and an error.
 func (service *Permission) UserInGroup(authorization *model.Authorization, groupToken string) (bool, error) {
 	return false, derp.NotImplemented("service.Permission.UserInGroup", "UserInGroup is not implemented")
 }
 
-// AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
+// AuthorInGroup is not implemented.  It always returns FALSE and an error.
 func (service *Permission) AuthorInGroup(accessLister model.AccessLister, groupToken string) (bool, error) {
 	return false, derp.NotImplemented("service.Permission.AuthorInGroup", "AuthorInGroup is not implemented")
 }

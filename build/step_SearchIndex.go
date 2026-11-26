@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
-// StepSearchIndex is a Step that can update a stream's PublishDate with the current time.
+// StepSearchIndex is a Step that adds the object to the search index, or removes it
 type StepSearchIndex struct {
 	If *template.Template
 }
@@ -19,7 +19,7 @@ func (step StepSearchIndex) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
-// Post updates the stream with the current date as the "PublishDate"
+// Post syncs the object's SearchResult into the search index, or deletes it when `If` is false
 func (step StepSearchIndex) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepSearchIndex.Post"

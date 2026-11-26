@@ -270,7 +270,7 @@ func (w Stream) IconURL() string {
 	return w._stream.IconURL
 }
 
-// Tags returns all tags (mentions, hashtags, etc) for the stream being built
+// Tags returns the hashtags of the stream being built
 func (w Stream) Tags() sliceof.Object[mapof.String] {
 	return slice.Map(w._stream.Hashtags, func(tag string) mapof.String {
 		return mapof.String{
@@ -291,7 +291,7 @@ func (w Stream) BasePath() string {
 	return "/" + w._stream.StreamID.Hex()
 }
 
-// AttributedTo returns ALL AttributedTo records for this stream
+// AttributedTo returns the author of this stream
 func (w Stream) AttributedTo() model.PersonLink {
 	return w._stream.AttributedTo
 }
@@ -914,8 +914,8 @@ func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
 // ParentSummary returns a one-row query for this Stream's parent, which a public view can read
 // safely.  Parent fails the whole page when the requester may not see the parent, so this
 // applies the permission filter instead, and a hidden parent yields an empty result.  So does a
-// parent that is not a Stream at all, such as a User's outbox.  It ignores the publish window,
-// because some parents are never published (QWERTY-COLLECTIONS: a qwertylicious collection).
+// parent that is not a Stream at all, such as a User's outbox.  It filters on
+// permissions alone, so a parent that is never published still appears (a qwertylicious collection).
 func (w Stream) ParentSummary() QueryBuilder[model.StreamSummary] {
 
 	// RULE: A top-level Stream has no parent to read
@@ -935,8 +935,7 @@ func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 	const location = "build.Stream.Ancestors"
 
 	// RULE: A top-level Stream has no parent, and therefore no ancestor generation to list.
-	// Without this guard the query below would search for the children of NilObjectID, which
-	// is this Stream's OWN generation -- a list that callers cannot tell apart from a real one.
+	// A Stream with no parent has no generation above it, so the list is empty
 	if !w.HasParent() {
 		return NewEmptyQueryBuilder[model.StreamSummary]()
 	}

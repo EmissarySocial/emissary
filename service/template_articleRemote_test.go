@@ -149,8 +149,8 @@ func articleRemoteFormOffers(t *testing.T, template model.Template, path string)
 // `forward-to` covers the Domain Owner, for whom every permission check answers true regardless.
 //
 // `promote-draft` and `discard-draft` are deliberately NOT in this list.  An earlier revision
-// neutralized them, which took away the only path to save-and-publish and left the article
-// unreachable from every auto-generated navigation list.  Promote is now the single control, and
+// neutralized them, which took away the menu bar's only path to save-and-publish and left the
+// article out of the auto-generated navigation lists.  Promote is now the single control, and
 // it publishes everything EXCEPT the body -- see TestArticleRemoteTemplate_PromoteKeepsTheBody.
 func TestArticleRemoteTemplate_ShipsNoReachableContentEditor(t *testing.T) {
 

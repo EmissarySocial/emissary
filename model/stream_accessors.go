@@ -211,7 +211,7 @@ func (stream *Stream) GetBoolOK(name string) (bool, bool) {
 
 	switch name {
 
-	// This is a READ-ONLY, virtual field that's computed based on Publish and UnPublish dates.
+	// This is a READ-ONLY, virtual field: TRUE when the Stream is in the outbox and not deleted
 	case "isPublished":
 		return stream.IsPublished(), true
 
@@ -316,7 +316,7 @@ func (stream *Stream) SetString(name string, value string) bool {
 var maxPublishDateTime = time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC).Unix()
 
 // setPublishDateTime sets PublishDate from a date-time string read as UTC.  An empty string changes
-// nothing, so clearing the field never unpublishes, and a value in the same minute keeps the seconds.
+// nothing, so clearing the field never removes a date, and a value in the same minute keeps the seconds.
 func setPublishDateTime(stream *Stream, value string) bool {
 
 	if value == "" {
@@ -325,7 +325,7 @@ func setPublishDateTime(stream *Stream, value string) bool {
 
 	publishTime, ok := convert.TimeOk(value, time.Time{})
 
-	// RULE: Only a moment after the Unix epoch, because 0 means "unpublished", and one it can read back
+	// RULE: Only a moment after the Unix epoch, because 0 means "never entered the outbox", and one it can read back
 	if !ok || (publishTime.Unix() <= 0) || (publishTime.Unix() > maxPublishDateTime) {
 		return false
 	}

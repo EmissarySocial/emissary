@@ -72,8 +72,6 @@ func TestReportedBug_NonOwnerProfileNo500(t *testing.T) {
 	require.Equal(t, "PROFILE", render(live))
 }
 
-// TestOutbox_IsIndexable proves the profile's "Index on Search Engines" setting
-// drives Outbox.IsIndexable, which overrides the indexable-by-default Common.
 // TestOutbox_HasPassword verifies that HasPassword reports whether any password is stored, and nothing more
 func TestOutbox_HasPassword(t *testing.T) {
 
@@ -95,6 +93,8 @@ func TestOutbox_HasPassword(t *testing.T) {
 	}
 }
 
+// TestOutbox_IsIndexable proves the profile's "Index on Search Engines" setting
+// drives Outbox.IsIndexable, which overrides the indexable-by-default Common.
 func TestOutbox_IsIndexable(t *testing.T) {
 
 	// A brand-new/opted-out profile (isIndexable=false) is NOT indexable...

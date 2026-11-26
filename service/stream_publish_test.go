@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// newAudienceStream returns a published Stream by authorID that mentions one remote actor, with the
+// newAudienceStream returns a Stream by authorID that mentions one remote actor, with the
 // DefaultAllow that the provided Groups or Circles produce for its viewers
 func newAudienceStream(authorID primitive.ObjectID, defaultAllow model.Permissions, circles id.Slice) model.Stream {
 

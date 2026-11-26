@@ -7,8 +7,8 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// sendSyndicationMessages sends messages to syndication targets
-// whenever a stream is added or removed from syndication
+// sendSyndicationMessages queues a Create, an Update, or a Delete for each syndication
+// target that the outbox task names
 func (service *Stream) sendSyndicationMessages(session data.Session, stream *model.Stream, added []string, changed []string, removed []string) error {
 
 	readOnlyDomain := service.domainService.Cached()
@@ -37,7 +37,7 @@ func (service *Stream) sendSyndicationMessages(session data.Session, stream *mod
 			)
 		}
 
-		// Send syndication:undo messages
+		// Send syndication.update messages
 		for _, endpoint := range changed {
 
 			if target.Value != endpoint {
@@ -58,7 +58,7 @@ func (service *Stream) sendSyndicationMessages(session data.Session, stream *mod
 			)
 		}
 
-		// Send syndication:undo messages
+		// Send syndication.delete messages
 		for _, endpoint := range removed {
 
 			if target.Value != endpoint {

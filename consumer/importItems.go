@@ -14,7 +14,7 @@ import (
 
 // ImportItems is a queue consumer that processes individual ImportItem records for a given Import.
 // When this task completes, it re-queues itself to process the next ImportItem in the database.
-// If there are no more ImportItem records to process, then the Import is marked as "Complete".
+// If there are no more ImportItem records to process, then the Import moves to "REVIEWING".
 func ImportItems(factory *service.Factory, session data.Session, user *model.User, importRecord *model.Import, args mapof.Any) queue.Result {
 
 	const location = "consumer.ImportItems"
@@ -57,7 +57,7 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 	// Load the next importable item from the database
 	err := importItemService.LoadNext(session, importRecord.UserID, importRecord.ImportID, &importItem)
 
-	// If no "next" importRecord is found, then the import is complete
+	// If no "next" importRecord is found, then every item is in, and the User reviews the result
 	if derp.IsNotFound(err) {
 		if inner := importService.SetState(session, importRecord, model.ImportStateReviewing); inner != nil {
 			return queue.Error(derp.Wrap(inner, location, "Updating import importRecord"))

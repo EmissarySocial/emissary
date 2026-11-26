@@ -11,7 +11,8 @@ import (
 	"github.com/benpate/uri"
 )
 
-// ConnectPushService polls an individual Following record for new post from its outbox (or RSS feed)
+// ConnectPushService connects a Following record to its source's push service, or marks it
+// for polling, and then queues the first poll
 func ConnectPushService(factory *service.Factory, session data.Session, user *model.User, following *model.Following, args mapof.Any) queue.Result {
 
 	const location = "consumer.ConnectPushService"
