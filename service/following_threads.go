@@ -465,7 +465,8 @@ func quoteURLs(document streams.Document) []string {
 		}
 	}
 
-	for tag := document.Tag(); tag.NotNil(); tag = tag.Next() {
+	// Range walks the list; tag.Next() would read the ActivityStreams "next" property and stop after one
+	for tag := range document.Tag().Range() {
 
 		if tag.IsString() || (tag.Type() != vocab.CoreTypeLink) {
 			continue

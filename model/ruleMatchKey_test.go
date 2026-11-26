@@ -206,3 +206,21 @@ func TestMatchKey_RoundTrip(t *testing.T) {
 		require.Contains(t, DocumentMatchKeys(document), RuleMatchKey(RuleTypeTag, "uspol"))
 	}
 }
+
+// TestDocumentMatchKeys_LaterHashtags confirms every Hashtag is keyed, not only the first one
+func TestDocumentMatchKeys_LaterHashtags(t *testing.T) {
+
+	document := streams.NewDocument(mapof.Any{
+		vocab.PropertyActor: "https://example.com/@bob",
+		vocab.PropertyTag: []any{
+			mapof.Any{vocab.PropertyType: vocab.LinkTypeHashtag, vocab.PropertyName: "#cats"},
+			mapof.Any{vocab.PropertyType: vocab.LinkTypeMention, vocab.PropertyName: "alice"},
+			mapof.Any{vocab.PropertyType: vocab.LinkTypeHashtag, vocab.PropertyName: "#uspol"},
+		},
+	})
+
+	keys := DocumentMatchKeys(document)
+
+	require.Contains(t, keys, "TAG:cats")
+	require.Contains(t, keys, "TAG:uspol")
+}

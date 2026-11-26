@@ -53,6 +53,9 @@ func (origin OriginLink) Icon() string {
 
 	case OriginTypeAnnounce:
 		return "rocket"
+
+	case OriginTypeHashtag:
+		return "hash"
 	}
 
 	return "question-square"

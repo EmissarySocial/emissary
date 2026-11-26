@@ -34,7 +34,8 @@ func Tags(document streams.Document) []map[string]any {
 
 		// Do not allow any "internal" tags to be imported from
 		// the open web.
-		for rel := tag.Rel(); rel.NotNil(); rel = rel.Next() {
+		// Range walks every rel; rel.Next() would read the "next" property and stop after one
+		for rel := range tag.Rel().Range() {
 			if strings.HasPrefix(rel.String(), "--emissary-") {
 				allow = false
 				break

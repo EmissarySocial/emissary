@@ -73,7 +73,8 @@ func DocumentMatchKeys(document streams.Document) []string {
 
 	// A TAG key for each Hashtag on the document. Mentions and Emoji are deliberately excluded
 	// (D12) so a TAG rule for "alice" cannot match a post that merely mentions @alice.
-	for tag := document.Tag(); tag.NotNil(); tag = tag.Next() {
+	// Range walks the list; tag.Next() would read the ActivityStreams "next" property and stop after one
+	for tag := range document.Tag().Range() {
 
 		if tag.IsString() {
 			continue

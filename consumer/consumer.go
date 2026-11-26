@@ -167,6 +167,18 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case "SendSearchResult":
 		return WithSession(consumer.serverFactory, args, SendSearchResult)
 
+	case service.TaskDeliverToTagFollowers:
+		return WithSession(consumer.serverFactory, args, DeliverToTagFollowers)
+
+	case service.TaskSubscribeTagRelay:
+		return WithSession(consumer.serverFactory, args, SubscribeTagRelay)
+
+	case service.TaskUnsubscribeTagRelay:
+		return WithSession(consumer.serverFactory, args, UnsubscribeTagRelay)
+
+	case service.TaskBackfillTagFollow:
+		return WithSession(consumer.serverFactory, args, BackfillTagFollow)
+
 	case "SendSearchResult-SearchQuery":
 		return WithSession(consumer.serverFactory, args, SendSearchResult_SearchQuery)
 

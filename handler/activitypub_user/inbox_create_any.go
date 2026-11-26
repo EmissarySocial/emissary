@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // init registers the Create and Update handlers, and the object types that are deliberately ignored
@@ -85,6 +86,9 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 		// to the context bookkeeping below.
 		return derp.Wrap(err, location, "Loading `Following` record", context.user.UserID)
 	}
+
+	// Offer the post to anyone here who follows one of its #hashtags
+	context.factory.TagFollow().QueueDelivery(context.session, document, primitive.NilObjectID)
 
 	// RULE: A reply to our own Stream with closed replies joins neither its Replies nor its thread
 	refused, err := context.factory.Stream().RefusesReply(context.session, document.InReplyTo().ID())

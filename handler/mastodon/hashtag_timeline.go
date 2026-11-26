@@ -146,6 +146,15 @@ func GetTag(serverFactory *server.Factory) func(model.Authorization, txn.GetTag)
 
 		defer cancel()
 
+		// Show whether the caller follows this tag
+		following, err := factory.TagFollow().IsFollowing(session, auth.UserID, model.ToToken(name))
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Checking tag follow"))
+		}
+
+		result.Following = following
+
 		histories, err := fetchHashtagHistories(factory, session, auth.UserID, t.Host, name)
 
 		if err != nil {

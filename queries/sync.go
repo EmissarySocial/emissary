@@ -207,6 +207,14 @@ func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONA
 		derp.Report(err)
 	}
 
+	if err := sync.TagFollow(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
+	if err := sync.TagRelay(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.Stream(ctx, session); err != nil {
 		derp.Report(err)
 	}
