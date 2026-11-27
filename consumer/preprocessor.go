@@ -73,7 +73,7 @@ func PreProcessor(task *queue.Task) error {
 	// database, and are NOT executed immediately
 
 	// (64) User Facing but Low Priority Tasks
-	case "Geocode":
+	case service.TaskGeocode:
 		task.Priority = 64
 
 	// A post's preview card appears on a later load, as on Mastodon, so the read can wait

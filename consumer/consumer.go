@@ -55,7 +55,7 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case service.TaskFetchLinkPreview:
 		return WithFactory(consumer.serverFactory, args, FetchLinkPreview)
 
-	case "Geocode":
+	case service.TaskGeocode:
 		return WithStream(consumer.serverFactory, args, Geocode)
 
 	case "ImportStartup":

@@ -15,7 +15,7 @@ import (
 // Added to a Conversation Context (FEP-7888)
 func ReceiveActivityPubAdd(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
-	const location = "consumer.ReceiveActivityPubMove"
+	const location = "consumer.ReceiveActivityPubAdd"
 
 	// Collect arguments
 	objectID := args.GetString("object")

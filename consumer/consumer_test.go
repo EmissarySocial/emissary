@@ -23,6 +23,19 @@ func TestConsumer_IgnoresUnknownTasks(t *testing.T) {
 	}
 }
 
+// TestConsumer_Run_ClaimsGeocode confirms that the name the geocode retry is published under is
+// one the consumer claims, because an unclaimed task is failed and never run (BUG-242)
+func TestConsumer_Run_ClaimsGeocode(t *testing.T) {
+
+	// The task has no hostname, so it stops in WithFactory, which only a claimed task reaches
+	result := New(nil).Run(queue.Task{Name: service.TaskGeocode, Arguments: mapof.NewAny()})
+	require.Equal(t, queue.ResultStatusFailure, result.Status)
+
+	// The name that was published until BUG-242 is claimed by no one
+	result = New(nil).Run(queue.Task{Name: "GeocodeAddress", Arguments: mapof.NewAny()})
+	require.Equal(t, queue.ResultStatusIgnored, result.Status)
+}
+
 // TestConsumer_LifecycleHooksAreSilent pins the DEFAULT of the three outcome hooks.  They run for
 // every task in the system, and only SyncStreamSource acts on them today -- see
 // syncStreamSource_test.go.  The nil ServerFactory is the proof: a hook that dispatched would

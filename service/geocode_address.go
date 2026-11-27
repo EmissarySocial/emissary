@@ -10,6 +10,9 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
+// TaskGeocode is the queue task that retries the geocoding of one Stream's Location
+const TaskGeocode = "Geocode"
+
 // GeocodeAddress resolves free-text addresses into coordinates, using this Domain's configured provider
 type GeocodeAddress struct {
 	hostname          string
@@ -39,10 +42,10 @@ func (service GeocodeAddress) GeocodeAndQueue(session data.Session, stream *mode
 		postcommit.Publish(
 			session,
 			service.queue,
-			"GeocodeAddress",
+			TaskGeocode,
 			mapof.Any{
 				"hostname": service.hostname,
-				"streamId": stream.StreamID,
+				"streamId": stream.StreamID.Hex(),
 			},
 			queue.WithDelaySeconds(30),
 		)

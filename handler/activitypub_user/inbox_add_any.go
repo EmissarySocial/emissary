@@ -41,10 +41,13 @@ func inbox_AddAny(context Context, activity streams.Document) error {
 	}
 
 	// Add a task to the queue (post-commit) to backfill the context of this activity
+	// RULE: "hostname" routes the task to this domain.  Without it the consumer falls back to
+	// "actor", which is the remote actor here, and looks for a domain on another server.
 	postcommit.Publish(context.session, context.factory.Queue(), "ReceiveActivityPub-Add", mapof.Any{
-		"actor":  activity.ActorID(),
-		"object": activity.Object().ID(),
-		"target": activity.Target().ID(),
+		"hostname": context.factory.Hostname(),
+		"actor":    activity.ActorID(),
+		"object":   activity.Object().ID(),
+		"target":   activity.Target().ID(),
 	})
 
 	return nil
