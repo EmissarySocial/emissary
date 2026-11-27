@@ -108,6 +108,23 @@ func TestStream_Save_Outbox_NewStream(t *testing.T) {
 	require.Equal(t, []string{note.StreamID.Hex()}, drainOutboxTasks(t, tasks))
 }
 
+// TestStream_Save_Outbox_TaskNamesItsDomain confirms that the outbox task carries the hostname
+// that the consumer routes on, because a task without one is failed and never retried (BUG-006001)
+func TestStream_Save_Outbox_TaskNamesItsDomain(t *testing.T) {
+
+	service, session, tasks := newOutboxSaveTest(t)
+	service.host = "https://example.test"
+
+	note := newOutboxStream("published")
+	require.NoError(t, service.Save(session, &note, "note"))
+
+	queued := tasks.Drain()
+	require.Len(t, queued, 1)
+	require.Equal(t, StreamOutboxTaskName, queued[0].Name)
+	require.Equal(t, "example.test", queued[0].Arguments.GetString("hostname"))
+	require.Equal(t, note.StreamID.Hex(), queued[0].Arguments.GetString("streamId"))
+}
+
 // TestStream_Save_Outbox_NewStreamDropsFingerprint confirms that a new record never claims that followers hold it,
 // which is what an imported Stream would otherwise carry in
 func TestStream_Save_Outbox_NewStreamDropsFingerprint(t *testing.T) {

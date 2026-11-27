@@ -80,7 +80,9 @@ func (service *Stream) queueOutbox(session data.Session, stream *model.Stream, r
 		return
 	}
 
+	// "hostname" is for the consumer, which routes the task to this domain
 	args := mapof.Any{
+		"hostname": service.Hostname(),
 		"streamId": stream.StreamID.Hex(),
 	}
 
