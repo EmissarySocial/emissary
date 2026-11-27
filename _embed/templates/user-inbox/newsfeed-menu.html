@@ -59,10 +59,12 @@
 </form>
 
 
-<!-- New Folder: a menu row like the folders above it, colored as a link. -->
-<div role="button" tabIndex="0" hx-get="/@me/newsfeed/folder-add" class="turboclick menu-item link">
-	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>
-	<span style="view-transition-name:app-sidebar-add-folder-label">New Folder</span>
+<div role="button" hx-get="/@me/settings/following-search" class="menu-item turboclick">
+	{{icon "add"}} Follow Someone
+</div>
+
+<div role="button" tabIndex="0" hx-get="/@me/newsfeed/folder-add" class="menu-item turboclick">
+	{{icon "add"}} New Folder
 </div>
 
 <script>

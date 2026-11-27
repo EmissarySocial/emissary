@@ -28,10 +28,12 @@
 		<!-- Follow Someone on every view; Filter and Folder Settings only when a folder is selected. -->
 		{{- $selectedFolder := ne $folderID nilObjectID.Hex -}}
 		{{- if or $selectedFolder (not $isWelcome) -}}
-		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); z-index:1000">
+		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; z-index:1000">
+			<!--
 			{{- if not $isWelcome -}}
 				<button hx-get="/@me/settings/following-search{{if $selectedFolder}}?folderId={{$folderID}}{{end}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Follow Someone{{end}}</button>
 			{{- end -}}
+			-->
 			{{- if $selectedFolder -}}
 				{{- if $filter.IsZero -}}
 					<button hx-get="/@me/newsfeed/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}}{{if $isDesktop}} Filter{{end}}</button>
@@ -75,10 +77,7 @@
 				<h1 class="text-xl bold margin-none flex-grow">
 					{{- if $isMobile -}}
 						<a class="turboclick" href="/@me/newsfeed/mobile">{{icon "back"}}</a>
-					{{- else -}}
-						{{iconFilled $folder.Icon}} 
 					{{- end }}
-					{{$folder.Label}}
 				</h1>
 			{{- end -}}
 		</div>
