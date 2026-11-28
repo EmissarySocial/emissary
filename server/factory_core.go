@@ -1072,8 +1072,8 @@ func (factory *factoryCore) refreshQueue(withStorage bool) {
 		}
 	}
 
-	// Stop the queue being replaced.  RULE: Each queue is stopped AT MOST ONCE, because a second
-	// Stop panics; the guard above returns early unless this queue is about to be dropped.
+	// Stop the queue being replaced.  RULE: A queue is stopped only when it is being dropped,
+	// because a stopped queue loses every task still in its buffer.
 	current.queue.Stop()
 
 	// Configure queue options, including task consumers
@@ -1098,11 +1098,36 @@ func (factory *factoryCore) refreshQueue(withStorage bool) {
 	// the inputs that produced it, so the guard above can detect "unchanged"
 	newQueue := queue.New(options...)
 
+	// RULE: The replacement of a running queue starts here, before it is published, because
+	// nothing else will ever start it.  A queue that was never started is left for StartQueue.
+	if current.queueStarted {
+		newQueue.Start()
+	}
+
 	factory.rewireLocked(func(value *wiring) {
 		value.queue = newQueue
 		value.queueReady = true
 		value.queueWithStorage = withStorage
 		value.queueDatabase = current.commonDatabase
+	})
+}
+
+// startQueueLocked starts the current task queue, unless this process has already started one.
+// Callers must hold reloadLock.
+func (factory *factoryCore) startQueueLocked() {
+
+	current := factory.currentWiring()
+
+	// RULE: Start at most once, because a second Start adds a second set of workers and pollers
+	if current.queueStarted {
+		return
+	}
+
+	current.queue.Start()
+
+	// Record the start, so that refreshQueue starts every queue that replaces this one
+	factory.rewireLocked(func(value *wiring) {
+		value.queueStarted = true
 	})
 }
 

@@ -1,13 +1,21 @@
 package server
 
 import (
+	"context"
+	"embed"
 	"testing"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/consumer"
 	"github.com/EmissarySocial/emissary/service"
+	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
+	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TestServerFactory verifies that both run modes satisfy the factory interfaces their consumers depend on
@@ -123,4 +131,56 @@ func TestFactory_StartSurvivesABadReload(t *testing.T) {
 	}
 
 	require.Equal(t, "known-good@example.com", factory.Config().AdminEmail)
+}
+
+/******************************************
+ * StartQueue
+ ******************************************/
+
+// TestFactory_ReloadKeepsQueueRunning requires a live Factory whose common database changes to
+// keep a running queue.  It needs the local replica set.
+func TestFactory_ReloadKeepsQueueRunning(t *testing.T) {
+
+	// BUG-313, through readConfig: one saved connection change stopped every node's queue
+	client := requireLiveMongo(t)
+	suffix := primitive.NewObjectID().Hex()
+	databaseA := "emissary_servertest_queue_a_" + suffix
+	databaseB := "emissary_servertest_queue_b_" + suffix
+	logLevel := zerolog.GlobalLevel()
+	before := countQueueWorkers()
+
+	factory := &Factory{}
+	factory.init(&stubStorage{}, embed.FS{})
+
+	t.Cleanup(func() {
+		factory.currentWiring().queue.Stop()
+		_ = factory.currentWiring().commonDatabase.Client().Disconnect(context.Background())
+		_ = client.Database(databaseA).Drop(context.Background())
+		_ = client.Database(databaseB).Drop(context.Background())
+
+		// readConfig replaces both of these process-wide settings
+		derp.SetPlugins(derpconsole.New())
+		zerolog.SetGlobalLevel(logLevel)
+	})
+
+	// Boot on database A, then start the queue as main does
+	configuration := config.DefaultConfig()
+	configuration.Templates = sliceof.Object[mapof.String]{{"adapter": config.FolderAdapterFile, "location": "../_embed/templates"}}
+	configuration.ActivityPubCache = mapof.String{"connectString": liveTestConnection, "database": databaseA}
+	require.NoError(t, factory.readConfig(configuration))
+
+	factory.StartQueue()
+	first := factory.Queue()
+	requireQueueWorkers(t, before+16, "the boot queue must be running")
+
+	// Reload onto database B, as a change-stream event does on every node
+	configuration.ActivityPubCache = mapof.String{"connectString": liveTestConnection, "database": databaseB}
+	require.NoError(t, factory.readConfig(configuration))
+
+	require.NotSame(t, first, factory.Queue(), "a new common database must rebuild the queue")
+	requireQueueWorkers(t, before+16, "the rebuilt queue must be running")
+
+	// A second StartQueue, as a late boot call would be, adds nothing
+	factory.StartQueue()
+	requireQueueWorkers(t, before+16, "StartQueue must not start a running queue again")
 }

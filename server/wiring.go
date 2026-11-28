@@ -70,6 +70,10 @@ type wiring struct {
 	queueWithStorage bool
 	queueDatabase    *mongo.Database
 
+	// queueStarted is TRUE once this process has started its queue.  refreshQueue reads it to
+	// start the replacement of a running queue, and the setup console never sets it.
+	queueStarted bool
+
 	// clientIPStrategy decides which address in a proxied request is the real client's
 	clientIPStrategy realclientip.Strategy
 }

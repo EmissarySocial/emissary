@@ -2,8 +2,11 @@ package server
 
 import (
 	"context"
+	"embed"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -509,8 +512,7 @@ func setTestCommonDatabase(factory *factoryCore, database *mongo.Database) {
 func stopQueueOnCleanup(t *testing.T, factory *factoryCore) {
 	t.Helper()
 
-	// A queue that refreshQueue replaced was already stopped there, and turbine's Stop panics on a
-	// second call.
+	// A queue that refreshQueue replaced was already stopped there
 	t.Cleanup(func() {
 		factory.currentWiring().queue.Stop()
 	})
@@ -586,6 +588,147 @@ func TestRefreshQueue_RebuildsWhenCommonDatabaseSwaps(t *testing.T) {
 	setTestCommonDatabase(factory, lazyDatabase(t, "lifecycle-storage-b"))
 	reloadQueue(factory, true)
 	require.NotSame(t, first, factory.currentWiring().queue, "a database swap must rebuild the queue")
+}
+
+// startQueue runs startQueueLocked under reloadLock, as Factory.StartQueue does.
+func startQueue(factory *factoryCore) {
+	factory.reloadLock.Lock()
+	defer factory.reloadLock.Unlock()
+	factory.startQueueLocked()
+}
+
+// countQueueWorkers returns the number of turbine worker goroutines alive in this process
+func countQueueWorkers() int {
+
+	// Grow the buffer until the whole stack dump fits
+	buffer := make([]byte, 1<<20)
+
+	for {
+		size := runtime.Stack(buffer, true)
+
+		if size < len(buffer) {
+			return strings.Count(string(buffer[:size]), "turbine/queue.(*Queue).startWorker(")
+		}
+
+		buffer = make([]byte, 2*len(buffer))
+	}
+}
+
+// requireQueueWorkers asserts how many turbine worker goroutines are alive
+func requireQueueWorkers(t *testing.T, expected int, message string) {
+	t.Helper()
+
+	// A worker that Stop released may take a moment to leave the stack dump
+	require.Eventually(t, func() bool {
+		return countQueueWorkers() == expected
+	}, 5*time.Second, 20*time.Millisecond, "%s: expected %d workers, found %d", message, expected, countQueueWorkers())
+}
+
+// TestRefreshQueue_StartsReplacementOfRunningQueue requires the queue that replaces a running
+// queue to consume a task
+func TestRefreshQueue_StartsReplacementOfRunningQueue(t *testing.T) {
+
+	// BUG-313: the replacement was published without being started, and Publish still succeeded
+	recorder := recordReports(t)
+	databaseA := lazyDatabase(t, "lifecycle-running-a")
+	databaseB := lazyDatabase(t, "lifecycle-running-b")
+	before := countQueueWorkers()
+
+	factory := newTestFactoryCore()
+	stopQueueOnCleanup(t, factory)
+	setTestCommonDatabase(factory, databaseA)
+
+	// Boot: build the storage-backed queue, then start it as main does
+	reloadQueue(factory, true)
+	startQueue(factory)
+	first := factory.currentWiring().queue
+	requireQueueWorkers(t, before+16, "the boot queue must be running")
+
+	// Swap the database and reload, as a changed connect string does
+	setTestCommonDatabase(factory, databaseB)
+	reloadQueue(factory, true)
+	require.NotSame(t, first, factory.currentWiring().queue)
+	require.True(t, factory.currentWiring().queueStarted)
+	requireQueueWorkers(t, before+16, "the old workers must be replaced, not joined")
+
+	// Only a running worker can report that no consumer claims this task
+	require.NoError(t, factory.Queue().Publish(queue.NewTask("BUG-313-Unclaimed-Task", mapof.NewAny())))
+
+	require.Eventually(t, func() bool {
+		for _, err := range recorder.reported() {
+			if strings.Contains(derp.Message(err), "No consumer recognizes this task") {
+				return true
+			}
+		}
+		return false
+	}, 5*time.Second, 20*time.Millisecond, "the replacement queue never consumed a task")
+}
+
+// TestStartQueue_StartsOnce requires a second start to add no workers
+func TestStartQueue_StartsOnce(t *testing.T) {
+
+	// turbine's Start has no guard of its own, so a second call would run 32 workers
+	before := countQueueWorkers()
+	factory := newTestFactoryCore()
+	stopQueueOnCleanup(t, factory)
+	reloadQueue(factory, false)
+
+	require.False(t, factory.currentWiring().queueStarted)
+
+	startQueue(factory)
+	startQueue(factory)
+
+	require.True(t, factory.currentWiring().queueStarted)
+	requireQueueWorkers(t, before+16, "the queue must be started exactly once")
+
+	// A reload that keeps the queue must not start it again either
+	reloadQueue(factory, false)
+	requireQueueWorkers(t, before+16, "an unchanged reload must not add workers")
+}
+
+// TestRefreshQueue_UnstartedQueueStaysUnstarted requires the replacement of a queue that was
+// never started to wait for StartQueue
+func TestRefreshQueue_UnstartedQueueStaysUnstarted(t *testing.T) {
+
+	// A reload can land before main starts the queue, and the setup console never starts one
+	before := countQueueWorkers()
+	factory := newTestFactoryCore()
+	stopQueueOnCleanup(t, factory)
+	setTestCommonDatabase(factory, lazyDatabase(t, "lifecycle-unstarted"))
+
+	reloadQueue(factory, false)
+	reloadQueue(factory, true)
+
+	require.False(t, factory.currentWiring().queueStarted)
+	require.Equal(t, before, countQueueWorkers(), "an unstarted queue must not be started by a reload")
+
+	// The late start reaches the queue that is current now
+	startQueue(factory)
+	requireQueueWorkers(t, before+16, "StartQueue must start the replacement")
+}
+
+// TestSetupFactory_QueueNeverStarts requires the setup console's queue to have no workers,
+// however many times it is configured
+func TestSetupFactory_QueueNeverStarts(t *testing.T) {
+
+	before := countQueueWorkers()
+	factory := &SetupFactory{}
+	factory.init(&stubStorage{}, embed.FS{})
+
+	t.Cleanup(func() {
+		factory.currentWiring().queue.Stop()
+	})
+
+	// The embedded templates are not in this test binary, so read them from disk
+	configuration := config.DefaultConfig()
+	configuration.Templates = sliceof.Object[mapof.String]{{"adapter": config.FolderAdapterFile, "location": "../_embed/templates"}}
+
+	factory.configure(configuration)
+	factory.configure(configuration)
+
+	require.True(t, factory.currentWiring().queueReady)
+	require.False(t, factory.currentWiring().queueStarted)
+	require.Equal(t, before, countQueueWorkers(), "the setup console must never consume tasks")
 }
 
 /******************************************

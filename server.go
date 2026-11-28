@@ -181,7 +181,7 @@ func main() {
 		go startHTTPS(serverFactory, e)
 
 		// Start the task queue after the HTTP server is running
-		go serverFactory.Queue().Start()
+		go serverFactory.StartQueue()
 
 		// Replace the embedded TLD list with IANA's current one. Each node holds its own
 		// copy, so this runs on every boot; a failed fetch keeps the embedded list.

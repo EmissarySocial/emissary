@@ -161,6 +161,16 @@ func (factory *Factory) readConfig(config config.Config) error {
 	return nil
 }
 
+// StartQueue starts the task queue, and keeps every queue that later replaces it running.
+// It is safe to call more than once.
+func (factory *Factory) StartQueue() {
+
+	factory.reloadLock.Lock()
+	defer factory.reloadLock.Unlock()
+
+	factory.startQueueLocked()
+}
+
 // IsLiveMode returns TRUE if the server is serving real websites, and not the setup mode.
 func (factory *Factory) IsLiveMode() bool {
 	return !factory.setup
