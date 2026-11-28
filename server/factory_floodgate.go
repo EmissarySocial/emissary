@@ -60,10 +60,8 @@ func (factory *factoryCore) ReviveHost(actorURL string) {
 		return
 	}
 
-	// Drop the cached copy, so that this server stops treating the host as blocked at once
-	factory.blockedHosts.mutex.Lock()
-	factory.blockedHosts.expires = time.Time{}
-	factory.blockedHosts.mutex.Unlock()
+	// Stop treating the host as blocked at once, without making the next request reload the copy
+	factory.blockedHosts.remove(host)
 }
 
 // isBlockedHost returns TRUE if this server's copy of the blocked hosts includes the host,
@@ -72,31 +70,59 @@ func (factory *factoryCore) isBlockedHost(host string) bool {
 
 	const location = "server.factoryCore.isBlockedHost"
 
-	cache := &factory.blockedHosts
+	isBlocked, err := factory.blockedHosts.contains(host, factory.Floodgate().Blocked)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Loading blocked hosts"))
+	}
+
+	return isBlocked
+}
+
+// contains returns TRUE if the copy includes the host. The one caller that finds the copy expired
+// reloads it, and a failed reload returns its error with the answer from the old copy.
+func (cache *blockedHostCache) contains(host string, load func(context.Context) (floodgate.Blocklist, error)) (bool, error) {
+
+	// RULE: Push the expiry forward before unlocking. That lets one caller reload while the rest
+	// answer from the old copy, and a failed reload is not tried again for a full interval.
+	cache.mutex.Lock()
+	isBlocked := cache.hosts.Contains(host)
+	mustReload := !time.Now().Before(cache.expires)
+
+	if mustReload {
+		cache.expires = time.Now().Add(blockedHostsMaxAge)
+	}
+
+	cache.mutex.Unlock()
+
+	if !mustReload {
+		return isBlocked, nil
+	}
+
+	// RULE: The database is read with the mutex unlocked, so no other request waits on it (BUG-381)
+	ctx, cancel := context.WithTimeout(context.Background(), blockedHostsTimeout)
+	defer cancel()
+
+	hosts, err := load(ctx)
+
+	if err != nil {
+		return isBlocked, err
+	}
+
+	cache.mutex.Lock()
+	cache.hosts = hosts
+	cache.mutex.Unlock()
+
+	return hosts.Contains(host), nil
+}
+
+// remove takes one host out of the copy and leaves its expiry alone
+func (cache *blockedHostCache) remove(host string) {
 
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
 
-	if time.Now().Before(cache.expires) {
-		return cache.hosts.Contains(host)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), blockedHostsTimeout)
-	defer cancel()
-
-	hosts, err := factory.Floodgate().Blocked(ctx)
-
-	// RULE: A failed reload keeps the old copy for another interval, so that a database outage
-	// does not put one failing query in front of every inbound request
-	cache.expires = time.Now().Add(blockedHostsMaxAge)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Loading blocked hosts"))
-		return cache.hosts.Contains(host)
-	}
-
-	cache.hosts = hosts
-	return cache.hosts.Contains(host)
+	delete(cache.hosts, host)
 }
 
 // hostOf returns the hostname of a URL as Floodgate keys it: lower case, with no port, and

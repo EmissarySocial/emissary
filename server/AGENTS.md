@@ -25,3 +25,10 @@ This package holds the root `Factory` (and its setup-mode sibling `SetupFactory`
 ## There is no page-level Content-Security-Policy, and that is a known deferral
 
 Emissary serves its application HTML with **no CSP**. Only file attachments carry one (`default-src 'none'; sandbox`, in `handler/attachment.go`); HSTS is set in `middleware/https.go`. This is why any missed XSS sink is directly exploitable — treat it as a standing condition of the threat model, not as a new finding each time it is noticed. The plan lives in `emissary-specs/CONTENT-SECURITY-POLICY.md`: a `script-src` without `'unsafe-inline'`, the bounded inline-script refactor it requires, and a Report-Only to nonce to enforce rollout. Two open questions gate enforcement — whether `_hyperscript` needs `'unsafe-eval'`, and whether any intent page is iframed cross-origin.
+
+## The blocked-hosts copy is never locked across a database read
+
+Every validated inbox request on every domain passes through `blockedHostCache` ([factory_floodgate.go](factory_floodgate.go)), so its mutex may guard a map lookup and nothing slower. Until BUG-381 the reload ran inside the lock, and one slow query on the common database stalled every inbox on the server for up to 5 seconds, once a minute.
+
+`contains` pushes the expiry forward before it unlocks, and that is the whole one-at-a-time guard: one caller reloads, the rest answer from the old copy, and a failed reload waits a full interval. Do not move the expiry update below the query. After a revival, `remove` takes that one host out and leaves the expiry alone, because a paused host stays on the list after it is revived, and zeroing the expiry made each of its requests force a reload. The copy stays one server's own; the records in the common database are what every server obeys.
+
