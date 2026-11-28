@@ -39,19 +39,19 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 		}
 
 		result := UseResult(status).
-			WithHeader("HX-Retarget", "aside").
-			WithHeader("HX-Reswap", "innerHTML").
+			WithHeader("Hx-Retarget", "aside").
+			WithHeader("Hx-Reswap", "innerHTML").
 			AsFullPage()
 
 		// The modal's own URL goes into the address bar, so it can be copied and shared.  htmx reads
 		// HX-Push-Url before HX-Replace-Url, so the "false" that WrapModal wrote must go.
 		if replaceURL := step.replaceURL(builder); replaceURL != "" {
-			builder.response().Header().Del("HX-Push-Url")
-			return result.WithHeader("HX-Replace-Url", replaceURL)
+			builder.response().Header().Del("Hx-Push-Url")
+			return result.WithHeader("Hx-Replace-Url", replaceURL)
 		}
 
 		if step.Background == "" {
-			result = result.WithHeader("HX-Push-Url", "false")
+			result = result.WithHeader("Hx-Push-Url", "false")
 		}
 
 		return result
