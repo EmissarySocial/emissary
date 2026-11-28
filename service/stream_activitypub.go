@@ -508,6 +508,47 @@ func (service *Stream) RemoveReply(session data.Session, inReplyToURL string, re
 	return nil
 }
 
+// RefreshReplyCount recomputes the ReplyCount of the Stream with the provided ID from its Replies
+// collection.  A Stream that is gone, or that has no Replies collection, is a no-op.
+func (service *Stream) RefreshReplyCount(session data.Session, streamID primitive.ObjectID) error {
+
+	const location = "service.Stream.RefreshReplyCount"
+
+	// Load the Stream that counts the replies
+	parent := model.NewStream()
+
+	if err := service.LoadByID(session, streamID, &parent); err != nil {
+
+		// A deleted Stream counts nothing
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading Stream", streamID.Hex())
+	}
+
+	// Locate its Replies collection
+	collection := model.NewCollection()
+
+	if err := service.collectionService.LoadByType(session, parent.StreamID, model.CollectionTypeReplies, &collection); err != nil {
+
+		// No collection means there was never a reply to count
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading Replies collection", streamID.Hex())
+	}
+
+	// Count and save
+	if err := service.refreshReplyCount(session, &parent, &collection); err != nil {
+		return derp.Wrap(err, location, "Refreshing reply count", streamID.Hex())
+	}
+
+	// One, two, three... ah ah ah.
+	return nil
+}
+
 // refreshReplyCount recomputes the parent Stream's denormalized ReplyCount from the live
 // Replies collection size and Saves it.
 func (service *Stream) refreshReplyCount(session data.Session, parent *model.Stream, collection *model.Collection) error {

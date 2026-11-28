@@ -34,6 +34,14 @@ func CollectionItem(ctx context.Context, database *mongo.Database) error {
 			}),
 		},
 
+		// Serves HardDeleteByURI, which removes a deleted object from every collection that
+		// lists it, and runs for each deleted Stream and each inbound Delete.
+		"idx_CollectionItem_URI": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "uri", Value: 1},
+			},
+		},
+
 		// Serves the reply list reader: items looked up by inReplyTo, ordered by
 		// createDate (QueryByInReplyTo / ReplyLinksAfter).
 		"idx_CollectionItem_InReplyTo": mongo.IndexModel{

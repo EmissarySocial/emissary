@@ -314,7 +314,8 @@ func (service *CollectionItem) LoadByURI(session data.Session, collectionID prim
 	return service.Load(session, criteria, collectionItem)
 }
 
-// HardDeleteByURI deletes every CollectionItem with the provided URI, with the same side effects as Delete.
+// HardDeleteByURI deletes every CollectionItem with the provided URI, with the same side effects as Delete,
+// and refreshes the reply count of each Stream that listed it as a reply.
 func (service *CollectionItem) HardDeleteByURI(session data.Session, URI string) error {
 
 	const location = "service.CollectionItem.HardDeleteByURI"
@@ -328,8 +329,18 @@ func (service *CollectionItem) HardDeleteByURI(session data.Session, URI string)
 
 	// Delete each one
 	for collectionItem := range collectionItems {
+
 		if err := service.Delete(session, &collectionItem, "Hard delete"); err != nil {
 			return derp.Wrap(err, location, "Deleting CollectionItem", "uri: "+URI)
+		}
+
+		// Only a reply is also counted on its parent Stream
+		if collectionItem.CollectionType != model.CollectionTypeReplies {
+			continue
+		}
+
+		if err := service.streamService.RefreshReplyCount(session, collectionItem.ParentID); err != nil {
+			return derp.Wrap(err, location, "Refreshing reply count", collectionItem.ParentID.Hex())
 		}
 	}
 

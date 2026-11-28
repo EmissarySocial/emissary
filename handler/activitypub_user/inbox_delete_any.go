@@ -30,6 +30,12 @@ func init() {
 		// If the activity is gone, then it will be removed from the cache.
 		_ = client.Delete(activity.Object().ID())
 
+		// Remove the object from every local Collection that lists it, such as a thread's Context
+		// or a parent's Replies.  The same-origin rule above is what makes this safe.
+		if err := context.factory.CollectionItem().HardDeleteByURI(context.session, activity.Object().ID()); err != nil {
+			return derp.Wrap(err, location, "Removing object from collections", activity.Object().ID())
+		}
+
 		// Who let the dogs out?
 		return nil
 	})
