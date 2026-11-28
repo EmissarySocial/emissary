@@ -94,3 +94,26 @@ func (client *createTestClient) Save(streams.Document) error {
 func (client *createTestClient) Delete(string) error {
 	return nil
 }
+
+// TestInboxIsOwnUpdate confirms that only an Update of an object on its actor's own origin
+// reloads the cached copy of that object.
+func TestInboxIsOwnUpdate(t *testing.T) {
+
+	// BUG-006002: publicCreate's actor is on social.example.com
+	note := func(id string) mapof.Any {
+		return mapof.Any{vocab.PropertyID: id, vocab.PropertyType: vocab.ObjectTypeNote}
+	}
+
+	test := func(name string, activityType string, object mapof.Any, expected bool) {
+		value := publicCreate("https://social.example.com/activities/1", object)
+		value[vocab.PropertyType] = activityType
+
+		activity := streams.NewDocument(value)
+		require.Equal(t, expected, inbox_IsOwnUpdate(activity, activity.Object()), name)
+	}
+
+	test("Update of an own object", vocab.ActivityTypeUpdate, note("https://social.example.com/notes/1"), true)
+	test("Create of an own object", vocab.ActivityTypeCreate, note("https://social.example.com/notes/1"), false)
+	test("Update of an object on another origin", vocab.ActivityTypeUpdate, note("https://other.example.com/notes/1"), false)
+	test("Update of an object with no id", vocab.ActivityTypeUpdate, note(""), false)
+}

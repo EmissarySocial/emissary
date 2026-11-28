@@ -3,12 +3,14 @@ package activitypub_user
 import (
 	"strings"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 )
 
 // init registers the Create and Update handlers, and the object types that are deliberately ignored
@@ -60,6 +62,22 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 	// activity, is dropped without an error so that the sender does not retry it.
 	if document.IsNil() || document.IsActivity() {
 		return nil
+	}
+
+	// RULE: An Update makes the cached copy of its object stale, so reload it from its origin
+	if inbox_IsOwnUpdate(activity, document) {
+
+		// The signature collapses the copies of one Update that arrive for each local follower
+		postcommit.Publish(
+			context.session,
+			context.factory.Queue(),
+			"ReindexActivityStream",
+			mapof.Any{
+				"hostname": context.factory.Hostname(),
+				"url":      document.ID(),
+			},
+			queue.WithSignature(document.ID()),
+		)
 	}
 
 	// Place the post into the User's newsfeed IF it came from a source they Follow. A post from a
@@ -115,6 +133,17 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	// Success!
 	return nil
+}
+
+// inbox_IsOwnUpdate returns TRUE if the activity is an Update of an object on its actor's own origin
+func inbox_IsOwnUpdate(activity streams.Document, object streams.Document) bool {
+
+	if activity.Type() != vocab.ActivityTypeUpdate {
+		return false
+	}
+
+	// RULE: An actor can refresh only the objects on its own origin (D19)
+	return activitypub.IsSameOrigin(activity.ActorID(), object.ID())
 }
 
 // hasLocalReplyOrContext returns TRUE if the document belongs to a context that
