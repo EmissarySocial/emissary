@@ -92,6 +92,16 @@ A missing case in `PreProcessor` is silent: the name falls through, `Priority` k
 
 A Domain with no SMTP connection is skipped before anything is claimed, so its Users get their email once it is configured.
 
+## A task that writes a whole collection runs outside a transaction
+
+`Shuffle` ([shuffle.go](shuffle.go)) gives every SearchResult on a Domain a new random `shuffle` value once an hour, with one pipeline `UpdateMany` (`queries.Shuffle`). It is registered with `WithFactory` and opens a plain session. Inside `WithSession`, every write would stay uncommitted until the last one, pinned in the database's cache, and a run longer than MongoDB's 60-second transaction limit would be aborted and start again. Until [BUG-003415](../../emissary-specs/bugs/BUG-003415-Shuffle-Rewrites-Every-Record-One-Round-Trip-At-A-Time.md) it did exactly that, with two round trips per record. Three more rules hold:
+
+- **Only SearchResults are shuffled.** Nothing reads a shuffled order of Streams, so `model.Stream` no longer has the field. Bandwagon's search pages are the readers, through `SearchBuilder.ByShuffle` and `AfterShuffle`.
+- **A partial or doubled run is harmless.** Every value is random, so a run that stops halfway, or two servers running at once, still leaves a shuffled collection. The task needs no signature beyond the hourly batch's.
+- **Each Domain starts at its own minute.** `hourlyOffsetSeconds` hashes the hostname into the first fifty minutes of the hour, because every Domain shares one database server. Use it for any new hourly task that writes a whole collection.
+
+A new SearchResult sorts after every shuffled one until the next run: the service starts it near `math.MaxInt64`, and shuffled values stay below 2^53 (`TestShuffleRange_NewRecordsSortLast`).
+
 ## Import fetches are origin-gated — the rule lives in service/AGENTS.md
 
 [importStartup.go](importStartup.go) skips cross-origin documents at item creation and [importItems.go](importItems.go) re-checks `uri.NotSameOrigin` at the fetch sink so the user's source-scoped OAuth Bearer token can never travel off-origin. The full reasoning (and the service-side gates) is in [../service/AGENTS.md](../service/AGENTS.md) — keep both check sites; the duplication is belt-and-suspenders, not redundancy.

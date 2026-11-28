@@ -2,17 +2,17 @@ package queries
 
 import (
 	"context"
-	"math/rand/v2"
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Shuffle randomizes the "shuffle" field for each record in the Collection
+// shuffleRange is 2^53, the number of distinct values that MongoDB's $rand can produce
+const shuffleRange int64 = 1 << 53
+
+// Shuffle gives every record in the Collection a new random "shuffle" value, in one statement
 func Shuffle(ctx context.Context, collection data.Collection) error {
 
 	const location = "queries.Shuffle"
@@ -23,100 +23,17 @@ func Shuffle(ctx context.Context, collection data.Collection) error {
 		return derp.Internal(location, "Collection must be a MongoDB collection")
 	}
 
-	if err := shuffleA(ctx, c); err != nil {
-		return derp.Wrap(err, location, "Assigning random numbers", nil)
+	// The database picks each value, so no record travels to this server and back
+	pipeline := mongo.Pipeline{
+		{{Key: "$set", Value: bson.M{
+			"shuffle": bson.M{"$toLong": bson.M{"$multiply": bson.A{bson.M{"$rand": bson.M{}}, shuffleRange}}},
+		}}},
 	}
 
-	if err := shuffleB(ctx, c); err != nil {
-		return derp.Wrap(err, location, "Assigning random numbers", nil)
+	if _, err := c.UpdateMany(ctx, bson.M{}, pipeline); err != nil {
+		return derp.Wrap(err, location, "Assigning random numbers", c.Name())
 	}
 
-	// Oh yeah.
-	return nil
-}
-
-// shuffleA assigns a random number to the "shuffle" field for each record in the Collection
-func shuffleA(ctx context.Context, collection *mongo.Collection) error {
-
-	const location = "queries.shuffleA"
-
-	opts := options.FindOptions{
-		Projection: bson.M{"_id": 1},
-	}
-
-	// Scan through all records (unsorted)
-	cursor, err := collection.Find(ctx, bson.M{}, &opts)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Retrieving records")
-	}
-
-	// For each record in the Collection
-	for cursor.Next(ctx) {
-
-		// Decode the result (just the ID)
-		result := mapof.NewAny()
-		if err := cursor.Decode(&result); err != nil {
-			return derp.Wrap(err, location, "Decoding record", result)
-		}
-
-		// Set a new random value for the "shuffle" field
-		_, err := collection.UpdateOne( // nolint:scopeguard (readability)
-			ctx,
-			bson.M{"_id": result["_id"]},
-			bson.M{"$set": bson.M{"shuffle": rand.Int64()}}, // #nosec G404 -- Shuffle is a randomized sort key, not a secret
-		)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Updating record", result)
-		}
-	}
-
-	// Oh yeah.
-	return nil
-}
-
-// shuffleB sets the "shuffle" field to a sequential number
-func shuffleB(ctx context.Context, collection *mongo.Collection) error {
-
-	const location = "queries.shuffleB"
-
-	var shuffle int64
-
-	opts := options.FindOptions{
-		Projection: bson.M{"_id": 1},
-		Sort:       bson.M{"shuffle": 1},
-	}
-
-	// Scan through all records (sorted by "shuffle")
-	cursor, err := collection.Find(ctx, bson.M{}, &opts)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Retrieving records")
-	}
-
-	// For each record in the Collection
-	for cursor.Next(ctx) {
-
-		// Decode the result
-		result := mapof.NewAny()
-		if err := cursor.Decode(&result); err != nil {
-			return derp.Wrap(err, location, "Decoding record", result)
-		}
-
-		// Set a sequential value for the "shuffle" field
-		shuffle++
-		_, err := collection.UpdateOne( // nolint:scopeguard (readability)
-			ctx,
-			bson.M{"_id": result["_id"]},
-			bson.M{"$set": bson.M{"shuffle": shuffle}},
-		)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Updating record", result)
-		}
-	}
-
-	// Oh yeah.
+	// Every day I'm shufflin'.
 	return nil
 }

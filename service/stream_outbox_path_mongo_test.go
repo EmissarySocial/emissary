@@ -155,7 +155,6 @@ func TestStreamOutboxPath_FingerprintFields(t *testing.T) {
 		"summary":      {edit: func(stream *model.Stream) { stream.Summary = "Edited" }},
 		"state":        {edit: func(stream *model.Stream) { stream.StateID.Set("featured") }},
 		"rank":         {edit: func(stream *model.Stream) { stream.Rank++ }},
-		"shuffle":      {edit: func(stream *model.Stream) { stream.Shuffle++ }},
 		"isFeatured":   {edit: func(stream *model.Stream) { stream.IsFeatured = true }},
 		"replyCount":   {edit: func(stream *model.Stream) { stream.ReplyCount++ }},
 		"likeCount":    {edit: func(stream *model.Stream) { stream.LikeCount++ }},

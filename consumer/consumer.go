@@ -174,7 +174,7 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 		return WithSession(consumer.serverFactory, args, SendWebPushNotification)
 
 	case "Shuffle":
-		return WithSession(consumer.serverFactory, args, Shuffle)
+		return WithFactory(consumer.serverFactory, args, Shuffle)
 
 	case service.TaskSyncStreamSource:
 		return WithSession(consumer.serverFactory, args, SyncStreamSource)

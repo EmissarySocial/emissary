@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"iter"
-	"math"
 	"net/url"
 	"slices"
 	"strings"
@@ -15,7 +14,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/parse"
-	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -666,11 +664,6 @@ func (service *Stream) save(session data.Session, stream *model.Stream, note str
 			return derp.Wrap(err, location, "Calculating max rank")
 		}
 		stream.Rank = maxRank
-	}
-
-	// RULE: If unassigned, shuffle the stream after the first trillion other results (will reset in 1 hour)
-	if stream.Shuffle == 0 {
-		stream.Shuffle = math.MaxInt64 - int64(random.GenerateInt(1, 999_999_999_999))
 	}
 
 	// RULE: Default Token
@@ -1343,17 +1336,6 @@ func (service *Stream) SetLocationChild(template *model.Template, stream *model.
  * Custom Actions
  ******************************************/
 
-// Shuffle assigns a unique random number to the "shuffle" field of each Stream
-func (service *Stream) Shuffle(session data.Session) error {
-
-	collection := service.collection(session)
-	if err := queries.Shuffle(session.Context(), collection); err != nil {
-		return derp.Wrap(err, "service.Stream.Shuffle", "Shuffling users")
-	}
-
-	return nil
-}
-
 // SetAttributedTo assigns a User to the "attributedTo" field of each Stream
 func (service *Stream) SetAttributedTo(user *model.User) {
 
@@ -2021,7 +2003,6 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	stream.StartDate = datetime.New()
 	stream.EndDate = datetime.New()
 	stream.Syndication = delta.NewSlice[string]()
-	stream.Shuffle = 0
 	stream.IsFeatured = false
 	stream.IsSubscribable = false
 

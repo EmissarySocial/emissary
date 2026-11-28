@@ -111,7 +111,7 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 		return derp.Internal(location, "SearchResultID is required", searchResult)
 	}
 
-	// RULE: If unassigned, shuffle the searchResult after the first trillion other results (will reset in 1 hour)
+	// RULE: If unassigned, sort the searchResult after every shuffled one, until the next hourly shuffle
 	if searchResult.Shuffle == 0 {
 		searchResult.Shuffle = math.MaxInt64 - int64(random.GenerateInt(0, 999_999_999_999))
 	}

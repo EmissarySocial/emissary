@@ -39,9 +39,6 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 	// Daily tasks for each domain
 	for factory := range serverFactory.RangeDomains() {
 
-		// Add "Shuffle" tasks to the queue
-		q.NewTask("Shuffle", mapof.Any{"hostname": factory.Hostname()})
-
 		// Add "Recycle" tasks to the queue
 		q.NewTask("RecycleDomain", mapof.Any{"hostname": factory.Hostname()})
 

@@ -56,7 +56,6 @@ type Stream struct {
 	EndDate          datetime.DateTime       `json:"endDate,omitzero"          bson:"endDate,omitempty"`      // Date/Time to publish as an "end date" for this Stream (semantics are dependent on the Template)
 	Syndication      delta.Slice[string]     `json:"syndication,omitzero"      bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
 	MovedTo          string                  `json:"movedTo"                   bson:"movedTo,omitempty"`      // If present, then this stream has been moved to a new location.
-	Shuffle          int64                   `json:"shuffle,omitzero"          bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
 	PublishDate      int64                   `json:"publishDate,omitzero"      bson:"publishDate"`            // Unix epoch SECONDS when this document first entered the outbox, or a date its author set (0 = never entered the outbox).  It hides nothing.
 	EditDate         int64                   `json:"editDate,omitzero"         bson:"editDate,omitempty"`     // Unix epoch SECONDS when the author last edited this document after publishing it (0 = never edited).
 	IsFeatured       bool                    `json:"isFeatured,omitzero"       bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.

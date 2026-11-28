@@ -616,17 +616,6 @@ func (service *User) QueryBlockedActors(session data.Session, userID primitive.O
  * Custom Actions
  ******************************************/
 
-// Shuffle assigns a unique random number to the "shuffle" field of each User
-func (service *User) Shuffle(session data.Session) error {
-
-	collection := service.collection(session)
-	if err := queries.Shuffle(session.Context(), collection); err != nil {
-		return derp.Wrap(err, "service.User.Shuffle", "Shuffling users")
-	}
-
-	return nil
-}
-
 // CalcNewUsername generates a unique username for a new User, derived from their
 // display name or email address, appending a random slug on collisions.
 func (service *User) CalcNewUsername(session data.Session, user *model.User) error {
