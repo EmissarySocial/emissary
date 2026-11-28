@@ -14,30 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// TestFollowerEmailObject verifies which post a follower's email shows for each kind of activity
-func TestFollowerEmailObject(t *testing.T) {
-
-	note := mapof.Any{"id": "https://example.com/notes/1", "type": "Note", "content": "Hello"}
-
-	// test checks the object shown for one activity
-	test := func(name string, activity mapof.Any, expected mapof.Any) {
-		t.Run(name, func(t *testing.T) {
-			require.Equal(t, expected, followerEmailObject(activity))
-		})
-	}
-
-	test("a Create shows its object", mapof.Any{"type": "Create", "object": note}, note)
-	test("an Announce of a post shows the post", mapof.Any{"type": "Announce", "object": note}, note)
-	test("an Announce of a Create shows the created post", mapof.Any{"type": "Announce", "object": mapof.Any{"type": "Create", "object": note}}, note)
-	test("an Announce of an Update shows the updated post", mapof.Any{"type": "Announce", "object": mapof.Any{"type": "Update", "object": note}}, note)
-	test("an Announce of a Delete shows the Delete", mapof.Any{"type": "Announce", "object": mapof.Any{"type": "Delete", "object": "https://example.com/notes/1"}}, mapof.Any{"type": "Delete", "object": "https://example.com/notes/1"})
-	test("an Announce of a Create of a URL shows nothing", mapof.Any{"type": "Announce", "object": mapof.Any{"type": "Create", "object": "https://example.com/notes/1"}}, mapof.NewAny())
-	test("an object named by its URL shows nothing", mapof.Any{"type": "Create", "object": "https://example.com/notes/1"}, mapof.NewAny())
-	test("an Announce of a URL shows nothing", mapof.Any{"type": "Announce", "object": "https://example.com/notes/1"}, mapof.NewAny())
-	test("no object shows nothing", mapof.Any{"type": "Create"}, mapof.NewAny())
-	test("a nil activity shows nothing", nil, mapof.NewAny())
-}
-
 // TestFollowerPost verifies which activities bring a post to email, and what the email shows of it
 func TestFollowerPost(t *testing.T) {
 
@@ -56,13 +32,16 @@ func TestFollowerPost(t *testing.T) {
 	none := followerEmailPost{}
 
 	test("a Create of a Note", map[string]any{"type": "Create", "object": note}, hello, true)
-	test("an Announce of a Note", map[string]any{"type": "Announce", "object": note}, hello, true)
-	test("an Announce of a Create of a Note", map[string]any{"type": "Announce", "object": map[string]any{"type": "Create", "object": note}}, hello, true)
 	test("an object as mapof.Any", map[string]any{"type": "Create", "object": mapof.Any(note)}, hello, true)
-	test("an Update of an Article with only a name", map[string]any{"type": "Update", "object": map[string]any{"type": "Article", "name": "Title"}}, followerEmailPost{Title: "Title"}, true)
 	test("a Create of a Stream with no body", map[string]any{"type": "Create", "object": map[string]any{"id": "https://example.com/1", "type": "Event", "name": "Tour date"}}, followerEmailPost{Title: "Tour date", URL: "https://example.com/1"}, true)
 	test("the link is the id, not the url", map[string]any{"type": "Create", "object": map[string]any{"id": "https://example.com/1", "url": "https://example.com/1.mp3", "type": "Audio", "name": "Song"}}, followerEmailPost{Title: "Song", URL: "https://example.com/1"}, true)
 
+	test("a Create of an Article with only a name", map[string]any{"type": "Create", "object": map[string]any{"type": "Article", "name": "Title"}}, followerEmailPost{Title: "Title"}, true)
+
+	test("an Update of a Note", map[string]any{"type": "Update", "object": note}, none, false)
+	test("an Announce of a Note", map[string]any{"type": "Announce", "object": note}, none, false)
+	test("an Announce of a Create of a Note", map[string]any{"type": "Announce", "object": map[string]any{"type": "Create", "object": note}}, none, false)
+	test("a Create of a Person", map[string]any{"type": "Create", "object": map[string]any{"type": "Person", "name": "Author"}}, none, false)
 	test("a Create of an empty Note", map[string]any{"type": "Create", "object": map[string]any{"type": "Note"}}, none, false)
 	test("a Create of a Note whose content is null", map[string]any{"type": "Create", "object": map[string]any{"type": "Note", "content": nil}}, none, false)
 	test("a Create of an object named by its URL", map[string]any{"type": "Create", "object": "https://remote.example/notes/1"}, none, false)
@@ -147,8 +126,6 @@ func TestFollowerActivity_RendersEveryShape(t *testing.T) {
 	article := mapof.Any{"id": "https://example.com/1", "type": "Article", "name": "Our new song", "content": "<p>Have a listen</p>"}
 
 	test("a Create with a name and content", mapof.Any{"type": "Create", "object": article}, "Our new song", "Have a listen", `href="https://example.com/1"`)
-	test("an Update", mapof.Any{"type": "Update", "object": article}, "Our new song", "Have a listen")
-	test("a Stream's announcement of a child", mapof.Any{"type": "Announce", "object": mapof.Any{"type": "Create", "object": article}}, "Our new song", "Have a listen")
 	test("a Stream with no body", mapof.Any{"type": "Create", "object": mapof.Any{"id": "https://example.com/2", "type": "Event", "name": "Tour date"}}, "Tour date", `href="https://example.com/2"`)
 	test("a Note with no name", mapof.Any{"type": "Create", "object": mapof.Any{"id": "https://example.com/3", "type": "Note", "content": "Just a thought"}}, "Just a thought", `href="https://example.com/3"`)
 }

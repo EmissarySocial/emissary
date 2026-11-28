@@ -1,6 +1,6 @@
 # Follower Activity Email
 
-Notifies an email-method Follower that the account or stream they subscribe to has published a post. Outbox2's `Outbox2-Email` task (`Outbox2.SendEmail` in service/outbox2_delivery.go) and the legacy follower loop (service/outbox_delivery.go) both call `DomainEmail.SendFollowerActivity` (service/domainEmail.go), which sends one message per email Follower with the subject "New Activity From {{.Actor.Name}}" and a `List-Unsubscribe` header populated from the Follower's unsubscribe link. An activity that brings no post, such as a Delete, an Undo, or a post with neither a name nor content, sends nothing; `followerPost` decides.
+Notifies an email-method Follower that the account or stream they subscribe to has published a post. Outbox2's `Outbox2-Email` task (`Outbox2.SendEmail` in service/outbox2_delivery.go) and the legacy follower loop (service/outbox_delivery.go) both call `DomainEmail.SendFollowerActivity` (service/domainEmail.go), which sends one message per email Follower with the subject "New Activity From {{.Actor.Name}}" and a `List-Unsubscribe` header populated from the Follower's unsubscribe link. Only a `Create` is emailed. An `Update`, an `Announce`, a Delete, an Undo, or a post with neither a name nor content sends nothing; `followerPost` decides.
 
 This is the only shipped email that declares a `headers:` block, and until `applyHeaders` was added to `ServerEmail.Send` those templates were parsed and then discarded, so the header had never actually been sent.
 

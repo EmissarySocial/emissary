@@ -274,14 +274,13 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 	return nil
 }
 
-// SendFollowerActivity emails the post that an activity brings to a Follower who subscribed by
-// email. An activity that brings no post to read sends nothing.
+// SendFollowerActivity emails the post that a Create brings to a Follower who subscribed by
+// email. Any other activity sends nothing.
 func (service *DomainEmail) SendFollowerActivity(session data.Session, follower *model.Follower, activity mapof.Any) error {
 
 	const location = "service.DomainEmail.SendFollowerActivity"
 
-	// RULE: Only a post is emailed. A Delete, an Undo, a Block, or a post with neither a name nor
-	// content would otherwise arrive as a blank "New Activity" message.
+	// RULE: Only a new post is emailed: a Create that embeds an object with a name or content
 	post, isPost := followerPost(activity)
 
 	if !isPost {
@@ -428,17 +427,22 @@ type followerEmailPost struct {
 // activity brings no post to read
 func followerPost(activity mapof.Any) (followerEmailPost, bool) {
 
-	// RULE: Only these activity types bring a post to read. A Delete, an Undo, an Accept,
-	// a Follow, or a Like has nothing to put in the email.
-	switch streams.NewDocument(activity).Type() {
-	case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate, vocab.ActivityTypeAnnounce:
-	default:
+	document := streams.NewDocument(activity)
+
+	// RULE: Only a Create is emailed. An Update or an Announce would mail a post that the
+	// Follower may already have, and no other activity has a post to show.
+	if document.Type() != vocab.ActivityTypeCreate {
 		return followerEmailPost{}, false
 	}
 
-	object := streams.NewDocument(followerEmailObject(activity))
+	object := document.Object()
 
-	// RULE: A profile is not a post, so an Update of an actor is not emailed
+	// RULE: Show only an embedded object, because one named by its URL would have to be fetched
+	if !object.IsMap() {
+		return followerEmailPost{}, false
+	}
+
+	// RULE: A profile is not a post
 	if object.IsActor() {
 		return followerEmailPost{}, false
 	}
@@ -483,32 +487,6 @@ func followerActivityValues(host string, follower *model.Follower, actor model.P
 		"Unsubscribe":             follower.UnsubscribeLink(host),
 		"UnsubscribeWithBrackets": follower.UnsubscribeLinkWithBrackets(host),
 	}
-}
-
-// followerEmailObject returns the post that a follower's email shows for an activity: its embedded
-// object, or the object of a Create or Update that it announces. It is empty when there is none.
-func followerEmailObject(activity mapof.Any) mapof.Any {
-
-	document := streams.NewDocument(activity)
-	object := document.Object()
-
-	// RULE: A Stream announces its new child as an Announce of the child's Create, so the email
-	// shows the child itself, not the Create
-	if document.Type() == vocab.ActivityTypeAnnounce {
-		if object.IsMap() {
-			switch object.Type() {
-			case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate:
-				object = object.Object()
-			}
-		}
-	}
-
-	// RULE: Show only an embedded object, because one named by its URL would have to be fetched
-	if !object.IsMap() {
-		return mapof.NewAny()
-	}
-
-	return mapof.Any(object.Map())
 }
 
 // host returns this Domain's hostname, with its protocol prefix
