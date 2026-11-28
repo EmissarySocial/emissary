@@ -561,14 +561,20 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		derp.Report(derp.Wrap(err, location, "Deleting stream sources", stream, note))
 	}
 
-	// RULE: Delete related Context Collection (if exists)
-	if err := service.collectionService.DeleteByURL(session, stream.Context); err != nil {
-		derp.Report(derp.Wrap(err, location, "Deleting context collection", stream, note))
+	// RULE: Delete the Context Collection that this Stream owns.  A reply owns none: its `context`
+	// names the Context of its thread, which belongs to the root.
+	if err := service.collectionService.DeleteContext(session, stream); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting context collection", stream.StreamID.Hex(), note))
 	}
 
 	// RULE: If this Stream is a reply, remove it from its parent's Replies collection (and refresh the count).
 	if err := service.RemoveReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Removing reply from parent collection", stream, note))
+	}
+
+	// RULE: Remove this Stream from every other Collection that lists it, such as its thread's Context
+	if err := service.collectionItemService.HardDeleteByURI(session, stream.ActivityPubURL()); err != nil {
+		derp.Report(derp.Wrap(err, location, "Removing Stream from collections", stream.StreamID.Hex(), note))
 	}
 
 	// RULE: Delete Outbox Messages

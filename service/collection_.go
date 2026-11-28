@@ -229,30 +229,37 @@ func (service *Collection) LoadByType(session data.Session, parentID primitive.O
 	return service.Load(session, criteria, collection)
 }
 
-// DeleteByURL removes the Collection at the provided URL, ignoring URLs that are not local
-func (service *Collection) DeleteByURL(session data.Session, url string) error {
+// DeleteContext removes the Context Collection that the provided Stream owns, with every item in it.
+// A Stream that owns none, as every reply does, is a no-op.
+func (service *Collection) DeleteContext(session data.Session, stream *model.Stream) error {
 
-	// Try to parse the Collection URL as a local collection
-	userID, collectionID, err := service.locatorService.ParseCollection(url)
+	const location = "service.Collection.DeleteContext"
 
-	// If it doesn't parse, then it's not a local collection
-	if err != nil {
+	// Load the Context that this Stream is the parent of.  `stream.Context` is never read here:
+	// a reply copies it from the post it answers, so it names the thread's Context, not its own.
+	collection := model.NewCollection()
+
+	if err := service.LoadByType(session, stream.StreamID, model.CollectionTypeContext, &collection); err != nil {
+
+		// A Stream that minted no Context has nothing to delete
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading context collection", stream.StreamID.Hex())
+	}
+
+	// RULE: The Context must also belong to the Stream's author
+	if collection.UserID != stream.AttributedTo.UserID {
 		return nil
 	}
 
-	// Try to load the Collection from the database
-	collection := model.NewCollection()
-
-	if err := service.LoadByID(session, userID, collectionID, &collection); err != nil {
-		return derp.Wrap(err, "service.Collection.DeleteByURL", "Loading collection", "url: "+url)
+	// Delete the Collection and its items
+	if err := service.Delete(session, &collection, "Deleted with its Stream"); err != nil {
+		return derp.Wrap(err, location, "Deleting context collection", collection.CollectionID.Hex())
 	}
 
-	// Delete the Collection
-	if err := service.Delete(session, &collection, "Deleted by URL"); err != nil {
-		return derp.Wrap(err, "service.Collection.DeleteByURL", "Deleting collection", "url: "+url)
-	}
-
-	// Success.
+	// The thread is cut.
 	return nil
 }
 

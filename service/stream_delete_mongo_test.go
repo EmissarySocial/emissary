@@ -50,18 +50,26 @@ func newStreamDeleteTest(t *testing.T) streamDeleteTest {
 	outbox2 := &Outbox2{locator: locator, host: "https://example.test", legacyOutbox: removals, objectCache: removals}
 	legacyOutbox := &Outbox{userService: &User{keyService: keyService}, outbox2Service: outbox2}
 
+	collectionItemService := &CollectionItem{}
+	collectionService := &Collection{locatorService: locator, collectionItemService: collectionItemService}
+
 	service := Stream{
-		attachmentService:   &Attachment{},
-		collectionService:   &Collection{locatorService: locator},
-		domainService:       &Domain{},
-		draftService:        &StreamDraft{},
-		locatorService:      locator,
-		outboxService:       legacyOutbox,
-		outbox2Service:      outbox2,
-		searchResultService: &SearchResult{},
-		streamSourceService: &StreamSource{},
-		sseUpdateChannel:    make(chan realtime.Message, 100),
+		attachmentService:     &Attachment{},
+		collectionService:     collectionService,
+		collectionItemService: collectionItemService,
+		domainService:         &Domain{},
+		draftService:          &StreamDraft{},
+		locatorService:        locator,
+		outboxService:         legacyOutbox,
+		outbox2Service:        outbox2,
+		searchResultService:   &SearchResult{},
+		streamSourceService:   &StreamSource{},
+		sseUpdateChannel:      make(chan realtime.Message, 100),
 	}
+
+	// Deleting a CollectionItem reaches back up to its Collection and its Stream
+	collectionItemService.collectionService = collectionService
+	collectionItemService.streamService = &service
 
 	return streamDeleteTest{
 		service:  service,
@@ -401,4 +409,270 @@ func TestStream_UnpublishOutboxStream_RemovesTheAnnounce(t *testing.T) {
 	require.True(t, derp.IsNotFound(err), "the unpublished child's Announce is removed")
 	require.NoError(t, test.service.outbox2Service.LoadByID(test.session, model.ActorTypeStream, parentID, sibling.ActivityID, &remaining))
 	require.Equal(t, int64(2), test.countOutbox2(t, model.ActorTypeStream, parentID))
+}
+
+// saveContext stores the Context Collection that a root Stream mints, owned by `userID`, with the
+// root as its first item, and points the root's `context` at it
+func (test streamDeleteTest) saveContext(t *testing.T, root *model.Stream, userID primitive.ObjectID) model.Collection {
+
+	t.Helper()
+
+	collection := model.NewCollection()
+	collection.UserID = userID
+	collection.ParentID = root.StreamID
+	collection.ParentType = model.CollectionParentTypeStream
+	collection.CollectionType = model.CollectionTypeContext
+	require.NoError(t, test.session.Collection("Collection").Save(&collection, "test setup"))
+
+	root.Context = test.service.collectionService.ActivityPubURL(collection.UserID, collection.CollectionID)
+	require.NoError(t, test.session.Collection("Stream").Save(root, "test setup"))
+
+	test.addItem(t, &collection, root.ActivityPubURL())
+	return collection
+}
+
+// saveReply stores a Stream by the given author that answers `parent` and carries its `context`
+func (test streamDeleteTest) saveReply(t *testing.T, authorID primitive.ObjectID, parent *model.Stream) model.Stream {
+
+	t.Helper()
+
+	reply := test.saveStream(t, authorID, authorID, true)
+	reply.InReplyTo = parent.ActivityPubURL()
+	reply.Context = parent.Context
+	require.NoError(t, test.session.Collection("Stream").Save(&reply, "test setup"))
+
+	return reply
+}
+
+// addItem lists a URL in the Collection
+func (test streamDeleteTest) addItem(t *testing.T, collection *model.Collection, url string) {
+
+	t.Helper()
+	require.NoError(t, test.service.collectionService.AddItem(test.session, collection, url, ""))
+}
+
+// contextURLs returns the URLs listed in the Collection, or nil when the Collection is gone
+func (test streamDeleteTest) contextURLs(t *testing.T, collection model.Collection) []string {
+
+	t.Helper()
+
+	loaded := model.NewCollection()
+
+	if err := test.service.collectionService.LoadByID(test.session, collection.UserID, collection.CollectionID, &loaded); err != nil {
+		require.True(t, derp.IsNotFound(err), "loading the collection: %v", err)
+		return nil
+	}
+
+	items, err := test.service.collectionItemService.Query(test.session, exp.Equal("collectionId", collection.CollectionID), option.SortAsc("uri"))
+	require.NoError(t, err)
+
+	result := make([]string, 0, len(items))
+
+	for _, item := range items {
+		result = append(result, item.URI)
+	}
+
+	require.Equal(t, len(result), loaded.TotalItems, "totalItems matches the items listed")
+	return result
+}
+
+// TestStreamDelete_RootDeletesItsContext pins that deleting the Stream that minted a Context
+// deletes the Context and every item in it
+func TestStreamDelete_RootDeletesItsContext(t *testing.T) {
+
+	test := newStreamDeleteTest(t)
+	aliceID := primitive.NewObjectID()
+
+	root := test.saveStream(t, aliceID, aliceID, true)
+	collection := test.saveContext(t, &root, aliceID)
+	test.addItem(t, &collection, "https://remote.example/notes/1")
+
+	require.NoError(t, test.service.Delete(test.session, &root, "test"))
+
+	require.Nil(t, test.contextURLs(t, collection))
+
+	count, err := test.service.collectionItemService.Count(test.session, exp.Equal("collectionId", collection.CollectionID))
+	require.NoError(t, err)
+	require.Zero(t, count, "no item outlives its Context")
+}
+
+// TestStreamDelete_ReplyLeavesTheRootContext pins that deleting a reply removes only that reply
+// from its thread's Context, whoever wrote it and wherever it copied the `context` from (BUG-312)
+func TestStreamDelete_ReplyLeavesTheRootContext(t *testing.T) {
+
+	const remoteReply = "https://remote.example/notes/1"
+
+	aliceID := primitive.NewObjectID()
+	bobID := primitive.NewObjectID()
+
+	// Each case returns the reply to delete, given the root of the thread
+	cases := map[string]func(streamDeleteTest, *model.Stream) model.Stream{
+
+		"another User's reply": func(test streamDeleteTest, root *model.Stream) model.Stream {
+			return test.saveReply(t, bobID, root)
+		},
+
+		"the root author's own reply": func(test streamDeleteTest, root *model.Stream) model.Stream {
+			return test.saveReply(t, aliceID, root)
+		},
+
+		"a reply to a reply": func(test streamDeleteTest, root *model.Stream) model.Stream {
+			first := test.saveReply(t, bobID, root)
+			return test.saveReply(t, aliceID, &first)
+		},
+
+		"a reply to a remote note that names this Context": func(test streamDeleteTest, root *model.Stream) model.Stream {
+			reply := test.saveReply(t, bobID, root)
+			reply.InReplyTo = "https://elsewhere.example/notes/9"
+			require.NoError(t, test.session.Collection("Stream").Save(&reply, "test setup"))
+			return reply
+		},
+	}
+
+	for name, makeReply := range cases {
+		t.Run(name, func(t *testing.T) {
+
+			test := newStreamDeleteTest(t)
+
+			root := test.saveStream(t, aliceID, aliceID, true)
+			collection := test.saveContext(t, &root, aliceID)
+			test.addItem(t, &collection, remoteReply)
+
+			reply := makeReply(test, &root)
+			test.addItem(t, &collection, reply.ActivityPubURL())
+			require.Len(t, test.contextURLs(t, collection), 3)
+
+			require.NoError(t, test.service.Delete(test.session, &reply, "test"))
+
+			require.ElementsMatch(t, []string{root.ActivityPubURL(), remoteReply}, test.contextURLs(t, collection))
+		})
+	}
+}
+
+// TestStreamDelete_UnlistedReplyLeavesTheRootContext pins that deleting a reply the Context never
+// listed changes nothing in it
+func TestStreamDelete_UnlistedReplyLeavesTheRootContext(t *testing.T) {
+
+	test := newStreamDeleteTest(t)
+	aliceID := primitive.NewObjectID()
+
+	root := test.saveStream(t, aliceID, aliceID, true)
+	collection := test.saveContext(t, &root, aliceID)
+	reply := test.saveReply(t, primitive.NewObjectID(), &root)
+
+	require.NoError(t, test.service.Delete(test.session, &reply, "test"))
+
+	require.Equal(t, []string{root.ActivityPubURL()}, test.contextURLs(t, collection))
+}
+
+// TestCollection_DeleteContext pins the ownership rule: the Stream must be the Context's parent
+// and its author must own it
+func TestCollection_DeleteContext(t *testing.T) {
+
+	aliceID := primitive.NewObjectID()
+
+	t.Run("no Context collection", func(t *testing.T) {
+		test := newStreamDeleteTest(t)
+		stream := test.saveStream(t, aliceID, aliceID, true)
+
+		require.NoError(t, test.service.collectionService.DeleteContext(test.session, &stream))
+	})
+
+	t.Run("a context URL that names nothing", func(t *testing.T) {
+		test := newStreamDeleteTest(t)
+		stream := test.saveStream(t, aliceID, aliceID, true)
+		stream.Context = "https://example.test/@" + aliceID.Hex() + "/pub/collections/" + primitive.NewObjectID().Hex()
+
+		require.NoError(t, test.service.collectionService.DeleteContext(test.session, &stream))
+	})
+
+	t.Run("another User owns the Context", func(t *testing.T) {
+		test := newStreamDeleteTest(t)
+		stream := test.saveStream(t, aliceID, aliceID, true)
+		collection := test.saveContext(t, &stream, primitive.NewObjectID())
+
+		require.NoError(t, test.service.collectionService.DeleteContext(test.session, &stream))
+		require.Equal(t, []string{stream.ActivityPubURL()}, test.contextURLs(t, collection))
+	})
+
+	t.Run("the Stream owns a collection of another type", func(t *testing.T) {
+		test := newStreamDeleteTest(t)
+		stream := test.saveStream(t, aliceID, aliceID, true)
+
+		replies, err := test.service.collectionService.LoadOrCreateByStream(test.session, &stream, model.CollectionTypeReplies)
+		require.NoError(t, err)
+
+		require.NoError(t, test.service.collectionService.DeleteContext(test.session, &stream))
+		require.NotNil(t, test.contextURLs(t, replies))
+	})
+
+	t.Run("the Stream owns the Context", func(t *testing.T) {
+		test := newStreamDeleteTest(t)
+		stream := test.saveStream(t, aliceID, aliceID, true)
+		collection := test.saveContext(t, &stream, aliceID)
+
+		require.NoError(t, test.service.collectionService.DeleteContext(test.session, &stream))
+		require.Nil(t, test.contextURLs(t, collection))
+	})
+}
+
+// TestCollectionItem_HardDeleteByURI_RemovesFromEveryCollection pins what an inbound Delete does:
+// the object leaves every Collection that lists it, and nothing else does
+func TestCollectionItem_HardDeleteByURI_RemovesFromEveryCollection(t *testing.T) {
+
+	const deleted = "https://remote.example/notes/1"
+	const kept = "https://remote.example/notes/2"
+
+	test := newStreamDeleteTest(t)
+	aliceID := primitive.NewObjectID()
+
+	first := test.saveStream(t, aliceID, aliceID, true)
+	firstContext := test.saveContext(t, &first, aliceID)
+	test.addItem(t, &firstContext, deleted)
+	test.addItem(t, &firstContext, kept)
+
+	second := test.saveStream(t, aliceID, aliceID, true)
+	secondContext := test.saveContext(t, &second, aliceID)
+	test.addItem(t, &secondContext, deleted)
+
+	require.NoError(t, test.service.collectionItemService.HardDeleteByURI(test.session, deleted))
+
+	require.ElementsMatch(t, []string{first.ActivityPubURL(), kept}, test.contextURLs(t, firstContext))
+	require.Equal(t, []string{second.ActivityPubURL()}, test.contextURLs(t, secondContext))
+
+	// A second Delete for the same object finds nothing, and is not an error
+	require.NoError(t, test.service.collectionItemService.HardDeleteByURI(test.session, deleted))
+}
+
+// TestCollectionItem_HardDeleteByURI_ReplyOfADeletedStream pins that a reply listed by a Stream
+// that is gone is still removed, with no count to refresh
+func TestCollectionItem_HardDeleteByURI_ReplyOfADeletedStream(t *testing.T) {
+
+	const deleted = "https://remote.example/notes/1"
+
+	test := newStreamDeleteTest(t)
+
+	replies := model.NewCollection()
+	replies.UserID = primitive.NewObjectID()
+	replies.ParentID = primitive.NewObjectID()
+	replies.ParentType = model.CollectionParentTypeStream
+	replies.CollectionType = model.CollectionTypeReplies
+	require.NoError(t, test.session.Collection("Collection").Save(&replies, "test setup"))
+	test.addItem(t, &replies, deleted)
+
+	require.NoError(t, test.service.collectionItemService.HardDeleteByURI(test.session, deleted))
+	require.Empty(t, test.contextURLs(t, replies))
+}
+
+// TestStream_RefreshReplyCount_NothingToCount pins the two no-ops: a Stream that is gone, and a
+// Stream with no Replies collection
+func TestStream_RefreshReplyCount_NothingToCount(t *testing.T) {
+
+	test := newStreamDeleteTest(t)
+	authorID := primitive.NewObjectID()
+
+	require.NoError(t, test.service.RefreshReplyCount(test.session, primitive.NewObjectID()))
+
+	stream := test.saveStream(t, authorID, authorID, true)
+	require.NoError(t, test.service.RefreshReplyCount(test.session, stream.StreamID))
 }

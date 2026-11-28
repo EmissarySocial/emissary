@@ -97,3 +97,43 @@ func TestUserDelete_ClearsOutbox2BeforeStreams(t *testing.T) {
 	require.Zero(t, test.countOutbox2(t, model.ActorTypeUser, owner.UserID))
 	require.Equal(t, int64(1), test.countOutbox2(t, model.ActorTypeUser, otherUserID))
 }
+
+// TestUserDelete_LeavesTheContextsOfThreadsTheyRepliedTo pins that deleting an account removes its
+// replies from other Users' threads, and leaves each thread's Context in place (BUG-312)
+func TestUserDelete_LeavesTheContextsOfThreadsTheyRepliedTo(t *testing.T) {
+
+	test := newStreamDeleteTest(t)
+	service := newUserDeleteTestService()
+	service.streamService = &test.service
+
+	bob := model.NewUser()
+	bob.UserID = primitive.NewObjectID()
+	bob.Username = "bob"
+	bob.ProfileURL = "https://example.test/@bob"
+	require.NoError(t, test.session.Collection("User").Save(&bob, "test setup"))
+
+	aliceID := primitive.NewObjectID()
+	frankID := primitive.NewObjectID()
+
+	aliceRoot := test.saveStream(t, aliceID, aliceID, true)
+	aliceContext := test.saveContext(t, &aliceRoot, aliceID)
+
+	frankRoot := test.saveStream(t, frankID, frankID, true)
+	frankContext := test.saveContext(t, &frankRoot, frankID)
+
+	// Bob replies in both threads, and starts one of his own
+	toAlice := test.saveReply(t, bob.UserID, &aliceRoot)
+	test.addItem(t, &aliceContext, toAlice.ActivityPubURL())
+
+	toFrank := test.saveReply(t, bob.UserID, &frankRoot)
+	test.addItem(t, &frankContext, toFrank.ActivityPubURL())
+
+	bobRoot := test.saveStream(t, bob.UserID, bob.UserID, true)
+	bobContext := test.saveContext(t, &bobRoot, bob.UserID)
+
+	require.NoError(t, service.Delete(test.session, &bob, "test"))
+
+	require.Equal(t, []string{aliceRoot.ActivityPubURL()}, test.contextURLs(t, aliceContext))
+	require.Equal(t, []string{frankRoot.ActivityPubURL()}, test.contextURLs(t, frankContext))
+	require.Nil(t, test.contextURLs(t, bobContext), "a thread the deleted User started goes with them")
+}
